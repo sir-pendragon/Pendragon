@@ -108,6 +108,7 @@ h3{margin-top:2px}
 #pop{position:fixed;left:50%;transform:translateX(-50%);width:min(calc(100vw - 32px),420px);z-index:9;background:var(--panel);border:2px solid var(--fg);border-radius:10px;padding:10px 14px;box-shadow:0 8px 30px rgba(0,0,0,.4)}
 #pop h3{margin:0 0 4px}
 #ov-go .row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+#ov-pay .row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 #ov-go .row button{white-space:nowrap}
 #go-yes{grid-column:1/-1;order:-1;padding:12px}
 #pop-x{width:100%;margin-top:8px}
@@ -248,6 +249,13 @@ h3{margin-top:2px}
     <h2>この装備で行きますか？</h2>
     <div class="res" id="go-sum"></div>
     <div class="row"><button id="go-no">やめる</button><button id="go-eq">装備を変える</button><button class="primary" id="go-yes">この装備で行く</button></div>
+  </div>
+</div>
+<div class="overlay" id="ov-pay" hidden>
+  <div class="modal">
+    <h2 id="pay-t">お金を使います</h2>
+    <div class="res" id="pay-sum"></div>
+    <div class="row"><button id="pay-no">やめる</button><button class="primary" id="pay-yes">支払う</button></div>
   </div>
 </div>
 <div class="overlay" id="ov-set" hidden>
@@ -598,10 +606,11 @@ function noneCard(slot){const on=!S.gear[slot],[n,s]=NONE_TXT[slot];
 function shopClick(e){const b=e.target.closest('button[data-act]');if(!b)return;const c=b.closest('.card'),kind=c.dataset.kind,id=c.dataset.id;
   if(c.dataset.none){S.gear[c.dataset.slot]=null;render();return;}
   const list=kind==='bike'?BIKES:kind==='cloth'?CLOTHES:kind==='gear'?GEAR_ITEMS:PARTS,item=list.find(x=>x.id===id),key=kind==='bike'?'bikes':kind==='cloth'?'cloth':kind==='gear'?'gear':'parts';
-  if(b.dataset.act==='buy'){if(S.money<item.price)return;S.money-=item.price;S.owned[key].push(id);log(`${item.name}を購入（${yen(item.price)}）`);}
-  if(b.dataset.act==='buy'||b.dataset.act==='equip'){if(kind==='bike')S.bike=id;else if(kind==='cloth')S.cloth=id;else if(kind==='gear')S.gear[item.slot]=id;else if(S.parts.length<3)S.parts.push(id);}
+  if(b.dataset.act==='buy'){if(S.money<item.price)return;askPay(`「${item.name}」を購入しますか？`,item.price,()=>{S.money-=item.price;S.owned[key].push(id);log(`${item.name}を購入（${yen(item.price)}）`);equipIt();});return;}
+  equipIt();
+  function equipIt(){if(b.dataset.act==='buy'||b.dataset.act==='equip'){if(kind==='bike')S.bike=id;else if(kind==='cloth')S.cloth=id;else if(kind==='gear')S.gear[item.slot]=id;else if(S.parts.length<3)S.parts.push(id);}
   if(b.dataset.act==='unequip'){if(kind==='gear')S.gear[item.slot]=null;else S.parts=S.parts.filter(x=>x!==id);}
-  render();}
+  render();}}
 for(const id of ['p-gear','p-camp','p-shop'])$(id).addEventListener('click',shopClick);
 
 function renderLog(){$('log').innerHTML=S.log.map(l=>`<li>${l}</li>`).join('');
@@ -614,6 +623,11 @@ document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{document.que
 // ---------- turn flow ----------
 let trip=null;
 // 出発前の確認（装備の一覧）
+function askPay(what,price,yes){
+  $('pay-t').textContent=what;
+  $('pay-sum').innerHTML=[['支払い',yen(price)],['所持金',yen(S.money)],['支払い後',yen(S.money-price)]].map(r=>`<span>${r[0]}</span><span>${r[1]}</span>`).join('');
+  $('pay-yes').onclick=()=>{$('ov-pay').hidden=true;yes();};$('pay-no').onclick=()=>{$('ov-pay').hidden=true;};
+  $('ov-pay').hidden=false;$('pay-no').focus();}
 function askGo(p,rinko){const ti=travelInfo(p),f=S.forecast[p.id],nm=(l,id)=>(l.find(x=>x.id===id)||{}).name,cl=CLOTHES.find(c=>c.id===S.cloth);
   const how=p.id===S.loc?'同じ場所（気力-15）':rinko?`輪行 ${yen(ti.rinko)}`:`自走 ${ti.d}km（遭遇${ti.enc}回）`;
   const gi=k=>S.gear[k]?nm(GEAR_ITEMS,S.gear[k]):'なし';
@@ -695,7 +709,7 @@ function cmd(k){let t='';let dmg=0;const mult=B.charge?2:1;
   else if(k==='walk'){dmg=10*mult;S.hp-=8;B.charge=false;t=`押して歩いた。${fmtD(dmg)}進んだ`;}
   else if(k==='kiai'){S.mp-=20;B.charge=true;t='気合いを入れた！次の行動が2倍進む';}
   else if(k==='rest'){S.hp=Math.min(100,S.hp+20);S.mp=Math.min(100,S.mp+5);t='ひと休みした。体力+20';}
-  else if(k==='rinko'){S.money-=trip.rk;t='輪行で区間を飛ばした！';log(`${B.e.name}の区間を輪行（${yen(trip.rk)}）`);S.stats.wins++;trip.i++;$('ov-battle').hidden=true;battleOver();nextEncounter();return;}
+  else if(k==='rinko'){if(!$('ov-pay').dataset.ok){askPay('輪行で区間を飛ばしますか？',trip.rk,()=>{$('ov-pay').dataset.ok='1';cmd('rinko');});return;}delete $('ov-pay').dataset.ok;S.money-=trip.rk;t='輪行で区間を飛ばした！';log(`${B.e.name}の区間を輪行（${yen(trip.rk)}）`);S.stats.wins++;trip.i++;$('ov-battle').hidden=true;battleOver();nextEncounter();return;}
   else if(k==='escape'){trip.late=true;$('ov-battle').hidden=true;battleOver();log('ライバルに撮影スポットを譲った…');S.stats.losses++;nextEncounter();return;}
   B.hp-=dmg;if(dmg>0&&B.hp>0)playSE('se_hit');
   if(B.hp<=0){blog(t+(isRival()?'\n先に撮影スポットに着いた！':'\nこの区間を走り切った！'));S.stats.wins++;playSE('se_win');renderBattle();$('bt-cmds').innerHTML=`<button class="primary" data-cmd="next">キャンプ場へ向かう</button>`;
@@ -739,7 +753,7 @@ function endTrip(){const p=trip.p,f=S.forecast[p.id],st=bikeStats(),cl=CLOTHES.f
   if(S.mp<=0){S.mp=20;S.fame=Math.max(0,S.fame-5);html+=`<p class="hint">気力が尽きて投稿をサボった。名声-5。</p>`;}
   if(S.money<0)html+=`<p class="hint">所持金がマイナス。次の投稿収入で返済される。</p>`;
   S.sel=S.loc;render();showResult(html,advance);}
-function restHome(){const ti=travelInfo(PREF[S.home]);if(S.loc!==S.home){if(S.money<ti.rinko)return;}snap();if(S.loc!==S.home)S.money-=ti.rinko;INTRIP=true;S.loc=S.home;S.hp=100;S.mp=100;S.fame=Math.max(0,S.fame-2);
+function restHome(){const ti=travelInfo(PREF[S.home]);if(S.loc!==S.home){if(S.money<ti.rinko)return;if(!$('ov-pay').dataset.ok){askPay('輪行で自宅に帰って休みますか？',ti.rinko,()=>{$('ov-pay').dataset.ok='1';restHome();});return;}delete $('ov-pay').dataset.ok;}snap();if(S.loc!==S.home)S.money-=ti.rinko;INTRIP=true;S.loc=S.home;S.hp=100;S.mp=100;S.fame=Math.max(0,S.fame-2);
   log('自宅で休養。名声-2');S.sel=S.loc;render();showResult(`<h2>自宅で休養</h2><div class="photo pic"><img src="img/rest.webp" width="720" height="480" alt="自宅の和室で大の字になって昼寝する旅行者"><div class="cap"><div>${PREF[S.home].name}の自宅</div><div>💤 一日中ごろごろ</div></div></div><p>体力・気力が全回復した。投稿がなく名声-2。</p>`,advance);}
 function showResult(html,then){$('result-box').innerHTML=html+`<button class="primary" id="res-ok">次の週末へ</button>`;$('ov-result').hidden=false;$('res-ok').onclick=()=>{$('ov-result').hidden=true;then();};}
 function turnPopup(){const t=TS;TS=null;if(!t)return;const e=$('pop'),sg=n=>(n>0?'+':n<0?'-':'')+Math.abs(n);
