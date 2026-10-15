@@ -62,6 +62,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .panel{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px;display:flex;flex-direction:column;gap:12px;min-width:0}
 .map{width:100%;max-width:100%;aspect-ratio:400/472;background:color-mix(in srgb,var(--sky) 10%,var(--panel));border-radius:8px;display:block}
 .map .bgimg{filter:var(--bgf)}
+@media (prefers-reduced-motion:no-preference){.map .drone{animation:hover 2.4s ease-in-out infinite}@keyframes hover{50%{transform:translate(6px,-4px)}}}
 .map path.ov{fill-opacity:.78;pointer-events:none;stroke:none}
 .map path.o0{fill-opacity:var(--o0)}
 .map path{cursor:pointer;-webkit-tap-highlight-color:transparent;stroke:var(--panel);stroke-width:.8;stroke-linejoin:round}
@@ -491,21 +492,24 @@ function xy(p){ // Okinawa is pulled up into an inset position
   const lon=p.name==='沖縄'?130.2:p.lon,lat=p.name==='沖縄'?30.6:p.lat;
   return [ (lon-127.5)*22+12, (45.5-lat)*22-20 ];}
 let MAPKEY='';
-function renderMap(){const svg=$('map');const mk=JSON.stringify([S.loc,S.sel,S.visits,S.bike,S.gear,season(calendar(S.turn).mi)]);if(mk===MAPKEY&&svg.firstChild)return;MAPKEY=mk;let s=`<defs><pattern id="tex" patternUnits="userSpaceOnUse" width="160" height="160"><image class="bgimg" href="img/land_tex.webp" width="160" height="160"/></pattern></defs><image class="bgimg" href="img/map_bg.webp" x="0" y="0" width="400" height="${MAP_H}" preserveAspectRatio="xMidYMid slice"/>`,top='';
+function renderMap(){const svg=$('map');const mk=JSON.stringify([S.loc,S.sel,S.visits,S.bike,S.gear,S.parts,season(calendar(S.turn).mi)]);if(mk===MAPKEY&&svg.firstChild)return;MAPKEY=mk;let s=`<defs><pattern id="tex" patternUnits="userSpaceOnUse" width="160" height="160"><image class="bgimg" href="img/land_tex.webp" width="160" height="160"/></pattern></defs><image class="bgimg" href="img/map_bg.webp" x="0" y="0" width="400" height="${MAP_H}" preserveAspectRatio="xMidYMid slice"/>`,top='';
   s+=`<path data-id="46" d="M14 386H142V470H14Z" fill="transparent" style="stroke:var(--line);stroke-dasharray:3 3;stroke-width:1"/><text x="20" y="399" style="fill:var(--muted)">沖縄</text>`;
   for(const p of PREF){const n=Math.min(3,S.visits[p.id]||0);
     const cls=(p.id===S.loc?'cur ':'')+(p.id===S.sel?'sel ':'')+'l'+n;
     const d=`<path data-id="${p.id}" class="${cls}" fill="url(#tex)" d="${AREAS[p.id].d}"/><path class="ov o${n}" fill="var(--a${n})" d="${AREAS[p.id].d}"/>`;
     if(p.id===S.loc||p.id===S.sel)top+=d;else s+=d;}
   s+=top;
-  const SPR={"tarp_tp2": [565, 199], "shelter_sh2": [355, 185], "bike_gravel": [190, 122], "bike_cross": [185, 120], "bike_road": [176, 121], "fire_fire3": [446, 210], "bike_mama": [162, 136], "fire_fire2": [241, 200], "tarp_tp1": [476, 166], "shelter_sh3": [501, 205], "bike_tigrav": [194, 120], "tarp_tp3": [733, 209], "shelter_sh1": [481, 185], "bike_mtb": [202, 139], "camp_ground": [451, 193], "fire_fire1": [197, 153], "bike_fold": [143, 112], "tree_spring": [256, 338], "tree_summer": [256, 338], "tree_autumn": [256, 338], "tree_winter": [256, 338]};
+  const SPR={"tarp_tp2":[565,199],"shelter_sh2":[355,185],"bike_gravel":[190,144],"bike_cross":[185,142],"bike_road":[176,136],"fire_fire3":[446,210],"bike_mama":[162,126],"fire_fire2":[241,200],"tarp_tp1":[476,166],"shelter_sh3":[501,205],"bike_tigrav":[194,122],"tarp_tp3":[733,209],"shelter_sh1":[481,185],"bike_mtb":[202,134],"camp_ground":[451,193],"fire_fire1":[197,153],"bike_fold":[143,124],"tree_spring":[256,338],"tree_summer":[256,338],"tree_autumn":[256,338],"tree_winter":[256,338],"part_tripod":[128,128],"part_cam":[128,128],"part_drone":[128,128],"part_comfy":[128,128]};
   const put=(key,cx,by,k)=>{const d=SPR[key];if(!d)return '';const w=d[0]*k,hh=d[1]*k;return `<image href="img/${key}.webp" x="${(cx-w/2).toFixed(1)}" y="${(by-hh).toFixed(1)}" width="${w.toFixed(1)}" height="${hh.toFixed(1)}"/>`;};
   const fk={fire1:.115,fire2:.115,fire3:.1},sk={sh1:.165,sh2:.16,sh3:.14};
   s+=`<g style="pointer-events:none">${put('camp_ground',272,462,244/451)}${put('tree_'+season(calendar(S.turn).mi),332,380,.385)}`
    +(S.gear.tarp?put('tarp_'+S.gear.tarp,258,406,.19):'')
    +(S.gear.shelter?put('shelter_'+S.gear.shelter,258,411,sk[S.gear.shelter]):'')
+   +(S.parts.includes('tripod')?put('part_tripod',214,430,.2)+(S.parts.includes('cam')?put('part_cam',214,408,.1):''):(S.parts.includes('cam')?put('part_cam',306,441,.1):''))
+   +(S.parts.includes('comfy')?put('part_comfy',304,446,.2):'')
    +put('bike_'+S.bike,342,426,.26)
-   +(S.gear.fire?put('fire_'+S.gear.fire,282,430,fk[S.gear.fire]):'')+`</g>`;
+   +(S.gear.fire?put('fire_'+S.gear.fire,282,430,fk[S.gear.fire]):'')+`</g>`
+   +(S.parts.includes('drone')?`<g class="drone">${put('part_drone',298,398,.15)}</g>`:'');
   s+=`<g id="hero" style="pointer-events:none"><ellipse id="hs" cy="0" ry="1.8" fill="#000" opacity=".28"/><g id="hf">${HFR.map(k=>`<image id="hi_${k}" href="img/hero_${k}.webp" width="${HDIM[k[0]][0]*HK}" height="${HDIM[k[0]][1]*HK}" style="display:none"/>`).join('')}</g><text id="hz1" style="font-size:6px;fill:#fff;paint-order:stroke;stroke:#234;stroke-width:1.5px">z</text><text id="hz2" style="font-size:5px;fill:#fff;paint-order:stroke;stroke:#234;stroke-width:1.5px">z</text></g>`;svg.innerHTML=s;HLAST=null;drawHero();}
 // ---- ドット絵の主人公：歩く／座って焚き火／寝る ----
 const HDIM={w:[90,141],s:[96,132],z:[162,78]},HK=.26;
