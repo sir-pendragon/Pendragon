@@ -564,7 +564,7 @@ function card(item,kind,mode){const eq=isEq(kind,item),own=owns(kind,item.id);
   if(mode==='shop'){act=own?`<span class="pill">所持</span>`:`<button data-act="buy" ${S.money>=item.price?'':'disabled'}>購入 ${yen(item.price)}</button>`;}
   else if(eq)act=(kind==='part'||kind==='gear')?`<button data-act="unequip">外す</button>`:`<span class="pill">装備中</span>`;
   else act=`<button data-act="equip" ${kind==='part'&&S.parts.length>=3?'disabled':''}>装備</button>`;
-  return `<div class="card ${eq?'eq':''}" data-kind="${kind}" data-id="${item.id}"><div class="name"><span class="nm"><img class="ci" src="img/${kind==='gear'?'icon_'+item.slot:'icon_'+({bike:'bike',cloth:'cloth',part:'part'})[kind]}.webp" width="28" height="28" alt="">${item.name}</span>${act}</div><div class="spec">${spec}</div></div>`;}
+  return `<div class="card ${eq?'eq':''}" data-kind="${kind}" data-id="${item.id}"><div class="name"><span class="nm"><img class="ci" src="img/${kind==='gear'?'icon_'+item.slot:(kind==='part'?'part_'+item.id:'icon_'+({bike:'bike',cloth:'cloth'})[kind])}.webp" width="28" height="28" alt="">${item.name}</span>${act}</div><div class="spec">${spec}</div></div>`;}
 function renderShop(){const lists={bike:BIKES,cloth:CLOTHES,part:PARTS};
   for(const [k,l] of Object.entries(lists)){$('shop-'+k).innerHTML=l.map(i=>card(i,k,'shop')).join('');
     const own=l.filter(i=>owns(k,i.id));$('eq-'+k).innerHTML=own.length?own.map(i=>card(i,k,'equip')).join(''):'<div class="hint">なし</div>';}
