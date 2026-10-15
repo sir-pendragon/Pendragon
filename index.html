@@ -576,7 +576,7 @@ function renderDetail(){const p=PREF[S.sel],f=S.forecast[p.id],ti=travelInfo(p),
   <div class="acts">${stay?`<button class="primary" id="go-stay">自転車旅に行く<small>${p.name}（現在地）</small></button><button disabled>輪行で旅に行く<small>${p.name}（現在地）</small></button>`:
    `<button class="primary" id="go-ride" ${ti.ride?'':'disabled'}>自転車旅に行く<small>${p.name}${ti.ride?'へ':'は遠すぎる'}</small></button>
     <button id="go-rinko" ${S.money>=ti.rinko?'':'disabled'}>輪行で旅に行く<small>${p.name}へ ${yen(ti.rinko)}</small></button>`}
-   ${S.loc!==S.home?`<button id="go-home" ${S.money>=travelInfo(PREF[S.home]).rinko?'':'disabled'}>自宅で休む<small>輪行 ${yen(travelInfo(PREF[S.home]).rinko)}${S.money>=travelInfo(PREF[S.home]).rinko?'':'（お金が足りません）'}</small></button>`:`<button id="go-home">自宅で休む<small>体力・気力回復</small></button>`}</div>`;
+   ${S.loc!==S.home?`<button id="go-home">自宅で休む<small>${S.money>=travelInfo(PREF[S.home]).rinko?'輪行 '+yen(travelInfo(PREF[S.home]).rinko):'お金不足で強制帰宅（名声-5）'}</small></button>`:`<button id="go-home">自宅で休む<small>体力・気力回復</small></button>`}</div>`;
   const b=id=>$(id);if(b('go-ride'))b('go-ride').onclick=()=>askGo(p,false);if(b('go-rinko'))b('go-rinko').onclick=()=>askGo(p,true);
   if(b('go-stay'))b('go-stay').onclick=()=>askGo(p,false);b('go-home').onclick=restHome;}
 
@@ -753,8 +753,8 @@ function endTrip(){const p=trip.p,f=S.forecast[p.id],st=bikeStats(),cl=CLOTHES.f
   if(S.mp<=0){S.mp=20;S.fame=Math.max(0,S.fame-5);html+=`<p class="hint">気力が尽きて投稿をサボった。名声-5。</p>`;}
   if(S.money<0)html+=`<p class="hint">所持金がマイナス。次の投稿収入で返済される。</p>`;
   S.sel=S.loc;render();showResult(html,advance);}
-function restHome(){const ti=travelInfo(PREF[S.home]);if(S.loc!==S.home){if(S.money<ti.rinko)return;if(!$('ov-pay').dataset.ok){askPay('輪行で自宅に帰って休みますか？',ti.rinko,()=>{$('ov-pay').dataset.ok='1';restHome();});return;}delete $('ov-pay').dataset.ok;}snap();if(S.loc!==S.home)S.money-=ti.rinko;INTRIP=true;S.loc=S.home;S.hp=100;S.mp=100;S.fame=Math.max(0,S.fame-2);
-  log('自宅で休養。名声-2');S.sel=S.loc;render();showResult(`<h2>自宅で休養</h2><div class="photo pic"><img src="img/rest.webp" width="720" height="480" alt="自宅の和室で大の字になって昼寝する旅行者"><div class="cap"><div>${PREF[S.home].name}の自宅</div><div>💤 一日中ごろごろ</div></div></div><p>体力・気力が全回復した。投稿がなく名声-2。</p>`,advance);}
+function restHome(){const ti=travelInfo(PREF[S.home]);if(S.loc!==S.home){const forced=S.money<ti.rinko;if(!forced&&!$('ov-pay').dataset.ok){askPay('輪行で自宅に帰って休みますか？',ti.rinko,()=>{$('ov-pay').dataset.ok='1';restHome();});return;}delete $('ov-pay').dataset.ok;}const forced2=S.loc!==S.home&&S.money<ti.rinko,pen=forced2?5:2;snap();if(S.loc!==S.home&&!forced2)S.money-=ti.rinko;INTRIP=true;S.loc=S.home;S.hp=100;S.mp=100;S.fame=Math.max(0,S.fame-pen);
+  log(forced2?'所持金が尽きて強制帰宅。名声-5':'自宅で休養。名声-2');S.sel=S.loc;render();showResult(`<h2>自宅で休養</h2><div class="photo pic"><img src="img/rest.webp" width="720" height="480" alt="自宅の和室で大の字になって昼寝する旅行者"><div class="cap"><div>${PREF[S.home].name}の自宅</div><div>💤 一日中ごろごろ</div></div></div><p>${forced2?'所持金が尽きて旅を続けられず、自宅へ連れ戻された…。体力・気力は全回復したが、名声-5。':'体力・気力が全回復した。投稿がなく名声-2。'}</p>`,advance);}
 function showResult(html,then){$('result-box').innerHTML=html+`<button class="primary" id="res-ok">次の週末へ</button>`;$('ov-result').hidden=false;$('res-ok').onclick=()=>{$('ov-result').hidden=true;then();};}
 function turnPopup(){const t=TS;TS=null;if(!t)return;const e=$('pop'),sg=n=>(n>0?'+':n<0?'-':'')+Math.abs(n);
   const dm=S.money-t.money,other=dm-(t.inc-t.fee),dh=S.hp-t.hp,dp=S.mp-t.mp,df=S.fame-t.fame,fc=S.fam.filter(Boolean).length;
