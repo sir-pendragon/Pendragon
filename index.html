@@ -348,7 +348,7 @@ const GEAR_ITEMS=Object.entries(GEAR).flatMap(([slot,g])=>g.items.map(i=>({...i,
 const ENEMY={
  hill:{name:'激坂',face:'⛰️',img:'img/enemy_hill.webp',hp:40,atk:8,limit:5,stat:'climb',hint:'登坂力が効く'},
  animal:{name:'野生動物',face:'🐗',img:'img/enemy_animal.webp',hp:30,atk:12,limit:4,stat:'cruise',hint:'巡航力で振り切る'},
- wind:{name:'強風',face:'🌬️',hp:35,atk:6,limit:5,stat:'cruise',mp:4,hint:'巡航力が効く。気力も削られる'},
+ wind:{name:'強風',face:'🌬️',img:'img/enemy_wind.webp',hp:35,atk:6,limit:5,stat:'cruise',mp:4,hint:'巡航力が効く。気力も削られる'},
  rain:{name:'大雨',face:'🌧️',img:'img/enemy_rain.webp',hp:35,atk:7,limit:5,stat:'wx',mp:5,hint:'耐候力が効く'},
  typhoon:{name:'台風',face:'🌀',img:'img/enemy_typhoon.webp',hp:70,atk:15,limit:6,stat:'wx',mp:6,hint:'耐候力が効く。無理は禁物'},
  rival:{name:'ライバルインフルエンサー',face:'🤳',img:'img/enemy_rival.webp',hp:40,atk:0,limit:5,stat:'fame',fame:4,hint:'名声と撮影機材で押し切る'},
