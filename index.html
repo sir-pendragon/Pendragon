@@ -422,7 +422,7 @@ function renderMap(){const svg=$('map');let s=`<defs><pattern id="tex" patternUn
    +(S.gear.shelter?put('shelter_'+S.gear.shelter,258,411,sk[S.gear.shelter]):'')
    +put('bike_'+S.bike,342,426,.26)
    +(S.gear.fire?put('fire_'+S.gear.fire,282,430,fk[S.gear.fire]):'')+`</g>`;
-  s+='<g id="hero" style="pointer-events:none"></g>';svg.innerHTML=s;drawHero();}
+  s+=`<g id="hero" style="pointer-events:none"><ellipse id="hs" cy="0" ry="1.8" fill="#000" opacity=".28"/><g id="hf">${HFR.map(k=>`<image id="hi_${k}" href="img/hero_${k}.webp" width="${HDIM[k[0]][0]*HK}" height="${HDIM[k[0]][1]*HK}" style="display:none"/>`).join('')}</g><text id="hz1" style="font-size:6px;fill:#fff;paint-order:stroke;stroke:#234;stroke-width:1.5px">z</text><text id="hz2" style="font-size:5px;fill:#fff;paint-order:stroke;stroke:#234;stroke-width:1.5px">z</text></g>`;svg.innerHTML=s;HLAST=null;drawHero();}
 // ---- ドット絵の主人公：歩く／座って焚き火／寝る ----
 const HDIM={w:[90,141],s:[96,132],z:[162,78]},HK=.26;
 const HERO={mode:'sit',x:256,y:432,dir:1,t:20,f:0,goal:null};
@@ -432,10 +432,17 @@ function heroPick(){const r=Math.random();
   else if(r<.7)HERO.goal={x:256,mode:'sit',y:432};
   else HERO.goal={x:228,mode:'sleep',y:421};
   HERO.mode='walk';HERO.y=432;}
-function drawHero(){const g=$('hero');if(!g)return;const k=heroImg(),d=HDIM[k[0]],w=d[0]*HK,hh=d[1]*HK;
+const HFR=['w1','w2','w3','w4','s1','s2','z1','z2'];
+HFR.forEach(k=>{const i=new Image();i.src='img/hero_'+k+'.webp';});
+let HLAST=null;
+function drawHero(){if(!$('hero'))return;const k=heroImg(),d=HDIM[k[0]],w=d[0]*HK,hh=d[1]*HK;
   const flip=HERO.dir<0&&HERO.mode==='walk',tx=HERO.x-w/2,ty=HERO.y-hh;
-  let z='';if(HERO.mode==='sleep'){const o=HERO.f%3;z=`<text x="${HERO.x-6}" y="${ty-1-o*2}" style="font-size:6px;fill:#fff;paint-order:stroke;stroke:#234;stroke-width:1.5px;opacity:${1-o*.3}">z</text><text x="${HERO.x-1}" y="${ty-6-o*2}" style="font-size:5px;fill:#fff;paint-order:stroke;stroke:#234;stroke-width:1.5px;opacity:${.7-o*.2}">z</text>`;}
-  g.innerHTML=`<ellipse cx="${HERO.x}" cy="${HERO.y}" rx="${w/2.2}" ry="1.8" fill="#000" opacity=".28"/><image href="img/hero_${k}.webp" x="${flip?-(tx+w):tx}" y="${ty}" width="${w}" height="${hh}"${flip?' transform="scale(-1 1)"':''}/>${z}`;}
+  if(HLAST!==k){if(HLAST&&$('hi_'+HLAST))$('hi_'+HLAST).style.display='none';$('hi_'+k).style.display='';HLAST=k;}
+  const im=$('hi_'+k);im.setAttribute('x',flip?-(tx+w):tx);im.setAttribute('y',ty);im.setAttribute('transform',flip?'scale(-1 1)':'');
+  const sh=$('hs');sh.setAttribute('cx',HERO.x);sh.setAttribute('cy',HERO.y);sh.setAttribute('rx',w/2.2);
+  const sl=HERO.mode==='sleep',o=HERO.f%3,z1=$('hz1'),z2=$('hz2');
+  z1.style.display=z2.style.display=sl?'':'none';
+  if(sl){z1.setAttribute('x',HERO.x-6);z1.setAttribute('y',ty-1-o*2);z1.style.opacity=1-o*.3;z2.setAttribute('x',HERO.x-1);z2.setAttribute('y',ty-6-o*2);z2.style.opacity=.7-o*.2;}}
 function heroTick(){if($('p-map').hidden||document.hidden)return;
   HERO.f++;
   if(HERO.mode==='walk'){const gx=HERO.goal?HERO.goal.x:HERO.x;const dx=gx-HERO.x;
