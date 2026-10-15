@@ -102,8 +102,12 @@ h3{margin-top:2px}
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:16px;z-index:10;overflow:auto;overscroll-behavior:contain}
 .setrow{display:grid;grid-template-columns:4.5em 4.5em 1fr;gap:8px;align-items:center}
 .setrow input[type=range]{width:100%;accent-color:var(--accent)}
-#pop{position:fixed;left:50%;transform:translateX(-50%);width:min(calc(100vw - 32px),420px);z-index:9;background:var(--panel);border:2px solid var(--fg);border-radius:10px;padding:10px 14px;box-shadow:0 8px 30px rgba(0,0,0,.4);cursor:pointer}
+#pop{position:fixed;left:50%;transform:translateX(-50%);width:min(calc(100vw - 32px),420px);z-index:9;background:var(--panel);border:2px solid var(--fg);border-radius:10px;padding:10px 14px;box-shadow:0 8px 30px rgba(0,0,0,.4)}
 #pop h3{margin:0 0 4px}
+#ov-go .row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+#ov-go .row button{white-space:nowrap}
+#go-yes{grid-column:1/-1;order:-1;padding:12px}
+#pop-x{width:100%;margin-top:8px}
 #pop .res b{color:var(--fg)}
 #pop .tot{border-top:1px dashed var(--line);margin-top:2px;padding-top:2px}
 @media (prefers-reduced-motion:no-preference){#pop{animation:popin .25s ease-out}@keyframes popin{from{opacity:0;transform:translateX(-50%) translateY(-8px)}}}
@@ -215,6 +219,13 @@ h3{margin-top:2px}
 
 <div id="pop" role="status" hidden></div>
 <button id="btn-set" aria-label="設定">⚙ 設定</button>
+<div class="overlay" id="ov-go" hidden>
+  <div class="modal">
+    <h2>この装備で行きますか？</h2>
+    <div class="res" id="go-sum"></div>
+    <div class="row"><button id="go-no">やめる</button><button id="go-eq">装備を変える</button><button class="primary" id="go-yes">この装備で行く</button></div>
+  </div>
+</div>
 <div class="overlay" id="ov-set" hidden>
   <div class="modal">
     <h2>設定</h2>
@@ -528,8 +539,8 @@ function renderDetail(){const p=PREF[S.sel],f=S.forecast[p.id],ti=travelInfo(p),
    `<button class="primary" id="go-ride" ${ti.ride?'':'disabled'}>自転車旅に行く<small>${ti.ride?'自走':'遠すぎる'}</small></button>
     <button id="go-rinko" ${S.money>=ti.rinko?'':'disabled'}>輪行で旅に行く<small>${yen(ti.rinko)}</small></button>`}
    ${S.loc!==S.home?`<button id="go-home">自宅で休む<small>輪行 ${yen(travelInfo(PREF[S.home]).rinko)}</small></button>`:`<button id="go-home">自宅で休む<small>体力・気力回復</small></button>`}</div>`;
-  const b=id=>$(id);if(b('go-ride'))b('go-ride').onclick=()=>startTrip(p,false);if(b('go-rinko'))b('go-rinko').onclick=()=>startTrip(p,true);
-  if(b('go-stay'))b('go-stay').onclick=()=>startTrip(p,false);b('go-home').onclick=restHome;}
+  const b=id=>$(id);if(b('go-ride'))b('go-ride').onclick=()=>askGo(p,false);if(b('go-rinko'))b('go-rinko').onclick=()=>askGo(p,true);
+  if(b('go-stay'))b('go-stay').onclick=()=>askGo(p,false);b('go-home').onclick=restHome;}
 
 function renderList(){$('sitelist').innerHTML=PREF.map(p=>`<button data-id="${p.id}" class="${p.id===S.loc?'cur':''}">${p.name} ${S.fam[p.id]?'🏅':S.visits[p.id]?'✔'.repeat(S.visits[p.id]):''}<small>${p.site}</small></button>`).join('');
   $('sitelist').querySelectorAll('button').forEach(b=>b.onclick=()=>{S.sel=+b.dataset.id;render();$('map').scrollIntoView({block:'start'});});}
@@ -572,6 +583,16 @@ document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{document.que
 
 // ---------- turn flow ----------
 let trip=null;
+// 出発前の確認（装備の一覧）
+function askGo(p,rinko){const ti=travelInfo(p),f=S.forecast[p.id],nm=(l,id)=>(l.find(x=>x.id===id)||{}).name,cl=CLOTHES.find(c=>c.id===S.cloth);
+  const how=p.id===S.loc?'同じ場所（気力-15）':rinko?`輪行 ${yen(ti.rinko)}`:`自走 ${ti.d}km（遭遇${ti.enc}回）`;
+  const gi=k=>S.gear[k]?nm(GEAR_ITEMS,S.gear[k]):'なし';
+  $('go-sum').innerHTML=[['行き先',`${p.site}（${p.name}）`],['移動',how],['予報',`${WX_J[f.wx]} ${f.temp}℃`],
+    ['自転車',nm(BIKES,S.bike)],['衣類',`${cl.name}（${cl.lo}〜${cl.hi}℃）`],['パーツ',S.parts.length?S.parts.map(x=>nm(PARTS,x)).join('、'):'なし'],
+    ['焚き火台',gi('fire')],['寝床',gi('shelter')],['タープ',gi('tarp')]].map(r=>`<span>${r[0]}</span><span>${r[1]}</span>`).join('');
+  $('go-yes').onclick=()=>{$('ov-go').hidden=true;startTrip(p,rinko);};$('ov-go').hidden=false;$('go-yes').focus();}
+$('go-no').onclick=()=>{$('ov-go').hidden=true;};
+$('go-eq').onclick=()=>{$('ov-go').hidden=true;$('tab-gear').click();};
 function startTrip(p,rinko){snap();const ti=travelInfo(p);const stay=p.id===S.loc;
   if(rinko){S.money-=ti.rinko;log(`${p.name}へ輪行（${yen(ti.rinko)}）`);}
   const f=S.forecast[p.id];const enc=[];
@@ -690,9 +711,9 @@ function turnPopup(){const t=TS;TS=null;if(!t)return;const e=$('pop'),sg=n=>(n>0
   const R=[];if(t.inc)R.push(['SNSからの収入','+'+yen(t.inc)]);if(t.fee)R.push(['利用料','-'+yen(t.fee)]);if(other)R.push(['輪行費・治療費など',(other<0?'-':'+')+yen(Math.abs(other))]);
   if(df)R.push(['名声',`${sg(df)}（${S.fame}）`]);if(dh)R.push(['体力',`${sg(dh)}（${S.hp}）`]);if(dp)R.push(['気力',`${sg(dp)}（${S.mp}）`]);
   if(t.became)R.push(['🏅 馴染み宿',t.became]);if(fc!==t.fam)R.push(['都道府県制覇数',`${fc} / 47`]);
-  e.innerHTML=`<h3>${calLabel(S.turn)}</h3><div class="res">${R.map(r=>`<span>${r[0]}</span><span>${r[1]}</span>`).join('')}<span class="tot">残高</span><span class="tot"><b>${yen(S.money)}</b></span></div>`;
-  const tb=document.querySelector('.tabs').getBoundingClientRect();e.style.top=Math.max(8,Math.min(tb.top,innerHeight-260))+'px';e.hidden=false;clearTimeout(turnPopup.h);turnPopup.h=setTimeout(()=>{e.hidden=true;},9000);}
-$('pop').onclick=()=>{$('pop').hidden=true;};
+  e.innerHTML=`<h3>${calLabel(S.turn)}</h3><div class="res">${R.map(r=>`<span>${r[0]}</span><span>${r[1]}</span>`).join('')}<span class="tot">残高</span><span class="tot"><b>${yen(S.money)}</b></span></div><button class="primary" id="pop-x">閉じる</button>`;
+  const tb=document.querySelector('.tabs').getBoundingClientRect();e.style.top=Math.max(8,Math.min(tb.top,innerHeight-260))+'px';e.hidden=false;$('pop-x').focus({preventScroll:true});}
+$('pop').onclick=e=>{if(e.target.id==='pop-x')$('pop').hidden=true;};
 function advance(){INTRIP=false;S.turn++;
   if(famCount()===47){showResult(`<h2>🎉 全国制覇！</h2><p>47か所すべてを馴染み宿にした。伝説の自転車インフルエンサー誕生。</p><div class="res"><span>達成</span><span>${calLabel(S.turn)}</span><span>名声</span><span>${S.fame}</span><span>所持金</span><span>${yen(S.money)}</span></div>`,()=>{render();turnPopup();});render();return;}
   if((S.turn-1)%52===0){const y=calendar(S.turn-1).year;rollForecast();S.sel=S.loc;showResult(`<h2>${y}年目 決算</h2><div class="res"><span>都道府県制覇数</span><span>${famCount()} / 47</span><span>名声</span><span>${S.fame}（${title(S.fame)}）</span><span>所持金</span><span>${yen(S.money)}</span><span>勝敗</span><span>${S.stats.wins}勝 ${S.stats.losses}敗</span></div><p class="hint">${y+1}年目は敵が少し強くなる。</p>`,()=>{render();turnPopup();});render();return;}
