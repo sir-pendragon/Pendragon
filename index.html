@@ -631,11 +631,16 @@ function renderMap(){const svg=$('map');const mk=JSON.stringify([S.loc,S.sel,S.v
    +put('bike_'+S.bike,332,419,.26)
    +(S.gear.fire?put('fire_'+S.gear.fire,283,424,fk[S.gear.fire]):'')+`</g>`
    +(S.parts.includes('drone')?`<g class="drone">${put('part_drone',300,392,.15)}</g>`:'');
-  s+=`<g id="hero" style="pointer-events:none"><ellipse id="hs" cy="0" ry="1.8" fill="#000" opacity=".28"/><g id="hf">${HFR.map(k=>`<image id="hi_${k}" href="img/hero_${k}.webp" width="${HDIM[k[0]][0]*HK}" height="${HDIM[k[0]][1]*HK}" style="display:none"/>`).join('')}</g><text id="hz1" style="font-size:6px;fill:#fff;paint-order:stroke;stroke:#234;stroke-width:1.5px">z</text><text id="hz2" style="font-size:5px;fill:#fff;paint-order:stroke;stroke:#234;stroke-width:1.5px">z</text></g>`;svg.innerHTML=s;HLAST=null;drawHero();}
+  s+=`<g id="hero" style="pointer-events:none"><ellipse id="hs" cy="0" ry="1.8" fill="#000" opacity=".28"/><g id="hf">${HFR.map(k=>`<image id="hi_${k}" href="img/hero_${k}.webp" width="${HDIM[k[0]][0]*HK}" height="${HDIM[k[0]][1]*HK}" style="display:none"/>`).join('')}</g><text id="hz1" style="font-size:6px;fill:#fff;paint-order:stroke;stroke:#234;stroke-width:1.5px">z</text><text id="hz2" style="font-size:5px;fill:#fff;paint-order:stroke;stroke:#234;stroke-width:1.5px">z</text></g>`
+   +(S.gear.shelter==='sh1'?hamFront(sk.sh1):'');svg.innerHTML=s;HLAST=null;drawHero();}
+// ハンモックで寝るとき、寝袋の下半分を手前の布で隠す（同じ絵を、布の手前側だけ切り抜いてキャラの上に重ねる）
+const HAMF={x0:95,x1:425,y0:98};// 切り抜く範囲（元の絵の座標）。杭を含めず、布のたるみの手前側だけ
+function hamFront(k){const d=[481,185],w=d[0]*k,hh=d[1]*k,x=252-w/2,y=408-hh;
+  return `<clipPath id="hamclip"><rect x="${(x+HAMF.x0*k).toFixed(1)}" y="${(y+HAMF.y0*k).toFixed(1)}" width="${((HAMF.x1-HAMF.x0)*k).toFixed(1)}" height="${(hh-HAMF.y0*k).toFixed(1)}"/></clipPath><image id="hamf" href="img/shelter_sh1.webp" x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${w.toFixed(1)}" height="${hh.toFixed(1)}" clip-path="url(#hamclip)" style="display:none;pointer-events:none"/>`;}
 // ---- ドット絵の主人公：歩く／座って焚き火／寝る ----
 const HDIM={w:[90,141],s:[96,132],z:[162,78]},HK=.26;
 const HERO={mode:'sit',x:254,y:426,dir:1,t:20,f:0,goal:null,ham:false};
-const HAM={x:252,y:402};// ハンモックで寝るときの位置（布のたるみの中央）
+const HAM={x:252,y:399};// ハンモックで寝るときの位置（布のたるみの中央）
 function heroImg(){const f=HERO.f,m=HERO.mode;return m==='walk'?'w'+(1+f%4):m==='sit'?'s'+(f%10<6?1:2):'z'+(f%4<2?1:2);}
 function heroPick(){const r=Math.random();
   if(r<.4)HERO.goal={x:215+Math.random()*90,mode:'walk',y:426};
@@ -649,6 +654,7 @@ function drawHero(){if(!$('hero'))return;const k=heroImg(),d=HDIM[k[0]],w=d[0]*H
   const flip=HERO.dir<0&&HERO.mode==='walk',tx=HERO.x-w/2,ty=HERO.y-hh;
   if(HLAST!==k){if(HLAST&&$('hi_'+HLAST))$('hi_'+HLAST).style.display='none';$('hi_'+k).style.display='';HLAST=k;}
   const im=$('hi_'+k);im.setAttribute('x',flip?-(tx+w):tx);im.setAttribute('y',ty);im.setAttribute('transform',flip?'scale(-1 1)':'');
+  const hf=$('hamf');if(hf)hf.style.display=HERO.ham&&HERO.mode==='sleep'?'':'none';
   const sh=$('hs');sh.style.display=HERO.ham&&HERO.mode==='sleep'?'none':'';sh.setAttribute('cx',HERO.x);sh.setAttribute('cy',HERO.y);sh.setAttribute('rx',w/2.2);
   const sl=HERO.mode==='sleep',o=HERO.f%3,z1=$('hz1'),z2=$('hz2');
   z1.style.display=z2.style.display=sl?'':'none';
