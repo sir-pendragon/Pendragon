@@ -414,7 +414,6 @@ function renderMap(){const svg=$('map');let s=`<defs><pattern id="tex" patternUn
     const d=`<path data-id="${p.id}" class="${cls}" fill="url(#tex)" d="${AREAS[p.id].d}"/><path class="ov o${n}" fill="var(--a${n})" d="${AREAS[p.id].d}"/>`;
     if(p.id===S.loc||p.id===S.sel)top+=d;else s+=d;}
   s+=top;
-  for(const id of new Set([S.sel,S.loc])){const c=AREAS[id].c;s+=`<text x="${c[0]-10}" y="${c[1]+4}" style="paint-order:stroke;stroke:var(--panel);stroke-width:3px">${PREF[id].name}</text>`;}
   const SPR={"tarp_tp2": [565, 199], "shelter_sh2": [355, 185], "bike_gravel": [190, 122], "bike_cross": [185, 120], "bike_road": [176, 121], "fire_fire3": [446, 210], "bike_mama": [162, 136], "fire_fire2": [241, 200], "tarp_tp1": [476, 166], "shelter_sh3": [501, 205], "bike_tigrav": [194, 120], "tarp_tp3": [733, 209], "shelter_sh1": [481, 185], "bike_mtb": [202, 139], "camp_ground": [451, 193], "fire_fire1": [197, 153], "bike_fold": [143, 112]};
   const put=(key,cx,by,k)=>{const d=SPR[key];if(!d)return '';const w=d[0]*k,hh=d[1]*k;return `<image href="img/${key}.webp" x="${(cx-w/2).toFixed(1)}" y="${(by-hh).toFixed(1)}" width="${w.toFixed(1)}" height="${hh.toFixed(1)}"/>`;};
   const fk={fire1:.15,fire2:.155,fire3:.125},sk={sh1:.17,sh2:.19,sh3:.18};
@@ -423,7 +422,38 @@ function renderMap(){const svg=$('map');let s=`<defs><pattern id="tex" patternUn
    +(S.gear.shelter?put('shelter_'+S.gear.shelter,258,411,sk[S.gear.shelter]):'')
    +put('bike_'+S.bike,340,426,.31)
    +(S.gear.fire?put('fire_'+S.gear.fire,282,430,fk[S.gear.fire]):'')+`</g>`;
-  svg.innerHTML=s;}
+  s+='<g id="hero" style="pointer-events:none"></g>';svg.innerHTML=s;drawHero();}
+// ---- ドット絵の主人公：歩く／座って焚き火／寝る ----
+const HPAL={h:'#c8402e',k:'#f2c9a0',e:'#2b2a24',s:'#e8892b',p:'#2f3e66',b:'#5a3a1f',c:'#8a5a2b',l:'#6aa0d8',L:'#9cc4ee'};
+const HSPR={
+ walkA:["..hhhh..",".hhhhhhh","..kkkk..","..kekk..","..kkkk..","..ssss..",".kssssk.","..ssss..","..pppp..",".pp..pp.",".bb..bb."],
+ walkB:["..hhhh..",".hhhhhhh","..kkkk..","..kekk..","..kkkk..","..ssss..","..ssss..","..ssss..","..pppp..","...pp...","...bb..."],
+ sit:["..hhhh....",".hhhhhhh..","..kkkk....","..kekk....","..kkkk....","..ssss....","c.kssssk..","c.ssss....","cccpppppp.","c.c.....pb","c.c.....bb"],
+ sleep:[".hhhh....",
+        "hkkkLllll",
+        "kekkllllp",
+        ".kklllllb"]};
+const HERO={mode:'sit',x:252,y:432,dir:1,t:20,f:0,goal:null};
+function heroSpr(){const m=HERO.mode;return m==='walk'?(HERO.f%2?HSPR.walkB:HSPR.walkA):HSPR[m];}
+function heroPick(){const r=Math.random();
+  if(r<.4)HERO.goal={x:190+Math.random()*140,mode:'walk',y:432};
+  else if(r<.7)HERO.goal={x:252,mode:'sit',y:432};
+  else HERO.goal={x:228,mode:'sleep',y:421};
+  HERO.mode='walk';HERO.y=432;}
+function drawHero(){const g=$('hero');if(!g)return;const sp=heroSpr(),d=2,w=sp[0].length*d,hh=sp.length*d;
+  let r='';sp.forEach((row,j)=>{for(let i=0;i<row.length;i++){const c=row[i];if(c!=='.')r+=`<rect x="${(i*d).toFixed(1)}" y="${(j*d).toFixed(1)}" width="${d+.15}" height="${d+.15}" fill="${HPAL[c]}"/>`;}});
+  const flip=HERO.dir<0&&HERO.mode==='walk';
+  const tx=HERO.x-w/2,ty=HERO.y-hh;
+  let z='';if(HERO.mode==='sleep'){const o=HERO.f%3;z=`<text x="${HERO.x-w/2+4}" y="${ty-2-o*2}" style="font-size:6px;fill:var(--fg);opacity:${1-o*.3}">z</text><text x="${HERO.x-w/2+9}" y="${ty-7-o*2}" style="font-size:5px;fill:var(--fg);opacity:${.7-o*.2}">z</text>`;}
+  g.innerHTML=`<ellipse cx="${HERO.x}" cy="${HERO.y}" rx="${w/2}" ry="1.6" fill="#000" opacity=".25"/><g transform="translate(${flip?tx+w:tx} ${ty})${flip?' scale(-1 1)':''}">${r}</g>${z}`;}
+function heroTick(){if($('p-map').hidden||document.hidden)return;
+  HERO.f++;
+  if(HERO.mode==='walk'){const gx=HERO.goal?HERO.goal.x:HERO.x;const dx=gx-HERO.x;
+    if(Math.abs(dx)<=3){const G=HERO.goal;if(G&&G.mode!=='walk'){HERO.mode=G.mode;HERO.y=G.y;HERO.x=G.x;HERO.dir=1;HERO.goal=null;HERO.t=18+Math.floor(Math.random()*14);}else heroPick();}
+    else{HERO.dir=dx>0?1:-1;HERO.x+=HERO.dir*3;}}
+  else{HERO.t--;if(HERO.t<=0)heroPick();}
+  drawHero();}
+if(!matchMedia('(prefers-reduced-motion: reduce)').matches)setInterval(heroTick,380);
 $('map').addEventListener('click',e=>{const c=e.target.closest('path');if(c){S.sel=+c.dataset.id;render();}});
 
 function travelInfo(p){const d=dist(PREF[S.loc],p);const st=bikeStats();
