@@ -48,7 +48,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .bar i{display:block;height:100%;background:var(--forest)}
 .bar.mp i{background:var(--sky)}
 .tabs{display:flex;gap:6px;flex-wrap:wrap}
-.tabs button{flex:1 1 60px;padding:4px 2px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;font-size:.78rem;line-height:1.2}
+.tabs button{flex:1 1 48px;padding:4px 2px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;font-size:.78rem;line-height:1.2}
 .ti{width:22px;height:22px;object-fit:contain}
 .stat .lb{display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
 @media (max-width:380px){.stat{font-size:.74rem}.stat .lb{gap:2px}.stat .si{width:14px;height:14px}}
@@ -107,6 +107,7 @@ h3{margin-top:2px}
 .setrow input[type=range]{width:100%;accent-color:var(--accent)}
 #pop{position:fixed;left:50%;transform:translateX(-50%);width:min(calc(100vw - 32px),420px);z-index:9;background:var(--panel);border:2px solid var(--fg);border-radius:10px;padding:10px 14px;box-shadow:0 8px 30px rgba(0,0,0,.4)}
 #pop h3{margin:0 0 4px}
+#ov-sight .row{display:grid}
 #ov-go .row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 #ov-pay .row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 #ov-go .row button{white-space:nowrap}
@@ -158,6 +159,14 @@ h3{margin-top:2px}
 .copy{text-align:center;margin:1em 0 0;font-size:11px}
 #ov-title label[for=start-pref]{display:block;text-align:left;margin:.4em 0 0;line-height:1.2}
 #start-pref{margin:2px 0 6px}
+.sg-reg{margin:14px 0 4px;font-size:.9rem;border-bottom:1px solid var(--line)}
+.sg-pref{margin:6px 0}.sg-h{display:flex;justify-content:space-between;font-size:.8rem;margin-bottom:2px}.sg-h span{color:var(--muted)}
+.sg-row{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.sg-c{display:flex;flex-direction:column;gap:2px;padding:0;border:1px solid var(--line);border-radius:6px;overflow:hidden;background:var(--panel);min-width:0}
+.sg-c img{width:100%;height:auto;aspect-ratio:3/2;object-fit:cover;display:block}
+.sg-c small{font-size:.62rem;line-height:1.2;padding:0 3px 3px;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sg-c.lock{opacity:.55}.sg-c.lock span{aspect-ratio:3/2;display:flex;align-items:center;justify-content:center;font-size:1.6rem;background:rgba(128,128,128,.18)}
+#ov-sight .modal img{width:100%;height:auto;border-radius:6px}
 </style>
 
 <div class="app" id="app">
@@ -175,6 +184,7 @@ h3{margin-top:2px}
     <button role="tab" aria-selected="false" data-tab="gear" id="tab-gear"><img class="ti" src="img/icon_bike.webp" width="22" height="22" alt="">自転車</button>
     <button role="tab" aria-selected="false" data-tab="camp" id="tab-camp"><img class="ti" src="img/icon_gear.webp" width="22" height="22" alt="">ギア</button>
     <button role="tab" aria-selected="false" data-tab="shop" id="tab-shop"><img class="ti" src="img/icon_shop.webp" width="22" height="22" alt="">店</button>
+    <button role="tab" aria-selected="false" data-tab="sight" id="tab-sight"><img class="ti" src="img/icon_sights.webp" width="22" height="22" alt="">名所</button>
     <button role="tab" aria-selected="false" data-tab="log" id="tab-log"><img class="ti" src="img/icon_log.webp" width="22" height="22" alt="">記録</button>
   </div>
 
@@ -210,6 +220,11 @@ h3{margin-top:2px}
     <div class="shopsec" data-sub="tarp" hidden><div class="shop" id="shop-tarp"></div></div>
   </section>
 
+  <section class="panel" id="p-sight" hidden>
+    <h2 style="margin:0">全国の名所</h2><div class="hint" id="sg-sum" style="margin-top:2px"></div>
+    <p class="hint">キャンプ場で投稿に成功すると、その県の名所が1枚ずつ集まります（1県3枚）。タップで大きく見られます。</p>
+    <div id="sightbook"></div>
+  </section>
   <section class="panel" id="p-log" hidden>
     <div class="loghead"><h2>旅の記録</h2><button id="btn-reset">リセット</button></div>
     <div class="profile"><img src="img/hero.webp" width="96" height="96" alt="主人公の自転車旅行者"><div class="res" id="summary"></div></div>
@@ -257,6 +272,9 @@ h3{margin-top:2px}
     <div class="res" id="pay-sum"></div>
     <div class="row"><button id="pay-no">やめる</button><button class="primary" id="pay-yes">支払う</button></div>
   </div>
+</div>
+<div class="overlay" id="ov-sight" hidden>
+  <div class="modal"><img id="sg-img" src="" alt=""><h2 id="sg-name"></h2><button class="primary" id="sg-x">閉じる</button></div>
 </div>
 <div class="overlay" id="ov-set" hidden>
   <div class="modal">
@@ -496,11 +514,17 @@ function rollForecast(){const c=calendar(S.turn),mi=c.mi,f={};const swing=rnd(-3
   S.forecast=f;}
 // 各県の景勝地3か所（フミヤスの大冒険ジュニアから流用）。投稿写真に訪問ごとに順番で使う
 const SIGHTS=[[["hokkaido-1","札幌市・時計台"],["hokkaido-2","大雪山"],["hokkaido-3","知床半島"]],[["aomori-1","青森市・アスパム"],["aomori-2","弘前城"],["aomori-3","白神山地"]],[["iwate-1","盛岡市・岩手銀行赤レンガ館"],["iwate-2","龍泉洞"],["iwate-3","平泉"]],[["miyagi-1","仙台市・定禅寺通"],["miyagi-2","松島"],["miyagi-3","蔵王連峰"]],[["akita-1","秋田市・赤れんが郷土館"],["akita-2","男鹿半島"],["akita-3","角館"]],[["yamagata-1","山形市・文翔館"],["yamagata-2","山寺（立石寺）"],["yamagata-3","最上川"]],[["fukushima-1","福島市・旧堀切邸"],["fukushima-2","猪苗代湖"],["fukushima-3","鶴ヶ城"]],[["ibaraki-1","水戸市・弘道館"],["ibaraki-2","霞ヶ浦"],["ibaraki-3","偕楽園"]],[["tochigi-1","宇都宮市・松が峰教会"],["tochigi-2","中禅寺湖"],["tochigi-3","日光東照宮"]],[["gunma-1","前橋市・臨江閣"],["gunma-2","赤城山"],["gunma-3","榛名山"]],[["saitama-1","さいたま市・武蔵一宮氷川神社"],["saitama-2","川越"],["saitama-3","長瀞"]],[["chiba-1","千葉市・千葉ポートタワー"],["chiba-2","九十九里浜"],["chiba-3","鋸山"]],[["tokyo-1","東京・都庁"],["tokyo-2","浅草・雷門"],["tokyo-3","高尾山"]],[["kanagawa-1","横浜市・赤レンガ倉庫"],["kanagawa-2","芦ノ湖"],["kanagawa-3","鎌倉大仏"]],[["niigata-1","新潟市・萬代橋"],["niigata-2","佐渡金山跡"],["niigata-3","信濃川"]],[["toyama-1","富山市・富山城"],["toyama-2","五箇山"],["toyama-3","立山連峰"]],[["ishikawa-1","金沢市・鼓門"],["ishikawa-2","兼六園"],["ishikawa-3","能登半島"]],[["fukui-1","福井市・養浩館庭園"],["fukui-2","東尋坊"],["fukui-3","若狭湾"]],[["yamanashi-1","甲府市・山梨県庁別館"],["yamanashi-2","富士山"],["yamanashi-3","甲府盆地"]],[["nagano-1","長野市・善光寺"],["nagano-2","松本城"],["nagano-3","上高地"]],[["gifu-1","岐阜市・川原町"],["gifu-2","白川郷"],["gifu-3","長良川"]],[["shizuoka-1","静岡市・駿府城東御門"],["shizuoka-2","伊豆半島"],["shizuoka-3","浜名湖"]],[["aichi-1","名古屋市・MIRAI TOWER"],["aichi-2","名古屋城"],["aichi-3","濃尾平野"]],[["mie-1","津市・津城跡"],["mie-2","伊勢神宮"],["mie-3","志摩半島"]],[["shiga-1","大津市・浮御堂"],["shiga-2","琵琶湖"],["shiga-3","彦根城"]],[["kyoto-1","京都市・京都市役所本庁舎"],["kyoto-2","清水寺"],["kyoto-3","天橋立"]],[["osaka-1","大阪市・大阪市中央公会堂"],["osaka-2","大阪城公園"],["osaka-3","仁徳天皇陵古墳"]],[["hyogo-1","神戸市・神戸ポートタワー"],["hyogo-2","姫路城"],["hyogo-3","淡路島"]],[["nara-1","奈良市・興福寺中金堂"],["nara-2","法隆寺"],["nara-3","吉野山"]],[["wakayama-1","和歌山市・和歌山城"],["wakayama-2","高野山"],["wakayama-3","熊野古道"]],[["tottori-1","鳥取市・仁風閣"],["tottori-2","鳥取砂丘"],["tottori-3","大山"]],[["shimane-1","松江市・松江城"],["shimane-2","出雲大社"],["shimane-3","石見銀山"]],[["okayama-1","岡山市・岡山城"],["okayama-2","後楽園"],["okayama-3","瀬戸大橋"]],[["hiroshima-1","広島市・広島城"],["hiroshima-2","厳島神社"],["hiroshima-3","平和記念公園"]],[["yamaguchi-1","山口市・山口県旧県庁舎"],["yamaguchi-2","秋芳洞"],["yamaguchi-3","錦帯橋"]],[["tokushima-1","徳島市・鷲の門"],["tokushima-2","鳴門の渦潮"],["tokushima-3","大歩危・小歩危"]],[["kagawa-1","高松市・艮櫓"],["kagawa-2","栗林公園"],["kagawa-3","小豆島"]],[["ehime-1","松山市・道後温泉本館"],["ehime-2","松山城"],["ehime-3","しまなみ海道"]],[["kochi-1","高知市・高知城"],["kochi-2","四万十川"],["kochi-3","足摺岬"]],[["fukuoka-1","福岡市・浮見堂"],["fukuoka-2","筑後川"],["fukuoka-3","太宰府天満宮"]],[["saga-1","佐賀市・佐賀城本丸歴史館"],["saga-2","吉野ヶ里遺跡"],["saga-3","有明海"]],[["nagasaki-1","長崎市・眼鏡橋"],["nagasaki-2","雲仙岳"],["nagasaki-3","軍艦島"]],[["kumamoto-1","熊本市・水前寺成趣園"],["kumamoto-2","阿蘇"],["kumamoto-3","熊本城"]],[["oita-1","大分市・府内城大手門"],["oita-2","別府"],["oita-3","国東半島"]],[["miyazaki-1","宮崎市・宮崎県庁本館"],["miyazaki-2","高千穂峡"],["miyazaki-3","青島"]],[["kagoshima-1","鹿児島市・県政記念館"],["kagoshima-2","桜島"],["kagoshima-3","屋久島"]],[["okinawa-1","那覇市・守礼門"],["okinawa-2","首里城"],["okinawa-3","西表島"]]];
+function renderSights(){let got=0,full=0,html='',reg='';
+  PREF.forEach(p=>{const n=Math.min(3,S.visits[p.id]||0);got+=n;if(n>=3)full++;
+    if(p.region!==reg){reg=p.region;if(reg===p.name)reg=reg;if(reg!==p.name)html+=`<h3 class="sg-reg">${reg}</h3>`;}
+    html+=`<div class="sg-pref"><div class="sg-h"><b>${p.name}</b><span>${n}/3</span></div><div class="sg-row">`+
+      SIGHTS[p.id].map((s,i)=>i<n?`<button class="sg-c" data-sg="${s[0]}" data-n="${s[1]}"><img loading="lazy" src="img/sights/${s[0]}.webp" width="480" height="320" alt="${s[1]}"><small>${s[1]}</small></button>`:`<div class="sg-c lock"><span>？</span><small>未訪問</small></div>`).join('')+`</div></div>`;});
+  $('sg-sum').textContent=`${got} / 141（コンプリート ${full}/47県）`;$('sightbook').innerHTML=html;}
 const sightOf=(id,v)=>SIGHTS[id][(Math.max(1,v)-1)%3];
 const WX_J={sun:'<img class="wi" src="img/wx_sun.webp" width="96" height="96" alt="">晴れ',cloud:'<img class="wi" src="img/wx_cloud.webp" width="96" height="96" alt="">曇り',rain:'<img class="wi" src="img/wx_rain.webp" width="96" height="96" alt="">雨',wind:'<img class="wi" src="img/wx_wind.webp" width="96" height="96" alt="">強風',typhoon:'<img class="wi" src="img/wx_typhoon.webp" width="96" height="96" alt="">台風'};
 
 // ---------- rendering ----------
-function render(){const c=calendar(S.turn);$('d-date').textContent=`${c.year}年目 ${c.month}月第${c.week}週（${S.turn}/52）`;$('d-season').innerHTML=SEASON_J[season(c.mi)];
+function render(){if(!$('p-sight').hidden)renderSights();const c=calendar(S.turn);$('d-date').textContent=`${c.year}年目 ${c.month}月第${c.week}週（${S.turn}/52）`;$('d-season').innerHTML=SEASON_J[season(c.mi)];
   $('d-fame').textContent=`${S.fame}（${title(S.fame)}）`;$('d-money').textContent=yen(S.money);
   $('d-hp').textContent=S.hp;$('b-hp').style.width=Math.max(0,S.hp)+'%';$('d-mp').textContent=S.mp;$('b-mp').style.width=Math.max(0,S.mp)+'%';
   $('d-loc').textContent=PREF[S.loc].name;$('d-fam').textContent=`${famCount()} / 47`;
@@ -618,7 +642,7 @@ function renderLog(){$('log').innerHTML=S.log.map(l=>`<li>${l}</li>`).join('');
 
 $('shop-tabs').addEventListener('click',e=>{const b=e.target.closest('button[data-sub]');if(!b)return;document.querySelectorAll('#shop-tabs button').forEach(x=>x.setAttribute('aria-selected',x===b));document.querySelectorAll('.shopsec').forEach(s=>s.hidden=s.dataset.sub!==b.dataset.sub);});
 document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tabs button').forEach(x=>x.setAttribute('aria-selected',x===b));
-  for(const t of ['map','gear','camp','shop','log'])$('p-'+t).hidden=t!==b.dataset.tab;});
+  for(const t of ['map','gear','camp','shop','sight','log'])$('p-'+t).hidden=t!==b.dataset.tab;if(b.dataset.tab==='sight')renderSights();});
 
 // ---------- turn flow ----------
 let trip=null;
@@ -635,6 +659,8 @@ function askGo(p,rinko){const ti=travelInfo(p),f=S.forecast[p.id],nm=(l,id)=>(l.
     ['自転車',nm(BIKES,S.bike)],['衣類',`${cl.name}（${cl.lo}〜${cl.hi}℃）`],['パーツ',S.parts.length?S.parts.map(x=>nm(PARTS,x)).join('、'):'なし'],
     ['焚き火台',gi('fire')],['寝床',gi('shelter')],['タープ',gi('tarp')]].map(r=>`<span>${r[0]}</span><span>${r[1]}</span>`).join('');
   $('go-yes').onclick=()=>{$('ov-go').hidden=true;startTrip(p,rinko);};$('ov-go').hidden=false;$('go-yes').focus();}
+$('sightbook').onclick=e=>{const b=e.target.closest('.sg-c[data-sg]');if(!b)return;$('sg-img').src='img/sights/'+b.dataset.sg+'.webp';$('sg-img').alt=b.dataset.n;$('sg-name').textContent=b.dataset.n;$('ov-sight').hidden=false;};
+$('sg-x').onclick=()=>{$('ov-sight').hidden=true;};
 $('go-no').onclick=()=>{$('ov-go').hidden=true;};
 $('go-eq').onclick=()=>{$('ov-go').hidden=true;$('tab-gear').click();};
 function startTrip(p,rinko){snap();{const i=new Image();i.src='img/late.webp';}{const i=new Image();i.src='img/sights/'+sightOf(p.id,S.visits[p.id]+1)[0]+'.webp';}const ti=travelInfo(p);const stay=p.id===S.loc;
