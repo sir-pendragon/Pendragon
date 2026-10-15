@@ -437,7 +437,8 @@ function render(){const c=calendar(S.turn);$('d-date').textContent=`${c.year}年
 function xy(p){ // Okinawa is pulled up into an inset position
   const lon=p.name==='沖縄'?130.2:p.lon,lat=p.name==='沖縄'?30.6:p.lat;
   return [ (lon-127.5)*22+12, (45.5-lat)*22-20 ];}
-function renderMap(){const svg=$('map');let s=`<defs><pattern id="tex" patternUnits="userSpaceOnUse" width="160" height="160"><image class="bgimg" href="img/land_tex.webp" width="160" height="160"/></pattern></defs><image class="bgimg" href="img/map_bg.webp" x="0" y="0" width="400" height="${MAP_H}" preserveAspectRatio="xMidYMid slice"/>`,top='';
+let MAPKEY='';
+function renderMap(){const svg=$('map');const mk=JSON.stringify([S.loc,S.sel,S.visits,S.bike,S.gear,season(calendar(S.turn).mi)]);if(mk===MAPKEY&&svg.firstChild)return;MAPKEY=mk;let s=`<defs><pattern id="tex" patternUnits="userSpaceOnUse" width="160" height="160"><image class="bgimg" href="img/land_tex.webp" width="160" height="160"/></pattern></defs><image class="bgimg" href="img/map_bg.webp" x="0" y="0" width="400" height="${MAP_H}" preserveAspectRatio="xMidYMid slice"/>`,top='';
   s+=`<path data-id="46" d="M14 386H142V470H14Z" fill="transparent" style="stroke:var(--line);stroke-dasharray:3 3;stroke-width:1"/><text x="20" y="399" style="fill:var(--muted)">沖縄</text>`;
   for(const p of PREF){const n=Math.min(3,S.visits[p.id]||0);
     const cls=(p.id===S.loc?'cur ':'')+(p.id===S.sel?'sel ':'')+'l'+n;
@@ -561,7 +562,7 @@ function nextEncounter(){if(trip.i>=trip.enc.length||trip.late){endTrip();return
 const AUD={cache:{},cur:null,mb:false,ms:false,vb:.5,vs:.8};
 try{const j=JSON.parse(localStorage.getItem('cc_snd')||'null');if(j)Object.assign(AUD,{mb:!!j.mb,ms:!!j.ms,vb:j.vb??.5,vs:j.vs??.8});}catch(e){}
 function saveSnd(){try{localStorage.setItem('cc_snd',JSON.stringify({mb:AUD.mb,ms:AUD.ms,vb:AUD.vb,vs:AUD.vs}));}catch(e){}}
-function audEl(n){if(!AUD.cache[n]){const a=new Audio('audio/'+n+'.mp3');a.preload='auto';a.addEventListener('error',()=>{a._bad=true;});AUD.cache[n]=a;}return AUD.cache[n];}
+function audEl(n){if(!AUD.cache[n]){const a=new Audio('audio/'+n+'.mp3');a.preload=n.startsWith('bgm')?'metadata':'auto';a.addEventListener('error',()=>{a._bad=true;});AUD.cache[n]=a;}return AUD.cache[n];}
 function playSE(n){if(AUD.ms||AUD.vs<=0)return;try{const a=audEl(n);if(a._bad)return;const c=a.cloneNode();c.volume=AUD.vs;c.play().catch(()=>{});}catch(e){}}
 function bgmApply(){const a=AUD.cur&&AUD.cache[AUD.cur];if(!a)return;a.volume=AUD.vb;if(AUD.mb||AUD.vb<=0||document.hidden)a.pause();else if(a.paused&&!a._bad)a.play().catch(()=>{});}
 function playBGM(n){if(AUD.cur===n)return;if(AUD.cur&&AUD.cache[AUD.cur])AUD.cache[AUD.cur].pause();AUD.cur=n;try{const a=audEl(n);a.loop=true;a.currentTime=0;bgmApply();}catch(e){}}
