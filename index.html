@@ -428,6 +428,8 @@ const DEER=new Set(['北海道','岩手','宮城','栃木','奈良','広島']);
 const BEAR=new Set(['北海道','青森','岩手','秋田','山形','福島','群馬','新潟','富山','石川','福井','長野','岐阜']);
 const URBAN=new Set(['東京','神奈川','埼玉','千葉','愛知','大阪','京都','兵庫','福岡','宮城']);
 const bearSeason=m=>m>=4&&m<=11;
+// 都会の敵は、暴走車と暴走バイクを週ごとに交互に出す（奇数週は暴走車、偶数週は暴走バイク）
+const urbanEnemy=()=>S.turn%2?'car':'bike';
 const TERRAIN={hill:'坂が多い',rough:'悪路が多い',flat:'平坦'};
 const MONTH_W=[4,4,5,4,4,5,4,4,5,4,4,5];
 const BASE_T=[5,6,10,15,19,23,27,28,24,18,13,8];
@@ -515,8 +517,8 @@ const ENEMY={
  animal:{name:'いのしし',face:'🐗',img:'img/enemy_animal.webp',hp:30,atk:12,limit:4,stat:'cruise',hint:'巡航力で振り切る'},
  pass:{name:'峠',face:'🏔️',img:'img/enemy_pass.webp',hp:55,atk:9,limit:6,stat:'climb',hint:'長い登り。登坂力が効く'},
  deer:{name:'牡鹿',face:'🦌',img:'img/enemy_deer.webp',hp:32,atk:11,limit:4,stat:'cruise',hint:'巡航力で振り切る。止まって待つ手もある'},
- bear:{name:'熊',face:'🐻',img:'img/enemy_bear.webp',hp:50,atk:18,limit:5,stat:'cruise',mp:6,hint:'危険。クマ鈴で追い払いたい'},
- car:{name:'暴走車',face:'🚗',img:'img/enemy_car.webp',hp:40,atk:15,limit:4,stat:'cruise',mp:4,hint:'巡航力で振り切る。路肩に避けたい'},
+ bear:{name:'熊',face:'🐻',img:'img/enemy_bear.webp',hp:50,atk:16,limit:5,stat:'cruise',mp:6,hint:'危険。クマ鈴で追い払いたい'},
+ car:{name:'暴走車',face:'🚗',img:'img/enemy_car.webp',hp:40,atk:13,limit:4,stat:'cruise',mp:4,hint:'巡航力で振り切る。路肩に避けたい'},
  bike:{name:'暴走バイク',face:'🏍️',img:'img/enemy_bike.webp',hp:36,atk:12,limit:4,stat:'cruise',mp:3,hint:'巡航力で振り切る。脇道へ逃げたい'},
  wind:{name:'強風',face:'🌬️',img:'img/enemy_wind.webp',hp:35,atk:6,limit:5,stat:'cruise',mp:4,hint:'巡航力が効く。気力も削られる'},
  rain:{name:'大雨',face:'🌧️',img:'img/enemy_rain.webp',hp:35,atk:7,limit:5,stat:'wx',mp:5,hint:'耐候力が効く'},
@@ -716,7 +718,7 @@ function renderDetail(){const p=PREF[S.sel],f=S.forecast[p.id],ti=travelInfo(p),
   const fit=f.temp<cl.lo?`❄️ 衣類が寒い（${cl.lo-f.temp}℃不足）`:f.temp>cl.hi?`🔥 衣類が暑い（${f.temp-cl.hi}℃超過）`:'👕 衣類OK';
   const ev=eventAt(S.turn,p.id),fee=S.fam[p.id]?Math.round(p.fee/2):p.fee;
   const enemies=[];if(p.terrain==='hill')enemies.push('激坂','峠');if(p.terrain==='rough'||WILD.has(p.region))enemies.push('いのしし');
-  if(DEER.has(p.name))enemies.push('牡鹿');if(BEAR.has(p.name)&&bearSeason(calendar(S.turn).month))enemies.push('熊');if(URBAN.has(p.name))enemies.push('暴走車','暴走バイク');
+  if(DEER.has(p.name))enemies.push('牡鹿');if(BEAR.has(p.name)&&bearSeason(calendar(S.turn).month))enemies.push('熊');if(URBAN.has(p.name))enemies.push(ENEMY[urbanEnemy()].name);
   if(f.wx==='rain')enemies.push('大雨');if(f.wx==='wind')enemies.push('強風');if(f.wx==='typhoon')enemies.push('台風');if(p.scen>=5||ev)enemies.push('ライバル?');
   $('info').innerHTML=`<h3>${p.site}</h3><div class="hint">${p.name}・${p.region}</div>${badge}
   <div class="kv"><span>地形</span><span>${TERRAIN[p.terrain]}（${'★'.repeat(p.diff)}）</span><span>景観</span><span>${'📷'.repeat(p.scen)}</span>
@@ -811,7 +813,7 @@ function startTrip(p,rinko){snap();{const i=new Image();i.src='img/late.webp';}{
   if(rinko){S.money-=ti.rinko;log(`${p.name}へ輪行（${yen(ti.rinko)}）`);}
   const f=S.forecast[p.id];const enc=[];
   if(!rinko&&!stay){const pool=[];if(p.terrain==='hill')pool.push('hill','hill','pass');if(p.terrain==='hill'&&p.diff>=3)pool.push('pass','pass');if(p.terrain==='rough')pool.push('animal','hill');if(WILD.has(p.region))pool.push('animal');
-    if(DEER.has(p.name))pool.push('deer','deer');if(BEAR.has(p.name)&&bearSeason(calendar(S.turn).month))pool.push('bear');if(URBAN.has(p.name))pool.push('car','bike');
+    if(DEER.has(p.name))pool.push('deer','deer');if(BEAR.has(p.name)&&bearSeason(calendar(S.turn).month))pool.push('bear');if(URBAN.has(p.name))pool.push(urbanEnemy());
     if(f.wx==='rain')pool.push('rain','rain');if(f.wx==='wind')pool.push('wind','wind');if(f.wx==='typhoon')pool.push('typhoon','typhoon');if(pool.length===0)pool.push('hill','animal');
     for(let i=0;i<ti.enc;i++)enc.push(pool[rnd(0,pool.length-1)]);
     if(f.wx==='typhoon'&&!enc.includes('typhoon'))enc[enc.length-1]='typhoon';}
