@@ -118,6 +118,7 @@ h3{margin-top:2px}
 .cmds button.ic{display:flex;align-items:center;gap:6px}
 .cmds button.ic img{width:30px;height:30px;flex:none;object-fit:contain}
 .rank{width:40px;height:40px;vertical-align:middle;margin-right:4px}
+@media (max-width:360px){#shop-forge button .wi{display:none}#shop-forge button{padding:8px 6px;white-space:nowrap;font-size:.85rem}}
 #ov-camp .row button small{display:block;color:var(--muted);font-size:.78rem}
 #ov-go .row button{white-space:nowrap}
 #go-yes{grid-column:1/-1;order:-1;padding:12px}
@@ -223,7 +224,7 @@ h3{margin-top:2px}
 
   <section class="panel" id="p-shop" hidden>
     <p class="hint">買うとすぐ装備されます（パーツは空きがある場合）。売却はできません。</p>
-    <div class="subtabs" id="shop-tabs"><button data-sub="bike" aria-selected="true">自転車</button><button data-sub="cloth" aria-selected="false">衣類</button><button data-sub="part" aria-selected="false">パーツ</button><button data-sub="fire" aria-selected="false">焚き火台</button><button data-sub="shelter" aria-selected="false">寝床</button><button data-sub="tarp" aria-selected="false">タープ</button><button data-sub="food" aria-selected="false">補給食</button><button data-sub="forge" aria-selected="false">カスタム</button></div>
+    <div class="subtabs" id="shop-tabs"><button data-sub="bike" aria-selected="true">自転車</button><button data-sub="cloth" aria-selected="false">衣類</button><button data-sub="part" aria-selected="false">パーツ</button><button data-sub="fire" aria-selected="false">焚き火台</button><button data-sub="shelter" aria-selected="false">寝床</button><button data-sub="tarp" aria-selected="false">タープ</button><button data-sub="food" aria-selected="false">補給食</button><button data-sub="forge" aria-selected="false"><img class="wi" src="img/icon_custom.webp" width="128" height="128" alt="">カスタム</button></div>
     <div class="shopsec" data-sub="bike"><div class="shop" id="shop-bike"></div></div>
     <div class="shopsec" data-sub="cloth" hidden><div class="shop" id="shop-cloth"></div></div>
     <div class="shopsec" data-sub="part" hidden><div class="shop" id="shop-part"></div></div>
@@ -231,7 +232,7 @@ h3{margin-top:2px}
     <div class="shopsec" data-sub="shelter" hidden><div class="shop" id="shop-shelter"></div></div>
     <div class="shopsec" data-sub="tarp" hidden><div class="shop" id="shop-tarp"></div></div>
     <div class="shopsec" data-sub="food" hidden><div class="shop" id="shop-food"></div></div>
-    <div class="shopsec" data-sub="forge" hidden><p class="hint" style="margin:0 0 6px">持っている自転車・パーツを、最大+3までカスタムできます。自転車は得意な上位2つの能力、パーツはその効果が、1段ごとに+1されます。</p><div class="shop" id="shop-forge"></div></div>
+    <div class="shopsec" data-sub="forge" hidden><div class="photo pic" style="transform:none;margin:0 0 8px"><img src="img/custom_shop.webp" width="768" height="512" alt="自転車のカスタム工房で整備士が自転車を調整している"></div><p class="hint" style="margin:0 0 6px">持っている自転車・パーツを、最大+3までカスタムできます。自転車は得意な上位2つの能力、パーツはその効果が、1段ごとに+1されます。</p><div class="shop" id="shop-forge"></div></div>
   </section>
 
   <section class="panel" id="p-log" hidden>
@@ -705,7 +706,7 @@ function renderShop(){const lists={bike:BIKES,cloth:CLOTHES,part:PARTS};
 function renderForge(){
   const row=(kind,item)=>{const lv=plv(item.id),nx=lv+1,keys=kind==='bike'?bikeBoost(item):['climb','rough','cruise','wx','photo','comfy'].filter(k=>item[k]);
     const fx=keys.map(k=>STATJ[k]+(k==='comfy'?'-1':'+1')).join(' ');
-    const act=lv>=3?'<span class="pill">最大</span>':`<button data-forge="${kind}:${item.id}" ${S.money>=upCost(kind,item,nx)?'':'disabled'}>+${nx}　${yen(upCost(kind,item,nx))}</button>`;
+    const act=lv>=3?'<span class="pill">最大</span>':`<button data-forge="${kind}:${item.id}" ${S.money>=upCost(kind,item,nx)?'':'disabled'}><img class="wi" src="img/icon_upgrade.webp" width="128" height="128" alt="">+${nx}　${yen(upCost(kind,item,nx))}</button>`;
     return `<div class="card"><div class="name"><span class="nm"><img class="ci" src="img/${kind==='bike'?'icon_bike_':'part_'}${item.id}.webp" width="28" height="28" alt="">${item.name}${lv?` <b>+${lv}</b>`:''}</span>${act}</div><div class="spec">カスタム1段ごとに ${fx}${lv?`（現在 +${lv}）`:''}</div></div>`;};
   $('shop-forge').innerHTML=BIKES.filter(i=>owns('bike',i.id)).map(i=>row('bike',i)).join('')+PARTS.filter(i=>owns('part',i.id)).map(i=>row('part',i)).join('');}
 $('shop-forge').addEventListener('click',e=>{const b=e.target.closest('button[data-forge]');if(!b)return;
