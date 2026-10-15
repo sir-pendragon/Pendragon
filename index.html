@@ -112,7 +112,12 @@ h3{margin-top:2px}
 #ov-go .row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 #ov-pay .row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 #ov-camp .row{display:grid;grid-template-columns:1fr;gap:8px}
-#ov-camp .row button{text-align:left}
+#ov-camp .row button{text-align:left;display:flex;align-items:center;gap:10px}
+#ov-camp .row button img{width:40px;height:40px;flex:none;object-fit:contain}
+#ov-camp .photo{transform:none;margin:-4px 0 0}
+.cmds button.ic{display:flex;align-items:center;gap:6px}
+.cmds button.ic img{width:30px;height:30px;flex:none;object-fit:contain}
+.rank{width:40px;height:40px;vertical-align:middle;margin-right:4px}
 #ov-camp .row button small{display:block;color:var(--muted);font-size:.78rem}
 #ov-go .row button{white-space:nowrap}
 #go-yes{grid-column:1/-1;order:-1;padding:12px}
@@ -285,7 +290,7 @@ h3{margin-top:2px}
   </div>
 </div>
 <div class="overlay" id="ov-camp" hidden>
-  <div class="modal"><h2>夜のキャンプ場</h2><p class="hint" id="camp-sum" style="margin:0"></p><div class="row" id="camp-btns"></div></div>
+  <div class="modal"><div class="photo pic"><img src="img/camp_night.webp" width="768" height="512" alt="夜のキャンプ場で焚き火のそばに座る自転車旅行者"></div><h2>夜のキャンプ場</h2><p class="hint" id="camp-sum" style="margin:0"></p><div class="row" id="camp-btns"></div></div>
 </div>
 <div class="overlay" id="ov-sight" hidden>
   <div class="modal"><img id="sg-img" src="" alt=""><h2 id="sg-name"></h2><button class="primary" id="sg-x">閉じる</button></div>
@@ -416,12 +421,13 @@ const BASE_T=[5,6,10,15,19,23,27,28,24,18,13,8];
 const RAIN_P=[.15,.15,.25,.25,.30,.45,.35,.30,.40,.30,.20,.15];
 // 毎年同じ週に開かれる催事。開催県へ行くと写真+12・フォロワー×1.5。ただし人が多くライバルに出会いやすい
 const EVENTS=[
- {m:1,w:2,pref:'新潟',name:'雪見の灯り'},{m:2,w:1,pref:'北海道',name:'さっぽろ雪まつり'},
- {m:4,w:2,pref:'青森',name:'弘前さくらまつり'},{m:4,w:4,pref:'茨城',name:'ネモフィラの丘'},
- {m:5,w:1,pref:'福岡',name:'博多どんたく'},{m:6,w:2,pref:'神奈川',name:'あじさいの季節'},
- {m:7,w:3,pref:'京都',name:'祇園祭'},{m:8,w:1,pref:'青森',name:'ねぶた祭'},{m:8,w:1,pref:'秋田',name:'竿燈まつり'},
- {m:8,w:2,pref:'徳島',name:'阿波おどり'},{m:9,w:2,pref:'大阪',name:'だんじり祭'},
- {m:10,w:2,pref:'長崎',name:'長崎くんち'},{m:11,w:2,pref:'栃木',name:'奥日光の紅葉'}];
+ {m:1,w:2,pref:'新潟',name:'雪見の灯り',img:'ev_niigata'},{m:2,w:1,pref:'北海道',name:'さっぽろ雪まつり',img:'ev_hokkaido'},
+ {m:4,w:2,pref:'青森',name:'弘前さくらまつり',img:'ev_aomori_sakura'},{m:4,w:4,pref:'茨城',name:'ネモフィラの丘',img:'ev_ibaraki'},
+ {m:5,w:1,pref:'福岡',name:'博多どんたく',img:'ev_fukuoka'},{m:6,w:2,pref:'神奈川',name:'あじさいの季節',img:'ev_kanagawa'},
+ {m:7,w:3,pref:'京都',name:'祇園祭',img:'ev_kyoto'},{m:8,w:1,pref:'青森',name:'ねぶた祭',img:'ev_aomori_nebuta'},{m:8,w:1,pref:'秋田',name:'竿燈まつり',img:'ev_akita'},
+ {m:8,w:2,pref:'徳島',name:'阿波おどり',img:'ev_tokushima'},{m:9,w:2,pref:'大阪',name:'だんじり祭',img:'ev_osaka'},
+ {m:10,w:2,pref:'長崎',name:'長崎くんち',img:'ev_nagasaki'},{m:11,w:2,pref:'栃木',name:'奥日光の紅葉',img:'ev_tochigi'}];
+const EVI='<img class="wi" src="img/icon_event.webp" width="128" height="128" alt="">';// 催事アイコン（文中用）
 function eventAt(turn,id){const c=calendar(turn);return EVENTS.find(e=>e.m===c.month&&e.w===c.week&&e.pref===PREF[id].name)||null;}
 // キャンプで食べる地方の名物
 const FOOD={'北海道':'石狩鍋','東北':'きりたんぽ鍋','関東':'もんじゃ焼き','中部':'ほうとう','近畿':'お好み焼き','中国':'牡蠣めし','四国':'鰹のたたき','九州':'もつ鍋','沖縄':'ゴーヤチャンプルー'};
@@ -653,7 +659,7 @@ function renderDetail(){const p=PREF[S.sel],f=S.forecast[p.id],ti=travelInfo(p),
   $('info').innerHTML=`<h3>${p.site}</h3><div class="hint">${p.name}・${p.region}</div>${badge}
   <div class="kv"><span>地形</span><span>${TERRAIN[p.terrain]}（${'★'.repeat(p.diff)}）</span><span>景観</span><span>${'📷'.repeat(p.scen)}</span>
   <span>予報</span><span>${WX_J[f.wx]} ${f.temp}℃<br>${fit}</span><span>距離</span><span>${stay?'同じ場所（気力-15）':ti.d+'km<br>'+(ti.ride?'遭遇'+ti.enc+'回':'自走不可')}</span>
-  <span>想定</span><span>${enemies.join('・')||'特になし'}</span>${ev?`<span>催事</span><span>🎉${ev.name}<br>写真+12・フォロワー×1.5</span>`:''}${S.fam[p.id]?'<span>特典</span><span>利用料半額・回復+4</span>':''}<span>利用料</span><span>${yen(fee)}</span></div>`;
+  <span>想定</span><span>${enemies.join('・')||'特になし'}</span>${ev?`<span>催事</span><span>${EVI}${ev.name}<br>写真+12・フォロワー×1.5</span>`:''}${S.fam[p.id]?'<span>特典</span><span>利用料半額・回復+4</span>':''}<span>利用料</span><span>${yen(fee)}</span></div>`;
   $('detail').innerHTML=`
   <div class="acts">${stay?`<button class="primary" id="go-stay">自転車旅に行く<small>${p.name}（現在地）</small></button><button disabled>輪行で旅に行く<small>${p.name}（現在地）</small></button>`:
    `<button class="primary" id="go-ride" ${ti.ride?'':'disabled'}>自転車旅に行く<small>${p.name}${ti.ride?'へ':'は遠すぎる'}</small></button>
@@ -722,7 +728,7 @@ function askGo(p,rinko){const ti=travelInfo(p),f=S.forecast[p.id],nm=(l,id)=>(l.
   $('go-yes').onclick=()=>{$('ov-go').hidden=true;startTrip(p,rinko);};$('ov-go').hidden=false;$('go-yes').focus();}
 let LOGSUB='trip';
 function renderAch(){$('ach-sum').textContent=`${Object.keys(S.ach).length} / ${ACH.length} 達成`;
-  $('achlist').innerHTML=ACH.map(a=>{const d=S.ach[a.id];return `<div class="card ${d!=null?'eq':''}"><div class="name"><span>${d!=null?'🏆':'🔒'} ${a.name}</span></div><div class="spec">${a.desc}${d!=null?`<br>${calLabel(d)}に達成`:''}</div></div>`;}).join('');}
+  $('achlist').innerHTML=ACH.map(a=>{const d=S.ach[a.id];return `<div class="card ${d!=null?'eq':''}"><div class="name"><span class="nm"><img class="ci" src="img/${d!=null?'icon_ach':'icon_lock'}.webp" width="28" height="28" alt="">${a.name}</span></div><div class="spec">${a.desc}${d!=null?`<br>${calLabel(d)}に達成`:''}</div></div>`;}).join('');}
 function showLogSub(){$('p-trip').hidden=LOGSUB!=='trip';$('p-sight').hidden=LOGSUB!=='sight';$('p-ach').hidden=LOGSUB!=='ach';if(LOGSUB==='ach')renderAch();document.querySelectorAll('#log-tabs button').forEach(x=>x.setAttribute('aria-selected',x.dataset.sub===LOGSUB));if(LOGSUB==='sight')renderSights();}
 $('log-tabs').onclick=e=>{const b=e.target.closest('button[data-sub]');if(!b)return;LOGSUB=b.dataset.sub;showLogSub();};
 $('sightbook').onclick=e=>{const b=e.target.closest('.sg-c[data-sg]');if(!b)return;$('sg-img').src='img/sights/'+b.dataset.sg+'.webp';$('sg-img').alt=b.dataset.n;$('sg-name').textContent=b.dataset.n;$('ov-sight').hidden=false;};
@@ -801,7 +807,8 @@ function renderBattle(){const pr=Math.min(100,Math.max(0,(1-B.hp/B.max)*100));$(
     ['tactic',...TACT[B.kind]],
     ['food','補給食を食べる','体力+25 気力+10'],
     ['rinko',`輪行 ${yen(ti.rinko)}`,'この区間を電車で飛ばす']];
-  $('bt-cmds').innerHTML=cmds.map(([k,l,s])=>`<button data-cmd="${k}" ${k==='kiai'&&S.mp<20||k==='rinko'&&S.money<ti.rinko||k==='push'&&S.hp<=15||k==='food'&&S.food<=0||k==='tactic'&&!tacOK()?'disabled':''}>${l}<small>${s}</small></button>`).join('');}
+  const ic={tactic:'tac_'+B.kind,guard:'cmd_guard',food:'icon_food'};
+  $('bt-cmds').innerHTML=cmds.map(([k,l,s])=>`<button data-cmd="${k}" ${ic[k]?'class="ic"':''} ${k==='kiai'&&S.mp<20||k==='rinko'&&S.money<ti.rinko||k==='push'&&S.hp<=15||k==='food'&&S.food<=0||k==='tactic'&&!tacOK()?'disabled':''}>${ic[k]?`<img src="img/${ic[k]}.webp" width="30" height="30" alt=""><span>${l}<small>${s}</small></span>`:`${l}<small>${s}</small>`}</button>`).join('');}
 $('bt-cmds').addEventListener('click',e=>{const b=e.target.closest('button[data-cmd]');if(b)cmd(b.dataset.cmd);});
 function cmd(k){let t='';let dmg=0;const mult=B.charge||1;B.cut=1;
   if(k==='push'||k==='post'){dmg=Math.round((playerPower()+rnd(0,8))*mult);if(k==='push')S.hp-=15;B.charge=false;t=`${k==='push'?'全力で踏んだ！':'渾身の映え投稿！'} ${fmtD(dmg)}${k==='push'?'進んだ':'詰めた'}`;}
@@ -847,7 +854,8 @@ function askCamp(p){const dish=FOOD[p.region]||'名物料理',feeNow=S.fam[p.id]
     ['朝焼けまで粘る','写真+15 ／ 体力-12',{q:15,hp:-12,label:'朝焼けを待った（写真+15）'}],
     ['ぐっすり眠る','体力+8 気力+8',{hp:8,mp:8,label:'ぐっすり眠った'}]];
   $('camp-sum').innerHTML=`${p.site}に到着。${WX_J[f.wx]} ${f.temp}℃<br>今夜はどう過ごす？`;
-  $('camp-btns').innerHTML=opts.map((o,i)=>`<button data-i="${i}" ${o[3]?'disabled':''}>${o[0]}<small>${o[1]}</small></button>`).join('');
+  const CI=['camp_c_eat','camp_c_night','camp_c_dawn','camp_c_sleep'];
+  $('camp-btns').innerHTML=opts.map((o,i)=>`<button data-i="${i}" ${o[3]?'disabled':''}><img src="img/${CI[i]}.webp" width="40" height="40" alt=""><span>${o[0]}<small>${o[1]}</small></span></button>`).join('');
   $('camp-btns').querySelectorAll('button').forEach(b=>b.onclick=()=>{$('ov-camp').hidden=true;endTrip2(opts[+b.dataset.i][2]);});
   $('ov-camp').hidden=false;$('camp-btns').querySelector('button:not([disabled])').focus();}
 function endTrip2(camp){const p=trip.p,f=S.forecast[p.id],st=bikeStats(),cl=CLOTHES.find(c=>c.id===S.cloth);
@@ -869,9 +877,10 @@ function endTrip2(camp){const p=trip.p,f=S.forecast[p.id],st=bikeStats(),cl=CLOT
     playSE('se_photo');S.visits[p.id]++;const became=!S.fam[p.id]&&S.visits[p.id]>=3;if(became)S.fam[p.id]=true;
     let fg=Math.round(q*3+S.fame*.03*q/70)+(S.visits[p.id]===1?300:0)+(became?1000:0);if(trip.ev){fg=Math.round(fg*1.5);S.stats.ev++;}if(f.wx==='typhoon')S.stats.tph++;
     const inc=300+q*25+Math.round(S.fame*.01);S.fame+=fg;S.money+=inc;if(TS){TS.inc=inc;TS.became=became?p.site:null;}S.stats.posts++;S.stats.bestQ=Math.max(S.stats.bestQ,q);
-    html=`<h2>${became?'🏅 馴染み宿になった！':'今回の旅の結果'}</h2>${(()=>{const [sid,sn]=sightOf(p.id,S.visits[p.id]);return `<div class="photo pic"><img src="img/sights/${sid}.webp" width="480" height="320" alt="${sn}"><div class="cap"><div>${sn}</div><div class="q">📷 ${q}点</div><div>${WX_J[f.wx]} ${f.temp}℃ ・ ${p.site}</div></div></div>`;})()}
+    html=`<h2>${became?'🏅 馴染み宿になった！':'今回の旅の結果'}</h2>${(()=>{const [sid,sn]=sightOf(p.id,S.visits[p.id]),ev=trip.ev;// 催事の週は催事の絵を出す（名所は図鑑に登録される）
+      return `<div class="photo pic"><img src="img/${ev?ev.img:'sights/'+sid}.webp" width="${ev?768:480}" height="${ev?512:320}" alt="${ev?ev.name:sn}"><div class="cap"><div>${ev?ev.name:sn}</div><div class="q">📷 ${q}点</div><div>${WX_J[f.wx]} ${f.temp}℃ ・ ${p.site}</div></div></div>`;})()}
     <div class="res"><span>フォロワー</span><span>+${fol(fg)}${became?'（馴染み宿ボーナス込）':''}</span><span>SNS収入</span><span>+${yen(inc)}</span><span>利用料</span><span>-${yen(fee)}</span>
-    <span>訪問</span><span>${Math.min(3,S.visits[p.id])}/3</span>${trip.ev?`<span>催事</span><span>🎉${trip.ev.name}（写真+12・フォロワー×1.5）</span>`:''}<span>ギア効果</span><span>写真+${g.photo}${wet?`（雨ガード${Math.round(g.guard*100)}%）`:''}</span>${cold?`<span>衣類不適</span><span>体力-${cold}</span>`:''}${campRows}</div>`;
+    <span>訪問</span><span>${Math.min(3,S.visits[p.id])}/3</span>${trip.ev?`<span>催事</span><span>${EVI}${trip.ev.name}（写真+12・フォロワー×1.5）</span>`:''}<span>ギア効果</span><span>写真+${g.photo}${wet?`（雨ガード${Math.round(g.guard*100)}%）`:''}</span>${cold?`<span>衣類不適</span><span>体力-${cold}</span>`:''}${campRows}</div>`;
     log(`${p.site}で投稿（${q}点）フォロワー+${fol(fg)} ${yen(inc)}${became?' 馴染み宿に！':''}`);}
   // natural recovery + advance
   S.hp=Math.min(100,S.hp+recHp);S.mp=Math.min(100,S.mp+recMp);
@@ -898,7 +907,7 @@ function yearEval(y){const n=Object.keys(S.ach).length,fc=famCount();
   return {score,rank:pace>=4000?'S':pace>=2000?'A':pace>=800?'B':'C',goal:Math.min(47,10*y),n,fc};}
 function advance(){INTRIP=false;const sp=sponsor();S.money+=sp[1];if(TS)TS.sp=sp;S.turn++;NEWACH=checkAch();
   if(famCount()===47){showResult(`<h2>🎉 全国制覇！</h2><p>47か所すべてを馴染み宿にした。伝説の自転車インフルエンサー誕生。</p><div class="res"><span>達成</span><span>${calLabel(S.turn)}</span><span>フォロワー</span><span>${fol(S.fame)}</span><span>所持金</span><span>${yen(S.money)}</span></div>`,()=>{render();turnPopup();});render();return;}
-  if((S.turn-1)%52===0){const y=calendar(S.turn-1).year;rollForecast();S.sel=S.loc;showResult(`<h2>${y}年目 決算</h2><div class="res"><span>都道府県制覇数</span><span>${famCount()} / 47</span><span>フォロワー</span><span>${fol(S.fame)}（${title(S.fame)}）</span><span>所持金</span><span>${yen(S.money)}</span><span>勝敗</span><span>${S.stats.wins}勝 ${S.stats.losses}敗</span>${(()=>{const v=yearEval(y);return `<span>実績</span><span>${v.n} / ${ACH.length}</span><span>年間目標</span><span>累計${v.goal}県制覇 ${v.fc>=v.goal?'✅ 達成':'❌ 未達'}</span><span>年間評価</span><span><b>${v.rank}</b>（${v.score.toLocaleString('ja-JP')}pt）</span>`;})()}</div><p class="hint">${y+1}年目は敵が少し強くなる。</p>`,()=>{render();turnPopup();});render();return;}
+  if((S.turn-1)%52===0){const y=calendar(S.turn-1).year;rollForecast();S.sel=S.loc;showResult(`<h2>${y}年目 決算</h2><div class="res"><span>都道府県制覇数</span><span>${famCount()} / 47</span><span>フォロワー</span><span>${fol(S.fame)}（${title(S.fame)}）</span><span>所持金</span><span>${yen(S.money)}</span><span>勝敗</span><span>${S.stats.wins}勝 ${S.stats.losses}敗</span>${(()=>{const v=yearEval(y);return `<span>実績</span><span>${v.n} / ${ACH.length}</span><span>年間目標</span><span>累計${v.goal}県制覇 ${v.fc>=v.goal?'✅ 達成':'❌ 未達'}</span><span>年間評価</span><span><img class="rank" src="img/rank_${v.rank.toLowerCase()}.webp" width="128" height="128" alt="${v.rank}"><b>${v.rank}</b>（${v.score.toLocaleString('ja-JP')}pt）</span>`;})()}</div><p class="hint">${y+1}年目は敵が少し強くなる。</p>`,()=>{render();turnPopup();});render();return;}
   rollForecast();S.sel=S.loc;render();turnPopup();}
 
 addEventListener('pagehide',save);
