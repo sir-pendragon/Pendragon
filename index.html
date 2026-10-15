@@ -679,7 +679,7 @@ function renderShop(){const lists={bike:BIKES,cloth:CLOTHES,part:PARTS};
     const own=l.filter(i=>owns(k,i.id));$('eq-'+k).innerHTML=own.length?own.map(i=>card(i,k,'equip')).join(''):'<div class="hint">なし</div>';}
   for(const slot of Object.keys(GEAR)){const l=GEAR_ITEMS.filter(i=>i.slot===slot);$('shop-'+slot).innerHTML=l.map(i=>card(i,'gear','shop')).join('');
     const own=l.filter(i=>owns('gear',i.id));$('eq-'+slot).innerHTML=noneCard(slot)+own.map(i=>card(i,'gear','equip')).join('');}
-  $('shop-food').innerHTML=`<div class="card"><div class="name"><span class="nm">🍙 補給食</span><button data-food="1" ${S.money>=FOOD_PRICE&&S.food<FOOD_MAX?'':'disabled'}>購入 ${yen(FOOD_PRICE)}</button></div><div class="spec">バトル中に食べると体力+25 気力+10。所持 ${S.food} / ${FOOD_MAX}個</div></div>`;}
+  $('shop-food').innerHTML=`<div class="card"><div class="name"><span class="nm"><img class="ci" src="img/icon_food.webp" width="28" height="28" alt="">補給食</span><button data-food="1" ${S.money>=FOOD_PRICE&&S.food<FOOD_MAX?'':'disabled'}>購入 ${yen(FOOD_PRICE)}</button></div><div class="spec">バトル中に食べると体力+25 気力+10。所持 ${S.food} / ${FOOD_MAX}個</div></div>`;}
 $('shop-food').addEventListener('click',e=>{if(!e.target.closest('button[data-food]')||S.money<FOOD_PRICE||S.food>=FOOD_MAX)return;
   askPay('補給食を買いますか？',FOOD_PRICE,()=>{S.money-=FOOD_PRICE;S.food++;log(`補給食を購入（${yen(FOOD_PRICE)}）`);render();});});
 const NONE_TXT={fire:['焚き火なし','気力回復の上乗せなし'],shelter:['寝床なし（地面に直接寝る）','体力・気力の上乗せなし'],tarp:['タープなし','雨ガード0%']};
