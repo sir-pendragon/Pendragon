@@ -576,7 +576,7 @@ function renderDetail(){const p=PREF[S.sel],f=S.forecast[p.id],ti=travelInfo(p),
   <div class="acts">${stay?`<button class="primary" id="go-stay">自転車旅に行く<small>${p.name}（現在地）</small></button><button disabled>輪行で旅に行く<small>${p.name}（現在地）</small></button>`:
    `<button class="primary" id="go-ride" ${ti.ride?'':'disabled'}>自転車旅に行く<small>${p.name}${ti.ride?'へ':'は遠すぎる'}</small></button>
     <button id="go-rinko" ${S.money>=ti.rinko?'':'disabled'}>輪行で旅に行く<small>${p.name}へ ${yen(ti.rinko)}</small></button>`}
-   ${S.loc!==S.home?`<button id="go-home">自宅で休む<small>輪行 ${yen(travelInfo(PREF[S.home]).rinko)}</small></button>`:`<button id="go-home">自宅で休む<small>体力・気力回復</small></button>`}</div>`;
+   ${S.loc!==S.home?`<button id="go-home" ${S.money>=travelInfo(PREF[S.home]).rinko?'':'disabled'}>自宅で休む<small>輪行 ${yen(travelInfo(PREF[S.home]).rinko)}${S.money>=travelInfo(PREF[S.home]).rinko?'':'（お金が足りません）'}</small></button>`:`<button id="go-home">自宅で休む<small>体力・気力回復</small></button>`}</div>`;
   const b=id=>$(id);if(b('go-ride'))b('go-ride').onclick=()=>askGo(p,false);if(b('go-rinko'))b('go-rinko').onclick=()=>askGo(p,true);
   if(b('go-stay'))b('go-stay').onclick=()=>askGo(p,false);b('go-home').onclick=restHome;}
 
