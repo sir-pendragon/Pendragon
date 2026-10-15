@@ -627,10 +627,13 @@ function renderMap(){const svg=$('map');const mk=JSON.stringify([S.loc,S.sel,S.v
   // 山岳テントの絵は下端に杭・ガイロープが長く伸びていて、本体の底が下端より約8単位上にある。入門テント(約3単位)と地面の高さを揃えるため下げる
   const SH3_DROP=4,fk={fire1:.115,fire2:.115,fire3:.085},sk={sh1:.165,sh2:.16,sh3:.085},tk={tp1:.27,tp2:.215,tp3:.125};// タープは寝床（特にハンモックの杭の間）を覆える幅にする
   // 山岳テントは背が高く、そのままだとタープの屋根を突き抜ける。テントごとにタープの大きさ・位置を決める [scale, 接地のy]
-  const TARP_FIT={sh3:{tp1:[.30,403],tp2:[.30,403],tp3:[.15,410,8]}};const tf=(S.gear.tarp&&TARP_FIT[S.gear.shelter]&&TARP_FIT[S.gear.shelter][S.gear.tarp])||[tk[S.gear.tarp],403,0];// [scale, 接地y, 横ずれ]
+  const TARP_FIT={sh3:{tp1:[.30,403],tp2:[.30,403],tp3:[.175,420,20]},sh2:{tp3:[.175,420,20]}};const tf=(S.gear.tarp&&TARP_FIT[S.gear.shelter]&&TARP_FIT[S.gear.shelter][S.gear.tarp])||[tk[S.gear.tarp],403,0];// [scale, 接地y, 横ずれ]
+  // 大型タープ＋テントのときは、テントをタープの奥（地図の上側）に置き、タープの布を手前に重ねてテントの上半分を隠す
+  const UNDER=S.gear.tarp==='tp3'&&(S.gear.shelter==='sh2'||S.gear.shelter==='sh3')?{x:264,by:S.gear.shelter==='sh3'?397:392,k:S.gear.shelter==='sh3'?.1:.16}:null;
+  const tarpS=S.gear.tarp?put('tarp_'+S.gear.tarp,252+(tf[2]||0),tf[1],tf[0]):'';
+  const shS=S.gear.shelter?(UNDER?put('shelter_'+S.gear.shelter,UNDER.x,UNDER.by,UNDER.k):put('shelter_'+S.gear.shelter,252,408+(S.gear.shelter==='sh3'?SH3_DROP:0),sk[S.gear.shelter])):'';
   s+=`<g style="pointer-events:none">${put('camp_ground',272,462,244/451)}${put('tree_'+season(calendar(S.turn).mi),332,380,.385)}`
-   +(S.gear.tarp?put('tarp_'+S.gear.tarp,252+(tf[2]||0),tf[1],tf[0]):'')
-   +(S.gear.shelter?put('shelter_'+S.gear.shelter,252,408+(S.gear.shelter==='sh3'?SH3_DROP:0),sk[S.gear.shelter]):'')
+   +(UNDER?shS+tarpS:tarpS+shS)
    +(S.parts.includes('tripod')?put('part_tripod',222,424,.2)+(S.parts.includes('cam')?put('part_cam',222,402,.1):''):(S.parts.includes('cam')?put('part_cam',312,430,.1):''))
    +(S.parts.includes('comfy')?put('part_comfy',204,418,.2):'')
    +put('bike_'+S.bike,332,419,.26)
@@ -638,9 +641,9 @@ function renderMap(){const svg=$('map');const mk=JSON.stringify([S.loc,S.sel,S.v
    +(S.parts.includes('drone')?`<g class="drone">${put('part_drone',300,392,.15)}</g>`:'');
   s+=`<g id="hero" style="pointer-events:none"><ellipse id="hs" cy="0" ry="1.8" fill="#000" opacity=".28"/><g id="hf">${HFR.map(k=>`<image id="hi_${k}" href="img/hero_${k}.webp" width="${HDIM[k[0]][0]*HK}" height="${HDIM[k[0]][1]*HK}" style="display:none"/>`).join('')}</g><text id="hz1" style="font-size:6px;fill:#fff;paint-order:stroke;stroke:#234;stroke-width:1.5px">z</text><text id="hz2" style="font-size:5px;fill:#fff;paint-order:stroke;stroke:#234;stroke-width:1.5px">z</text></g>`
    +(S.gear.shelter==='sh1'?hamFront(sk.sh1):'')
-   +(S.gear.shelter==='sh2'||S.gear.shelter==='sh3'?zzzFx(S.gear.shelter==='sh3'?372+SH3_DROP:378):'');svg.innerHTML=s;HLAST=null;drawHero();}
+   +(S.gear.shelter==='sh2'||S.gear.shelter==='sh3'?(UNDER?zzzFx(UNDER.by-(S.gear.shelter==='sh3'?44:34),UNDER.x-252):zzzFx(S.gear.shelter==='sh3'?372+SH3_DROP:378)):'');svg.innerHTML=s;HLAST=null;drawHero();}
 // テントで寝ている間、テントの上に立ちのぼる「Z z z」（ty：テントの頂点のy）
-function zzzFx(ty){return `<g id="zzz" style="display:none;pointer-events:none"><text class="zq" x="258" y="${ty+6}" style="font-size:9px">Z</text><text class="zq zq2" x="265" y="${ty}" style="font-size:7px">z</text><text class="zq zq3" x="271" y="${ty-6}" style="font-size:5.5px">z</text></g>`;}
+function zzzFx(ty,dx=0){return `<g id="zzz" style="display:none;pointer-events:none"><text class="zq" x="${258+dx}" y="${ty+6}" style="font-size:9px">Z</text><text class="zq zq2" x="${265+dx}" y="${ty}" style="font-size:7px">z</text><text class="zq zq3" x="${271+dx}" y="${ty-6}" style="font-size:5.5px">z</text></g>`;}
 // ハンモックで寝るとき、寝袋の下半分を手前の布で隠す（同じ絵を、布の手前側だけ切り抜いてキャラの上に重ねる）
 const HAMF={x0:95,x1:425,y0:98};// 切り抜く範囲（元の絵の座標）。杭を含めず、布のたるみの手前側だけ
 function hamFront(k){const d=[481,185],w=d[0]*k,hh=d[1]*k,x=252-w/2,y=408-hh;
