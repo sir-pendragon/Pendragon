@@ -93,6 +93,10 @@ h3{margin-top:2px}
 .title p{margin:0}
 .row{display:flex;gap:8px;flex-wrap:wrap}
 .row>*{flex:1}
+.profile{display:flex;gap:12px;align-items:center}
+.profile img{flex:none;width:96px;height:96px;object-fit:cover;border-radius:8px;border:1px solid var(--line);background:var(--bg)}
+.profile .res{flex:1;min-width:0}
+.enemy .face img{display:block;width:104px;height:104px;object-fit:contain}
 .loghead{display:flex;justify-content:space-between;align-items:center;gap:8px}
 .res{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-variant-numeric:tabular-nums}
 .res span:nth-child(odd){color:var(--muted)}
@@ -152,7 +156,7 @@ h3{margin-top:2px}
 
   <section class="panel" id="p-log" hidden>
     <div class="loghead"><h2>旅の記録</h2><button id="btn-reset">リセット</button></div>
-    <div class="res" id="summary"></div>
+    <div class="profile"><img src="img/hero.webp" width="96" height="96" alt="主人公の自転車旅行者"><div class="res" id="summary"></div></div>
     <ul class="log" id="log"></ul>
   </section>
 </div>
@@ -286,8 +290,8 @@ const GEAR={
 };
 const GEAR_ITEMS=Object.entries(GEAR).flatMap(([slot,g])=>g.items.map(i=>({...i,slot})));
 const ENEMY={
- hill:{name:'激坂',face:'⛰️',hp:40,atk:8,limit:5,stat:'climb',hint:'登坂力が効く'},
- animal:{name:'野生動物',face:'🐗',hp:30,atk:12,limit:4,stat:'cruise',hint:'巡航力で振り切る'},
+ hill:{name:'激坂',face:'⛰️',img:'img/enemy_hill.webp',hp:40,atk:8,limit:5,stat:'climb',hint:'登坂力が効く'},
+ animal:{name:'野生動物',face:'🐗',img:'img/enemy_animal.webp',hp:30,atk:12,limit:4,stat:'cruise',hint:'巡航力で振り切る'},
  wind:{name:'強風',face:'🌬️',hp:35,atk:6,limit:5,stat:'cruise',mp:4,hint:'巡航力が効く。気力も削られる'},
  rain:{name:'大雨',face:'🌧️',hp:35,atk:7,limit:5,stat:'wx',mp:5,hint:'耐候力が効く'},
  typhoon:{name:'台風',face:'🌀',hp:70,atk:15,limit:6,stat:'wx',mp:6,hint:'耐候力が効く。無理は禁物'},
@@ -426,7 +430,7 @@ let B=null;
 function startBattle(kind){const e=ENEMY[kind],p=trip.p,c=calendar(S.turn);const scale=1+.4*(p.diff-1)+.2*(c.year-1);
   const hp=kind==='rival'?Math.round(40+S.fame/3):Math.round(e.hp*scale);
   B={kind,e,hp,max:hp,limit:e.limit,turn:1,charge:false,atk:Math.round(e.atk*scale)};
-  $('ov-battle').hidden=false;$('bt-face').textContent=e.face;$('bt-name').textContent=`${e.name}（${trip.i+1}/${trip.enc.length}）`;
+  $('ov-battle').hidden=false;$('bt-face').innerHTML=e.img?`<img src="${e.img}" alt="${e.name}" width="104" height="104">`:e.face;$('bt-name').textContent=`${e.name}（${trip.i+1}/${trip.enc.length}）`;
   $('bt-title').textContent=kind==='rival'?'SNSバトル！':`${e.name}が立ちはだかる！`;
   blog(`${e.name}が現れた！\n${e.hint}。残り時間 ${B.limit}ターン。`);renderBattle();}
 function blog(t){$('bt-log').textContent=t;}
