@@ -32,6 +32,7 @@ h1,h2,h3{font-family:var(--display);font-weight:400;margin:0;text-wrap:balance;l
 h1{font-size:1.6rem} h2{font-size:1.2rem} h3{font-size:1.05rem}
 button{font-family:var(--body);font-size:15px;border:1px solid var(--line);background:var(--panel);color:var(--fg);border-radius:6px;padding:8px 12px;cursor:pointer}
 button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+select{font-family:var(--body);font-size:15px;border:1px solid var(--line);background:var(--panel);color:var(--fg);border-radius:6px;padding:8px;width:100%}
 button.primary{background:var(--accent);color:var(--accent-fg);border-color:var(--accent);font-weight:700}
 button:disabled{opacity:.45;cursor:not-allowed}
 .app{max-width:900px;margin:0 auto;display:flex;flex-direction:column;gap:10px}
@@ -43,7 +44,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .bar i{display:block;height:100%;background:var(--forest)}
 .bar.mp i{background:var(--sky)}
 .tabs{display:flex;gap:6px}
-.tabs button{flex:1}
+.tabs button{flex:1;padding:8px 4px}
 .tabs button[aria-selected="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
 .panel{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px;display:flex;flex-direction:column;gap:12px;min-width:0}
 .map{width:100%;max-width:100%;aspect-ratio:1/1.05;background:color-mix(in srgb,var(--sky) 10%,var(--panel));border-radius:8px;display:block}
@@ -69,6 +70,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .log{font-size:.85rem;max-height:40vh;overflow:auto;display:flex;flex-direction:column;gap:4px;padding:0;margin:0;list-style:none}
 .log li{border-bottom:1px dashed var(--line);padding:3px 0}
 .hint{font-size:.85rem;color:var(--muted)}
+h3{margin-top:2px}
 .overlay{position:fixed;inset:0;background:color-mix(in srgb,var(--bg) 88%,transparent);display:flex;align-items:center;justify-content:center;
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:16px;z-index:10;overflow:auto}
 .modal{background:var(--panel);border:2px solid var(--fg);border-radius:10px;padding:16px;max-width:520px;width:100%;display:flex;flex-direction:column;gap:12px;box-shadow:0 10px 40px rgba(0,0,0,.3)}
@@ -105,7 +107,8 @@ button:disabled{opacity:.45;cursor:not-allowed}
   </div>
   <div class="tabs" role="tablist">
     <button role="tab" aria-selected="true" data-tab="map" id="tab-map">地図</button>
-    <button role="tab" aria-selected="false" data-tab="gear" id="tab-gear">装備・ショップ</button>
+    <button role="tab" aria-selected="false" data-tab="gear" id="tab-gear">自転車</button>
+    <button role="tab" aria-selected="false" data-tab="camp" id="tab-camp">キャンプ</button>
     <button role="tab" aria-selected="false" data-tab="log" id="tab-log">記録</button>
   </div>
 
@@ -120,7 +123,14 @@ button:disabled{opacity:.45;cursor:not-allowed}
     <h2>自転車（武器）</h2><div class="shop" id="shop-bike"></div>
     <h2>衣類（防具）</h2><div class="shop" id="shop-cloth"></div>
     <h2>パーツ（アクセサリー・3つまで）</h2><div class="shop" id="shop-part"></div>
-    <p class="hint">装備中のパーツをタップすると外せます（売却額は購入額の半分）。</p>
+    <p class="hint">装備中のパーツは「外す」で取り外せます（売却はできません）。</p>
+  </section>
+
+  <section class="panel" id="p-camp" hidden>
+    <p class="hint">キャンプ地での写真の出来栄えと、翌週に持ち越す疲労が変わります。良いギアほど高価です。</p>
+    <h2>焚き火台（気力回復）</h2><div class="shop" id="shop-fire"></div>
+    <h2>寝床：テントかハンモック（体力・気力回復）</h2><div class="shop" id="shop-shelter"></div>
+    <h2>タープ（雨から守る）</h2><div class="shop" id="shop-tarp"></div>
   </section>
 
   <section class="panel" id="p-log" hidden>
@@ -136,6 +146,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
     <h1 class="logo">🚲 チャリキャン<br>全国制覇</h1>
     <p>自転車インフルエンサーとして全国47か所のキャンプ場を巡り、3回通って「馴染み客」になれ。</p>
     <p class="hint">毎週末が1ターン。1年＝52ターンで決算。<br>坂・動物・強風・大雨・台風・ライバルがあなたを阻む。</p>
+    <label class="hint" for="start-pref">出発地（自宅）を選ぶ</label><select id="start-pref"></select>
     <div class="row"><button class="primary" id="btn-new">はじめから</button><button id="btn-cont" hidden>つづきから</button></div>
   </div>
 </div>
@@ -209,7 +220,6 @@ const PREF=[
 ['鹿児島',130.56,31.56,'九州','桜島ファイアキャンプ場','rough',3,4,1200,2],
 ['沖縄',127.68,26.21,'沖縄','やんばるマングローブキャンプ場','rough',9,5,2500,2],
 ].map((p,i)=>({id:i,name:p[0],lon:p[1],lat:p[2],region:p[3],site:p[4],terrain:p[5],off:p[6],scen:p[7],fee:p[8],diff:p[9]}));
-const HOME=12;
 const WINDY=new Set(['北海道','青森','秋田','山形','新潟','富山','石川','福井','鳥取','島根','沖縄']);
 const TYPHOON=new Set(['沖縄','鹿児島','宮崎','高知','徳島','長崎','熊本','和歌山']);
 const WILD=new Set(['北海道','東北','九州']);
@@ -244,6 +254,21 @@ const PARTS=[
  {id:'drone',name:'ドローン',price:120000,photo:25},
  {id:'comfy',name:'快適キャンプセット',price:25000,comfy:5},
 ];
+const GEAR={
+ fire:{label:'焚き火台（気力回復）',items:[
+  {id:'fire1',name:'簡易焚き火台',price:6000,mp:6,photo:4},
+  {id:'fire2',name:'ステンレス焚き火台',price:20000,mp:12,photo:8},
+  {id:'fire3',name:'チタン焚き火台＋焚き火シート',price:45000,mp:18,photo:12}]},
+ shelter:{label:'寝床：テントかハンモック（体力・気力回復）',items:[
+  {id:'sh1',name:'ハンモック',price:8000,hp:6,mp:8,photo:3,guard:0},
+  {id:'sh2',name:'入門ソロテント',price:15000,hp:12,mp:8,photo:5,guard:.2},
+  {id:'sh3',name:'軽量山岳テント',price:55000,hp:20,mp:14,photo:9,guard:.4}]},
+ tarp:{label:'タープ（雨から守る）',items:[
+  {id:'tp1',name:'簡易タープ',price:5000,photo:2,guard:.4},
+  {id:'tp2',name:'ヘキサタープ',price:18000,photo:5,guard:.7},
+  {id:'tp3',name:'大型ウイングタープ',price:40000,photo:8,guard:.9}]},
+};
+const GEAR_ITEMS=Object.entries(GEAR).flatMap(([slot,g])=>g.items.map(i=>({...i,slot})));
 const ENEMY={
  hill:{name:'激坂',face:'⛰️',hp:40,atk:8,limit:5,stat:'climb',hint:'登坂力が効く'},
  animal:{name:'野生動物',face:'🐗',hp:30,atk:12,limit:4,stat:'cruise',hint:'巡航力で振り切る'},
@@ -268,15 +293,19 @@ function title(f){let t=TITLES[0][1];for(const [n,s] of TITLES) if(f>=n) t=s;ret
 
 // ---------- state ----------
 let S=null;
-function newGame(){S={turn:1,fame:0,money:30000,hp:100,mp:100,loc:HOME,bike:'mama',cloth:'plain',parts:[],owned:{bikes:['mama'],cloth:['plain'],parts:[]},
+function newGame(HOME){S={turn:1,fame:0,money:30000,hp:100,mp:100,home:HOME,loc:HOME,bike:'mama',cloth:'plain',parts:[],gear:{fire:null,shelter:null,tarp:null},owned:{bikes:['mama'],cloth:['plain'],parts:[],gear:[]},
   visits:Array(47).fill(0),fam:Array(47).fill(false),log:[],forecast:null,sel:HOME,stats:{wins:0,losses:0,posts:0,bestQ:0}};
-  rollForecast();log('春の週末。東京の自宅から旅が始まる。');save();}
+  rollForecast();log(`春の週末。${PREF[HOME].name}の自宅から旅が始まる。`);save();}
 function save(){try{localStorage.setItem('charicamp',JSON.stringify(S));}catch(e){}}
-function load(){try{const s=localStorage.getItem('charicamp');return s?JSON.parse(s):null;}catch(e){return null;}}
+function load(){try{const s=localStorage.getItem('charicamp');if(!s)return null;const o=JSON.parse(s);if(!o.gear)o.gear={fire:null,shelter:null,tarp:null};if(!o.owned.gear)o.owned.gear=[];if(o.home==null)o.home=12;return o;}catch(e){return null;}}
 function log(t){S.log.unshift(`${calLabel(S.turn)} ${t}`);if(S.log.length>120)S.log.length=120;}
 function calLabel(t){const c=calendar(t);return `${c.year}年目${c.month}月第${c.week}週`;}
 function bikeStats(){const b=BIKES.find(x=>x.id===S.bike);const st={climb:b.climb,rough:b.rough,cruise:b.cruise,wx:b.wx,photo:0,comfy:0,fold:!!b.fold};
   for(const pid of S.parts){const p=PARTS.find(x=>x.id===pid);for(const k of ['climb','rough','cruise','wx','photo','comfy']) if(p[k]) st[k]+=p[k];}return st;}
+function gearFx(){let hp=0,mp=0,photo=0,sg=0,tg=0;const names=[];
+  for(const [slot,g] of Object.entries(GEAR)){const id=S.gear[slot];if(!id)continue;const it=g.items.find(x=>x.id===id);if(!it)continue;
+    names.push(it.name);hp+=it.hp||0;mp+=it.mp||0;photo+=it.photo||0;if(slot==='tarp')tg=it.guard;if(slot==='shelter')sg=it.guard||0;}
+  return {hp,mp,photo,guard:1-(1-tg)*(1-sg),names};}
 function famCount(){return S.fam.filter(Boolean).length;}
 
 // forecast for this turn: per destination temp + weather, rolled once per turn so it is a real forecast
@@ -319,39 +348,44 @@ function renderDetail(){const p=PREF[S.sel],f=S.forecast[p.id],ti=travelInfo(p),
   if(f.wx==='rain')enemies.push('大雨');if(f.wx==='wind')enemies.push('強風');if(f.wx==='typhoon')enemies.push('台風');if(p.scen>=5)enemies.push('ライバル?');
   $('detail').innerHTML=`<div><h3>${p.site}</h3><div class="hint">${p.name}・${p.region}</div></div><div>${badge}</div>
   <div class="kv"><span>地形</span><span>${TERRAIN[p.terrain]}（難度${'★'.repeat(p.diff)}）</span><span>景観</span><span>${'📷'.repeat(p.scen)}</span>
-  <span>予報</span><span>${WX_J[f.wx]} ${f.temp}℃　${fit}</span><span>距離</span><span>${stay?'連泊（気力-15）':ti.d+'km → 遭遇 '+(ti.ride?ti.enc+'回':'自走不可')}</span>
-  <span>想定</span><span>${enemies.join('・')||'特になし'}</span><span>利用料</span><span>${yen(p.fee)}</span></div>
-  <div class="acts">${stay?`<button class="primary" id="go-stay">連泊する</button>`:
-   `<button class="primary" id="go-ride" ${ti.ride?'':'disabled'}>自走で向かう${ti.ride?'':'（遠すぎる）'}</button>
-    <button id="go-rinko" ${S.money>=ti.rinko?'':'disabled'}>輪行で向かう ${yen(ti.rinko)}</button>`}
-   ${S.loc!==HOME?`<button id="go-home">東京の自宅で休む（輪行 ${yen(travelInfo(PREF[HOME]).rinko)}）</button>`:`<button id="go-home">自宅で休む（体力・気力回復）</button>`}</div>`;
+  <span>予報</span><span>${WX_J[f.wx]} ${f.temp}℃　${fit}</span><span>距離</span><span>${stay?'同じ場所（気力-15）':ti.d+'km → 遭遇 '+(ti.ride?ti.enc+'回':'自走不可')}</span>
+  <span>想定</span><span>${enemies.join('・')||'特になし'}</span><span>利用料</span><span>${yen(p.fee)}</span><span>ギア</span><span>${gearFx().names.join('・')||'なし（地面に直接寝る）'}</span></div>
+  <div class="acts">${stay?`<button class="primary" id="go-stay">自転車旅行く</button>`:
+   `<button class="primary" id="go-ride" ${ti.ride?'':'disabled'}>自転車旅行く（自走）${ti.ride?'':'（遠すぎる）'}</button>
+    <button id="go-rinko" ${S.money>=ti.rinko?'':'disabled'}>輪行で旅行く ${yen(ti.rinko)}</button>`}
+   ${S.loc!==S.home?`<button id="go-home">${PREF[S.home].name}の自宅で休む（輪行 ${yen(travelInfo(PREF[S.home]).rinko)}）</button>`:`<button id="go-home">自宅で休む（体力・気力回復）</button>`}</div>`;
   const b=id=>$(id);if(b('go-ride'))b('go-ride').onclick=()=>startTrip(p,false);if(b('go-rinko'))b('go-rinko').onclick=()=>startTrip(p,true);
   if(b('go-stay'))b('go-stay').onclick=()=>startTrip(p,false);b('go-home').onclick=restHome;}
 
 function renderList(){$('sitelist').innerHTML=PREF.map(p=>`<button data-id="${p.id}" class="${p.id===S.loc?'cur':''}">${p.name} ${S.fam[p.id]?'🏅':S.visits[p.id]?'✔'.repeat(S.visits[p.id]):''}<small>${p.site}</small></button>`).join('');
   $('sitelist').querySelectorAll('button').forEach(b=>b.onclick=()=>{S.sel=+b.dataset.id;render();$('map').scrollIntoView({block:'start'});});}
 
-function card(item,kind){const eq=kind==='bike'?S.bike===item.id:kind==='cloth'?S.cloth===item.id:S.parts.includes(item.id);
-  const own=S.owned[kind==='bike'?'bikes':kind==='cloth'?'cloth':'parts'].includes(item.id);
+function owns(kind,id){return S.owned[kind==='bike'?'bikes':kind==='cloth'?'cloth':kind==='gear'?'gear':'parts'].includes(id);}
+function isEq(kind,item){return kind==='bike'?S.bike===item.id:kind==='cloth'?S.cloth===item.id:kind==='gear'?S.gear[item.slot]===item.id:S.parts.includes(item.id);}
+function card(item,kind){const eq=isEq(kind,item),own=owns(kind,item.id);
   const spec=kind==='bike'?`登坂${item.climb} 悪路${item.rough} 巡航${item.cruise} 耐候${item.wx}${item.fold?' 輪行半額':''}`:
-   kind==='cloth'?`快適 ${item.lo}℃〜${item.hi}℃`:Object.entries(item).filter(([k])=>['climb','rough','cruise','wx','photo','comfy'].includes(k)).map(([k,v])=>({climb:'登坂',rough:'悪路',cruise:'巡航',wx:'耐候',photo:'写真',comfy:'気力消費'}[k]+(k==='comfy'?'-':'+')+v)).join(' ');
-  let act='';if(eq)act=kind==='part'?`<button data-act="unequip">外す</button>`:`<span class="pill">装備中</span>`;
+   kind==='cloth'?`快適 ${item.lo}℃〜${item.hi}℃`:
+   kind==='gear'?[item.mp?`気力+${item.mp}`:'',item.hp?`体力+${item.hp}`:'',item.photo?`写真+${item.photo}`:'',item.guard?`雨ガード${Math.round(item.guard*100)}%`:''].filter(Boolean).join(' '):
+   Object.entries(item).filter(([k])=>['climb','rough','cruise','wx','photo','comfy'].includes(k)).map(([k,v])=>({climb:'登坂',rough:'悪路',cruise:'巡航',wx:'耐候',photo:'写真',comfy:'気力消費'}[k]+(k==='comfy'?'-':'+')+v)).join(' ');
+  let act='';if(eq)act=(kind==='part'||kind==='gear')?`<button data-act="unequip">外す</button>`:`<span class="pill">装備中</span>`;
   else if(own)act=`<button data-act="equip" ${kind==='part'&&S.parts.length>=3?'disabled':''}>装備</button>`;
   else act=`<button data-act="buy" ${S.money>=item.price?'':'disabled'}>購入 ${yen(item.price)}</button>`;
   return `<div class="card ${eq?'eq':''}" data-kind="${kind}" data-id="${item.id}"><div class="name"><span>${item.name}</span>${act}</div><div class="spec">${spec}</div></div>`;}
-function renderShop(){$('shop-bike').innerHTML=BIKES.map(b=>card(b,'bike')).join('');$('shop-cloth').innerHTML=CLOTHES.map(c=>card(c,'cloth')).join('');$('shop-part').innerHTML=PARTS.map(p=>card(p,'part')).join('');}
-$('p-gear').addEventListener('click',e=>{const b=e.target.closest('button[data-act]');if(!b)return;const c=b.closest('.card'),kind=c.dataset.kind,id=c.dataset.id;
-  const list=kind==='bike'?BIKES:kind==='cloth'?CLOTHES:PARTS,item=list.find(x=>x.id===id),key=kind==='bike'?'bikes':kind==='cloth'?'cloth':'parts';
+function renderShop(){$('shop-bike').innerHTML=BIKES.map(b=>card(b,'bike')).join('');$('shop-cloth').innerHTML=CLOTHES.map(c=>card(c,'cloth')).join('');$('shop-part').innerHTML=PARTS.map(p=>card(p,'part')).join('');
+  for(const slot of Object.keys(GEAR))$('shop-'+slot).innerHTML=GEAR_ITEMS.filter(i=>i.slot===slot).map(i=>card(i,'gear')).join('');}
+function shopClick(e){const b=e.target.closest('button[data-act]');if(!b)return;const c=b.closest('.card'),kind=c.dataset.kind,id=c.dataset.id;
+  const list=kind==='bike'?BIKES:kind==='cloth'?CLOTHES:kind==='gear'?GEAR_ITEMS:PARTS,item=list.find(x=>x.id===id),key=kind==='bike'?'bikes':kind==='cloth'?'cloth':kind==='gear'?'gear':'parts';
   if(b.dataset.act==='buy'){if(S.money<item.price)return;S.money-=item.price;S.owned[key].push(id);log(`${item.name}を購入（${yen(item.price)}）`);}
-  if(b.dataset.act==='buy'||b.dataset.act==='equip'){if(kind==='bike')S.bike=id;else if(kind==='cloth')S.cloth=id;else if(S.parts.length<3)S.parts.push(id);}
-  if(b.dataset.act==='unequip'){S.parts=S.parts.filter(x=>x!==id);}
-  render();});
+  if(b.dataset.act==='buy'||b.dataset.act==='equip'){if(kind==='bike')S.bike=id;else if(kind==='cloth')S.cloth=id;else if(kind==='gear')S.gear[item.slot]=id;else if(S.parts.length<3)S.parts.push(id);}
+  if(b.dataset.act==='unequip'){if(kind==='gear')S.gear[item.slot]=null;else S.parts=S.parts.filter(x=>x!==id);}
+  render();}
+$('p-gear').addEventListener('click',shopClick);$('p-camp').addEventListener('click',shopClick);
 
 function renderLog(){$('log').innerHTML=S.log.map(l=>`<li>${l}</li>`).join('');
   $('summary').innerHTML=`<span>称号</span><span>${title(S.fame)}</span><span>投稿数</span><span>${S.stats.posts}</span><span>最高写真</span><span>${S.stats.bestQ}点</span><span>勝敗</span><span>${S.stats.wins}勝 ${S.stats.losses}敗</span>`;}
 
 document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tabs button').forEach(x=>x.setAttribute('aria-selected',x===b));
-  for(const t of ['map','gear','log'])$('p-'+t).hidden=t!==b.dataset.tab;});
+  for(const t of ['map','gear','camp','log'])$('p-'+t).hidden=t!==b.dataset.tab;});
 
 // ---------- turn flow ----------
 let trip=null;
@@ -420,24 +454,28 @@ function endTrip(){const p=trip.p,f=S.forecast[p.id],st=bikeStats(),cl=CLOTHES.f
   // clothing check
   let cold=0;if(f.temp<cl.lo)cold=Math.min(40,(cl.lo-f.temp)*3);if(f.temp>cl.hi)cold=Math.min(40,(f.temp-cl.hi)*3);
   if(cold){S.hp-=cold;}
-  const harsh=['rain','typhoon'].includes(f.wx)||season(calendar(S.turn).mi)==='winter';if(harsh)S.mp-=Math.max(0,10-st.comfy);
+  const g=gearFx(),wet=['rain','typhoon'].includes(f.wx),harsh=wet||season(calendar(S.turn).mi)==='winter';
+  const harshMp=harsh?Math.round(Math.max(0,10-st.comfy)*(1-(wet?g.guard:0))):0;S.mp-=harshMp;
+  const wetHp=wet?Math.round((f.wx==='typhoon'?20:12)*(1-g.guard)):0;S.hp-=wetHp;
+  const recHp=4+g.hp,recMp=4+g.mp;
+  const campRows=`<span>キャンプ回復</span><span>体力+${recHp} 気力+${recMp}</span>${wetHp?`<span>雨ざらし</span><span>体力-${wetHp}</span>`:''}${harshMp?`<span>厳しい環境</span><span>気力-${harshMp}</span>`:''}`;
   if(trip.late){S.fame=Math.max(0,S.fame-3);
-    html=`<h2>遅刻…</h2><p>${p.site}に着いたのは日没後。写真は撮れず、投稿できなかった。</p><div class="res"><span>名声</span><span>-3</span><span>利用料</span><span>-${yen(p.fee)}</span>${cold?`<span>衣類不適</span><span>体力-${cold}</span>`:''}</div>`;
+    html=`<h2>遅刻…</h2><p>${p.site}に着いたのは日没後。写真は撮れず、投稿できなかった。</p><div class="res"><span>名声</span><span>-3</span><span>利用料</span><span>-${yen(p.fee)}</span>${cold?`<span>衣類不適</span><span>体力-${cold}</span>`:''}${campRows}</div>`;
     log(`${p.site}に遅刻。投稿なし`);}
-  else{const wb={sun:10,cloud:0,rain:-15,wind:-5,typhoon:-25}[f.wx];let q=40+p.scen*8+st.photo+wb+rnd(0,10);if(trip.stay)q-=10;q=Math.max(10,Math.min(100,q));
+  else{const wb0={sun:10,cloud:0,rain:-15,wind:-5,typhoon:-25}[f.wx],wb=wet?Math.round(wb0*(1-g.guard)):wb0;let q=40+p.scen*8+st.photo+g.photo+wb+rnd(0,10);if(trip.stay)q-=10;q=Math.max(10,Math.min(100,q));
     S.visits[p.id]++;const became=!S.fam[p.id]&&S.visits[p.id]>=3;if(became)S.fam[p.id]=true;
     let fg=Math.round(q/5)+(S.visits[p.id]===1?5:0)+(became?10:0);const inc=300+q*25+S.fame*3;S.fame+=fg;S.money+=inc;S.stats.posts++;S.stats.bestQ=Math.max(S.stats.bestQ,q);
     html=`<h2>${became?'🏅 馴染み客になった！':'素敵なキャンプの夜'}</h2><div class="photo"><div>${p.site}</div><div class="q">📷 ${q}点</div><div>${WX_J[f.wx]} ${f.temp}℃</div></div>
     <div class="res"><span>名声</span><span>+${fg}${became?'（馴染みボーナス込）':''}</span><span>SNS収入</span><span>+${yen(inc)}</span><span>利用料</span><span>-${yen(p.fee)}</span>
-    <span>友好度</span><span>${Math.min(3,S.visits[p.id])}/3</span>${cold?`<span>衣類不適</span><span>体力-${cold}</span>`:''}${harsh?`<span>厳しい環境</span><span>気力-${Math.max(0,10-st.comfy)}</span>`:''}</div>`;
+    <span>友好度</span><span>${Math.min(3,S.visits[p.id])}/3</span><span>ギア効果</span><span>写真+${g.photo}${wet?`（雨ガード${Math.round(g.guard*100)}%）`:''}</span>${cold?`<span>衣類不適</span><span>体力-${cold}</span>`:''}${campRows}</div>`;
     log(`${p.site}で投稿（${q}点）名声+${fg} ${yen(inc)}${became?' 馴染み客に！':''}`);}
   // natural recovery + advance
-  S.hp=Math.min(100,S.hp+10);S.mp=Math.min(100,S.mp+10);
+  S.hp=Math.min(100,S.hp+recHp);S.mp=Math.min(100,S.mp+recMp);
   if(S.hp<=0){S.hp=30;S.money-=5000;html+=`<p class="hint">体力が尽きてダウン。治療費¥5,000。</p>`;}
   if(S.mp<=0){S.mp=20;S.fame=Math.max(0,S.fame-5);html+=`<p class="hint">気力が尽きて投稿をサボった。名声-5。</p>`;}
   if(S.money<0)html+=`<p class="hint">所持金がマイナス。次の投稿収入で返済される。</p>`;
   showResult(html,advance);}
-function restHome(){const ti=travelInfo(PREF[HOME]);if(S.loc!==HOME){if(S.money<ti.rinko)return;S.money-=ti.rinko;}S.loc=HOME;S.hp=100;S.mp=100;S.fame=Math.max(0,S.fame-2);
+function restHome(){const ti=travelInfo(PREF[S.home]);if(S.loc!==S.home){if(S.money<ti.rinko)return;S.money-=ti.rinko;}S.loc=S.home;S.hp=100;S.mp=100;S.fame=Math.max(0,S.fame-2);
   log('自宅で休養。名声-2');showResult(`<h2>自宅で休養</h2><p>体力・気力が全回復した。投稿がなく名声-2。</p>`,advance);}
 function showResult(html,then){$('result-box').innerHTML=html+`<button class="primary" id="res-ok">次の週末へ</button>`;$('ov-result').hidden=false;$('res-ok').onclick=()=>{$('ov-result').hidden=true;then();};}
 function advance(){S.turn++;
@@ -446,9 +484,10 @@ function advance(){S.turn++;
   rollForecast();S.sel=S.loc;render();}
 
 // ---------- boot ----------
-$('btn-new').onclick=()=>{newGame();$('ov-title').hidden=true;render();};
+$('start-pref').innerHTML=PREF.map(p=>`<option value="${p.id}">${p.name}（${p.site}）</option>`).join('');$('start-pref').value='12';
+$('btn-new').onclick=()=>{newGame(+$('start-pref').value);$('ov-title').hidden=true;render();};
 $('btn-cont').onclick=()=>{$('ov-title').hidden=true;render();};
-$('btn-reset').onclick=()=>{if($('btn-reset').textContent==='本当に消す？'){newGame();render();$('btn-reset').textContent='はじめから';$('tab-map').click();}else{$('btn-reset').textContent='本当に消す？';setTimeout(()=>$('btn-reset').textContent='はじめから',3000);}};
+$('btn-reset').onclick=()=>{if($('btn-reset').textContent==='本当に消す？'){$('ov-title').hidden=false;$('btn-reset').textContent='はじめから';$('tab-map').click();}else{$('btn-reset').textContent='本当に消す？';setTimeout(()=>$('btn-reset').textContent='はじめから',3000);}};
 const saved=load();if(saved&&saved.forecast){S=saved;$('btn-cont').hidden=false;render();}
 })();
 </script>
