@@ -627,7 +627,8 @@ function renderMap(){const svg=$('map');const mk=JSON.stringify([S.loc,S.sel,S.v
   // 山岳テントの絵は下端に杭・ガイロープが長く伸びていて、本体の底が下端より約8単位上にある。入門テント(約3単位)と地面の高さを揃えるため下げる
   const SH3_DROP=4,fk={fire1:.115,fire2:.115,fire3:.085},sk={sh1:.165,sh2:.16,sh3:.085},tk={tp1:.27,tp2:.215,tp3:.125};// タープは寝床（特にハンモックの杭の間）を覆える幅にする
   // 山岳テントは背が高く、そのままだとタープの屋根を突き抜ける。テントごとにタープの大きさ・位置を決める [scale, 接地のy]
-  const TARP_FIT={sh3:{tp1:[.30,403],tp2:[.30,403],tp3:[.175,420,20]},sh2:{tp3:[.175,420,20]}};const tf=(S.gear.tarp&&TARP_FIT[S.gear.shelter]&&TARP_FIT[S.gear.shelter][S.gear.tarp])||[tk[S.gear.tarp],403,0];// [scale, 接地y, 横ずれ]
+  // 接地yを413にして、タープのポールの根元をテントの前の地面に出す（403だとポールがテントの床に刺さって見える）
+  const TARP_FIT={sh3:{tp1:[.30,413],tp2:[.30,413],tp3:[.175,420,20]},sh2:{tp1:[.27,413],tp2:[.215,413],tp3:[.175,420,20]}};const tf=(S.gear.tarp&&TARP_FIT[S.gear.shelter]&&TARP_FIT[S.gear.shelter][S.gear.tarp])||[tk[S.gear.tarp],403,0];// [scale, 接地y, 横ずれ]
   // 大型タープ＋テントのときは、テントをさらにタープの奥（地図の上側）に置く
   const UNDER=S.gear.tarp==='tp3'&&(S.gear.shelter==='sh2'||S.gear.shelter==='sh3')?{x:264,by:S.gear.shelter==='sh3'?397:392,k:S.gear.shelter==='sh3'?.1:.16}:null;
   const BEHIND=!!(S.gear.tarp&&(S.gear.shelter==='sh2'||S.gear.shelter==='sh3'));// テント＋タープのときは、テントを奥に描いて、タープの布とポールを手前に重ねる
