@@ -46,7 +46,12 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .bar i{display:block;height:100%;background:var(--forest)}
 .bar.mp i{background:var(--sky)}
 .tabs{display:flex;gap:6px;flex-wrap:wrap}
-.tabs button{flex:1 1 60px;padding:8px 4px}
+.tabs button{flex:1 1 60px;padding:4px 2px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;font-size:.78rem;line-height:1.2}
+.ti{width:22px;height:22px;object-fit:contain}
+.stat .lb{display:inline-flex;align-items:center;gap:4px}
+.si{width:16px;height:16px;object-fit:contain}
+.card .nm{display:flex;align-items:center;gap:6px;min-width:0}
+.ci{width:28px;height:28px;flex:none;object-fit:contain}
 .tabs button[aria-selected="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
 .panel{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px;display:flex;flex-direction:column;gap:12px;min-width:0}
 .map{width:100%;max-width:100%;aspect-ratio:1/1.05;background:color-mix(in srgb,var(--sky) 10%,var(--panel));border-radius:8px;display:block}
@@ -108,19 +113,19 @@ h3{margin-top:2px}
 <div class="app" id="app">
   <div class="status">
     <div class="date"><span id="d-date">1年目 4月第1週</span><span id="d-season">🌸 春</span></div>
-    <div class="stat">名声<b id="d-fame">0</b></div>
-    <div class="stat">所持金<b id="d-money">¥30,000</b></div>
-    <div class="stat">体力 <b id="d-hp">100</b><div class="bar"><i id="b-hp" style="width:100%"></i></div></div>
-    <div class="stat">気力 <b id="d-mp">100</b><div class="bar mp"><i id="b-mp" style="width:100%"></i></div></div>
-    <div class="stat">現在地<b id="d-loc">東京</b></div>
-    <div class="stat">馴染み宿<b id="d-fam">0 / 47</b></div>
+    <div class="stat"><span class="lb"><img class="si" src="img/icon_fame.webp" width="16" height="16" alt="">名声</span><b id="d-fame">0</b></div>
+    <div class="stat"><span class="lb"><img class="si" src="img/icon_money.webp" width="16" height="16" alt="">所持金</span><b id="d-money">¥30,000</b></div>
+    <div class="stat"><span class="lb"><img class="si" src="img/icon_hp.webp" width="16" height="16" alt="">体力</span><b id="d-hp">100</b><div class="bar"><i id="b-hp" style="width:100%"></i></div></div>
+    <div class="stat"><span class="lb"><img class="si" src="img/icon_mp.webp" width="16" height="16" alt="">気力</span><b id="d-mp">100</b><div class="bar mp"><i id="b-mp" style="width:100%"></i></div></div>
+    <div class="stat"><span class="lb"><img class="si" src="img/icon_loc.webp" width="16" height="16" alt="">現在地</span><b id="d-loc">東京</b></div>
+    <div class="stat"><span class="lb"><img class="si" src="img/icon_inn.webp" width="16" height="16" alt="">馴染み宿</span><b id="d-fam">0 / 47</b></div>
   </div>
   <div class="tabs" role="tablist">
-    <button role="tab" aria-selected="true" data-tab="map" id="tab-map">地図</button>
-    <button role="tab" aria-selected="false" data-tab="gear" id="tab-gear">自転車</button>
-    <button role="tab" aria-selected="false" data-tab="camp" id="tab-camp">ギア</button>
-    <button role="tab" aria-selected="false" data-tab="shop" id="tab-shop">店</button>
-    <button role="tab" aria-selected="false" data-tab="log" id="tab-log">記録</button>
+    <button role="tab" aria-selected="true" data-tab="map" id="tab-map"><img class="ti" src="img/icon_map.webp" width="22" height="22" alt="">地図</button>
+    <button role="tab" aria-selected="false" data-tab="gear" id="tab-gear"><img class="ti" src="img/icon_bike.webp" width="22" height="22" alt="">自転車</button>
+    <button role="tab" aria-selected="false" data-tab="camp" id="tab-camp"><img class="ti" src="img/icon_gear.webp" width="22" height="22" alt="">ギア</button>
+    <button role="tab" aria-selected="false" data-tab="shop" id="tab-shop"><img class="ti" src="img/icon_shop.webp" width="22" height="22" alt="">店</button>
+    <button role="tab" aria-selected="false" data-tab="log" id="tab-log"><img class="ti" src="img/icon_log.webp" width="22" height="22" alt="">記録</button>
   </div>
 
   <section class="panel" id="p-map">
@@ -293,9 +298,9 @@ const ENEMY={
  hill:{name:'激坂',face:'⛰️',img:'img/enemy_hill.webp',hp:40,atk:8,limit:5,stat:'climb',hint:'登坂力が効く'},
  animal:{name:'野生動物',face:'🐗',img:'img/enemy_animal.webp',hp:30,atk:12,limit:4,stat:'cruise',hint:'巡航力で振り切る'},
  wind:{name:'強風',face:'🌬️',hp:35,atk:6,limit:5,stat:'cruise',mp:4,hint:'巡航力が効く。気力も削られる'},
- rain:{name:'大雨',face:'🌧️',hp:35,atk:7,limit:5,stat:'wx',mp:5,hint:'耐候力が効く'},
- typhoon:{name:'台風',face:'🌀',hp:70,atk:15,limit:6,stat:'wx',mp:6,hint:'耐候力が効く。無理は禁物'},
- rival:{name:'ライバルインフルエンサー',face:'🤳',hp:40,atk:0,limit:5,stat:'fame',fame:4,hint:'名声と撮影機材で押し切る'},
+ rain:{name:'大雨',face:'🌧️',img:'img/enemy_rain.webp',hp:35,atk:7,limit:5,stat:'wx',mp:5,hint:'耐候力が効く'},
+ typhoon:{name:'台風',face:'🌀',img:'img/enemy_typhoon.webp',hp:70,atk:15,limit:6,stat:'wx',mp:6,hint:'耐候力が効く。無理は禁物'},
+ rival:{name:'ライバルインフルエンサー',face:'🤳',img:'img/enemy_rival.webp',hp:40,atk:0,limit:5,stat:'fame',fame:4,hint:'名声と撮影機材で押し切る'},
 };
 const TITLES=[[0,'無名'],[30,'駆け出し'],[80,'注目の新人'],[160,'人気配信者'],[300,'カリスマ'],[500,'伝説']];
 
@@ -391,7 +396,7 @@ function card(item,kind,mode){const eq=isEq(kind,item),own=owns(kind,item.id);
   if(mode==='shop'){act=own?`<span class="pill">所持</span>`:`<button data-act="buy" ${S.money>=item.price?'':'disabled'}>購入 ${yen(item.price)}</button>`;}
   else if(eq)act=(kind==='part'||kind==='gear')?`<button data-act="unequip">外す</button>`:`<span class="pill">装備中</span>`;
   else act=`<button data-act="equip" ${kind==='part'&&S.parts.length>=3?'disabled':''}>装備</button>`;
-  return `<div class="card ${eq?'eq':''}" data-kind="${kind}" data-id="${item.id}"><div class="name"><span>${item.name}</span>${act}</div><div class="spec">${spec}</div></div>`;}
+  return `<div class="card ${eq?'eq':''}" data-kind="${kind}" data-id="${item.id}"><div class="name"><span class="nm"><img class="ci" src="img/${kind==='gear'?'icon_'+item.slot:'icon_'+({bike:'bike',cloth:'cloth',part:'part'})[kind]}.webp" width="28" height="28" alt="">${item.name}</span>${act}</div><div class="spec">${spec}</div></div>`;}
 function renderShop(){const lists={bike:BIKES,cloth:CLOTHES,part:PARTS};
   for(const [k,l] of Object.entries(lists)){$('shop-'+k).innerHTML=l.map(i=>card(i,k,'shop')).join('');
     const own=l.filter(i=>owns(k,i.id));$('eq-'+k).innerHTML=own.length?own.map(i=>card(i,k,'equip')).join(''):'<div class="hint">なし</div>';}
