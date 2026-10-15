@@ -118,13 +118,14 @@ h3{margin-top:2px}
 .enemy{display:flex;gap:12px;align-items:center}
 .enemy .face{font-size:2.6rem;line-height:1}
 .enemy .hp{flex:1;min-width:0}
-.route{position:relative;height:22px;margin:4px 22px 2px 0;border-bottom:3px dashed var(--line)}
+.route{position:relative;height:30px;margin:4px 40px 2px 0;border-bottom:3px dashed var(--line)}
 .route i{position:absolute;left:0;bottom:-3px;height:3px;background:var(--forest);width:0}
 .route img{position:absolute;bottom:-2px;width:26px;height:26px;transform:translateX(-50%);object-fit:contain;transition:left .35s}
-.route .flag{position:absolute;right:-20px;bottom:-1px;font-size:16px;line-height:1}
+.route img.flag{position:absolute;left:auto;right:-38px;bottom:-4px;width:34px;height:34px;transform:none;transition:none}
 .bt-km{font-family:var(--display);font-size:1.05rem;color:var(--fg)}
 .cmds{display:grid;grid-template-columns:1fr 1fr;gap:6px}
 .cmds button{text-align:left;line-height:1.25}
+.cmds button.primary{grid-column:1/-1;text-align:center;padding:12px}
 .cmds button small{display:block;color:var(--muted);font-size:.75rem}
 .blog{font-family:var(--display);font-size:.95rem;background:var(--bg);border-radius:6px;padding:8px;min-height:4.2em;max-height:9em;overflow:auto;white-space:pre-wrap}
 .photo{border:6px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.25);background:linear-gradient(160deg,var(--sky),var(--forest));color:#fff;padding:18px 14px;font-family:var(--display);text-shadow:0 1px 2px rgba(0,0,0,.5);transform:rotate(-1.5deg)}
@@ -222,7 +223,7 @@ h3{margin-top:2px}
   <div class="modal" id="battle-box">
     <h2 id="bt-title">バトル</h2>
     <div class="enemy"><div class="face" id="bt-face">⛰️</div>
-      <div class="hp"><div id="bt-name">坂</div><div class="route"><i id="bt-hp"></i><img id="bt-bike" src="img/icon_bike_mama.webp" width="128" height="128" alt=""><span class="flag">🏁</span></div>
+      <div class="hp"><div id="bt-name">坂</div><div class="route"><i id="bt-hp"></i><img id="bt-bike" src="img/icon_bike_mama.webp" width="128" height="128" alt=""><img class="flag" id="bt-goal" src="img/icon_g_sh2.webp" width="128" height="128" alt="キャンプ場"></div>
       <div class="hint" id="bt-info"></div></div></div>
     <div class="blog" id="bt-log"></div>
     <div class="cmds" id="bt-cmds"></div>
@@ -660,8 +661,8 @@ function fmtD(v){const x=kmOf(v);return isRival()?Math.round(x)+'m':(x>=10?Math.
 const LEFT=()=>isRival()?'撮影スポットまで':'ゴールまで';
 const HIT={hill:'坂がきつい',animal:'野生動物に足止めされた',wind:'向かい風に押し戻された',rain:'冷たい雨に体温を奪われた',typhoon:'暴風雨にあおられた'};
 function playerPower(){const st=bikeStats();if(B.kind==='rival')return 8+S.fame/8+st.photo/2;return st[B.e.stat]*4;}
-function renderBattle(){const pr=Math.min(100,Math.max(0,(1-B.hp/B.max)*100));$('bt-hp').style.width=pr+'%';$('bt-bike').style.left=pr+'%';$('bt-bike').src=isRival()?'img/part_cam.webp':'img/icon_bike_'+S.bike+'.webp';
-  $('bt-info').innerHTML=`<span class="bt-km">${LEFT()} ${fmtD(B.hp)}</span><br>日没まで あと${B.limit-B.turn+1}時間　体力${S.hp} 気力${S.mp}${isRival()?' 名声'+S.fame:''}`;
+function renderBattle(){const pr=Math.min(100,Math.max(0,(1-B.hp/B.max)*100));$('bt-hp').style.width=pr+'%';$('bt-bike').style.left=pr+'%';$('bt-bike').src=isRival()?'img/part_cam.webp':'img/icon_bike_'+S.bike+'.webp';$('bt-goal').src=isRival()?'img/part_tripod.webp':'img/icon_g_sh2.webp';
+  $('bt-info').innerHTML=`<span class="bt-km">${B.hp<=0?(isRival()?'撮影スポットに到着！':'区間ゴール！'):LEFT()+' '+fmtD(B.hp)}</span><br>日没まで あと${B.limit-B.turn+1}時間　体力${S.hp} 気力${S.mp}${isRival()?' 名声'+S.fame:''}`;
   const st=bikeStats(),ti={rinko:trip.rk};const pw=playerPower(),pd=v=>fmtD(v);
   const cmds=B.kind==='rival'?[
     ['post','映え投稿で勝負',`約${pd(pw+4)}詰める（名声・写真機材）`],
@@ -683,7 +684,7 @@ function cmd(k){let t='';let dmg=0;const mult=B.charge?2:1;
   else if(k==='rinko'){S.money-=trip.rk;t='輪行で区間を飛ばした！';log(`${B.e.name}の区間を輪行（${yen(trip.rk)}）`);S.stats.wins++;trip.i++;$('ov-battle').hidden=true;battleOver();nextEncounter();return;}
   else if(k==='escape'){trip.late=true;$('ov-battle').hidden=true;battleOver();log('ライバルに撮影スポットを譲った…');S.stats.losses++;nextEncounter();return;}
   B.hp-=dmg;if(dmg>0&&B.hp>0)playSE('se_hit');
-  if(B.hp<=0){blog(t+(isRival()?'\n先に撮影スポットに着いた！':'\nこの区間を走り切った！'));S.stats.wins++;playSE('se_win');renderBattle();$('bt-cmds').innerHTML=`<button class="primary" data-cmd="next">進む</button>`;
+  if(B.hp<=0){blog(t+(isRival()?'\n先に撮影スポットに着いた！':'\nこの区間を走り切った！'));S.stats.wins++;playSE('se_win');renderBattle();$('bt-cmds').innerHTML=`<button class="primary" data-cmd="next">キャンプ場へ向かう</button>`;
     $('bt-cmds').querySelector('button').onclick=()=>{trip.i++;$('ov-battle').hidden=true;battleOver();nextEncounter();};return;}
   // enemy acts
   let et='';if(B.kind==='rival'){S.fame=Math.max(0,S.fame-B.e.fame);et=`ライバルの投稿がバズった。名声-${B.e.fame}`;}
