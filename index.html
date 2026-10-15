@@ -219,7 +219,7 @@ h3{margin-top:2px}
 
   <section class="panel" id="p-shop" hidden>
     <p class="hint">買うとすぐ装備されます（パーツは空きがある場合）。売却はできません。</p>
-    <div class="subtabs" id="shop-tabs"><button data-sub="bike" aria-selected="true">自転車</button><button data-sub="cloth" aria-selected="false">衣類</button><button data-sub="part" aria-selected="false">パーツ</button><button data-sub="fire" aria-selected="false">焚き火台</button><button data-sub="shelter" aria-selected="false">寝床</button><button data-sub="tarp" aria-selected="false">タープ</button><button data-sub="food" aria-selected="false">補給食</button></div>
+    <div class="subtabs" id="shop-tabs"><button data-sub="bike" aria-selected="true">自転車</button><button data-sub="cloth" aria-selected="false">衣類</button><button data-sub="part" aria-selected="false">パーツ</button><button data-sub="fire" aria-selected="false">焚き火台</button><button data-sub="shelter" aria-selected="false">寝床</button><button data-sub="tarp" aria-selected="false">タープ</button><button data-sub="food" aria-selected="false">補給食</button><button data-sub="forge" aria-selected="false">鍛冶屋</button></div>
     <div class="shopsec" data-sub="bike"><div class="shop" id="shop-bike"></div></div>
     <div class="shopsec" data-sub="cloth" hidden><div class="shop" id="shop-cloth"></div></div>
     <div class="shopsec" data-sub="part" hidden><div class="shop" id="shop-part"></div></div>
@@ -227,6 +227,7 @@ h3{margin-top:2px}
     <div class="shopsec" data-sub="shelter" hidden><div class="shop" id="shop-shelter"></div></div>
     <div class="shopsec" data-sub="tarp" hidden><div class="shop" id="shop-tarp"></div></div>
     <div class="shopsec" data-sub="food" hidden><div class="shop" id="shop-food"></div></div>
+    <div class="shopsec" data-sub="forge" hidden><p class="hint" style="margin:0 0 6px">鍛冶屋で、持っている自転車・パーツを最大+3まで強化できます。自転車は得意な上位2つの能力、パーツはその効果が、1段ごとに+1されます。</p><div class="shop" id="shop-forge"></div></div>
   </section>
 
   <section class="panel" id="p-log" hidden>
@@ -527,7 +528,7 @@ function title(f){let t=TITLES[0][1];for(const [n,s] of TITLES) if(f>=n) t=s;ret
 // ---------- state ----------
 let S=null;
 function newGame(HOME){INTRIP=false;S={turn:1,fame:0,money:30000,hp:100,mp:100,home:HOME,loc:HOME,bike:'mama',cloth:'plain',parts:[],gear:{fire:null,shelter:null,tarp:null},owned:{bikes:['mama'],cloth:['plain'],parts:[],gear:[]},
-  visits:Array(47).fill(0),fam:Array(47).fill(false),log:[],forecast:null,sel:HOME,food:0,ach:{},stats:{wins:0,losses:0,posts:0,bestQ:0,tph:0,ev:0}};
+  visits:Array(47).fill(0),fam:Array(47).fill(false),log:[],forecast:null,sel:HOME,food:0,plus:{},ach:{},stats:{wins:0,losses:0,posts:0,bestQ:0,tph:0,ev:0}};
   rollForecast();log(`春の週末。${PREF[HOME].name}の自宅から旅が始まる。`);save();}
 // ---------- セーブ ----------
 // 旅の最中（出発〜結果を閉じるまで）は保存しない。途中で閉じても旅の前の状態に戻るだけで、バトルや費用の食い逃げができない
@@ -546,6 +547,7 @@ function load(){try{const s=localStorage.getItem('charicamp');if(!s)return null;
   o.owned.cloth=(Array.isArray(o.owned.cloth)?o.owned.cloth:[]).filter(x=>has(CLOTHES,x));if(!o.owned.cloth.includes('plain'))o.owned.cloth.unshift('plain');
   o.owned.parts=(Array.isArray(o.owned.parts)?o.owned.parts:[]).filter(x=>has(PARTS,x));
   o.owned.gear=(Array.isArray(o.owned.gear)?o.owned.gear:[]).filter(x=>has(GEAR_ITEMS,x));
+  const pl=o.plus&&typeof o.plus==='object'?o.plus:{};o.plus={};for(const id of [...o.owned.bikes,...o.owned.parts]){const v=num(pl[id],0,0,3);if(v)o.plus[id]=v;}
   if(!o.owned.bikes.includes(o.bike))o.bike=o.owned.bikes[0];if(!o.owned.cloth.includes(o.cloth))o.cloth=o.owned.cloth[0];
   o.parts=(Array.isArray(o.parts)?o.parts:[]).filter(x=>o.owned.parts.includes(x)).slice(0,3);
   const g=o.gear&&typeof o.gear==='object'?o.gear:{};o.gear={};for(const k of ['fire','shelter','tarp'])o.gear[k]=GEAR_ITEMS.some(x=>x.slot===k&&x.id===g[k]&&o.owned.gear.includes(x.id))?g[k]:null;
@@ -559,7 +561,14 @@ function load(){try{const s=localStorage.getItem('charicamp');if(!s)return null;
 function log(t){S.log.unshift(`${calLabel(S.turn)} ${t}`);if(S.log.length>120)S.log.length=120;}
 function calLabel(t){const c=calendar(t);return `${c.year}年目${c.month}月第${c.week}週`;}
 function bikeStats(){const b=BIKES.find(x=>x.id===S.bike);const st={climb:b.climb,rough:b.rough,cruise:b.cruise,wx:b.wx,photo:0,comfy:0,fold:!!b.fold};
-  for(const pid of S.parts){const p=PARTS.find(x=>x.id===pid);for(const k of ['climb','rough','cruise','wx','photo','comfy']) if(p[k]) st[k]+=p[k];}return st;}
+  const bl=plv(b.id);if(bl)for(const k of bikeBoost(b))st[k]+=bl;// 鍛冶屋の強化：得意な上位2能力が+段数
+  for(const pid of S.parts){const p=PARTS.find(x=>x.id===pid);for(const k of ['climb','rough','cruise','wx','photo','comfy']) if(p[k]) st[k]+=p[k]+plv(pid);}return st;}
+// ---------- 鍛冶屋（自転車・パーツを+1〜+3に強化） ----------
+const STATJ={climb:'登坂',rough:'悪路',cruise:'巡航',wx:'耐候',photo:'写真',comfy:'気力消費'};
+const plv=id=>(S.plus&&S.plus[id])||0;
+const bv=(b,k)=>b[k]+(plv(b.id)&&bikeBoost(b).includes(k)?plv(b.id):0);// 強化後の能力値（表示用）
+function bikeBoost(b){return ['climb','rough','cruise','wx'].sort((x,y)=>b[y]-b[x]).slice(0,2);}
+function upCost(kind,item,lv){const u=kind==='bike'?Math.max(30000,Math.round(item.price*.3/1000)*1000):Math.max(10000,Math.round(item.price*.4/1000)*1000);return u*lv;}
 function gearFx(){let hp=0,mp=0,photo=0,sg=0,tg=0;const names=[];
   for(const [slot,g] of Object.entries(GEAR)){const id=S.gear[slot];if(!id)continue;const it=g.items.find(x=>x.id===id);if(!it)continue;
     names.push(it.name);hp+=it.hp||0;mp+=it.mp||0;photo+=it.photo||0;if(slot==='tarp')tg=it.guard;if(slot==='shelter')sg=it.guard||0;}
@@ -674,7 +683,7 @@ function renderList(){$('sitelist').innerHTML=PREF.map(p=>`<button data-id="${p.
 function owns(kind,id){return S.owned[kind==='bike'?'bikes':kind==='cloth'?'cloth':kind==='gear'?'gear':'parts'].includes(id);}
 function isEq(kind,item){return kind==='bike'?S.bike===item.id:kind==='cloth'?S.cloth===item.id:kind==='gear'?S.gear[item.slot]===item.id:S.parts.includes(item.id);}
 function card(item,kind,mode){const eq=isEq(kind,item),own=owns(kind,item.id);
-  const spec=kind==='bike'?`登坂${item.climb} 悪路${item.rough} 巡航${item.cruise} 耐候${item.wx}${item.fold?' 輪行半額':''}`:
+  const spec=kind==='bike'?`登坂${bv(item,'climb')} 悪路${bv(item,'rough')} 巡航${bv(item,'cruise')} 耐候${bv(item,'wx')}${item.fold?' 輪行半額':''}`:
    kind==='cloth'?`快適 ${item.lo}℃〜${item.hi}℃`:
    kind==='gear'?[item.mp?`気力+${item.mp}`:'',item.hp?`体力+${item.hp}`:'',item.photo?`写真+${item.photo}`:'',item.guard?`雨ガード${Math.round(item.guard*100)}%`:''].filter(Boolean).join(' '):
    Object.entries(item).filter(([k])=>['climb','rough','cruise','wx','photo','comfy'].includes(k)).map(([k,v])=>({climb:'登坂',rough:'悪路',cruise:'巡航',wx:'耐候',photo:'写真',comfy:'気力消費'}[k]+(k==='comfy'?'-':'+')+v)).join(' ');
@@ -682,13 +691,23 @@ function card(item,kind,mode){const eq=isEq(kind,item),own=owns(kind,item.id);
   if(mode==='shop'){act=own?`<span class="pill">所持</span>`:`<button data-act="buy" ${S.money>=item.price?'':'disabled'}>購入 ${yen(item.price)}</button>`;}
   else if(eq)act=(kind==='part'||kind==='gear')?`<button data-act="unequip">外す</button>`:`<span class="pill">装備中</span>`;
   else act=`<button data-act="equip" ${kind==='part'&&S.parts.length>=3?'disabled':''}>装備</button>`;
-  return `<div class="card ${eq?'eq':''}" data-kind="${kind}" data-id="${item.id}"><div class="name"><span class="nm"><img class="ci" src="img/${kind==='gear'?'icon_g_'+item.id:(kind==='part'?'part_'+item.id:kind==='cloth'?'cloth_'+item.id:'icon_bike_'+item.id)}.webp" width="28" height="28" alt="">${item.name}</span>${act}</div><div class="spec">${spec}</div></div>`;}
+  return `<div class="card ${eq?'eq':''}" data-kind="${kind}" data-id="${item.id}"><div class="name"><span class="nm"><img class="ci" src="img/${kind==='gear'?'icon_g_'+item.id:(kind==='part'?'part_'+item.id:kind==='cloth'?'cloth_'+item.id:'icon_bike_'+item.id)}.webp" width="28" height="28" alt="">${item.name}${(kind==='bike'||kind==='part')&&plv(item.id)?` <b>+${plv(item.id)}</b>`:''}</span>${act}</div><div class="spec">${spec}</div></div>`;}
 function renderShop(){const lists={bike:BIKES,cloth:CLOTHES,part:PARTS};
   for(const [k,l] of Object.entries(lists)){$('shop-'+k).innerHTML=l.map(i=>card(i,k,'shop')).join('');
     const own=l.filter(i=>owns(k,i.id));$('eq-'+k).innerHTML=own.length?own.map(i=>card(i,k,'equip')).join(''):'<div class="hint">なし</div>';}
   for(const slot of Object.keys(GEAR)){const l=GEAR_ITEMS.filter(i=>i.slot===slot);$('shop-'+slot).innerHTML=l.map(i=>card(i,'gear','shop')).join('');
     const own=l.filter(i=>owns('gear',i.id));$('eq-'+slot).innerHTML=noneCard(slot)+own.map(i=>card(i,'gear','equip')).join('');}
-  $('shop-food').innerHTML=`<div class="card"><div class="name"><span class="nm"><img class="ci" src="img/icon_food.webp" width="28" height="28" alt="">補給食</span><button data-food="1" ${S.money>=FOOD_PRICE&&S.food<FOOD_MAX?'':'disabled'}>購入 ${yen(FOOD_PRICE)}</button></div><div class="spec">バトル中に食べると体力+25 気力+10。所持 ${S.food} / ${FOOD_MAX}個</div></div>`;}
+  $('shop-food').innerHTML=`<div class="card"><div class="name"><span class="nm"><img class="ci" src="img/icon_food.webp" width="28" height="28" alt="">補給食</span><button data-food="1" ${S.money>=FOOD_PRICE&&S.food<FOOD_MAX?'':'disabled'}>購入 ${yen(FOOD_PRICE)}</button></div><div class="spec">バトル中に食べると体力+25 気力+10。所持 ${S.food} / ${FOOD_MAX}個</div></div>`;renderForge();}
+function renderForge(){
+  const row=(kind,item)=>{const lv=plv(item.id),nx=lv+1,keys=kind==='bike'?bikeBoost(item):['climb','rough','cruise','wx','photo','comfy'].filter(k=>item[k]);
+    const fx=keys.map(k=>STATJ[k]+(k==='comfy'?'-1':'+1')).join(' ');
+    const act=lv>=3?'<span class="pill">最大</span>':`<button data-forge="${kind}:${item.id}" ${S.money>=upCost(kind,item,nx)?'':'disabled'}>+${nx}に強化 ${yen(upCost(kind,item,nx))}</button>`;
+    return `<div class="card"><div class="name"><span class="nm"><img class="ci" src="img/${kind==='bike'?'icon_bike_':'part_'}${item.id}.webp" width="28" height="28" alt="">${item.name}${lv?` <b>+${lv}</b>`:''}</span>${act}</div><div class="spec">強化1段ごとに ${fx}${lv?`（現在 +${lv}）`:''}</div></div>`;};
+  $('shop-forge').innerHTML=BIKES.filter(i=>owns('bike',i.id)).map(i=>row('bike',i)).join('')+PARTS.filter(i=>owns('part',i.id)).map(i=>row('part',i)).join('');}
+$('shop-forge').addEventListener('click',e=>{const b=e.target.closest('button[data-forge]');if(!b)return;
+  const [kind,id]=b.dataset.forge.split(':'),item=(kind==='bike'?BIKES:PARTS).find(x=>x.id===id),nx=plv(id)+1;if(!item||nx>3)return;
+  const c=upCost(kind,item,nx);if(S.money<c)return;
+  askPay(`「${item.name}」を+${nx}に強化しますか？`,c,()=>{S.money-=c;S.plus[id]=nx;log(`${item.name}を+${nx}に強化（${yen(c)}）`);render();});});
 $('shop-food').addEventListener('click',e=>{if(!e.target.closest('button[data-food]')||S.money<FOOD_PRICE||S.food>=FOOD_MAX)return;
   askPay('補給食を買いますか？',FOOD_PRICE,()=>{S.money-=FOOD_PRICE;S.food++;log(`補給食を購入（${yen(FOOD_PRICE)}）`);render();});});
 const NONE_TXT={fire:['焚き火なし','気力回復の上乗せなし'],shelter:['寝床なし（地面に直接寝る）','体力・気力の上乗せなし'],tarp:['タープなし','雨ガード0%']};
