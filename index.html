@@ -53,6 +53,9 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .si{width:16px;height:16px;object-fit:contain}
 .card .nm{display:flex;align-items:center;gap:6px;min-width:0}
 .ci{width:28px;height:28px;flex:none;object-fit:contain}
+.subtabs{display:flex;gap:3px;flex-wrap:wrap;margin:2px 0 8px}
+.subtabs button{flex:1 1 auto;padding:4px 3px;font-size:.74rem;white-space:nowrap}
+.subtabs button[aria-selected="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
 .tabs button[aria-selected="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
 .panel{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px;display:flex;flex-direction:column;gap:12px;min-width:0}
 .map{width:100%;max-width:100%;aspect-ratio:400/472;background:color-mix(in srgb,var(--sky) 10%,var(--panel));border-radius:8px;display:block}
@@ -157,12 +160,13 @@ h3{margin-top:2px}
 
   <section class="panel" id="p-shop" hidden>
     <p class="hint">買うとすぐ装備されます（パーツは空きがある場合）。売却はできません。</p>
-    <h2>自転車</h2><div class="shop" id="shop-bike"></div>
-    <h2>衣類</h2><div class="shop" id="shop-cloth"></div>
-    <h2>パーツ</h2><div class="shop" id="shop-part"></div>
-    <h2>焚き火台</h2><div class="shop" id="shop-fire"></div>
-    <h2>寝床</h2><div class="shop" id="shop-shelter"></div>
-    <h2>タープ</h2><div class="shop" id="shop-tarp"></div>
+    <div class="subtabs" id="shop-tabs"><button data-sub="bike" aria-selected="true">自転車</button><button data-sub="cloth" aria-selected="false">衣類</button><button data-sub="part" aria-selected="false">パーツ</button><button data-sub="fire" aria-selected="false">焚き火台</button><button data-sub="shelter" aria-selected="false">寝床</button><button data-sub="tarp" aria-selected="false">タープ</button></div>
+    <div class="shopsec" data-sub="bike"><div class="shop" id="shop-bike"></div></div>
+    <div class="shopsec" data-sub="cloth" hidden><div class="shop" id="shop-cloth"></div></div>
+    <div class="shopsec" data-sub="part" hidden><div class="shop" id="shop-part"></div></div>
+    <div class="shopsec" data-sub="fire" hidden><div class="shop" id="shop-fire"></div></div>
+    <div class="shopsec" data-sub="shelter" hidden><div class="shop" id="shop-shelter"></div></div>
+    <div class="shopsec" data-sub="tarp" hidden><div class="shop" id="shop-tarp"></div></div>
   </section>
 
   <section class="panel" id="p-log" hidden>
@@ -508,6 +512,7 @@ for(const id of ['p-gear','p-camp','p-shop'])$(id).addEventListener('click',shop
 function renderLog(){$('log').innerHTML=S.log.map(l=>`<li>${l}</li>`).join('');
   $('summary').innerHTML=`<span>称号</span><span>${title(S.fame)}</span><span>投稿数</span><span>${S.stats.posts}</span><span>最高写真</span><span>${S.stats.bestQ}点</span><span>勝敗</span><span>${S.stats.wins}勝 ${S.stats.losses}敗</span>`;}
 
+$('shop-tabs').addEventListener('click',e=>{const b=e.target.closest('button[data-sub]');if(!b)return;document.querySelectorAll('#shop-tabs button').forEach(x=>x.setAttribute('aria-selected',x===b));document.querySelectorAll('.shopsec').forEach(s=>s.hidden=s.dataset.sub!==b.dataset.sub);});
 document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tabs button').forEach(x=>x.setAttribute('aria-selected',x===b));
   for(const t of ['map','gear','camp','shop','log'])$('p-'+t).hidden=t!==b.dataset.tab;});
 
