@@ -101,6 +101,10 @@ button:disabled{opacity:.45;cursor:not-allowed}
 h3{margin-top:2px}
 .overlay{position:fixed;inset:0;background:color-mix(in srgb,var(--bg) 88%,transparent);display:flex;
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:16px;z-index:10;overflow:auto}
+.setrow{display:grid;grid-template-columns:4.5em 4.5em 1fr;gap:8px;align-items:center}
+.setrow input[type=range]{width:100%;accent-color:var(--accent)}
+#btn-set{position:fixed;right:max(12px,env(safe-area-inset-right,0px));bottom:max(12px,env(safe-area-inset-bottom,0px));z-index:8;padding:6px 12px;font-size:.85rem;border-radius:999px;box-shadow:0 2px 10px rgba(0,0,0,.35);opacity:.92}
+body{padding-bottom:64px}
 .modal{margin:auto;background:var(--panel);border:2px solid var(--fg);border-radius:10px;padding:16px;max-width:520px;width:100%;display:flex;flex-direction:column;gap:12px;box-shadow:0 10px 40px rgba(0,0,0,.3)}
 .enemy{display:flex;gap:12px;align-items:center}
 .enemy .face{font-size:2.6rem;line-height:1}
@@ -207,6 +211,18 @@ h3{margin-top:2px}
   </div>
 </div>
 
+<button id="btn-set" aria-label="設定">⚙ 設定</button>
+<div class="overlay" id="ov-set" hidden>
+  <div class="modal">
+    <h2>設定</h2>
+    <div class="setrow"><span>BGM</span><button id="set-bgm-t"></button><input type="range" min="0" max="100" id="set-bgm-v" aria-label="BGMの音量"></div>
+    <div class="setrow"><span>効果音</span><button id="set-se-t"></button><input type="range" min="0" max="100" id="set-se-v" aria-label="効果音の音量"></div>
+    <p class="hint">スマホでは、画面を一度タップしてから音が鳴ります。</p>
+    <h3>出典</h3>
+    <p class="hint">地図：地球地図日本（国土地理院）を加工して作成</p>
+    <button class="primary" id="set-close">閉じる</button>
+  </div>
+</div>
 <div class="overlay" id="ov-result" hidden>
   <div class="modal" id="result-box"></div>
 </div>
@@ -542,15 +558,28 @@ function startTrip(p,rinko){const ti=travelInfo(p);const stay=p.id===S.loc;
 function nextEncounter(){if(trip.i>=trip.enc.length||trip.late){endTrip();return;}startBattle(trip.enc[trip.i]);}
 
 // ---------- 音（audio/ に mp3 を置くと自動で鳴る。無ければ無音） ----------
-const AUD={cache:{},cur:null,muted:false,vb:.5,vs:.8};
-try{AUD.muted=localStorage.getItem('cc_mute')==='1';}catch(e){}
+const AUD={cache:{},cur:null,mb:false,ms:false,vb:.5,vs:.8};
+try{const j=JSON.parse(localStorage.getItem('cc_snd')||'null');if(j)Object.assign(AUD,{mb:!!j.mb,ms:!!j.ms,vb:j.vb??.5,vs:j.vs??.8});}catch(e){}
+function saveSnd(){try{localStorage.setItem('cc_snd',JSON.stringify({mb:AUD.mb,ms:AUD.ms,vb:AUD.vb,vs:AUD.vs}));}catch(e){}}
 function audEl(n){if(!AUD.cache[n]){const a=new Audio('audio/'+n+'.mp3');a.preload='auto';a.addEventListener('error',()=>{a._bad=true;});AUD.cache[n]=a;}return AUD.cache[n];}
-function playSE(n){if(AUD.muted)return;try{const a=audEl(n);if(a._bad)return;const c=a.cloneNode();c.volume=AUD.vs;c.play().catch(()=>{});}catch(e){}}
-function playBGM(n){if(AUD.cur===n)return;if(AUD.cur&&AUD.cache[AUD.cur])AUD.cache[AUD.cur].pause();AUD.cur=n;try{const a=audEl(n);a.loop=true;a.volume=AUD.vb;a.currentTime=0;if(!AUD.muted&&!a._bad)a.play().catch(()=>{});}catch(e){}}
-function setSound(on){AUD.muted=!on;try{localStorage.setItem('cc_mute',on?'0':'1');}catch(e){}const a=AUD.cur&&AUD.cache[AUD.cur];if(a){if(on)a.play().catch(()=>{});else a.pause();}}
+function playSE(n){if(AUD.ms||AUD.vs<=0)return;try{const a=audEl(n);if(a._bad)return;const c=a.cloneNode();c.volume=AUD.vs;c.play().catch(()=>{});}catch(e){}}
+function bgmApply(){const a=AUD.cur&&AUD.cache[AUD.cur];if(!a)return;a.volume=AUD.vb;if(AUD.mb||AUD.vb<=0||document.hidden)a.pause();else if(a.paused&&!a._bad)a.play().catch(()=>{});}
+function playBGM(n){if(AUD.cur===n)return;if(AUD.cur&&AUD.cache[AUD.cur])AUD.cache[AUD.cur].pause();AUD.cur=n;try{const a=audEl(n);a.loop=true;a.currentTime=0;bgmApply();}catch(e){}}
 function battleOver(){setTimeout(()=>{if($('ov-battle').hidden)playBGM('bgm_main');},40);}
-document.addEventListener('visibilitychange',()=>{const a=AUD.cur&&AUD.cache[AUD.cur];if(!a)return;if(document.hidden)a.pause();else if(!AUD.muted)a.play().catch(()=>{});});
-document.addEventListener('pointerdown',()=>{if(!AUD.cur)playBGM($('ov-battle').hidden?'bgm_main':'bgm_battle');else{const a=AUD.cache[AUD.cur];if(a&&a.paused&&!AUD.muted&&!document.hidden)a.play().catch(()=>{});}},{capture:true});
+document.addEventListener('visibilitychange',bgmApply);
+document.addEventListener('pointerdown',()=>{if(!AUD.cur)playBGM($('ov-battle').hidden?'bgm_main':'bgm_battle');else bgmApply();},{capture:true});
+// 設定画面
+function renderSet(){$('set-bgm-t').textContent=AUD.mb?'オフ':'オン';$('set-se-t').textContent=AUD.ms?'オフ':'オン';
+  $('set-bgm-v').value=Math.round(AUD.vb*100);$('set-se-v').value=Math.round(AUD.vs*100);
+  $('set-bgm-t').classList.toggle('primary',!AUD.mb);$('set-se-t').classList.toggle('primary',!AUD.ms);}
+$('btn-set').onclick=()=>{renderSet();$('ov-set').hidden=false;};
+$('set-close').onclick=()=>{$('ov-set').hidden=true;};
+$('ov-set').addEventListener('click',e=>{if(e.target===$('ov-set'))$('ov-set').hidden=true;});
+$('set-bgm-t').onclick=()=>{AUD.mb=!AUD.mb;saveSnd();renderSet();if(!AUD.cur)playBGM('bgm_main');bgmApply();};
+$('set-se-t').onclick=()=>{AUD.ms=!AUD.ms;saveSnd();renderSet();playSE('se_hit');};
+$('set-bgm-v').oninput=e=>{AUD.vb=e.target.value/100;saveSnd();bgmApply();};
+$('set-se-v').oninput=e=>{AUD.vs=e.target.value/100;saveSnd();};
+$('set-se-v').onchange=()=>playSE('se_photo');
 
 // ---------- battle ----------
 let B=null;
