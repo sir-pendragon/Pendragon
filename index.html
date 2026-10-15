@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<link rel="icon" type="image/png" href="favicon.png">
 <title>日本巡る自転車旅</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Zen+Kaku+Gothic+New:wght@400;700&display=swap">
@@ -453,7 +454,7 @@ const ENEMY={
  rival:{name:'ライバルインフルエンサー',face:'🤳',img:'img/enemy_rival.webp',hp:40,atk:0,limit:5,stat:'fame',fame:4,hint:'フォロワーと撮影機材で押し切る'},
 };
 const TITLES=[[0,'無名'],[1000,'駆け出し'],[10000,'注目の新人'],[100000,'人気配信者'],[500000,'カリスマ'],[1000000,'伝説']];
-const fol=n=>n<10000?Math.round(n).toLocaleString('ja-JP')+'人':(Math.round(n/1000)/10).toLocaleString('ja-JP',{maximumFractionDigits:1}).replace(/\.0$/,'')+'万人';
+const fol=n=>n<10000?Math.round(n).toLocaleString('ja-JP')+'人':(Math.floor(n/1000)/10).toLocaleString('ja-JP',{maximumFractionDigits:1}).replace(/\.0$/,'')+'万人';
 const sfol=n=>(n>0?'+':n<0?'-':'')+fol(Math.abs(n));
 
 // ---------- helpers ----------
@@ -522,7 +523,7 @@ function rollForecast(){const c=calendar(S.turn),mi=c.mi,f={};const swing=rnd(-3
 const SIGHTS=[[["hokkaido-1","札幌市・時計台"],["hokkaido-2","大雪山"],["hokkaido-3","知床半島"]],[["aomori-1","青森市・アスパム"],["aomori-2","弘前城"],["aomori-3","白神山地"]],[["iwate-1","盛岡市・岩手銀行赤レンガ館"],["iwate-2","龍泉洞"],["iwate-3","平泉"]],[["miyagi-1","仙台市・定禅寺通"],["miyagi-2","松島"],["miyagi-3","蔵王連峰"]],[["akita-1","秋田市・赤れんが郷土館"],["akita-2","男鹿半島"],["akita-3","角館"]],[["yamagata-1","山形市・文翔館"],["yamagata-2","山寺（立石寺）"],["yamagata-3","最上川"]],[["fukushima-1","福島市・旧堀切邸"],["fukushima-2","猪苗代湖"],["fukushima-3","鶴ヶ城"]],[["ibaraki-1","水戸市・弘道館"],["ibaraki-2","霞ヶ浦"],["ibaraki-3","偕楽園"]],[["tochigi-1","宇都宮市・松が峰教会"],["tochigi-2","中禅寺湖"],["tochigi-3","日光東照宮"]],[["gunma-1","前橋市・臨江閣"],["gunma-2","赤城山"],["gunma-3","榛名山"]],[["saitama-1","さいたま市・武蔵一宮氷川神社"],["saitama-2","川越"],["saitama-3","長瀞"]],[["chiba-1","千葉市・千葉ポートタワー"],["chiba-2","九十九里浜"],["chiba-3","鋸山"]],[["tokyo-1","東京・都庁"],["tokyo-2","浅草・雷門"],["tokyo-3","高尾山"]],[["kanagawa-1","横浜市・赤レンガ倉庫"],["kanagawa-2","芦ノ湖"],["kanagawa-3","鎌倉大仏"]],[["niigata-1","新潟市・萬代橋"],["niigata-2","佐渡金山跡"],["niigata-3","信濃川"]],[["toyama-1","富山市・富山城"],["toyama-2","五箇山"],["toyama-3","立山連峰"]],[["ishikawa-1","金沢市・鼓門"],["ishikawa-2","兼六園"],["ishikawa-3","能登半島"]],[["fukui-1","福井市・養浩館庭園"],["fukui-2","東尋坊"],["fukui-3","若狭湾"]],[["yamanashi-1","甲府市・山梨県庁別館"],["yamanashi-2","富士山"],["yamanashi-3","甲府盆地"]],[["nagano-1","長野市・善光寺"],["nagano-2","松本城"],["nagano-3","上高地"]],[["gifu-1","岐阜市・川原町"],["gifu-2","白川郷"],["gifu-3","長良川"]],[["shizuoka-1","静岡市・駿府城東御門"],["shizuoka-2","伊豆半島"],["shizuoka-3","浜名湖"]],[["aichi-1","名古屋市・MIRAI TOWER"],["aichi-2","名古屋城"],["aichi-3","濃尾平野"]],[["mie-1","津市・津城跡"],["mie-2","伊勢神宮"],["mie-3","志摩半島"]],[["shiga-1","大津市・浮御堂"],["shiga-2","琵琶湖"],["shiga-3","彦根城"]],[["kyoto-1","京都市・京都市役所本庁舎"],["kyoto-2","清水寺"],["kyoto-3","天橋立"]],[["osaka-1","大阪市・大阪市中央公会堂"],["osaka-2","大阪城公園"],["osaka-3","仁徳天皇陵古墳"]],[["hyogo-1","神戸市・神戸ポートタワー"],["hyogo-2","姫路城"],["hyogo-3","淡路島"]],[["nara-1","奈良市・興福寺中金堂"],["nara-2","法隆寺"],["nara-3","吉野山"]],[["wakayama-1","和歌山市・和歌山城"],["wakayama-2","高野山"],["wakayama-3","熊野古道"]],[["tottori-1","鳥取市・仁風閣"],["tottori-2","鳥取砂丘"],["tottori-3","大山"]],[["shimane-1","松江市・松江城"],["shimane-2","出雲大社"],["shimane-3","石見銀山"]],[["okayama-1","岡山市・岡山城"],["okayama-2","後楽園"],["okayama-3","瀬戸大橋"]],[["hiroshima-1","広島市・広島城"],["hiroshima-2","厳島神社"],["hiroshima-3","平和記念公園"]],[["yamaguchi-1","山口市・山口県旧県庁舎"],["yamaguchi-2","秋芳洞"],["yamaguchi-3","錦帯橋"]],[["tokushima-1","徳島市・鷲の門"],["tokushima-2","鳴門の渦潮"],["tokushima-3","大歩危・小歩危"]],[["kagawa-1","高松市・艮櫓"],["kagawa-2","栗林公園"],["kagawa-3","小豆島"]],[["ehime-1","松山市・道後温泉本館"],["ehime-2","松山城"],["ehime-3","しまなみ海道"]],[["kochi-1","高知市・高知城"],["kochi-2","四万十川"],["kochi-3","足摺岬"]],[["fukuoka-1","福岡市・浮見堂"],["fukuoka-2","筑後川"],["fukuoka-3","太宰府天満宮"]],[["saga-1","佐賀市・佐賀城本丸歴史館"],["saga-2","吉野ヶ里遺跡"],["saga-3","有明海"]],[["nagasaki-1","長崎市・眼鏡橋"],["nagasaki-2","雲仙岳"],["nagasaki-3","軍艦島"]],[["kumamoto-1","熊本市・水前寺成趣園"],["kumamoto-2","阿蘇"],["kumamoto-3","熊本城"]],[["oita-1","大分市・府内城大手門"],["oita-2","別府"],["oita-3","国東半島"]],[["miyazaki-1","宮崎市・宮崎県庁本館"],["miyazaki-2","高千穂峡"],["miyazaki-3","青島"]],[["kagoshima-1","鹿児島市・県政記念館"],["kagoshima-2","桜島"],["kagoshima-3","屋久島"]],[["okinawa-1","那覇市・守礼門"],["okinawa-2","首里城"],["okinawa-3","西表島"]]];
 function renderSights(){let got=0,full=0,html='',reg='';
   PREF.forEach(p=>{const n=Math.min(3,S.visits[p.id]||0);got+=n;if(n>=3)full++;
-    if(p.region!==reg){reg=p.region;if(reg===p.name)reg=reg;if(reg!==p.name)html+=`<h3 class="sg-reg">${reg}</h3>`;}
+    if(p.region!==reg){reg=p.region;if(reg!==p.name)html+=`<h3 class="sg-reg">${reg}</h3>`;}
     html+=`<div class="sg-pref"><div class="sg-h"><b>${p.name}</b><span>${n}/3</span></div><div class="sg-row">`+
       SIGHTS[p.id].map((s,i)=>i<n?`<button class="sg-c" data-sg="${s[0]}" data-n="${s[1]}"><img loading="lazy" src="img/sights/${s[0]}.webp" width="480" height="320" alt="${s[1]}"><small>${s[1]}</small></button>`:`<div class="sg-c lock"><span>？</span><small>未訪問</small></div>`).join('')+`</div></div>`;});
   $('sg-sum').textContent=`${got} / 141（コンプリート ${full}/47県）`;$('sightbook').innerHTML=html;}
@@ -763,7 +764,7 @@ function fail(why){S.stats.losses++;trip.late=true;log(`${B.e.name}の区間で�
 
 // ---------- camp result ----------
 function endTrip(){const p=trip.p,f=S.forecast[p.id],st=bikeStats(),cl=CLOTHES.find(c=>c.id===S.cloth);
-  S.money-=p.fee;if(TS)TS.fee=p.fee;let html='';
+  const fee=Math.min(p.fee,Math.max(0,S.money));S.money-=fee;if(TS)TS.fee=fee;let html='';
   // clothing check
   let cold=0;if(f.temp<cl.lo)cold=Math.min(40,(cl.lo-f.temp)*3);if(f.temp>cl.hi)cold=Math.min(40,(f.temp-cl.hi)*3);
   if(cold){S.hp-=cold;}
@@ -773,18 +774,18 @@ function endTrip(){const p=trip.p,f=S.forecast[p.id],st=bikeStats(),cl=CLOTHES.f
   const recHp=4+g.hp,recMp=4+g.mp;
   const campRows=`<span>キャンプ回復</span><span>体力+${recHp} 気力+${recMp}</span>${wetHp?`<span>雨ざらし</span><span>体力-${wetHp}</span>`:''}${harshMp?`<span>厳しい環境</span><span>気力-${harshMp}</span>`:''}`;
   const lateL=floss(20,.025);if(trip.late){S.fame=Math.max(0,S.fame-lateL);
-    html=`<h2>遅刻…</h2><div class="photo pic"><img src="img/late.webp" width="720" height="480" alt="日没後にキャンプ場へ着いた自転車旅行者"><div class="cap"><div>${p.site}</div><div>${WX_J[f.wx]} ${f.temp}℃ ・ 📷 撮影できず</div></div></div><p>${p.site}に着いたのは日没後。写真は撮れず、投稿できなかった。</p><div class="res"><span>フォロワー</span><span>-${fol(lateL)}</span><span>利用料</span><span>-${yen(p.fee)}</span>${cold?`<span>衣類不適</span><span>体力-${cold}</span>`:''}${campRows}</div>`;
+    html=`<h2>遅刻…</h2><div class="photo pic"><img src="img/late.webp" width="720" height="480" alt="日没後にキャンプ場へ着いた自転車旅行者"><div class="cap"><div>${p.site}</div><div>${WX_J[f.wx]} ${f.temp}℃ ・ 📷 撮影できず</div></div></div><p>${p.site}に着いたのは日没後。写真は撮れず、投稿できなかった。</p><div class="res"><span>フォロワー</span><span>-${fol(lateL)}</span><span>利用料</span><span>-${yen(fee)}</span>${cold?`<span>衣類不適</span><span>体力-${cold}</span>`:''}${campRows}</div>`;
     log(`${p.site}に遅刻。投稿なし`);}
   else{const wb0={sun:10,cloud:0,rain:-15,wind:-5,typhoon:-25}[f.wx],wb=wet?Math.round(wb0*(1-g.guard)):wb0;let q=40+p.scen*8+st.photo+g.photo+wb+rnd(0,10);if(trip.stay)q-=10;q=Math.max(10,Math.min(100,q));
     playSE('se_photo');S.visits[p.id]++;const became=!S.fam[p.id]&&S.visits[p.id]>=3;if(became)S.fam[p.id]=true;
     let fg=Math.round(q*3+S.fame*.03*q/70)+(S.visits[p.id]===1?300:0)+(became?1000:0);const inc=300+q*25+Math.round(S.fame*.01);S.fame+=fg;S.money+=inc;if(TS){TS.inc=inc;TS.became=became?p.site:null;}S.stats.posts++;S.stats.bestQ=Math.max(S.stats.bestQ,q);
     html=`<h2>${became?'🏅 馴染み宿になった！':'今回の旅の結果'}</h2>${(()=>{const [sid,sn]=sightOf(p.id,S.visits[p.id]);return `<div class="photo pic"><img src="img/sights/${sid}.webp" width="480" height="320" alt="${sn}"><div class="cap"><div>${sn}</div><div class="q">📷 ${q}点</div><div>${WX_J[f.wx]} ${f.temp}℃ ・ ${p.site}</div></div></div>`;})()}
-    <div class="res"><span>フォロワー</span><span>+${fol(fg)}${became?'（馴染み宿ボーナス込）':''}</span><span>SNS収入</span><span>+${yen(inc)}</span><span>利用料</span><span>-${yen(p.fee)}</span>
-    <span>友好度</span><span>${Math.min(3,S.visits[p.id])}/3</span><span>ギア効果</span><span>写真+${g.photo}${wet?`（雨ガード${Math.round(g.guard*100)}%）`:''}</span>${cold?`<span>衣類不適</span><span>体力-${cold}</span>`:''}${campRows}</div>`;
+    <div class="res"><span>フォロワー</span><span>+${fol(fg)}${became?'（馴染み宿ボーナス込）':''}</span><span>SNS収入</span><span>+${yen(inc)}</span><span>利用料</span><span>-${yen(fee)}</span>
+    <span>訪問</span><span>${Math.min(3,S.visits[p.id])}/3</span><span>ギア効果</span><span>写真+${g.photo}${wet?`（雨ガード${Math.round(g.guard*100)}%）`:''}</span>${cold?`<span>衣類不適</span><span>体力-${cold}</span>`:''}${campRows}</div>`;
     log(`${p.site}で投稿（${q}点）フォロワー+${fol(fg)} ${yen(inc)}${became?' 馴染み宿に！':''}`);}
   // natural recovery + advance
   S.hp=Math.min(100,S.hp+recHp);S.mp=Math.min(100,S.mp+recMp);
-  if(S.hp<=0){S.hp=30;S.money-=5000;html+=`<p class="hint">体力が尽きてダウン。治療費¥5,000。</p>`;}
+  if(S.hp<=0){const cure=Math.min(5000,Math.max(0,S.money));S.hp=30;S.money-=cure;html+=`<p class="hint">体力が尽きてダウン。治療費${yen(cure)}${cure<5000?'（所持金が足りず、払える分だけ）':''}。</p>`;}
   if(S.mp<=0){const l=floss(30,.04);S.mp=20;S.fame=Math.max(0,S.fame-l);html+=`<p class="hint">気力が尽きて投稿をサボった。フォロワー-${fol(l)}。</p>`;}
   if(S.money<0)html+=`<p class="hint">所持金がマイナス。次の投稿収入で返済される。</p>`;
   S.sel=S.loc;render();showResult(html,advance);}
