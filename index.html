@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>チャリキャン全国制覇</title>
+<title>日本巡る自転車旅</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Zen+Kaku+Gothic+New:wght@400;700&display=swap">
 <style>
 /* layout: one-screen RPG console. status strip on top, a tabbed main panel (map / gear / log), battle as a full overlay */
@@ -154,7 +154,7 @@ h3{margin-top:2px}
 
 <div class="overlay" id="ov-title">
   <div class="modal title">
-    <h1 class="logo">🚲 チャリキャン<br>全国制覇</h1>
+    <h1 class="logo">🚲 日本巡る<br>自転車旅</h1>
     <p>自転車インフルエンサーとして全国47か所のキャンプ場を巡り、3回通って「馴染み宿」にしろ。</p>
     <p class="hint">毎週末が1ターン。1年＝52ターンで決算。<br>坂・動物・強風・大雨・台風・ライバルがあなたを阻む。</p>
     <label class="hint" for="start-pref">出発地（自宅）を選ぶ</label><select id="start-pref"></select>
@@ -494,7 +494,7 @@ function restHome(){const ti=travelInfo(PREF[S.home]);if(S.loc!==S.home){if(S.mo
   log('自宅で休養。名声-2');showResult(`<h2>自宅で休養</h2><p>体力・気力が全回復した。投稿がなく名声-2。</p>`,advance);}
 function showResult(html,then){$('result-box').innerHTML=html+`<button class="primary" id="res-ok">次の週末へ</button>`;$('ov-result').hidden=false;$('res-ok').onclick=()=>{$('ov-result').hidden=true;then();};}
 function advance(){S.turn++;
-  if(famCount()===47){showResult(`<h2>🎉 全国制覇！</h2><p>47か所すべてを馴染み宿にした。伝説のチャリキャンインフルエンサー誕生。</p><div class="res"><span>達成</span><span>${calLabel(S.turn)}</span><span>名声</span><span>${S.fame}</span><span>所持金</span><span>${yen(S.money)}</span></div>`,()=>{render();});render();return;}
+  if(famCount()===47){showResult(`<h2>🎉 全国制覇！</h2><p>47か所すべてを馴染み宿にした。伝説の自転車インフルエンサー誕生。</p><div class="res"><span>達成</span><span>${calLabel(S.turn)}</span><span>名声</span><span>${S.fame}</span><span>所持金</span><span>${yen(S.money)}</span></div>`,()=>{render();});render();return;}
   if((S.turn-1)%52===0){const y=calendar(S.turn-1).year;rollForecast();showResult(`<h2>${y}年目 決算</h2><div class="res"><span>馴染み宿</span><span>${famCount()} / 47</span><span>名声</span><span>${S.fame}（${title(S.fame)}）</span><span>所持金</span><span>${yen(S.money)}</span><span>勝敗</span><span>${S.stats.wins}勝 ${S.stats.losses}敗</span></div><p class="hint">${y+1}年目は敵が少し強くなる。</p>`,()=>{render();});render();return;}
   rollForecast();S.sel=S.loc;render();}
 
