@@ -634,13 +634,14 @@ function renderMap(){const svg=$('map');const mk=JSON.stringify([S.loc,S.sel,S.v
   s+=`<g id="hero" style="pointer-events:none"><ellipse id="hs" cy="0" ry="1.8" fill="#000" opacity=".28"/><g id="hf">${HFR.map(k=>`<image id="hi_${k}" href="img/hero_${k}.webp" width="${HDIM[k[0]][0]*HK}" height="${HDIM[k[0]][1]*HK}" style="display:none"/>`).join('')}</g><text id="hz1" style="font-size:6px;fill:#fff;paint-order:stroke;stroke:#234;stroke-width:1.5px">z</text><text id="hz2" style="font-size:5px;fill:#fff;paint-order:stroke;stroke:#234;stroke-width:1.5px">z</text></g>`;svg.innerHTML=s;HLAST=null;drawHero();}
 // ---- ドット絵の主人公：歩く／座って焚き火／寝る ----
 const HDIM={w:[90,141],s:[96,132],z:[162,78]},HK=.26;
-const HERO={mode:'sit',x:254,y:426,dir:1,t:20,f:0,goal:null};
+const HERO={mode:'sit',x:254,y:426,dir:1,t:20,f:0,goal:null,ham:false};
+const HAM={x:252,y:402};// ハンモックで寝るときの位置（布のたるみの中央）
 function heroImg(){const f=HERO.f,m=HERO.mode;return m==='walk'?'w'+(1+f%4):m==='sit'?'s'+(f%10<6?1:2):'z'+(f%4<2?1:2);}
 function heroPick(){const r=Math.random();
   if(r<.4)HERO.goal={x:215+Math.random()*90,mode:'walk',y:426};
   else if(r<.7)HERO.goal={x:254,mode:'sit',y:426};
-  else HERO.goal={x:240,mode:'sleep',y:416};
-  HERO.mode='walk';HERO.y=426;}
+  else HERO.goal=S&&S.gear&&S.gear.shelter==='sh1'?{x:HAM.x,mode:'sleep',y:HAM.y,ham:true}:{x:240,mode:'sleep',y:416};
+  HERO.mode='walk';HERO.y=426;HERO.ham=false;}
 const HFR=['w1','w2','w3','w4','s1','s2','z1','z2'];
 HFR.forEach(k=>{const i=new Image();i.src='img/hero_'+k+'.webp';});
 let HLAST=null;
@@ -648,14 +649,14 @@ function drawHero(){if(!$('hero'))return;const k=heroImg(),d=HDIM[k[0]],w=d[0]*H
   const flip=HERO.dir<0&&HERO.mode==='walk',tx=HERO.x-w/2,ty=HERO.y-hh;
   if(HLAST!==k){if(HLAST&&$('hi_'+HLAST))$('hi_'+HLAST).style.display='none';$('hi_'+k).style.display='';HLAST=k;}
   const im=$('hi_'+k);im.setAttribute('x',flip?-(tx+w):tx);im.setAttribute('y',ty);im.setAttribute('transform',flip?'scale(-1 1)':'');
-  const sh=$('hs');sh.setAttribute('cx',HERO.x);sh.setAttribute('cy',HERO.y);sh.setAttribute('rx',w/2.2);
+  const sh=$('hs');sh.style.display=HERO.ham&&HERO.mode==='sleep'?'none':'';sh.setAttribute('cx',HERO.x);sh.setAttribute('cy',HERO.y);sh.setAttribute('rx',w/2.2);
   const sl=HERO.mode==='sleep',o=HERO.f%3,z1=$('hz1'),z2=$('hz2');
   z1.style.display=z2.style.display=sl?'':'none';
   if(sl){z1.setAttribute('x',HERO.x-6);z1.setAttribute('y',ty-1-o*2);z1.style.opacity=1-o*.3;z2.setAttribute('x',HERO.x-1);z2.setAttribute('y',ty-6-o*2);z2.style.opacity=.7-o*.2;}}
 function heroTick(){if($('p-map').hidden||document.hidden)return;
   HERO.f++;
   if(HERO.mode==='walk'){const gx=HERO.goal?HERO.goal.x:HERO.x;const dx=gx-HERO.x;
-    if(Math.abs(dx)<=3){const G=HERO.goal;if(G&&G.mode!=='walk'){HERO.mode=G.mode;HERO.y=G.y;HERO.x=G.x;HERO.dir=1;HERO.goal=null;HERO.t=18+Math.floor(Math.random()*14);}else heroPick();}
+    if(Math.abs(dx)<=3){const G=HERO.goal;if(G&&G.mode!=='walk'){HERO.mode=G.mode;HERO.y=G.y;HERO.x=G.x;HERO.ham=!!G.ham;HERO.dir=1;HERO.goal=null;HERO.t=18+Math.floor(Math.random()*14);}else heroPick();}
     else{HERO.dir=dx>0?1:-1;HERO.x+=HERO.dir*3;}}
   else{HERO.t--;if(HERO.t<=0)heroPick();}
   drawHero();}
