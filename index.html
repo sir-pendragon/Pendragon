@@ -69,6 +69,14 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .map text{font-family:var(--display);font-size:10px;fill:var(--fg);pointer-events:none}
 .legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.8rem;color:var(--muted)}
 .legend span::before{content:"";display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:4px;vertical-align:middle;background:var(--c)}
+.mapbox{position:relative}
+.info{position:absolute;left:3.5%;top:3%;width:47%;padding:6px 8px;border-radius:8px;background:color-mix(in srgb,var(--panel) 84%,transparent);border:1px solid var(--line);font-size:.68rem;line-height:1.35;backdrop-filter:blur(2px);pointer-events:none}
+.info h3{font-size:.85rem;line-height:1.25;margin:0}
+.info .hint{font-size:.66rem;margin-bottom:2px}
+@media (max-width:390px){.info{font-size:.62rem}.info h3{font-size:.78rem}}
+.info .kv{display:grid;grid-template-columns:auto 1fr;gap:1px 6px}
+.info .kv span:nth-child(odd){color:var(--muted)}
+.info .pill{font-size:.62rem;padding:0 6px;display:inline-block;margin:2px 0}
 .detail{display:grid;grid-template-columns:1fr auto;gap:8px 12px;align-items:start}
 .detail .kv{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;font-size:.9rem;min-width:0}
 .detail .kv span:nth-child(odd){color:var(--muted)}
@@ -137,7 +145,7 @@ h3{margin-top:2px}
   </div>
 
   <section class="panel" id="p-map">
-    <svg class="map" id="map" viewBox="0 0 400 472" aria-label="日本地図"></svg>
+    <div class="mapbox"><svg class="map" id="map" viewBox="0 0 400 472" aria-label="日本地図"></svg><div class="info" id="info"></div></div>
     <div class="legend"><span style="--c:var(--a0)">未踏破</span><span style="--c:var(--a1)">1回</span><span style="--c:var(--a2)">2回</span><span style="--c:var(--a3)">3回(馴染み宿)</span><span style="--c:var(--sky)">現在地</span></div>
     <div class="credit">地図：地球地図日本（国土地理院）を加工</div>
     <div class="detail" id="detail"></div>
@@ -466,10 +474,11 @@ function renderDetail(){const p=PREF[S.sel],f=S.forecast[p.id],ti=travelInfo(p),
   const fit=f.temp<cl.lo?`❄️ 衣類が寒い（${cl.lo-f.temp}℃不足）`:f.temp>cl.hi?`🔥 衣類が暑い（${f.temp-cl.hi}℃超過）`:'👕 衣類OK';
   const enemies=[];if(p.terrain==='hill')enemies.push('激坂');if(p.terrain==='rough'||WILD.has(p.region))enemies.push('野生動物');
   if(f.wx==='rain')enemies.push('大雨');if(f.wx==='wind')enemies.push('強風');if(f.wx==='typhoon')enemies.push('台風');if(p.scen>=5)enemies.push('ライバル?');
-  $('detail').innerHTML=`<div><h3>${p.site}</h3><div class="hint">${p.name}・${p.region}</div></div><div>${badge}</div>
-  <div class="kv"><span>地形</span><span>${TERRAIN[p.terrain]}（難度${'★'.repeat(p.diff)}）</span><span>景観</span><span>${'📷'.repeat(p.scen)}</span>
-  <span>予報</span><span>${WX_J[f.wx]} ${f.temp}℃　${fit}</span><span>距離</span><span>${stay?'同じ場所（気力-15）':ti.d+'km → 遭遇 '+(ti.ride?ti.enc+'回':'自走不可')}</span>
-  <span>想定</span><span>${enemies.join('・')||'特になし'}</span><span>利用料</span><span>${yen(p.fee)}</span><span>ギア</span><span>${gearFx().names.join('・')||'なし（地面に直接寝る）'}</span></div>
+  $('info').innerHTML=`<h3>${p.site}</h3><div class="hint">${p.name}・${p.region}</div>${badge}
+  <div class="kv"><span>地形</span><span>${TERRAIN[p.terrain]}（${'★'.repeat(p.diff)}）</span><span>景観</span><span>${'📷'.repeat(p.scen)}</span>
+  <span>予報</span><span>${WX_J[f.wx]} ${f.temp}℃<br>${fit}</span><span>距離</span><span>${stay?'同じ場所（気力-15）':ti.d+'km<br>'+(ti.ride?'遭遇'+ti.enc+'回':'自走不可')}</span>
+  <span>想定</span><span>${enemies.join('・')||'特になし'}</span><span>利用料</span><span>${yen(p.fee)}</span></div>`;
+  $('detail').innerHTML=`
   <div class="acts">${stay?`<button class="primary" id="go-stay">自転車旅に行く（同じ場所）</button>`:
    `<button class="primary" id="go-ride" ${ti.ride?'':'disabled'}>自転車旅に行く（自走）${ti.ride?'':'（遠すぎる）'}</button>
     <button id="go-rinko" ${S.money>=ti.rinko?'':'disabled'}>輪行で旅に行く ${yen(ti.rinko)}</button>`}
