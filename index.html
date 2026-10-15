@@ -148,7 +148,7 @@ h3{margin-top:2px}
   <section class="panel" id="p-camp" hidden>
     <p class="hint">持っているキャンプギア。写真の出来栄えと、翌週に持ち越す疲労が変わります。</p>
     <h2>焚き火台（気力回復）</h2><div class="shop" id="eq-fire"></div>
-    <h2>寝床：テントかハンモック（体力・気力回復）</h2><div class="shop" id="eq-shelter"></div>
+    <h2>寝床（体力・気力回復）</h2><div class="shop" id="eq-shelter"></div>
     <h2>タープ（雨から守る）</h2><div class="shop" id="eq-tarp"></div>
   </section>
 
@@ -454,8 +454,12 @@ function renderShop(){const lists={bike:BIKES,cloth:CLOTHES,part:PARTS};
   for(const [k,l] of Object.entries(lists)){$('shop-'+k).innerHTML=l.map(i=>card(i,k,'shop')).join('');
     const own=l.filter(i=>owns(k,i.id));$('eq-'+k).innerHTML=own.length?own.map(i=>card(i,k,'equip')).join(''):'<div class="hint">なし</div>';}
   for(const slot of Object.keys(GEAR)){const l=GEAR_ITEMS.filter(i=>i.slot===slot);$('shop-'+slot).innerHTML=l.map(i=>card(i,'gear','shop')).join('');
-    const own=l.filter(i=>owns('gear',i.id));$('eq-'+slot).innerHTML=own.length?own.map(i=>card(i,'gear','equip')).join(''):'<div class="hint">なし（地面に直接寝る）</div>';}}
+    const own=l.filter(i=>owns('gear',i.id));$('eq-'+slot).innerHTML=noneCard(slot)+own.map(i=>card(i,'gear','equip')).join('');}}
+const NONE_TXT={fire:['焚き火なし','気力回復の上乗せなし'],shelter:['寝床なし（地面に直接寝る）','体力・気力の上乗せなし'],tarp:['タープなし','雨ガード0%']};
+function noneCard(slot){const on=!S.gear[slot],[n,s]=NONE_TXT[slot];
+  return `<div class="card ${on?'eq':''}" data-kind="gear" data-slot="${slot}" data-none="1"><div class="name"><span class="nm"><img class="ci" src="img/icon_${slot}.webp" width="28" height="28" alt="" style="opacity:.4">${n}</span>${on?'<span class="pill">装備中</span>':'<button data-act="unequip">外す</button>'}</div><div class="spec">${s}</div></div>`;}
 function shopClick(e){const b=e.target.closest('button[data-act]');if(!b)return;const c=b.closest('.card'),kind=c.dataset.kind,id=c.dataset.id;
+  if(c.dataset.none){S.gear[c.dataset.slot]=null;render();return;}
   const list=kind==='bike'?BIKES:kind==='cloth'?CLOTHES:kind==='gear'?GEAR_ITEMS:PARTS,item=list.find(x=>x.id===id),key=kind==='bike'?'bikes':kind==='cloth'?'cloth':kind==='gear'?'gear':'parts';
   if(b.dataset.act==='buy'){if(S.money<item.price)return;S.money-=item.price;S.owned[key].push(id);log(`${item.name}を購入（${yen(item.price)}）`);}
   if(b.dataset.act==='buy'||b.dataset.act==='equip'){if(kind==='bike')S.bike=id;else if(kind==='cloth')S.cloth=id;else if(kind==='gear')S.gear[item.slot]=id;else if(S.parts.length<3)S.parts.push(id);}
