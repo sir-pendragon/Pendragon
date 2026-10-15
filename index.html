@@ -701,7 +701,7 @@ function endTrip(){const p=trip.p,f=S.forecast[p.id],st=bikeStats(),cl=CLOTHES.f
   else{const wb0={sun:10,cloud:0,rain:-15,wind:-5,typhoon:-25}[f.wx],wb=wet?Math.round(wb0*(1-g.guard)):wb0;let q=40+p.scen*8+st.photo+g.photo+wb+rnd(0,10);if(trip.stay)q-=10;q=Math.max(10,Math.min(100,q));
     playSE('se_photo');S.visits[p.id]++;const became=!S.fam[p.id]&&S.visits[p.id]>=3;if(became)S.fam[p.id]=true;
     let fg=Math.round(q/5)+(S.visits[p.id]===1?5:0)+(became?10:0);const inc=300+q*25+S.fame*3;S.fame+=fg;S.money+=inc;if(TS){TS.inc=inc;TS.became=became?p.site:null;}S.stats.posts++;S.stats.bestQ=Math.max(S.stats.bestQ,q);
-    html=`<h2>${became?'🏅 馴染み宿になった！':'素敵なキャンプの夜'}</h2>${(()=>{const [sid,sn]=sightOf(p.id,S.visits[p.id]);return `<div class="photo pic"><img src="img/sights/${sid}.webp" width="480" height="320" alt="${sn}"><div class="cap"><div>${sn}</div><div class="q">📷 ${q}点</div><div>${WX_J[f.wx]} ${f.temp}℃ ・ ${p.site}</div></div></div>`;})()}
+    html=`<h2>${became?'🏅 馴染み宿になった！':'今回の旅の結果'}</h2>${(()=>{const [sid,sn]=sightOf(p.id,S.visits[p.id]);return `<div class="photo pic"><img src="img/sights/${sid}.webp" width="480" height="320" alt="${sn}"><div class="cap"><div>${sn}</div><div class="q">📷 ${q}点</div><div>${WX_J[f.wx]} ${f.temp}℃ ・ ${p.site}</div></div></div>`;})()}
     <div class="res"><span>名声</span><span>+${fg}${became?'（馴染み宿ボーナス込）':''}</span><span>SNS収入</span><span>+${yen(inc)}</span><span>利用料</span><span>-${yen(p.fee)}</span>
     <span>友好度</span><span>${Math.min(3,S.visits[p.id])}/3</span><span>ギア効果</span><span>写真+${g.photo}${wet?`（雨ガード${Math.round(g.guard*100)}%）`:''}</span>${cold?`<span>衣類不適</span><span>体力-${cold}</span>`:''}${campRows}</div>`;
     log(`${p.site}で投稿（${q}点）名声+${fg} ${yen(inc)}${became?' 馴染み宿に！':''}`);}
