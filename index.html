@@ -90,6 +90,7 @@ h3{margin-top:2px}
 .title p{margin:0}
 .row{display:flex;gap:8px;flex-wrap:wrap}
 .row>*{flex:1}
+.loghead{display:flex;justify-content:space-between;align-items:center;gap:8px}
 .res{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-variant-numeric:tabular-nums}
 .res span:nth-child(odd){color:var(--muted)}
 @media (prefers-reduced-motion:no-preference){ .shake{animation:shake .35s} @keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}} }
@@ -147,10 +148,9 @@ h3{margin-top:2px}
   </section>
 
   <section class="panel" id="p-log" hidden>
-    <h2>旅の記録</h2>
+    <div class="loghead"><h2>旅の記録</h2><button id="btn-reset">リセット</button></div>
     <div class="res" id="summary"></div>
     <ul class="log" id="log"></ul>
-    <div class="row"><button id="btn-reset">はじめから</button></div>
   </section>
 </div>
 
@@ -504,7 +504,7 @@ function advance(){S.turn++;
 $('start-pref').innerHTML=PREF.map(p=>`<option value="${p.id}">${p.name}（${p.site}）</option>`).join('');$('start-pref').value='12';
 $('btn-new').onclick=()=>{newGame(+$('start-pref').value);$('ov-title').hidden=true;render();};
 $('btn-cont').onclick=()=>{$('ov-title').hidden=true;render();};
-$('btn-reset').onclick=()=>{if($('btn-reset').textContent==='本当に消す？'){$('ov-title').hidden=false;$('btn-reset').textContent='はじめから';$('tab-map').click();}else{$('btn-reset').textContent='本当に消す？';setTimeout(()=>$('btn-reset').textContent='はじめから',3000);}};
+$('btn-reset').onclick=()=>{if($('btn-reset').textContent==='本当に消す？'){$('ov-title').hidden=false;$('btn-reset').textContent='リセット';$('tab-map').click();}else{$('btn-reset').textContent='本当に消す？';setTimeout(()=>$('btn-reset').textContent='リセット',3000);}};
 const saved=load();if(saved&&saved.forecast){S=saved;$('btn-cont').hidden=false;render();}
 })();
 </script>
