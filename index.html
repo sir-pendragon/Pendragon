@@ -554,7 +554,7 @@ function startTrip(p,rinko){const ti=travelInfo(p);const stay=p.id===S.loc;
     if(f.wx==='typhoon'&&!enc.includes('typhoon'))enc[enc.length-1]='typhoon';}
   if(p.scen>=5&&Math.random()<(stay?.15:.4))enc.push('rival');
   trip={p,rinko,stay,enc,i:0,late:false};S.loc=p.id;if(stay){S.mp-=Math.max(0,15-bikeStats().comfy);}
-  nextEncounter();}
+  S.sel=S.loc;render();nextEncounter();}
 function nextEncounter(){if(trip.i>=trip.enc.length||trip.late){endTrip();return;}startBattle(trip.enc[trip.i]);}
 
 // ---------- 音（audio/ に mp3 を置くと自動で鳴る。無ければ無音） ----------
@@ -565,7 +565,7 @@ function audEl(n){if(!AUD.cache[n]){const a=new Audio('audio/'+n+'.mp3');a.prelo
 function playSE(n){if(AUD.ms||AUD.vs<=0)return;try{const a=audEl(n);if(a._bad)return;const c=a.cloneNode();c.volume=AUD.vs;c.play().catch(()=>{});}catch(e){}}
 function bgmApply(){const a=AUD.cur&&AUD.cache[AUD.cur];if(!a)return;a.volume=AUD.vb;if(AUD.mb||AUD.vb<=0||document.hidden)a.pause();else if(a.paused&&!a._bad)a.play().catch(()=>{});}
 function playBGM(n){if(AUD.cur===n)return;if(AUD.cur&&AUD.cache[AUD.cur])AUD.cache[AUD.cur].pause();AUD.cur=n;try{const a=audEl(n);a.loop=true;a.currentTime=0;bgmApply();}catch(e){}}
-function battleOver(){setTimeout(()=>{if($('ov-battle').hidden)playBGM('bgm_main');},40);}
+function battleOver(){render();setTimeout(()=>{if($('ov-battle').hidden)playBGM('bgm_main');},40);}
 document.addEventListener('visibilitychange',bgmApply);
 document.addEventListener('pointerdown',()=>{if(!AUD.cur)playBGM($('ov-battle').hidden?'bgm_main':'bgm_battle');else bgmApply();},{capture:true});
 // 設定画面
@@ -654,13 +654,13 @@ function endTrip(){const p=trip.p,f=S.forecast[p.id],st=bikeStats(),cl=CLOTHES.f
   if(S.hp<=0){S.hp=30;S.money-=5000;html+=`<p class="hint">体力が尽きてダウン。治療費¥5,000。</p>`;}
   if(S.mp<=0){S.mp=20;S.fame=Math.max(0,S.fame-5);html+=`<p class="hint">気力が尽きて投稿をサボった。名声-5。</p>`;}
   if(S.money<0)html+=`<p class="hint">所持金がマイナス。次の投稿収入で返済される。</p>`;
-  showResult(html,advance);}
+  S.sel=S.loc;render();showResult(html,advance);}
 function restHome(){const ti=travelInfo(PREF[S.home]);if(S.loc!==S.home){if(S.money<ti.rinko)return;S.money-=ti.rinko;}S.loc=S.home;S.hp=100;S.mp=100;S.fame=Math.max(0,S.fame-2);
-  log('自宅で休養。名声-2');showResult(`<h2>自宅で休養</h2><p>体力・気力が全回復した。投稿がなく名声-2。</p>`,advance);}
+  log('自宅で休養。名声-2');S.sel=S.loc;render();showResult(`<h2>自宅で休養</h2><p>体力・気力が全回復した。投稿がなく名声-2。</p>`,advance);}
 function showResult(html,then){$('result-box').innerHTML=html+`<button class="primary" id="res-ok">次の週末へ</button>`;$('ov-result').hidden=false;$('res-ok').onclick=()=>{$('ov-result').hidden=true;then();};}
 function advance(){S.turn++;
   if(famCount()===47){showResult(`<h2>🎉 全国制覇！</h2><p>47か所すべてを馴染み宿にした。伝説の自転車インフルエンサー誕生。</p><div class="res"><span>達成</span><span>${calLabel(S.turn)}</span><span>名声</span><span>${S.fame}</span><span>所持金</span><span>${yen(S.money)}</span></div>`,()=>{render();});render();return;}
-  if((S.turn-1)%52===0){const y=calendar(S.turn-1).year;rollForecast();showResult(`<h2>${y}年目 決算</h2><div class="res"><span>都道府県制覇数</span><span>${famCount()} / 47</span><span>名声</span><span>${S.fame}（${title(S.fame)}）</span><span>所持金</span><span>${yen(S.money)}</span><span>勝敗</span><span>${S.stats.wins}勝 ${S.stats.losses}敗</span></div><p class="hint">${y+1}年目は敵が少し強くなる。</p>`,()=>{render();});render();return;}
+  if((S.turn-1)%52===0){const y=calendar(S.turn-1).year;rollForecast();S.sel=S.loc;showResult(`<h2>${y}年目 決算</h2><div class="res"><span>都道府県制覇数</span><span>${famCount()} / 47</span><span>名声</span><span>${S.fame}（${title(S.fame)}）</span><span>所持金</span><span>${yen(S.money)}</span><span>勝敗</span><span>${S.stats.wins}勝 ${S.stats.losses}敗</span></div><p class="hint">${y+1}年目は敵が少し強くなる。</p>`,()=>{render();});render();return;}
   rollForecast();S.sel=S.loc;render();}
 
 // ---------- boot ----------
