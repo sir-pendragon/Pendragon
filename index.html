@@ -83,7 +83,8 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .detail .kv span:nth-child(odd){color:var(--muted)}
 .detail .acts{display:flex;flex-direction:row;gap:6px;grid-column:1/-1}
 .detail .acts button{flex:1 1 0;min-width:0;padding:8px 2px;font-size:.76rem;line-height:1.25;white-space:nowrap;display:flex;flex-direction:column;align-items:center;gap:1px}
-.detail .acts button small{font-size:.68rem;opacity:.8}
+@media (max-width:340px){.detail .acts button{font-size:.68rem}}
+.detail .acts button small{font-size:.68rem;opacity:.8;white-space:normal;text-align:center;word-break:keep-all;overflow-wrap:anywhere}
 .pill{display:inline-block;padding:1px 8px;border-radius:999px;font-size:.78rem;border:1px solid var(--line);color:var(--muted)}
 .pill.fam{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
 .sitelist{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px}
@@ -549,9 +550,9 @@ function renderDetail(){const p=PREF[S.sel],f=S.forecast[p.id],ti=travelInfo(p),
   <span>予報</span><span>${WX_J[f.wx]} ${f.temp}℃<br>${fit}</span><span>距離</span><span>${stay?'同じ場所（気力-15）':ti.d+'km<br>'+(ti.ride?'遭遇'+ti.enc+'回':'自走不可')}</span>
   <span>想定</span><span>${enemies.join('・')||'特になし'}</span><span>利用料</span><span>${yen(p.fee)}</span></div>`;
   $('detail').innerHTML=`
-  <div class="acts">${stay?`<button class="primary" id="go-stay">自転車旅に行く<small>同じ場所</small></button><button disabled>輪行で旅に行く<small>行き先を選ぶ</small></button>`:
-   `<button class="primary" id="go-ride" ${ti.ride?'':'disabled'}>自転車旅に行く<small>${ti.ride?'自走':'遠すぎる'}</small></button>
-    <button id="go-rinko" ${S.money>=ti.rinko?'':'disabled'}>輪行で旅に行く<small>${yen(ti.rinko)}</small></button>`}
+  <div class="acts">${stay?`<button class="primary" id="go-stay">自転車旅に行く<small>${p.name}（現在地）</small></button><button disabled>輪行で旅に行く<small>${p.name}（現在地）</small></button>`:
+   `<button class="primary" id="go-ride" ${ti.ride?'':'disabled'}>自転車旅に行く<small>${p.name}${ti.ride?'へ':'は遠すぎる'}</small></button>
+    <button id="go-rinko" ${S.money>=ti.rinko?'':'disabled'}>輪行で旅に行く<small>${p.name}へ ${yen(ti.rinko)}</small></button>`}
    ${S.loc!==S.home?`<button id="go-home">自宅で休む<small>輪行 ${yen(travelInfo(PREF[S.home]).rinko)}</small></button>`:`<button id="go-home">自宅で休む<small>体力・気力回復</small></button>`}</div>`;
   const b=id=>$(id);if(b('go-ride'))b('go-ride').onclick=()=>askGo(p,false);if(b('go-rinko'))b('go-rinko').onclick=()=>askGo(p,true);
   if(b('go-stay'))b('go-stay').onclick=()=>askGo(p,false);b('go-home').onclick=restHome;}
