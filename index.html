@@ -136,6 +136,9 @@ h3{margin-top:2px}
 .route img{position:absolute;bottom:6px;width:34px;height:34px;transform:translateX(-50%);object-fit:contain;transition:left .35s}
 .route img.flag{position:absolute;left:auto;right:-40px;bottom:2px;width:38px;height:38px;transform:none;transition:none}
 .bt-km{font-family:var(--display);font-size:1.05rem;color:var(--fg)}
+.bt-bar{display:flex;align-items:center;gap:6px;margin:3px 0;font-family:var(--display);font-size:1.05rem;color:var(--fg);font-variant-numeric:tabular-nums}
+.bt-bar .bar{flex:1;min-width:0}
+.bt-bar b{min-width:2.2em;text-align:right;font-weight:400}
 .cmds{display:grid;grid-template-columns:1fr 1fr;gap:6px}
 .cmds button{text-align:left;line-height:1.25}
 .cmds button.primary{grid-column:1/-1;text-align:center;padding:12px}
@@ -810,7 +813,7 @@ const HIT={hill:'坂がきつい',animal:'野生動物に足止めされた',win
 function tacOK(){const k=B.kind;return k==='hill'?S.hp>5:k==='animal'?S.mp>=5:k==='rival'?S.mp>=8:k==='rain'?!!S.gear.tarp:k==='typhoon'?!!S.gear.shelter:true;}
 function playerPower(){const st=bikeStats();if(B.kind==='rival')return 8+FL()/8+st.photo/2;return st[B.e.stat]*4;}
 function renderBattle(){const pr=Math.min(100,Math.max(0,(1-B.hp/B.max)*100));$('bt-hp').style.width=pr+'%';$('bt-bike').style.left=pr+'%';$('bt-bike').src=isRival()?'img/part_cam.webp':'img/icon_bike_'+S.bike+'.webp';$('bt-goal').src=isRival()?'img/part_tripod.webp':'img/icon_g_sh2.webp';
-  $('bt-info').innerHTML=`<span class="bt-km">${B.hp<=0?(isRival()?'撮影スポットに到着！':'区間ゴール！'):LEFT()+' '+fmtD(B.hp)}</span><br><span class="bt-km">日没まで あと${B.limit-B.turn+1}時間</span><br><span class="bt-km">体力${S.hp}　気力${S.mp}${isRival()?'　フォロワー'+fol(S.fame):''}</span><br>次の${isRival()?'ライバル':'敵'}の勢い：${B.next==='heavy'?`<b style="color:var(--bad)">${NEXT.heavy[0]}</b>`:NEXT[B.next][0]}　補給食${S.food}個`;
+  $('bt-info').innerHTML=`<span class="bt-km">${B.hp<=0?(isRival()?'撮影スポットに到着！':'区間ゴール！'):LEFT()+' '+fmtD(B.hp)}</span><br><span class="bt-km">日没まで あと${B.limit-B.turn+1}時間</span><div class="bt-bar"><span>体力</span><div class="bar"><i style="width:${Math.max(0,S.hp)}%"></i></div><b>${S.hp}</b></div><div class="bt-bar"><span>気力</span><div class="bar mp"><i style="width:${Math.max(0,S.mp)}%"></i></div><b>${S.mp}</b></div>${isRival()?`<span class="bt-km">フォロワー ${fol(S.fame)}</span><br>`:''}次の${isRival()?'ライバル':'敵'}の勢い：${B.next==='heavy'?`<b style="color:var(--bad)">${NEXT.heavy[0]}</b>`:NEXT[B.next][0]}　補給食${S.food}個`;
   const st=bikeStats(),ti={rinko:trip.rk};const pw=playerPower(),pd=v=>fmtD(v);
   const cmds=B.kind==='rival'?[
     ['post','映え投稿で勝負',`約${pd(pw+4)}詰める（フォロワー・写真機材）`],
