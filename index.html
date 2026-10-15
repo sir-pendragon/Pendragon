@@ -631,11 +631,13 @@ function renderMap(){const svg=$('map');const mk=JSON.stringify([S.loc,S.sel,S.v
   const TARP_FIT={sh3:{tp1:[.30,413],tp2:[.30,413],tp3:[.175,420,20]},sh2:{tp1:[.27,413],tp2:[.215,413],tp3:[.175,420,20]}};const tf=(S.gear.tarp&&TARP_FIT[S.gear.shelter]&&TARP_FIT[S.gear.shelter][S.gear.tarp])||[tk[S.gear.tarp],403,0];// [scale, 接地y, 横ずれ]
   // 大型タープ＋テントのときは、テントをさらにタープの奥（地図の上側）に置く
   const UNDER=S.gear.tarp==='tp3'&&(S.gear.shelter==='sh2'||S.gear.shelter==='sh3')?{x:264,by:S.gear.shelter==='sh3'?397:392,k:S.gear.shelter==='sh3'?.1:.16}:null;
-  const BEHIND=!!(S.gear.tarp&&(S.gear.shelter==='sh2'||S.gear.shelter==='sh3'));// テント＋タープのときは、テントを奥に描いて、タープの布とポールを手前に重ねる
+  const hasTent=S.gear.shelter==='sh2'||S.gear.shelter==='sh3';
+  // 簡易・ヘキサ：布(奥)→テント→ポール(手前)。テントの頂点が布の手前に出て、屋根の下に入って見える。大型タープだけは布を手前に重ねてテントを隠す
+  const BEHIND=S.gear.tarp==='tp3'&&hasTent;
   const tarpS=S.gear.tarp?put('tarp_'+S.gear.tarp,252+(tf[2]||0),tf[1],tf[0]):'';
   const shS=S.gear.shelter?(UNDER?put('shelter_'+S.gear.shelter,UNDER.x,UNDER.by,UNDER.k):put('shelter_'+S.gear.shelter,252,408+(S.gear.shelter==='sh3'?SH3_DROP:0),sk[S.gear.shelter])):'';
   s+=`<g style="pointer-events:none">${put('camp_ground',272,462,244/451)}${put('tree_'+season(calendar(S.turn).mi),332,380,.385)}`
-   +(BEHIND?shS+tarpS:tarpS+shS)
+   +(BEHIND?shS+tarpS:tarpS+shS+(hasTent&&S.gear.tarp==='tp2'?tarpPole('tp2',252+(tf[2]||0),tf[1],tf[0]):''))
    +(S.parts.includes('tripod')?put('part_tripod',222,424,.2)+(S.parts.includes('cam')?put('part_cam',222,402,.1):''):(S.parts.includes('cam')?put('part_cam',312,430,.1):''))
    +(S.parts.includes('comfy')?put('part_comfy',204,418,.2):'')
    +put('bike_'+S.bike,332,419,.26)
@@ -646,6 +648,10 @@ function renderMap(){const svg=$('map');const mk=JSON.stringify([S.loc,S.sel,S.v
    +(S.gear.shelter==='sh2'||S.gear.shelter==='sh3'?(UNDER?zzzFx(UNDER.by-(S.gear.shelter==='sh3'?44:34),UNDER.x-252):zzzFx(S.gear.shelter==='sh3'?372+SH3_DROP:378)):'');svg.innerHTML=s;HLAST=null;drawHero();}
 // テントで寝ている間、テントの上に立ちのぼる「Z z z」（ty：テントの頂点のy）
 function zzzFx(ty,dx=0){return `<g id="zzz" style="display:none;pointer-events:none"><text class="zq" x="${258+dx}" y="${ty+6}" style="font-size:9px">Z</text><text class="zq zq2" x="${265+dx}" y="${ty}" style="font-size:7px">z</text><text class="zq zq3" x="${271+dx}" y="${ty-6}" style="font-size:5.5px">z</text></g>`;}
+// ヘキサタープの中央ポールだけを切り抜き、テントの手前に重ねる（元の絵の x=245〜259 がポール）
+function tarpPole(key,cx,by,k){const d=SPRK[key],w=d[0]*k,hh=d[1]*k,x=cx-w/2,y=by-hh;
+  return `<clipPath id="tpole"><rect x="${(x+245*k).toFixed(1)}" y="${y.toFixed(1)}" width="${(14*k).toFixed(1)}" height="${hh.toFixed(1)}"/></clipPath><image href="img/tarp_${key}.webp" x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${w.toFixed(1)}" height="${hh.toFixed(1)}" clip-path="url(#tpole)"/>`;}
+const SPRK={tp2:[565,199]};
 // ハンモックで寝るとき、寝袋の下半分を手前の布で隠す（同じ絵を、布の手前側だけ切り抜いてキャラの上に重ねる）
 const HAMF={x0:95,x1:425,y0:98};// 切り抜く範囲（元の絵の座標）。杭を含めず、布のたるみの手前側だけ
 function hamFront(k){const d=[481,185],w=d[0]*k,hh=d[1]*k,x=252-w/2,y=408-hh;
