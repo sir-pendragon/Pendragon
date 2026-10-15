@@ -151,6 +151,8 @@ h3{margin-top:2px}
 .res{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-variant-numeric:tabular-nums}
 .res span:nth-child(odd){color:var(--muted)}
 @media (prefers-reduced-motion:no-preference){ .shake{animation:shake .35s} @keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}} }
+.rules-h{margin:.6em 0 .2em;font-size:14px;text-align:left}
+.copy{text-align:center;margin:1em 0 0;font-size:11px}
 </style>
 
 <div class="app" id="app">
@@ -214,9 +216,11 @@ h3{margin-top:2px}
   <div class="modal title">
     <div class="hero"><img src="img/title.webp" width="1200" height="800" alt="夕暮れの尾根道から日本の山並みと海を見渡す自転車旅行者"><h1 class="logo">日本巡る<br>自転車旅</h1></div>
     <p>自転車インフルエンサーとして全国47か所のキャンプ場を巡ろう</p>
+    <h3 class="rules-h">■ゲームのルール</h3>
     <p class="hint">毎週末が1ターン。1年＝52ターンで決算。<br>坂・動物・強風・大雨・台風・ライバルがあなたを阻む。</p>
     <label class="hint" for="start-pref">出発地（自宅）を選ぶ</label><select id="start-pref"></select>
     <div class="row"><button class="primary" id="btn-new">はじめから</button><button id="btn-cont" hidden>つづきから</button></div>
+    <p class="hint copy">(c) キャメロット王国自転車旅推進室</p>
   </div>
 </div>
 
