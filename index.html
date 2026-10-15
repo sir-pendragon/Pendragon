@@ -223,7 +223,7 @@ h3{margin-top:2px}
 
   <section class="panel" id="p-shop" hidden>
     <p class="hint">買うとすぐ装備されます（パーツは空きがある場合）。売却はできません。</p>
-    <div class="subtabs" id="shop-tabs"><button data-sub="bike" aria-selected="true">自転車</button><button data-sub="cloth" aria-selected="false">衣類</button><button data-sub="part" aria-selected="false">パーツ</button><button data-sub="fire" aria-selected="false">焚き火台</button><button data-sub="shelter" aria-selected="false">寝床</button><button data-sub="tarp" aria-selected="false">タープ</button><button data-sub="food" aria-selected="false">補給食</button><button data-sub="forge" aria-selected="false">鍛冶屋</button></div>
+    <div class="subtabs" id="shop-tabs"><button data-sub="bike" aria-selected="true">自転車</button><button data-sub="cloth" aria-selected="false">衣類</button><button data-sub="part" aria-selected="false">パーツ</button><button data-sub="fire" aria-selected="false">焚き火台</button><button data-sub="shelter" aria-selected="false">寝床</button><button data-sub="tarp" aria-selected="false">タープ</button><button data-sub="food" aria-selected="false">補給食</button><button data-sub="forge" aria-selected="false">カスタム</button></div>
     <div class="shopsec" data-sub="bike"><div class="shop" id="shop-bike"></div></div>
     <div class="shopsec" data-sub="cloth" hidden><div class="shop" id="shop-cloth"></div></div>
     <div class="shopsec" data-sub="part" hidden><div class="shop" id="shop-part"></div></div>
@@ -231,7 +231,7 @@ h3{margin-top:2px}
     <div class="shopsec" data-sub="shelter" hidden><div class="shop" id="shop-shelter"></div></div>
     <div class="shopsec" data-sub="tarp" hidden><div class="shop" id="shop-tarp"></div></div>
     <div class="shopsec" data-sub="food" hidden><div class="shop" id="shop-food"></div></div>
-    <div class="shopsec" data-sub="forge" hidden><p class="hint" style="margin:0 0 6px">鍛冶屋で、持っている自転車・パーツを最大+3まで強化できます。自転車は得意な上位2つの能力、パーツはその効果が、1段ごとに+1されます。</p><div class="shop" id="shop-forge"></div></div>
+    <div class="shopsec" data-sub="forge" hidden><p class="hint" style="margin:0 0 6px">持っている自転車・パーツを、最大+3までカスタムできます。自転車は得意な上位2つの能力、パーツはその効果が、1段ごとに+1されます。</p><div class="shop" id="shop-forge"></div></div>
   </section>
 
   <section class="panel" id="p-log" hidden>
@@ -565,9 +565,9 @@ function load(){try{const s=localStorage.getItem('charicamp');if(!s)return null;
 function log(t){S.log.unshift(`${calLabel(S.turn)} ${t}`);if(S.log.length>120)S.log.length=120;}
 function calLabel(t){const c=calendar(t);return `${c.year}年目${c.month}月第${c.week}週`;}
 function bikeStats(){const b=BIKES.find(x=>x.id===S.bike);const st={climb:b.climb,rough:b.rough,cruise:b.cruise,wx:b.wx,photo:0,comfy:0,fold:!!b.fold};
-  const bl=plv(b.id);if(bl)for(const k of bikeBoost(b))st[k]+=bl;// 鍛冶屋の強化：得意な上位2能力が+段数
+  const bl=plv(b.id);if(bl)for(const k of bikeBoost(b))st[k]+=bl;// カスタム：得意な上位2能力が+段数
   for(const pid of S.parts){const p=PARTS.find(x=>x.id===pid);for(const k of ['climb','rough','cruise','wx','photo','comfy']) if(p[k]) st[k]+=p[k]+plv(pid);}return st;}
-// ---------- 鍛冶屋（自転車・パーツを+1〜+3に強化） ----------
+// ---------- カスタム（自転車・パーツを+1〜+3に改造） ----------
 const STATJ={climb:'登坂',rough:'悪路',cruise:'巡航',wx:'耐候',photo:'写真',comfy:'気力消費'};
 const plv=id=>(S.plus&&S.plus[id])||0;
 const bv=(b,k)=>b[k]+(plv(b.id)&&bikeBoost(b).includes(k)?plv(b.id):0);// 強化後の能力値（表示用）
@@ -705,13 +705,13 @@ function renderShop(){const lists={bike:BIKES,cloth:CLOTHES,part:PARTS};
 function renderForge(){
   const row=(kind,item)=>{const lv=plv(item.id),nx=lv+1,keys=kind==='bike'?bikeBoost(item):['climb','rough','cruise','wx','photo','comfy'].filter(k=>item[k]);
     const fx=keys.map(k=>STATJ[k]+(k==='comfy'?'-1':'+1')).join(' ');
-    const act=lv>=3?'<span class="pill">最大</span>':`<button data-forge="${kind}:${item.id}" ${S.money>=upCost(kind,item,nx)?'':'disabled'}>+${nx}に強化 ${yen(upCost(kind,item,nx))}</button>`;
-    return `<div class="card"><div class="name"><span class="nm"><img class="ci" src="img/${kind==='bike'?'icon_bike_':'part_'}${item.id}.webp" width="28" height="28" alt="">${item.name}${lv?` <b>+${lv}</b>`:''}</span>${act}</div><div class="spec">強化1段ごとに ${fx}${lv?`（現在 +${lv}）`:''}</div></div>`;};
+    const act=lv>=3?'<span class="pill">最大</span>':`<button data-forge="${kind}:${item.id}" ${S.money>=upCost(kind,item,nx)?'':'disabled'}>+${nx}　${yen(upCost(kind,item,nx))}</button>`;
+    return `<div class="card"><div class="name"><span class="nm"><img class="ci" src="img/${kind==='bike'?'icon_bike_':'part_'}${item.id}.webp" width="28" height="28" alt="">${item.name}${lv?` <b>+${lv}</b>`:''}</span>${act}</div><div class="spec">カスタム1段ごとに ${fx}${lv?`（現在 +${lv}）`:''}</div></div>`;};
   $('shop-forge').innerHTML=BIKES.filter(i=>owns('bike',i.id)).map(i=>row('bike',i)).join('')+PARTS.filter(i=>owns('part',i.id)).map(i=>row('part',i)).join('');}
 $('shop-forge').addEventListener('click',e=>{const b=e.target.closest('button[data-forge]');if(!b)return;
   const [kind,id]=b.dataset.forge.split(':'),item=(kind==='bike'?BIKES:PARTS).find(x=>x.id===id),nx=plv(id)+1;if(!item||nx>3)return;
   const c=upCost(kind,item,nx);if(S.money<c)return;
-  askPay(`「${item.name}」を+${nx}に強化しますか？`,c,()=>{S.money-=c;S.plus[id]=nx;log(`${item.name}を+${nx}に強化（${yen(c)}）`);render();});});
+  askPay(`「${item.name}」を+${nx}にカスタムしますか？`,c,()=>{S.money-=c;S.plus[id]=nx;log(`${item.name}を+${nx}にカスタム（${yen(c)}）`);render();});});
 $('shop-food').addEventListener('click',e=>{if(!e.target.closest('button[data-food]')||S.money<FOOD_PRICE||S.food>=FOOD_MAX)return;
   askPay('補給食を買いますか？',FOOD_PRICE,()=>{S.money-=FOOD_PRICE;S.food++;log(`補給食を購入（${yen(FOOD_PRICE)}）`);render();});});
 const NONE_TXT={fire:['焚き火なし','気力回復の上乗せなし'],shelter:['寝床なし（地面に直接寝る）','体力・気力の上乗せなし'],tarp:['タープなし','雨ガード0%']};
