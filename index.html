@@ -49,7 +49,8 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .tabs{display:flex;gap:6px;flex-wrap:wrap}
 .tabs button{flex:1 1 60px;padding:4px 2px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;font-size:.78rem;line-height:1.2}
 .ti{width:22px;height:22px;object-fit:contain}
-.stat .lb{display:inline-flex;align-items:center;gap:4px}
+.stat .lb{display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
+@media (max-width:380px){.stat{font-size:.74rem}.stat .lb{gap:2px}.stat .si{width:14px;height:14px}}
 .si{width:16px;height:16px;object-fit:contain}
 .card .nm{display:flex;align-items:center;gap:6px;min-width:0}
 .ci{width:28px;height:28px;flex:none;object-fit:contain}
@@ -136,7 +137,7 @@ h3{margin-top:2px}
     <div class="stat"><span class="lb"><img class="si" src="img/icon_hp.webp" width="16" height="16" alt="">体力</span><b id="d-hp">100</b><div class="bar"><i id="b-hp" style="width:100%"></i></div></div>
     <div class="stat"><span class="lb"><img class="si" src="img/icon_mp.webp" width="16" height="16" alt="">気力</span><b id="d-mp">100</b><div class="bar mp"><i id="b-mp" style="width:100%"></i></div></div>
     <div class="stat"><span class="lb"><img class="si" src="img/icon_loc.webp" width="16" height="16" alt="">現在地</span><b id="d-loc">東京</b></div>
-    <div class="stat"><span class="lb"><img class="si" src="img/icon_inn.webp" width="16" height="16" alt="">馴染み宿</span><b id="d-fam">0 / 47</b></div>
+    <div class="stat"><span class="lb"><img class="si" src="img/icon_inn.webp" width="16" height="16" alt="">都道府県制覇数</span><b id="d-fam">0 / 47</b></div>
   </div>
   <div class="tabs" role="tablist">
     <button role="tab" aria-selected="true" data-tab="map" id="tab-map"><img class="ti" src="img/icon_map.webp" width="22" height="22" alt="">地図</button>
@@ -619,7 +620,7 @@ function restHome(){const ti=travelInfo(PREF[S.home]);if(S.loc!==S.home){if(S.mo
 function showResult(html,then){$('result-box').innerHTML=html+`<button class="primary" id="res-ok">次の週末へ</button>`;$('ov-result').hidden=false;$('res-ok').onclick=()=>{$('ov-result').hidden=true;then();};}
 function advance(){S.turn++;
   if(famCount()===47){showResult(`<h2>🎉 全国制覇！</h2><p>47か所すべてを馴染み宿にした。伝説の自転車インフルエンサー誕生。</p><div class="res"><span>達成</span><span>${calLabel(S.turn)}</span><span>名声</span><span>${S.fame}</span><span>所持金</span><span>${yen(S.money)}</span></div>`,()=>{render();});render();return;}
-  if((S.turn-1)%52===0){const y=calendar(S.turn-1).year;rollForecast();showResult(`<h2>${y}年目 決算</h2><div class="res"><span>馴染み宿</span><span>${famCount()} / 47</span><span>名声</span><span>${S.fame}（${title(S.fame)}）</span><span>所持金</span><span>${yen(S.money)}</span><span>勝敗</span><span>${S.stats.wins}勝 ${S.stats.losses}敗</span></div><p class="hint">${y+1}年目は敵が少し強くなる。</p>`,()=>{render();});render();return;}
+  if((S.turn-1)%52===0){const y=calendar(S.turn-1).year;rollForecast();showResult(`<h2>${y}年目 決算</h2><div class="res"><span>都道府県制覇数</span><span>${famCount()} / 47</span><span>名声</span><span>${S.fame}（${title(S.fame)}）</span><span>所持金</span><span>${yen(S.money)}</span><span>勝敗</span><span>${S.stats.wins}勝 ${S.stats.losses}敗</span></div><p class="hint">${y+1}年目は敵が少し強くなる。</p>`,()=>{render();});render();return;}
   rollForecast();S.sel=S.loc;render();}
 
 // ---------- boot ----------
