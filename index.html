@@ -48,7 +48,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .bar i{display:block;height:100%;background:var(--forest)}
 .bar.mp i{background:var(--sky)}
 .tabs{display:flex;gap:6px;flex-wrap:wrap}
-.tabs button{flex:1 1 48px;padding:4px 2px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;font-size:.78rem;line-height:1.2}
+.tabs button{flex:1 1 60px;padding:4px 2px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;font-size:.78rem;line-height:1.2}
 .ti{width:22px;height:22px;object-fit:contain}
 .stat .lb{display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
 @media (max-width:380px){.stat{font-size:.74rem}.stat .lb{gap:2px}.stat .si{width:14px;height:14px}}
@@ -184,7 +184,6 @@ h3{margin-top:2px}
     <button role="tab" aria-selected="false" data-tab="gear" id="tab-gear"><img class="ti" src="img/icon_bike.webp" width="22" height="22" alt="">自転車</button>
     <button role="tab" aria-selected="false" data-tab="camp" id="tab-camp"><img class="ti" src="img/icon_gear.webp" width="22" height="22" alt="">ギア</button>
     <button role="tab" aria-selected="false" data-tab="shop" id="tab-shop"><img class="ti" src="img/icon_shop.webp" width="22" height="22" alt="">店</button>
-    <button role="tab" aria-selected="false" data-tab="sight" id="tab-sight"><img class="ti" src="img/icon_sights.webp" width="22" height="22" alt="">名所</button>
     <button role="tab" aria-selected="false" data-tab="log" id="tab-log"><img class="ti" src="img/icon_log.webp" width="22" height="22" alt="">記録</button>
   </div>
 
@@ -220,15 +219,18 @@ h3{margin-top:2px}
     <div class="shopsec" data-sub="tarp" hidden><div class="shop" id="shop-tarp"></div></div>
   </section>
 
-  <section class="panel" id="p-sight" hidden>
+  <section class="panel" id="p-log" hidden>
+    <div class="subtabs" id="log-tabs"><button data-sub="trip" aria-selected="true">旅の記録</button><button data-sub="sight" aria-selected="false">全国の名所</button></div>
+    <div id="p-sight" hidden>
     <h2 style="margin:0">全国の名所</h2><div class="hint" id="sg-sum" style="margin-top:2px"></div>
     <p class="hint">キャンプ場で投稿に成功すると、その県の名所が1枚ずつ集まります（1県3枚）。タップで大きく見られます。</p>
     <div id="sightbook"></div>
-  </section>
-  <section class="panel" id="p-log" hidden>
+    </div>
+    <div id="p-trip">
     <div class="loghead"><h2>旅の記録</h2><button id="btn-reset">リセット</button></div>
     <div class="profile"><img src="img/hero.webp" width="96" height="96" alt="主人公の自転車旅行者"><div class="res" id="summary"></div></div>
     <ul class="log" id="log"></ul>
+    </div>
   </section>
 </div>
 
@@ -524,7 +526,7 @@ const sightOf=(id,v)=>SIGHTS[id][(Math.max(1,v)-1)%3];
 const WX_J={sun:'<img class="wi" src="img/wx_sun.webp" width="96" height="96" alt="">晴れ',cloud:'<img class="wi" src="img/wx_cloud.webp" width="96" height="96" alt="">曇り',rain:'<img class="wi" src="img/wx_rain.webp" width="96" height="96" alt="">雨',wind:'<img class="wi" src="img/wx_wind.webp" width="96" height="96" alt="">強風',typhoon:'<img class="wi" src="img/wx_typhoon.webp" width="96" height="96" alt="">台風'};
 
 // ---------- rendering ----------
-function render(){if(!$('p-sight').hidden)renderSights();const c=calendar(S.turn);$('d-date').textContent=`${c.year}年目 ${c.month}月第${c.week}週（${S.turn}/52）`;$('d-season').innerHTML=SEASON_J[season(c.mi)];
+function render(){if(!$('p-sight').hidden&&!$('p-log').hidden)renderSights();const c=calendar(S.turn);$('d-date').textContent=`${c.year}年目 ${c.month}月第${c.week}週（${S.turn}/52）`;$('d-season').innerHTML=SEASON_J[season(c.mi)];
   $('d-fame').textContent=`${S.fame}（${title(S.fame)}）`;$('d-money').textContent=yen(S.money);
   $('d-hp').textContent=S.hp;$('b-hp').style.width=Math.max(0,S.hp)+'%';$('d-mp').textContent=S.mp;$('b-mp').style.width=Math.max(0,S.mp)+'%';
   $('d-loc').textContent=PREF[S.loc].name;$('d-fam').textContent=`${famCount()} / 47`;
@@ -642,7 +644,7 @@ function renderLog(){$('log').innerHTML=S.log.map(l=>`<li>${l}</li>`).join('');
 
 $('shop-tabs').addEventListener('click',e=>{const b=e.target.closest('button[data-sub]');if(!b)return;document.querySelectorAll('#shop-tabs button').forEach(x=>x.setAttribute('aria-selected',x===b));document.querySelectorAll('.shopsec').forEach(s=>s.hidden=s.dataset.sub!==b.dataset.sub);});
 document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tabs button').forEach(x=>x.setAttribute('aria-selected',x===b));
-  for(const t of ['map','gear','camp','shop','sight','log'])$('p-'+t).hidden=t!==b.dataset.tab;if(b.dataset.tab==='sight')renderSights();});
+  for(const t of ['map','gear','camp','shop','log'])$('p-'+t).hidden=t!==b.dataset.tab;if(b.dataset.tab==='log')showLogSub();});
 
 // ---------- turn flow ----------
 let trip=null;
@@ -659,6 +661,9 @@ function askGo(p,rinko){const ti=travelInfo(p),f=S.forecast[p.id],nm=(l,id)=>(l.
     ['自転車',nm(BIKES,S.bike)],['衣類',`${cl.name}（${cl.lo}〜${cl.hi}℃）`],['パーツ',S.parts.length?S.parts.map(x=>nm(PARTS,x)).join('、'):'なし'],
     ['焚き火台',gi('fire')],['寝床',gi('shelter')],['タープ',gi('tarp')]].map(r=>`<span>${r[0]}</span><span>${r[1]}</span>`).join('');
   $('go-yes').onclick=()=>{$('ov-go').hidden=true;startTrip(p,rinko);};$('ov-go').hidden=false;$('go-yes').focus();}
+let LOGSUB='trip';
+function showLogSub(){$('p-trip').hidden=LOGSUB!=='trip';$('p-sight').hidden=LOGSUB!=='sight';document.querySelectorAll('#log-tabs button').forEach(x=>x.setAttribute('aria-selected',x.dataset.sub===LOGSUB));if(LOGSUB==='sight')renderSights();}
+$('log-tabs').onclick=e=>{const b=e.target.closest('button[data-sub]');if(!b)return;LOGSUB=b.dataset.sub;showLogSub();};
 $('sightbook').onclick=e=>{const b=e.target.closest('.sg-c[data-sg]');if(!b)return;$('sg-img').src='img/sights/'+b.dataset.sg+'.webp';$('sg-img').alt=b.dataset.n;$('sg-name').textContent=b.dataset.n;$('ov-sight').hidden=false;};
 $('sg-x').onclick=()=>{$('ov-sight').hidden=true;};
 $('go-no').onclick=()=>{$('ov-go').hidden=true;};
