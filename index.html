@@ -424,28 +424,18 @@ function renderMap(){const svg=$('map');let s=`<defs><pattern id="tex" patternUn
    +(S.gear.fire?put('fire_'+S.gear.fire,282,430,fk[S.gear.fire]):'')+`</g>`;
   s+='<g id="hero" style="pointer-events:none"></g>';svg.innerHTML=s;drawHero();}
 // ---- ドット絵の主人公：歩く／座って焚き火／寝る ----
-const HPAL={h:'#c8402e',k:'#f2c9a0',e:'#2b2a24',s:'#e8892b',p:'#2f3e66',b:'#5a3a1f',c:'#8a5a2b',l:'#6aa0d8',L:'#9cc4ee'};
-const HSPR={
- walkA:["..hhhh..",".hhhhhhh","..kkkk..","..kekk..","..kkkk..","..ssss..",".kssssk.","..ssss..","..pppp..",".pp..pp.",".bb..bb."],
- walkB:["..hhhh..",".hhhhhhh","..kkkk..","..kekk..","..kkkk..","..ssss..","..ssss..","..ssss..","..pppp..","...pp...","...bb..."],
- sit:["..hhhh....",".hhhhhhh..","..kkkk....","..kekk....","..kkkk....","..ssss....","c.kssssk..","c.ssss....","cccpppppp.","c.c.....pb","c.c.....bb"],
- sleep:[".hhhh....",
-        "hkkkLllll",
-        "kekkllllp",
-        ".kklllllb"]};
-const HERO={mode:'sit',x:252,y:432,dir:1,t:20,f:0,goal:null};
-function heroSpr(){const m=HERO.mode;return m==='walk'?(HERO.f%2?HSPR.walkB:HSPR.walkA):HSPR[m];}
+const HDIM={w:[90,141],s:[96,132],z:[162,78]},HK=.21;
+const HERO={mode:'sit',x:256,y:432,dir:1,t:20,f:0,goal:null};
+function heroImg(){const f=HERO.f,m=HERO.mode;return m==='walk'?'w'+(1+f%4):m==='sit'?'s'+(f%10<6?1:2):'z'+(f%4<2?1:2);}
 function heroPick(){const r=Math.random();
   if(r<.4)HERO.goal={x:190+Math.random()*140,mode:'walk',y:432};
-  else if(r<.7)HERO.goal={x:252,mode:'sit',y:432};
+  else if(r<.7)HERO.goal={x:256,mode:'sit',y:432};
   else HERO.goal={x:228,mode:'sleep',y:421};
   HERO.mode='walk';HERO.y=432;}
-function drawHero(){const g=$('hero');if(!g)return;const sp=heroSpr(),d=2,w=sp[0].length*d,hh=sp.length*d;
-  let r='';sp.forEach((row,j)=>{for(let i=0;i<row.length;i++){const c=row[i];if(c!=='.')r+=`<rect x="${(i*d).toFixed(1)}" y="${(j*d).toFixed(1)}" width="${d+.15}" height="${d+.15}" fill="${HPAL[c]}"/>`;}});
-  const flip=HERO.dir<0&&HERO.mode==='walk';
-  const tx=HERO.x-w/2,ty=HERO.y-hh;
-  let z='';if(HERO.mode==='sleep'){const o=HERO.f%3;z=`<text x="${HERO.x-w/2+4}" y="${ty-2-o*2}" style="font-size:6px;fill:var(--fg);opacity:${1-o*.3}">z</text><text x="${HERO.x-w/2+9}" y="${ty-7-o*2}" style="font-size:5px;fill:var(--fg);opacity:${.7-o*.2}">z</text>`;}
-  g.innerHTML=`<ellipse cx="${HERO.x}" cy="${HERO.y}" rx="${w/2}" ry="1.6" fill="#000" opacity=".25"/><g transform="translate(${flip?tx+w:tx} ${ty})${flip?' scale(-1 1)':''}">${r}</g>${z}`;}
+function drawHero(){const g=$('hero');if(!g)return;const k=heroImg(),d=HDIM[k[0]],w=d[0]*HK,hh=d[1]*HK;
+  const flip=HERO.dir<0&&HERO.mode==='walk',tx=HERO.x-w/2,ty=HERO.y-hh;
+  let z='';if(HERO.mode==='sleep'){const o=HERO.f%3;z=`<text x="${HERO.x-6}" y="${ty-1-o*2}" style="font-size:6px;fill:#fff;paint-order:stroke;stroke:#234;stroke-width:1.5px;opacity:${1-o*.3}">z</text><text x="${HERO.x-1}" y="${ty-6-o*2}" style="font-size:5px;fill:#fff;paint-order:stroke;stroke:#234;stroke-width:1.5px;opacity:${.7-o*.2}">z</text>`;}
+  g.innerHTML=`<ellipse cx="${HERO.x}" cy="${HERO.y}" rx="${w/2.2}" ry="1.8" fill="#000" opacity=".28"/><image href="img/hero_${k}.webp" x="${flip?-(tx+w):tx}" y="${ty}" width="${w}" height="${hh}"${flip?' transform="scale(-1 1)"':''}/>${z}`;}
 function heroTick(){if($('p-map').hidden||document.hidden)return;
   HERO.f++;
   if(HERO.mode==='walk'){const gx=HERO.goal?HERO.goal.x:HERO.x;const dx=gx-HERO.x;
