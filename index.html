@@ -103,7 +103,7 @@ h3{margin-top:2px}
     <div class="stat">体力 <b id="d-hp">100</b><div class="bar"><i id="b-hp" style="width:100%"></i></div></div>
     <div class="stat">気力 <b id="d-mp">100</b><div class="bar mp"><i id="b-mp" style="width:100%"></i></div></div>
     <div class="stat">現在地<b id="d-loc">東京</b></div>
-    <div class="stat">馴染み客<b id="d-fam">0 / 47</b></div>
+    <div class="stat">馴染み宿<b id="d-fam">0 / 47</b></div>
   </div>
   <div class="tabs" role="tablist">
     <button role="tab" aria-selected="true" data-tab="map" id="tab-map">地図</button>
@@ -115,7 +115,7 @@ h3{margin-top:2px}
 
   <section class="panel" id="p-map">
     <svg class="map" id="map" viewBox="0 0 400 420" aria-label="日本地図"></svg>
-    <div class="legend"><span style="--c:var(--line)">未訪問</span><span style="--c:var(--forest)">訪問済</span><span style="--c:var(--accent)">馴染み客</span><span style="--c:var(--sky)">現在地</span></div>
+    <div class="legend"><span style="--c:var(--line)">未訪問</span><span style="--c:var(--forest)">訪問済</span><span style="--c:var(--accent)">馴染み宿</span><span style="--c:var(--sky)">現在地</span></div>
     <div class="detail" id="detail"></div>
     <details><summary class="hint">一覧から選ぶ</summary><div class="sitelist" id="sitelist"></div></details>
   </section>
@@ -155,7 +155,7 @@ h3{margin-top:2px}
 <div class="overlay" id="ov-title">
   <div class="modal title">
     <h1 class="logo">🚲 チャリキャン<br>全国制覇</h1>
-    <p>自転車インフルエンサーとして全国47か所のキャンプ場を巡り、3回通って「馴染み客」になれ。</p>
+    <p>自転車インフルエンサーとして全国47か所のキャンプ場を巡り、3回通って「馴染み宿」にしろ。</p>
     <p class="hint">毎週末が1ターン。1年＝52ターンで決算。<br>坂・動物・強風・大雨・台風・ライバルがあなたを阻む。</p>
     <label class="hint" for="start-pref">出発地（自宅）を選ぶ</label><select id="start-pref"></select>
     <div class="row"><button class="primary" id="btn-new">はじめから</button><button id="btn-cont" hidden>つづきから</button></div>
@@ -353,7 +353,7 @@ function travelInfo(p){const d=dist(PREF[S.loc],p);const st=bikeStats();
   const enc=d===0?0:d<=120?1:d<=250?2:d<=400?3:99;return {d,rinko:okinawa?rinko+6000:rinko,enc,ride:enc<99&&!okinawa};}
 
 function renderDetail(){const p=PREF[S.sel],f=S.forecast[p.id],ti=travelInfo(p),cl=CLOTHES.find(c=>c.id===S.cloth);
-  const stay=S.sel===S.loc;const badge=S.fam[p.id]?'<span class="pill fam">馴染み客</span>':`<span class="pill">訪問 ${S.visits[p.id]}/3</span>`;
+  const stay=S.sel===S.loc;const badge=S.fam[p.id]?'<span class="pill fam">馴染み宿</span>':`<span class="pill">訪問 ${S.visits[p.id]}/3</span>`;
   const fit=f.temp<cl.lo?`❄️ 衣類が寒い（${cl.lo-f.temp}℃不足）`:f.temp>cl.hi?`🔥 衣類が暑い（${f.temp-cl.hi}℃超過）`:'👕 衣類OK';
   const enemies=[];if(p.terrain==='hill')enemies.push('激坂');if(p.terrain==='rough'||WILD.has(p.region))enemies.push('野生動物');
   if(f.wx==='rain')enemies.push('大雨');if(f.wx==='wind')enemies.push('強風');if(f.wx==='typhoon')enemies.push('台風');if(p.scen>=5)enemies.push('ライバル?');
@@ -480,10 +480,10 @@ function endTrip(){const p=trip.p,f=S.forecast[p.id],st=bikeStats(),cl=CLOTHES.f
   else{const wb0={sun:10,cloud:0,rain:-15,wind:-5,typhoon:-25}[f.wx],wb=wet?Math.round(wb0*(1-g.guard)):wb0;let q=40+p.scen*8+st.photo+g.photo+wb+rnd(0,10);if(trip.stay)q-=10;q=Math.max(10,Math.min(100,q));
     S.visits[p.id]++;const became=!S.fam[p.id]&&S.visits[p.id]>=3;if(became)S.fam[p.id]=true;
     let fg=Math.round(q/5)+(S.visits[p.id]===1?5:0)+(became?10:0);const inc=300+q*25+S.fame*3;S.fame+=fg;S.money+=inc;S.stats.posts++;S.stats.bestQ=Math.max(S.stats.bestQ,q);
-    html=`<h2>${became?'🏅 馴染み客になった！':'素敵なキャンプの夜'}</h2><div class="photo"><div>${p.site}</div><div class="q">📷 ${q}点</div><div>${WX_J[f.wx]} ${f.temp}℃</div></div>
-    <div class="res"><span>名声</span><span>+${fg}${became?'（馴染みボーナス込）':''}</span><span>SNS収入</span><span>+${yen(inc)}</span><span>利用料</span><span>-${yen(p.fee)}</span>
+    html=`<h2>${became?'🏅 馴染み宿になった！':'素敵なキャンプの夜'}</h2><div class="photo"><div>${p.site}</div><div class="q">📷 ${q}点</div><div>${WX_J[f.wx]} ${f.temp}℃</div></div>
+    <div class="res"><span>名声</span><span>+${fg}${became?'（馴染み宿ボーナス込）':''}</span><span>SNS収入</span><span>+${yen(inc)}</span><span>利用料</span><span>-${yen(p.fee)}</span>
     <span>友好度</span><span>${Math.min(3,S.visits[p.id])}/3</span><span>ギア効果</span><span>写真+${g.photo}${wet?`（雨ガード${Math.round(g.guard*100)}%）`:''}</span>${cold?`<span>衣類不適</span><span>体力-${cold}</span>`:''}${campRows}</div>`;
-    log(`${p.site}で投稿（${q}点）名声+${fg} ${yen(inc)}${became?' 馴染み客に！':''}`);}
+    log(`${p.site}で投稿（${q}点）名声+${fg} ${yen(inc)}${became?' 馴染み宿に！':''}`);}
   // natural recovery + advance
   S.hp=Math.min(100,S.hp+recHp);S.mp=Math.min(100,S.mp+recMp);
   if(S.hp<=0){S.hp=30;S.money-=5000;html+=`<p class="hint">体力が尽きてダウン。治療費¥5,000。</p>`;}
@@ -494,8 +494,8 @@ function restHome(){const ti=travelInfo(PREF[S.home]);if(S.loc!==S.home){if(S.mo
   log('自宅で休養。名声-2');showResult(`<h2>自宅で休養</h2><p>体力・気力が全回復した。投稿がなく名声-2。</p>`,advance);}
 function showResult(html,then){$('result-box').innerHTML=html+`<button class="primary" id="res-ok">次の週末へ</button>`;$('ov-result').hidden=false;$('res-ok').onclick=()=>{$('ov-result').hidden=true;then();};}
 function advance(){S.turn++;
-  if(famCount()===47){showResult(`<h2>🎉 全国制覇！</h2><p>47か所すべてで馴染み客になった。伝説のチャリキャンインフルエンサー誕生。</p><div class="res"><span>達成</span><span>${calLabel(S.turn)}</span><span>名声</span><span>${S.fame}</span><span>所持金</span><span>${yen(S.money)}</span></div>`,()=>{render();});render();return;}
-  if((S.turn-1)%52===0){const y=calendar(S.turn-1).year;rollForecast();showResult(`<h2>${y}年目 決算</h2><div class="res"><span>馴染み客</span><span>${famCount()} / 47</span><span>名声</span><span>${S.fame}（${title(S.fame)}）</span><span>所持金</span><span>${yen(S.money)}</span><span>勝敗</span><span>${S.stats.wins}勝 ${S.stats.losses}敗</span></div><p class="hint">${y+1}年目は敵が少し強くなる。</p>`,()=>{render();});render();return;}
+  if(famCount()===47){showResult(`<h2>🎉 全国制覇！</h2><p>47か所すべてを馴染み宿にした。伝説のチャリキャンインフルエンサー誕生。</p><div class="res"><span>達成</span><span>${calLabel(S.turn)}</span><span>名声</span><span>${S.fame}</span><span>所持金</span><span>${yen(S.money)}</span></div>`,()=>{render();});render();return;}
+  if((S.turn-1)%52===0){const y=calendar(S.turn-1).year;rollForecast();showResult(`<h2>${y}年目 決算</h2><div class="res"><span>馴染み宿</span><span>${famCount()} / 47</span><span>名声</span><span>${S.fame}（${title(S.fame)}）</span><span>所持金</span><span>${yen(S.money)}</span><span>勝敗</span><span>${S.stats.wins}勝 ${S.stats.losses}敗</span></div><p class="hint">${y+1}年目は敵が少し強くなる。</p>`,()=>{render();});render();return;}
   rollForecast();S.sel=S.loc;render();}
 
 // ---------- boot ----------
