@@ -601,7 +601,7 @@ function askGo(p,rinko){const ti=travelInfo(p),f=S.forecast[p.id],nm=(l,id)=>(l.
   $('go-yes').onclick=()=>{$('ov-go').hidden=true;startTrip(p,rinko);};$('ov-go').hidden=false;$('go-yes').focus();}
 $('go-no').onclick=()=>{$('ov-go').hidden=true;};
 $('go-eq').onclick=()=>{$('ov-go').hidden=true;$('tab-gear').click();};
-function startTrip(p,rinko){snap();{const i=new Image();i.src='img/sights/'+sightOf(p.id,S.visits[p.id]+1)[0]+'.webp';}const ti=travelInfo(p);const stay=p.id===S.loc;
+function startTrip(p,rinko){snap();{const i=new Image();i.src='img/late.webp';}{const i=new Image();i.src='img/sights/'+sightOf(p.id,S.visits[p.id]+1)[0]+'.webp';}const ti=travelInfo(p);const stay=p.id===S.loc;
   if(rinko){S.money-=ti.rinko;log(`${p.name}へ輪行（${yen(ti.rinko)}）`);}
   const f=S.forecast[p.id];const enc=[];
   if(!rinko&&!stay){const pool=[];if(p.terrain==='hill')pool.push('hill','hill');if(p.terrain==='rough')pool.push('animal','hill');if(WILD.has(p.region))pool.push('animal');
@@ -696,7 +696,7 @@ function endTrip(){const p=trip.p,f=S.forecast[p.id],st=bikeStats(),cl=CLOTHES.f
   const recHp=4+g.hp,recMp=4+g.mp;
   const campRows=`<span>キャンプ回復</span><span>体力+${recHp} 気力+${recMp}</span>${wetHp?`<span>雨ざらし</span><span>体力-${wetHp}</span>`:''}${harshMp?`<span>厳しい環境</span><span>気力-${harshMp}</span>`:''}`;
   if(trip.late){S.fame=Math.max(0,S.fame-3);
-    html=`<h2>遅刻…</h2><p>${p.site}に着いたのは日没後。写真は撮れず、投稿できなかった。</p><div class="res"><span>名声</span><span>-3</span><span>利用料</span><span>-${yen(p.fee)}</span>${cold?`<span>衣類不適</span><span>体力-${cold}</span>`:''}${campRows}</div>`;
+    html=`<h2>遅刻…</h2><div class="photo pic"><img src="img/late.webp" width="720" height="480" alt="日没後にキャンプ場へ着いた自転車旅行者"><div class="cap"><div>${p.site}</div><div>${WX_J[f.wx]} ${f.temp}℃ ・ 📷 撮影できず</div></div></div><p>${p.site}に着いたのは日没後。写真は撮れず、投稿できなかった。</p><div class="res"><span>名声</span><span>-3</span><span>利用料</span><span>-${yen(p.fee)}</span>${cold?`<span>衣類不適</span><span>体力-${cold}</span>`:''}${campRows}</div>`;
     log(`${p.site}に遅刻。投稿なし`);}
   else{const wb0={sun:10,cloud:0,rain:-15,wind:-5,typhoon:-25}[f.wx],wb=wet?Math.round(wb0*(1-g.guard)):wb0;let q=40+p.scen*8+st.photo+g.photo+wb+rnd(0,10);if(trip.stay)q-=10;q=Math.max(10,Math.min(100,q));
     playSE('se_photo');S.visits[p.id]++;const became=!S.fam[p.id]&&S.visits[p.id]>=3;if(became)S.fam[p.id]=true;
