@@ -52,6 +52,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .ti{width:22px;height:22px;object-fit:contain}
 .stat .lb{display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
 @media (max-width:380px){.stat{font-size:.74rem}.stat .lb{gap:2px}.stat .si{width:14px;height:14px}}
+.wi{width:1.25em;height:1.25em;object-fit:contain;vertical-align:-.3em;margin-right:3px}
 .si{width:16px;height:16px;object-fit:contain}
 .card .nm{display:flex;align-items:center;gap:6px;min-width:0}
 .ci{width:28px;height:28px;flex:none;object-fit:contain}
@@ -146,7 +147,7 @@ h3{margin-top:2px}
 
 <div class="app" id="app">
   <div class="status">
-    <div class="date"><span id="d-date">1年目 4月第1週</span><span id="d-season">🌸 春</span></div>
+    <div class="date"><span id="d-date">1年目 4月第1週</span><span id="d-season"></span></div>
     <div class="stat"><span class="lb"><img class="si" src="img/icon_fame.webp" width="16" height="16" alt="">名声</span><b id="d-fame">0</b></div>
     <div class="stat"><span class="lb"><img class="si" src="img/icon_money.webp" width="16" height="16" alt="">所持金</span><b id="d-money">¥30,000</b></div>
     <div class="stat"><span class="lb"><img class="si" src="img/icon_hp.webp" width="16" height="16" alt="">体力</span><b id="d-hp">100</b><div class="bar"><i id="b-hp" style="width:100%"></i></div></div>
@@ -416,7 +417,7 @@ function dist(a,b){const R=6371,dl=(b.lat-a.lat)*Math.PI/180,dn=(b.lon-a.lon)*Ma
 function calendar(turn){const abs=((13+turn-1)%52)+1;let m=0,w=abs;while(w>MONTH_W[m]){w-=MONTH_W[m];m++;}
   return {year:1+Math.floor((turn-1)/52),month:m+1,week:w,mi:m};}
 function season(mi){return [3,4,5].includes(mi+1)?'spring':[6,7,8].includes(mi+1)?'summer':[9,10,11].includes(mi+1)?'autumn':'winter';}
-const SEASON_J={spring:'🌸 春',summer:'☀️ 夏',autumn:'🍁 秋',winter:'⛄ 冬'};
+const SEASON_J={spring:'<img class="wi" src="img/wx_spring.webp" width="96" height="96" alt="">春',summer:'<img class="wi" src="img/wx_summer.webp" width="96" height="96" alt="">夏',autumn:'<img class="wi" src="img/wx_autumn.webp" width="96" height="96" alt="">秋',winter:'<img class="wi" src="img/wx_winter.webp" width="96" height="96" alt="">冬'};
 function title(f){let t=TITLES[0][1];for(const [n,s] of TITLES) if(f>=n) t=s;return t;}
 
 // ---------- state ----------
@@ -470,10 +471,10 @@ function rollForecast(){const c=calendar(S.turn),mi=c.mi,f={};const swing=rnd(-3
 // 各県の景勝地3か所（フミヤスの大冒険ジュニアから流用）。投稿写真に訪問ごとに順番で使う
 const SIGHTS=[[["hokkaido-1","札幌市・時計台"],["hokkaido-2","大雪山"],["hokkaido-3","知床半島"]],[["aomori-1","青森市・アスパム"],["aomori-2","弘前城"],["aomori-3","白神山地"]],[["iwate-1","盛岡市・岩手銀行赤レンガ館"],["iwate-2","龍泉洞"],["iwate-3","平泉"]],[["miyagi-1","仙台市・定禅寺通"],["miyagi-2","松島"],["miyagi-3","蔵王連峰"]],[["akita-1","秋田市・赤れんが郷土館"],["akita-2","男鹿半島"],["akita-3","角館"]],[["yamagata-1","山形市・文翔館"],["yamagata-2","山寺（立石寺）"],["yamagata-3","最上川"]],[["fukushima-1","福島市・旧堀切邸"],["fukushima-2","猪苗代湖"],["fukushima-3","鶴ヶ城"]],[["ibaraki-1","水戸市・弘道館"],["ibaraki-2","霞ヶ浦"],["ibaraki-3","偕楽園"]],[["tochigi-1","宇都宮市・松が峰教会"],["tochigi-2","中禅寺湖"],["tochigi-3","日光東照宮"]],[["gunma-1","前橋市・臨江閣"],["gunma-2","赤城山"],["gunma-3","榛名山"]],[["saitama-1","さいたま市・武蔵一宮氷川神社"],["saitama-2","川越"],["saitama-3","長瀞"]],[["chiba-1","千葉市・千葉ポートタワー"],["chiba-2","九十九里浜"],["chiba-3","鋸山"]],[["tokyo-1","東京・都庁"],["tokyo-2","浅草・雷門"],["tokyo-3","高尾山"]],[["kanagawa-1","横浜市・赤レンガ倉庫"],["kanagawa-2","芦ノ湖"],["kanagawa-3","鎌倉大仏"]],[["niigata-1","新潟市・萬代橋"],["niigata-2","佐渡金山跡"],["niigata-3","信濃川"]],[["toyama-1","富山市・富山城"],["toyama-2","五箇山"],["toyama-3","立山連峰"]],[["ishikawa-1","金沢市・鼓門"],["ishikawa-2","兼六園"],["ishikawa-3","能登半島"]],[["fukui-1","福井市・養浩館庭園"],["fukui-2","東尋坊"],["fukui-3","若狭湾"]],[["yamanashi-1","甲府市・山梨県庁別館"],["yamanashi-2","富士山"],["yamanashi-3","甲府盆地"]],[["nagano-1","長野市・善光寺"],["nagano-2","松本城"],["nagano-3","上高地"]],[["gifu-1","岐阜市・川原町"],["gifu-2","白川郷"],["gifu-3","長良川"]],[["shizuoka-1","静岡市・駿府城東御門"],["shizuoka-2","伊豆半島"],["shizuoka-3","浜名湖"]],[["aichi-1","名古屋市・MIRAI TOWER"],["aichi-2","名古屋城"],["aichi-3","濃尾平野"]],[["mie-1","津市・津城跡"],["mie-2","伊勢神宮"],["mie-3","志摩半島"]],[["shiga-1","大津市・浮御堂"],["shiga-2","琵琶湖"],["shiga-3","彦根城"]],[["kyoto-1","京都市・京都市役所本庁舎"],["kyoto-2","清水寺"],["kyoto-3","天橋立"]],[["osaka-1","大阪市・大阪市中央公会堂"],["osaka-2","大阪城公園"],["osaka-3","仁徳天皇陵古墳"]],[["hyogo-1","神戸市・神戸ポートタワー"],["hyogo-2","姫路城"],["hyogo-3","淡路島"]],[["nara-1","奈良市・興福寺中金堂"],["nara-2","法隆寺"],["nara-3","吉野山"]],[["wakayama-1","和歌山市・和歌山城"],["wakayama-2","高野山"],["wakayama-3","熊野古道"]],[["tottori-1","鳥取市・仁風閣"],["tottori-2","鳥取砂丘"],["tottori-3","大山"]],[["shimane-1","松江市・松江城"],["shimane-2","出雲大社"],["shimane-3","石見銀山"]],[["okayama-1","岡山市・岡山城"],["okayama-2","後楽園"],["okayama-3","瀬戸大橋"]],[["hiroshima-1","広島市・広島城"],["hiroshima-2","厳島神社"],["hiroshima-3","平和記念公園"]],[["yamaguchi-1","山口市・山口県旧県庁舎"],["yamaguchi-2","秋芳洞"],["yamaguchi-3","錦帯橋"]],[["tokushima-1","徳島市・鷲の門"],["tokushima-2","鳴門の渦潮"],["tokushima-3","大歩危・小歩危"]],[["kagawa-1","高松市・艮櫓"],["kagawa-2","栗林公園"],["kagawa-3","小豆島"]],[["ehime-1","松山市・道後温泉本館"],["ehime-2","松山城"],["ehime-3","しまなみ海道"]],[["kochi-1","高知市・高知城"],["kochi-2","四万十川"],["kochi-3","足摺岬"]],[["fukuoka-1","福岡市・浮見堂"],["fukuoka-2","筑後川"],["fukuoka-3","太宰府天満宮"]],[["saga-1","佐賀市・佐賀城本丸歴史館"],["saga-2","吉野ヶ里遺跡"],["saga-3","有明海"]],[["nagasaki-1","長崎市・眼鏡橋"],["nagasaki-2","雲仙岳"],["nagasaki-3","軍艦島"]],[["kumamoto-1","熊本市・水前寺成趣園"],["kumamoto-2","阿蘇"],["kumamoto-3","熊本城"]],[["oita-1","大分市・府内城大手門"],["oita-2","別府"],["oita-3","国東半島"]],[["miyazaki-1","宮崎市・宮崎県庁本館"],["miyazaki-2","高千穂峡"],["miyazaki-3","青島"]],[["kagoshima-1","鹿児島市・県政記念館"],["kagoshima-2","桜島"],["kagoshima-3","屋久島"]],[["okinawa-1","那覇市・守礼門"],["okinawa-2","首里城"],["okinawa-3","西表島"]]];
 const sightOf=(id,v)=>SIGHTS[id][(Math.max(1,v)-1)%3];
-const WX_J={sun:'☀️ 晴れ',cloud:'☁️ 曇り',rain:'🌧️ 雨',wind:'🌬️ 強風',typhoon:'🌀 台風'};
+const WX_J={sun:'<img class="wi" src="img/wx_sun.webp" width="96" height="96" alt="">晴れ',cloud:'<img class="wi" src="img/wx_cloud.webp" width="96" height="96" alt="">曇り',rain:'<img class="wi" src="img/wx_rain.webp" width="96" height="96" alt="">雨',wind:'<img class="wi" src="img/wx_wind.webp" width="96" height="96" alt="">強風',typhoon:'<img class="wi" src="img/wx_typhoon.webp" width="96" height="96" alt="">台風'};
 
 // ---------- rendering ----------
-function render(){const c=calendar(S.turn);$('d-date').textContent=`${c.year}年目 ${c.month}月第${c.week}週（${S.turn}/52）`;$('d-season').textContent=SEASON_J[season(c.mi)];
+function render(){const c=calendar(S.turn);$('d-date').textContent=`${c.year}年目 ${c.month}月第${c.week}週（${S.turn}/52）`;$('d-season').innerHTML=SEASON_J[season(c.mi)];
   $('d-fame').textContent=`${S.fame}（${title(S.fame)}）`;$('d-money').textContent=yen(S.money);
   $('d-hp').textContent=S.hp;$('b-hp').style.width=Math.max(0,S.hp)+'%';$('d-mp').textContent=S.mp;$('b-mp').style.width=Math.max(0,S.mp)+'%';
   $('d-loc').textContent=PREF[S.loc].name;$('d-fam').textContent=`${famCount()} / 47`;
