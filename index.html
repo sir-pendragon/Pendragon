@@ -172,7 +172,7 @@ h3{margin-top:2px}
 <div class="app" id="app">
   <div class="status">
     <div class="date"><span id="d-date">1年目 4月第1週</span><span id="d-season"></span></div>
-    <div class="stat"><span class="lb"><img class="si" src="img/icon_fame.webp" width="16" height="16" alt="">名声</span><b id="d-fame">0</b></div>
+    <div class="stat"><span class="lb"><img class="si" src="img/icon_fame.webp" width="16" height="16" alt="">フォロワー</span><b id="d-fame">0</b></div>
     <div class="stat"><span class="lb"><img class="si" src="img/icon_money.webp" width="16" height="16" alt="">所持金</span><b id="d-money">¥30,000</b></div>
     <div class="stat"><span class="lb"><img class="si" src="img/icon_hp.webp" width="16" height="16" alt="">体力</span><b id="d-hp">100</b><div class="bar"><i id="b-hp" style="width:100%"></i></div></div>
     <div class="stat"><span class="lb"><img class="si" src="img/icon_mp.webp" width="16" height="16" alt="">気力</span><b id="d-mp">100</b><div class="bar mp"><i id="b-mp" style="width:100%"></i></div></div>
@@ -450,9 +450,11 @@ const ENEMY={
  wind:{name:'強風',face:'🌬️',img:'img/enemy_wind.webp',hp:35,atk:6,limit:5,stat:'cruise',mp:4,hint:'巡航力が効く。気力も削られる'},
  rain:{name:'大雨',face:'🌧️',img:'img/enemy_rain.webp',hp:35,atk:7,limit:5,stat:'wx',mp:5,hint:'耐候力が効く'},
  typhoon:{name:'台風',face:'🌀',img:'img/enemy_typhoon.webp',hp:70,atk:15,limit:6,stat:'wx',mp:6,hint:'耐候力が効く。無理は禁物'},
- rival:{name:'ライバルインフルエンサー',face:'🤳',img:'img/enemy_rival.webp',hp:40,atk:0,limit:5,stat:'fame',fame:4,hint:'名声と撮影機材で押し切る'},
+ rival:{name:'ライバルインフルエンサー',face:'🤳',img:'img/enemy_rival.webp',hp:40,atk:0,limit:5,stat:'fame',fame:4,hint:'フォロワーと撮影機材で押し切る'},
 };
-const TITLES=[[0,'無名'],[30,'駆け出し'],[80,'注目の新人'],[160,'人気配信者'],[300,'カリスマ'],[500,'伝説']];
+const TITLES=[[0,'無名'],[1000,'駆け出し'],[10000,'注目の新人'],[100000,'人気配信者'],[500000,'カリスマ'],[1000000,'伝説']];
+const fol=n=>n<10000?Math.round(n).toLocaleString('ja-JP')+'人':(Math.round(n/1000)/10).toLocaleString('ja-JP',{maximumFractionDigits:1}).replace(/\.0$/,'')+'万人';
+const sfol=n=>(n>0?'+':n<0?'-':'')+fol(Math.abs(n));
 
 // ---------- helpers ----------
 const $=id=>document.getElementById(id);
@@ -464,6 +466,8 @@ function calendar(turn){const abs=((13+turn-1)%52)+1;let m=0,w=abs;while(w>MONTH
   return {year:1+Math.floor((turn-1)/52),month:m+1,week:w,mi:m};}
 function season(mi){return [3,4,5].includes(mi+1)?'spring':[6,7,8].includes(mi+1)?'summer':[9,10,11].includes(mi+1)?'autumn':'winter';}
 const SEASON_J={spring:'<img class="wi" src="img/wx_spring.webp" width="96" height="96" alt="">春',summer:'<img class="wi" src="img/wx_summer.webp" width="96" height="96" alt="">夏',autumn:'<img class="wi" src="img/wx_autumn.webp" width="96" height="96" alt="">秋',winter:'<img class="wi" src="img/wx_winter.webp" width="96" height="96" alt="">冬'};
+const FL=()=>30*Math.log(1+S.fame/100);
+const floss=(min,pc)=>Math.max(min,Math.round(S.fame*pc));
 function title(f){let t=TITLES[0][1];for(const [n,s] of TITLES) if(f>=n) t=s;return t;}
 
 // ---------- state ----------
@@ -475,12 +479,12 @@ function newGame(HOME){INTRIP=false;S={turn:1,fame:0,money:30000,hp:100,mp:100,h
 // 旅の最中（出発〜結果を閉じるまで）は保存しない。途中で閉じても旅の前の状態に戻るだけで、バトルや費用の食い逃げができない
 let TS=null;// 旅の前の数値（週の変化をポップアップに出すため）
 function snap(){TS={money:S.money,fame:S.fame,hp:S.hp,mp:S.mp,fam:S.fam.filter(Boolean).length,inc:0,fee:0,became:null};}
-let INTRIP=false;const SAVE_V=2;
+let INTRIP=false;const SAVE_V=3;
 function save(){if(INTRIP)return;try{const {sel,...o}=S;o.v=SAVE_V;localStorage.setItem('charicamp',JSON.stringify(o));}catch(e){}}
 function load(){try{const s=localStorage.getItem('charicamp');if(!s)return null;const o=JSON.parse(s);if(!o||typeof o!=='object')return null;
   const num=(v,d,lo,hi)=>Number.isFinite(+v)?Math.min(hi,Math.max(lo,Math.round(+v))):d;
   const has=(l,id)=>l.some(x=>x.id===id);
-  o.turn=num(o.turn,1,1,99999);o.fame=num(o.fame,0,0,1e9);o.money=num(o.money,0,-1e9,1e12);o.hp=num(o.hp,100,1,100);o.mp=num(o.mp,100,1,100);
+  o.turn=num(o.turn,1,1,99999);o.fame=num((o.v||0)<3?100*(Math.exp((+o.fame||0)/30)-1):o.fame,0,0,1e9);o.money=num(o.money,0,-1e9,1e12);o.hp=num(o.hp,100,1,100);o.mp=num(o.mp,100,1,100);
   o.home=num(o.home,12,0,46);o.loc=num(o.loc,o.home,0,46);o.sel=o.loc;
   o.visits=Array.from({length:47},(_,i)=>num(o.visits&&o.visits[i],0,0,9999));o.fam=Array.from({length:47},(_,i)=>!!(o.fam&&o.fam[i]));
   o.owned=o.owned&&typeof o.owned==='object'?o.owned:{};
@@ -527,7 +531,7 @@ const WX_J={sun:'<img class="wi" src="img/wx_sun.webp" width="96" height="96" al
 
 // ---------- rendering ----------
 function render(){if(!$('p-sight').hidden&&!$('p-log').hidden)renderSights();const c=calendar(S.turn);$('d-date').textContent=`${c.year}年目 ${c.month}月第${c.week}週（${S.turn}/52）`;$('d-season').innerHTML=SEASON_J[season(c.mi)];
-  $('d-fame').textContent=`${S.fame}（${title(S.fame)}）`;$('d-money').textContent=yen(S.money);
+  $('d-fame').textContent=`${fol(S.fame)}（${title(S.fame)}）`;$('d-money').textContent=yen(S.money);
   $('d-hp').textContent=S.hp;$('b-hp').style.width=Math.max(0,S.hp)+'%';$('d-mp').textContent=S.mp;$('b-mp').style.width=Math.max(0,S.mp)+'%';
   $('d-loc').textContent=PREF[S.loc].name;$('d-fam').textContent=`${famCount()} / 47`;
   renderMap();renderDetail();renderList();renderShop();renderLog();save();}
@@ -602,7 +606,7 @@ function renderDetail(){const p=PREF[S.sel],f=S.forecast[p.id],ti=travelInfo(p),
   <div class="acts">${stay?`<button class="primary" id="go-stay">自転車旅に行く<small>${p.name}（現在地）</small></button><button disabled>輪行で旅に行く<small>${p.name}（現在地）</small></button>`:
    `<button class="primary" id="go-ride" ${ti.ride?'':'disabled'}>自転車旅に行く<small>${p.name}${ti.ride?'へ':'は遠すぎる'}</small></button>
     <button id="go-rinko" ${S.money>=ti.rinko?'':'disabled'}>輪行で旅に行く<small>${p.name}へ ${yen(ti.rinko)}</small></button>`}
-   ${S.loc!==S.home?`<button id="go-home">自宅で休む<small>${S.money>=travelInfo(PREF[S.home]).rinko?'輪行 '+yen(travelInfo(PREF[S.home]).rinko):'お金不足で強制帰宅（名声-5）'}</small></button>`:`<button id="go-home">自宅で休む<small>体力・気力回復</small></button>`}</div>`;
+   ${S.loc!==S.home?`<button id="go-home">自宅で休む<small>${S.money>=travelInfo(PREF[S.home]).rinko?'輪行 '+yen(travelInfo(PREF[S.home]).rinko):'お金不足で強制帰宅（フォロワー減）'}</small></button>`:`<button id="go-home">自宅で休む<small>体力・気力回復</small></button>`}</div>`;
   const b=id=>$(id);if(b('go-ride'))b('go-ride').onclick=()=>askGo(p,false);if(b('go-rinko'))b('go-rinko').onclick=()=>askGo(p,true);
   if(b('go-stay'))b('go-stay').onclick=()=>askGo(p,false);b('go-home').onclick=restHome;}
 
@@ -707,7 +711,7 @@ $('set-se-v').onchange=()=>playSE('se_photo');
 // ---------- battle ----------
 let B=null;
 function startBattle(kind){const e=ENEMY[kind],p=trip.p,c=calendar(S.turn);const scale=1+.4*(p.diff-1)+.2*(c.year-1);
-  const hp=kind==='rival'?Math.round(40+S.fame/3):Math.round(e.hp*scale);
+  const hp=kind==='rival'?Math.round(40+FL()/3):Math.round(e.hp*scale);
   B={kind,e,hp,max:hp,limit:e.limit,turn:1,charge:false,atk:Math.round(e.atk*scale)};
   $('ov-battle').hidden=false;playSE('se_encounter');playBGM('bgm_battle');$('bt-face').innerHTML=e.img?`<img src="${e.img}" alt="${e.name}" width="104" height="104">`:e.face;$('bt-name').textContent=`区間 ${trip.i+1}/${trip.enc.length}：${e.name}`;
   $('bt-title').textContent=kind==='rival'?'SNSバトル！':`${e.name}が立ちはだかる！`;
@@ -719,14 +723,14 @@ function kmOf(v){const L=isRival()?400:trip.sec;return Math.max(0,v)/B.max*L;}
 function fmtD(v){const x=kmOf(v);return isRival()?Math.round(x)+'m':(x>=10?Math.round(x):x.toFixed(1))+'km';}
 const LEFT=()=>isRival()?'撮影スポットまで':'ゴールまで';
 const HIT={hill:'坂がきつい',animal:'野生動物に足止めされた',wind:'向かい風に押し戻された',rain:'冷たい雨に体温を奪われた',typhoon:'暴風雨にあおられた'};
-function playerPower(){const st=bikeStats();if(B.kind==='rival')return 8+S.fame/8+st.photo/2;return st[B.e.stat]*4;}
+function playerPower(){const st=bikeStats();if(B.kind==='rival')return 8+FL()/8+st.photo/2;return st[B.e.stat]*4;}
 function renderBattle(){const pr=Math.min(100,Math.max(0,(1-B.hp/B.max)*100));$('bt-hp').style.width=pr+'%';$('bt-bike').style.left=pr+'%';$('bt-bike').src=isRival()?'img/part_cam.webp':'img/icon_bike_'+S.bike+'.webp';$('bt-goal').src=isRival()?'img/part_tripod.webp':'img/icon_g_sh2.webp';
-  $('bt-info').innerHTML=`<span class="bt-km">${B.hp<=0?(isRival()?'撮影スポットに到着！':'区間ゴール！'):LEFT()+' '+fmtD(B.hp)}</span><br>日没まで あと${B.limit-B.turn+1}時間　体力${S.hp} 気力${S.mp}${isRival()?' 名声'+S.fame:''}`;
+  $('bt-info').innerHTML=`<span class="bt-km">${B.hp<=0?(isRival()?'撮影スポットに到着！':'区間ゴール！'):LEFT()+' '+fmtD(B.hp)}</span><br>日没まで あと${B.limit-B.turn+1}時間　体力${S.hp} 気力${S.mp}${isRival()?' フォロワー'+fol(S.fame):''}`;
   const st=bikeStats(),ti={rinko:trip.rk};const pw=playerPower(),pd=v=>fmtD(v);
   const cmds=B.kind==='rival'?[
-    ['post','映え投稿で勝負',`約${pd(pw+4)}詰める（名声・写真機材）`],
+    ['post','映え投稿で勝負',`約${pd(pw+4)}詰める（フォロワー・写真機材）`],
     ['kiai','気合い（気力-20）','次の行動が2倍進む'],
-    ['rest','休む','体力+20。その間に名声が下がる'],
+    ['rest','休む','体力+20。その間にフォロワーが減る'],
     ['escape','撮影をやめて場所を譲る','ライバル戦を放棄（遅刻扱い）']]:[
     ['push','全力で踏む（体力-15）',`約${pd(pw+4)}進む（${{climb:'登坂',cruise:'巡航',wx:'耐候'}[B.e.stat]}力）`],
     ['walk','押し歩き（体力-8）',`約${pd(10)}進む。安全だが遅い`],
@@ -746,7 +750,7 @@ function cmd(k){let t='';let dmg=0;const mult=B.charge?2:1;
   if(B.hp<=0){blog(t+(isRival()?'\n先に撮影スポットに着いた！':'\nこの区間を走り切った！'));S.stats.wins++;playSE('se_win');renderBattle();$('bt-cmds').innerHTML=`<button class="primary" data-cmd="next">キャンプ場へ向かう</button>`;
     $('bt-cmds').querySelector('button').onclick=()=>{trip.i++;$('ov-battle').hidden=true;battleOver();nextEncounter();};return;}
   // enemy acts
-  let et='';if(B.kind==='rival'){S.fame=Math.max(0,S.fame-B.e.fame);et=`ライバルの投稿がバズった。名声-${B.e.fame}`;}
+  let et='';if(B.kind==='rival'){const l=floss(20,.03);S.fame=Math.max(0,S.fame-l);et=`ライバルの投稿がバズった。フォロワー-${fol(l)}`;}
   else{const st=bikeStats();const red=['rain','typhoon'].includes(B.kind)?Math.min(4,Math.floor(st.wx/2)):0;const d=Math.max(1,B.atk+rnd(-2,2)-red);S.hp-=d;et=`${HIT[B.kind]||B.e.name}…体力-${d}`;
     if(B.e.mp){S.mp-=B.e.mp;et+=` 気力-${B.e.mp}`;}}
   $('battle-box').classList.remove('shake');void $('battle-box').offsetWidth;$('battle-box').classList.add('shake');
@@ -768,36 +772,36 @@ function endTrip(){const p=trip.p,f=S.forecast[p.id],st=bikeStats(),cl=CLOTHES.f
   const wetHp=wet?Math.round((f.wx==='typhoon'?20:12)*(1-g.guard)):0;S.hp-=wetHp;
   const recHp=4+g.hp,recMp=4+g.mp;
   const campRows=`<span>キャンプ回復</span><span>体力+${recHp} 気力+${recMp}</span>${wetHp?`<span>雨ざらし</span><span>体力-${wetHp}</span>`:''}${harshMp?`<span>厳しい環境</span><span>気力-${harshMp}</span>`:''}`;
-  if(trip.late){S.fame=Math.max(0,S.fame-3);
-    html=`<h2>遅刻…</h2><div class="photo pic"><img src="img/late.webp" width="720" height="480" alt="日没後にキャンプ場へ着いた自転車旅行者"><div class="cap"><div>${p.site}</div><div>${WX_J[f.wx]} ${f.temp}℃ ・ 📷 撮影できず</div></div></div><p>${p.site}に着いたのは日没後。写真は撮れず、投稿できなかった。</p><div class="res"><span>名声</span><span>-3</span><span>利用料</span><span>-${yen(p.fee)}</span>${cold?`<span>衣類不適</span><span>体力-${cold}</span>`:''}${campRows}</div>`;
+  const lateL=floss(20,.025);if(trip.late){S.fame=Math.max(0,S.fame-lateL);
+    html=`<h2>遅刻…</h2><div class="photo pic"><img src="img/late.webp" width="720" height="480" alt="日没後にキャンプ場へ着いた自転車旅行者"><div class="cap"><div>${p.site}</div><div>${WX_J[f.wx]} ${f.temp}℃ ・ 📷 撮影できず</div></div></div><p>${p.site}に着いたのは日没後。写真は撮れず、投稿できなかった。</p><div class="res"><span>フォロワー</span><span>-${fol(lateL)}</span><span>利用料</span><span>-${yen(p.fee)}</span>${cold?`<span>衣類不適</span><span>体力-${cold}</span>`:''}${campRows}</div>`;
     log(`${p.site}に遅刻。投稿なし`);}
   else{const wb0={sun:10,cloud:0,rain:-15,wind:-5,typhoon:-25}[f.wx],wb=wet?Math.round(wb0*(1-g.guard)):wb0;let q=40+p.scen*8+st.photo+g.photo+wb+rnd(0,10);if(trip.stay)q-=10;q=Math.max(10,Math.min(100,q));
     playSE('se_photo');S.visits[p.id]++;const became=!S.fam[p.id]&&S.visits[p.id]>=3;if(became)S.fam[p.id]=true;
-    let fg=Math.round(q/5)+(S.visits[p.id]===1?5:0)+(became?10:0);const inc=300+q*25+S.fame*3;S.fame+=fg;S.money+=inc;if(TS){TS.inc=inc;TS.became=became?p.site:null;}S.stats.posts++;S.stats.bestQ=Math.max(S.stats.bestQ,q);
+    let fg=Math.round(q*3+S.fame*.03*q/70)+(S.visits[p.id]===1?300:0)+(became?1000:0);const inc=300+q*25+Math.round(S.fame*.01);S.fame+=fg;S.money+=inc;if(TS){TS.inc=inc;TS.became=became?p.site:null;}S.stats.posts++;S.stats.bestQ=Math.max(S.stats.bestQ,q);
     html=`<h2>${became?'🏅 馴染み宿になった！':'今回の旅の結果'}</h2>${(()=>{const [sid,sn]=sightOf(p.id,S.visits[p.id]);return `<div class="photo pic"><img src="img/sights/${sid}.webp" width="480" height="320" alt="${sn}"><div class="cap"><div>${sn}</div><div class="q">📷 ${q}点</div><div>${WX_J[f.wx]} ${f.temp}℃ ・ ${p.site}</div></div></div>`;})()}
-    <div class="res"><span>名声</span><span>+${fg}${became?'（馴染み宿ボーナス込）':''}</span><span>SNS収入</span><span>+${yen(inc)}</span><span>利用料</span><span>-${yen(p.fee)}</span>
+    <div class="res"><span>フォロワー</span><span>+${fol(fg)}${became?'（馴染み宿ボーナス込）':''}</span><span>SNS収入</span><span>+${yen(inc)}</span><span>利用料</span><span>-${yen(p.fee)}</span>
     <span>友好度</span><span>${Math.min(3,S.visits[p.id])}/3</span><span>ギア効果</span><span>写真+${g.photo}${wet?`（雨ガード${Math.round(g.guard*100)}%）`:''}</span>${cold?`<span>衣類不適</span><span>体力-${cold}</span>`:''}${campRows}</div>`;
-    log(`${p.site}で投稿（${q}点）名声+${fg} ${yen(inc)}${became?' 馴染み宿に！':''}`);}
+    log(`${p.site}で投稿（${q}点）フォロワー+${fol(fg)} ${yen(inc)}${became?' 馴染み宿に！':''}`);}
   // natural recovery + advance
   S.hp=Math.min(100,S.hp+recHp);S.mp=Math.min(100,S.mp+recMp);
   if(S.hp<=0){S.hp=30;S.money-=5000;html+=`<p class="hint">体力が尽きてダウン。治療費¥5,000。</p>`;}
-  if(S.mp<=0){S.mp=20;S.fame=Math.max(0,S.fame-5);html+=`<p class="hint">気力が尽きて投稿をサボった。名声-5。</p>`;}
+  if(S.mp<=0){const l=floss(30,.04);S.mp=20;S.fame=Math.max(0,S.fame-l);html+=`<p class="hint">気力が尽きて投稿をサボった。フォロワー-${fol(l)}。</p>`;}
   if(S.money<0)html+=`<p class="hint">所持金がマイナス。次の投稿収入で返済される。</p>`;
   S.sel=S.loc;render();showResult(html,advance);}
-function restHome(){const ti=travelInfo(PREF[S.home]);if(S.loc!==S.home){const forced=S.money<ti.rinko;if(!forced&&!$('ov-pay').dataset.ok){askPay('輪行で自宅に帰って休みますか？',ti.rinko,()=>{$('ov-pay').dataset.ok='1';restHome();});return;}delete $('ov-pay').dataset.ok;}const forced2=S.loc!==S.home&&S.money<ti.rinko,pen=forced2?5:2;snap();if(S.loc!==S.home&&!forced2)S.money-=ti.rinko;INTRIP=true;S.loc=S.home;S.hp=100;S.mp=100;S.fame=Math.max(0,S.fame-pen);
-  log(forced2?'所持金が尽きて強制帰宅。名声-5':'自宅で休養。名声-2');S.sel=S.loc;render();showResult(`<h2>自宅で休養</h2><div class="photo pic"><img src="img/rest.webp" width="720" height="480" alt="自宅の和室で大の字になって昼寝する旅行者"><div class="cap"><div>${PREF[S.home].name}の自宅</div><div>💤 一日中ごろごろ</div></div></div><p>${forced2?'所持金が尽きて旅を続けられず、自宅へ連れ戻された…。体力・気力は全回復したが、名声-5。':'体力・気力が全回復した。投稿がなく名声-2。'}</p>`,advance);}
+function restHome(){const ti=travelInfo(PREF[S.home]);if(S.loc!==S.home){const forced=S.money<ti.rinko;if(!forced&&!$('ov-pay').dataset.ok){askPay('輪行で自宅に帰って休みますか？',ti.rinko,()=>{$('ov-pay').dataset.ok='1';restHome();});return;}delete $('ov-pay').dataset.ok;}const forced2=S.loc!==S.home&&S.money<ti.rinko,pen=forced2?floss(30,.04):floss(10,.015);snap();if(S.loc!==S.home&&!forced2)S.money-=ti.rinko;INTRIP=true;S.loc=S.home;S.hp=100;S.mp=100;S.fame=Math.max(0,S.fame-pen);
+  log(forced2?`所持金が尽きて強制帰宅。フォロワー-${fol(pen)}`:`自宅で休養。フォロワー-${fol(pen)}`);S.sel=S.loc;render();showResult(`<h2>自宅で休養</h2><div class="photo pic"><img src="img/rest.webp" width="720" height="480" alt="自宅の和室で大の字になって昼寝する旅行者"><div class="cap"><div>${PREF[S.home].name}の自宅</div><div>💤 一日中ごろごろ</div></div></div><p>${forced2?`所持金が尽きて旅を続けられず、自宅へ連れ戻された…。体力・気力は全回復したが、フォロワー-${fol(pen)}。`:`体力・気力が全回復した。投稿がなく フォロワー-${fol(pen)}。`}</p>`,advance);}
 function showResult(html,then){$('result-box').innerHTML=html+`<button class="primary" id="res-ok">次の週末へ</button>`;$('ov-result').hidden=false;$('res-ok').onclick=()=>{$('ov-result').hidden=true;then();};}
 function turnPopup(){const t=TS;TS=null;if(!t)return;const e=$('pop'),sg=n=>(n>0?'+':n<0?'-':'')+Math.abs(n);
   const dm=S.money-t.money,other=dm-(t.inc-t.fee),dh=S.hp-t.hp,dp=S.mp-t.mp,df=S.fame-t.fame,fc=S.fam.filter(Boolean).length;
   const R=[];if(t.inc)R.push(['SNSからの収入','+'+yen(t.inc)]);if(t.fee)R.push(['利用料','-'+yen(t.fee)]);if(other)R.push(['輪行費・治療費など',(other<0?'-':'+')+yen(Math.abs(other))]);
-  if(df)R.push(['名声',`${sg(df)}（${S.fame}）`]);if(dh)R.push(['体力',`${sg(dh)}（${S.hp}）`]);if(dp)R.push(['気力',`${sg(dp)}（${S.mp}）`]);
+  if(df)R.push(['フォロワー',`${sfol(df)}（${fol(S.fame)}）`]);if(dh)R.push(['体力',`${sg(dh)}（${S.hp}）`]);if(dp)R.push(['気力',`${sg(dp)}（${S.mp}）`]);
   if(t.became)R.push(['🏅 馴染み宿',t.became]);if(fc!==t.fam)R.push(['都道府県制覇数',`${fc} / 47`]);
   e.innerHTML=`<h3>${calLabel(S.turn)}</h3><div class="res">${R.map(r=>`<span>${r[0]}</span><span>${r[1]}</span>`).join('')}<span class="tot">残高</span><span class="tot"><b>${yen(S.money)}</b></span></div><button class="primary" id="pop-x">閉じる</button>`;
   const tb=document.querySelector('.tabs').getBoundingClientRect();e.style.top=Math.max(8,Math.min(tb.top,innerHeight-260))+'px';e.hidden=false;playSE('se_turn');$('pop-x').focus({preventScroll:true});}
 $('pop').onclick=e=>{if(e.target.id==='pop-x')$('pop').hidden=true;};
 function advance(){INTRIP=false;S.turn++;
-  if(famCount()===47){showResult(`<h2>🎉 全国制覇！</h2><p>47か所すべてを馴染み宿にした。伝説の自転車インフルエンサー誕生。</p><div class="res"><span>達成</span><span>${calLabel(S.turn)}</span><span>名声</span><span>${S.fame}</span><span>所持金</span><span>${yen(S.money)}</span></div>`,()=>{render();turnPopup();});render();return;}
-  if((S.turn-1)%52===0){const y=calendar(S.turn-1).year;rollForecast();S.sel=S.loc;showResult(`<h2>${y}年目 決算</h2><div class="res"><span>都道府県制覇数</span><span>${famCount()} / 47</span><span>名声</span><span>${S.fame}（${title(S.fame)}）</span><span>所持金</span><span>${yen(S.money)}</span><span>勝敗</span><span>${S.stats.wins}勝 ${S.stats.losses}敗</span></div><p class="hint">${y+1}年目は敵が少し強くなる。</p>`,()=>{render();turnPopup();});render();return;}
+  if(famCount()===47){showResult(`<h2>🎉 全国制覇！</h2><p>47か所すべてを馴染み宿にした。伝説の自転車インフルエンサー誕生。</p><div class="res"><span>達成</span><span>${calLabel(S.turn)}</span><span>フォロワー</span><span>${fol(S.fame)}</span><span>所持金</span><span>${yen(S.money)}</span></div>`,()=>{render();turnPopup();});render();return;}
+  if((S.turn-1)%52===0){const y=calendar(S.turn-1).year;rollForecast();S.sel=S.loc;showResult(`<h2>${y}年目 決算</h2><div class="res"><span>都道府県制覇数</span><span>${famCount()} / 47</span><span>フォロワー</span><span>${fol(S.fame)}（${title(S.fame)}）</span><span>所持金</span><span>${yen(S.money)}</span><span>勝敗</span><span>${S.stats.wins}勝 ${S.stats.losses}敗</span></div><p class="hint">${y+1}年目は敵が少し強くなる。</p>`,()=>{render();turnPopup();});render();return;}
   rollForecast();S.sel=S.loc;render();turnPopup();}
 
 addEventListener('pagehide',save);
