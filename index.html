@@ -497,6 +497,9 @@ const ENEMY={
  typhoon:{name:'台風',face:'🌀',img:'img/enemy_typhoon.webp',hp:70,atk:15,limit:6,stat:'wx',mp:6,hint:'耐候力が効く。無理は禁物'},
  rival:{name:'ライバルインフルエンサー',face:'🤳',img:'img/enemy_rival.webp',hp:40,atk:0,limit:5,stat:'fame',fame:4,hint:'フォロワーと撮影機材で押し切る'},
 };
+// 毎週のスポンサー料。称号（フォロワー数）に応じて増える [必要フォロワー, 週額, スポンサー]
+const SPONSOR=[[0,2000,'地元の自転車店'],[1000,3000,'アウトドア用品店'],[10000,5000,'自転車メーカー'],[100000,10000,'旅行会社'],[500000,20000,'大手スポーツブランド'],[1000000,30000,'鉄道会社']];
+function sponsor(){let r=SPONSOR[0];for(const x of SPONSOR)if(S.fame>=x[0])r=x;return r;}
 const TITLES=[[0,'無名'],[1000,'駆け出し'],[10000,'注目の新人'],[100000,'人気配信者'],[500000,'カリスマ'],[1000000,'伝説']];
 const fol=n=>n<10000?Math.round(n).toLocaleString('ja-JP')+'人':(Math.floor(n/1000)/10).toLocaleString('ja-JP',{maximumFractionDigits:1}).replace(/\.0$/,'')+'万人';
 const sfol=n=>(n>0?'+':n<0?'-':'')+fol(Math.abs(n));
@@ -696,7 +699,7 @@ function shopClick(e){const b=e.target.closest('button[data-act]');if(!b)return;
 for(const id of ['p-gear','p-camp','p-shop'])$(id).addEventListener('click',shopClick);
 
 function renderLog(){$('log').innerHTML=S.log.map(l=>`<li>${l}</li>`).join('');
-  $('summary').innerHTML=`<span>称号</span><span>${title(S.fame)}</span><span>投稿数</span><span>${S.stats.posts}</span><span>最高写真</span><span>${S.stats.bestQ}点</span><span>勝敗</span><span>${S.stats.wins}勝 ${S.stats.losses}敗</span>`;}
+  const sp=sponsor();$('summary').innerHTML=`<span>称号</span><span>${title(S.fame)}</span><span>スポンサー</span><span>${sp[2]}（${yen(sp[1])}/週）</span><span>投稿数</span><span>${S.stats.posts}</span><span>最高写真</span><span>${S.stats.bestQ}点</span><span>勝敗</span><span>${S.stats.wins}勝 ${S.stats.losses}敗</span>`;}
 
 $('shop-tabs').addEventListener('click',e=>{const b=e.target.closest('button[data-sub]');if(!b)return;document.querySelectorAll('#shop-tabs button').forEach(x=>x.setAttribute('aria-selected',x===b));document.querySelectorAll('.shopsec').forEach(s=>s.hidden=s.dataset.sub!==b.dataset.sub);});
 document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tabs button').forEach(x=>x.setAttribute('aria-selected',x===b));
@@ -880,8 +883,8 @@ function restHome(){const ti=travelInfo(PREF[S.home]);if(S.loc!==S.home){const f
   log(forced2?`所持金が尽きて強制帰宅。フォロワー-${fol(pen)}`:`自宅で休養。フォロワー-${fol(pen)}`);S.sel=S.loc;render();showResult(`<h2>自宅で休養</h2><div class="photo pic"><img src="img/rest.webp" width="720" height="480" alt="自宅の和室で大の字になって昼寝する旅行者"><div class="cap"><div>${PREF[S.home].name}の自宅</div><div>💤 一日中ごろごろ</div></div></div><p>${forced2?`所持金が尽きて旅を続けられず、自宅へ連れ戻された…。体力・気力は全回復したが、フォロワー-${fol(pen)}。`:`体力・気力が全回復した。投稿がなく フォロワー-${fol(pen)}。`}</p>`,advance);}
 function showResult(html,then){$('result-box').innerHTML=html+`<button class="primary" id="res-ok">次の週末へ</button>`;$('ov-result').hidden=false;$('res-ok').onclick=()=>{$('ov-result').hidden=true;then();};}
 function turnPopup(){const t=TS;TS=null;if(!t)return;const e=$('pop'),sg=n=>(n>0?'+':n<0?'-':'')+Math.abs(n);
-  const dm=S.money-t.money,other=dm-(t.inc-t.fee),dh=S.hp-t.hp,dp=S.mp-t.mp,df=S.fame-t.fame,fc=S.fam.filter(Boolean).length;
-  const R=[];if(t.inc)R.push(['SNSからの収入','+'+yen(t.inc)]);if(t.fee)R.push(['利用料','-'+yen(t.fee)]);if(other)R.push(['輪行費・治療費など',(other<0?'-':'+')+yen(Math.abs(other))]);
+  const spv=t.sp?t.sp[1]:0,dm=S.money-t.money,other=dm-(t.inc-t.fee)-spv,dh=S.hp-t.hp,dp=S.mp-t.mp,df=S.fame-t.fame,fc=S.fam.filter(Boolean).length;
+  const R=[];if(t.inc)R.push(['SNSからの収入','+'+yen(t.inc)]);if(spv)R.push([`スポンサー料（${t.sp[2]}）`,'+'+yen(spv)]);if(t.fee)R.push(['利用料','-'+yen(t.fee)]);if(other)R.push(['輪行費・治療費など',(other<0?'-':'+')+yen(Math.abs(other))]);
   if(df)R.push(['フォロワー',`${sfol(df)}（${fol(S.fame)}）`]);if(dh)R.push(['体力',`${sg(dh)}（${S.hp}）`]);if(dp)R.push(['気力',`${sg(dp)}（${S.mp}）`]);
   if(t.became)R.push(['🏅 馴染み宿',t.became]);if(NEWACH.length){R.push(['🏆 実績',NEWACH.join('、')]);NEWACH=[];}if(fc!==t.fam)R.push(['都道府県制覇数',`${fc} / 47`]);
   e.innerHTML=`<h3>${calLabel(S.turn)}</h3><div class="res">${R.map(r=>`<span>${r[0]}</span><span>${r[1]}</span>`).join('')}<span class="tot">残高</span><span class="tot"><b>${yen(S.money)}</b></span></div><button class="primary" id="pop-x">閉じる</button>`;
@@ -893,7 +896,7 @@ function checkAch(){const n=[];for(const a of ACH)if(S.ach[a.id]==null&&a.ok()){
 function yearEval(y){const n=Object.keys(S.ach).length,fc=famCount();
   const score=Math.round(S.fame/100+fc*300+n*200+Math.max(0,S.money)/1000+S.stats.wins*10),pace=score/y;
   return {score,rank:pace>=4000?'S':pace>=2000?'A':pace>=800?'B':'C',goal:Math.min(47,10*y),n,fc};}
-function advance(){INTRIP=false;S.turn++;NEWACH=checkAch();
+function advance(){INTRIP=false;const sp=sponsor();S.money+=sp[1];if(TS)TS.sp=sp;S.turn++;NEWACH=checkAch();
   if(famCount()===47){showResult(`<h2>🎉 全国制覇！</h2><p>47か所すべてを馴染み宿にした。伝説の自転車インフルエンサー誕生。</p><div class="res"><span>達成</span><span>${calLabel(S.turn)}</span><span>フォロワー</span><span>${fol(S.fame)}</span><span>所持金</span><span>${yen(S.money)}</span></div>`,()=>{render();turnPopup();});render();return;}
   if((S.turn-1)%52===0){const y=calendar(S.turn-1).year;rollForecast();S.sel=S.loc;showResult(`<h2>${y}年目 決算</h2><div class="res"><span>都道府県制覇数</span><span>${famCount()} / 47</span><span>フォロワー</span><span>${fol(S.fame)}（${title(S.fame)}）</span><span>所持金</span><span>${yen(S.money)}</span><span>勝敗</span><span>${S.stats.wins}勝 ${S.stats.losses}敗</span>${(()=>{const v=yearEval(y);return `<span>実績</span><span>${v.n} / ${ACH.length}</span><span>年間目標</span><span>累計${v.goal}県制覇 ${v.fc>=v.goal?'✅ 達成':'❌ 未達'}</span><span>年間評価</span><span><b>${v.rank}</b>（${v.score.toLocaleString('ja-JP')}pt）</span>`;})()}</div><p class="hint">${y+1}年目は敵が少し強くなる。</p>`,()=>{render();turnPopup();});render();return;}
   rollForecast();S.sel=S.loc;render();turnPopup();}
