@@ -415,6 +415,9 @@ function renderMap(){const svg=$('map');let s=`<defs><pattern id="tex" patternUn
     if(p.id===S.loc||p.id===S.sel)top+=d;else s+=d;}
   s+=top;
   for(const id of new Set([S.sel,S.loc])){const c=AREAS[id].c;s+=`<text x="${c[0]-10}" y="${c[1]+4}" style="paint-order:stroke;stroke:var(--panel);stroke-width:3px">${PREF[id].name}</text>`;}
+  const eqs=[['bike',(BIKES.find(b=>b.id===S.bike)||{}).name],['shelter',(GEAR_ITEMS.find(g=>g.id===S.gear.shelter)||{}).name],['fire',(GEAR_ITEMS.find(g=>g.id===S.gear.fire)||{}).name]];
+  eqs.forEach(([ic,nm],i)=>{const x=158+i*54,y=394;
+    s+=`<g style="pointer-events:none"><rect x="${x}" y="${y}" width="50" height="58" rx="6" fill="var(--panel)" fill-opacity=".82" stroke="var(--line)"/><image href="img/icon_${ic}.webp" x="${x+11}" y="${y+4}" width="28" height="28" style="filter:none;opacity:${nm?1:.35}"/><text x="${x+25}" y="${y+46}" text-anchor="middle" style="font-size:8.5px;${nm?'':'fill:var(--muted)'}">${nm?(nm.length>6?nm.slice(0,6)+'…':nm):'なし'}</text></g>`;});
   svg.innerHTML=s;}
 $('map').addEventListener('click',e=>{const c=e.target.closest('path');if(c){S.sel=+c.dataset.id;render();}});
 
