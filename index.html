@@ -10,7 +10,7 @@
 <style>
 /* layout: one-screen RPG console. status strip on top, a tabbed main panel (map / gear / log), battle as a full overlay */
 :root{
-  --bg:#e6d6b8; --panel:#fffdf7; --fg:#2b2a24; --muted:#6b6757; --line:#d8d2c0;
+  --bg:#f3efe4; --page:#e6d6b8; --panel:#fffdf7; --fg:#2b2a24; --muted:#6b6757; --line:#d8d2c0;
   --accent:#d9622b; --accent-fg:#fff; --forest:#3f6b45; --sky:#4a7fa8;
   --good:#3f8a4f; --warn:#c48a1a; --bad:#c43b3b;
   --bgf:none; --o0:.5; --a0:#f4efe0; --a1:#d9bf94; --a2:#a8743c; --a3:#5b3a1f;
@@ -18,15 +18,15 @@
   --body:'Zen Kaku Gothic New','Hiragino Sans','Noto Sans JP',system-ui,sans-serif;
 }
 @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
-  --bg:#141a1c; --panel:#1d2528; --fg:#ece7d8; --muted:#a19b88; --line:#34403f;
+  --bg:#141a1c; --page:#e6d6b8; --panel:#1d2528; --fg:#ece7d8; --muted:#a19b88; --line:#34403f;
   --accent:#ef7a3c; --accent-fg:#1a1410; --forest:#6fa877; --sky:#7fb3d8;
   --good:#6cc07c; --warn:#e2b04a; --bad:#e26666; --bgf:brightness(.55) saturate(.9); --o0:.62; --a0:#1d2528; --a1:#b89a6e; --a2:#94602f; --a3:#5a3418; color-scheme:dark }}
 :root[data-theme="dark"]{
-  --bg:#141a1c; --panel:#1d2528; --fg:#ece7d8; --muted:#a19b88; --line:#34403f;
+  --bg:#141a1c; --page:#e6d6b8; --panel:#1d2528; --fg:#ece7d8; --muted:#a19b88; --line:#34403f;
   --accent:#ef7a3c; --accent-fg:#1a1410; --forest:#6fa877; --sky:#7fb3d8;
   --good:#6cc07c; --warn:#e2b04a; --bad:#e26666; --bgf:brightness(.55) saturate(.9); --o0:.62; --a0:#1d2528; --a1:#b89a6e; --a2:#94602f; --a3:#5a3418; color-scheme:dark }
 html,body{height:100%}
-body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:15px;line-height:1.5;
+body{background:var(--page);color:var(--fg);font-family:var(--body);font-size:15px;line-height:1.5;
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:10px;padding-bottom:64px;margin:0;-webkit-text-size-adjust:100%;text-size-adjust:100%}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
