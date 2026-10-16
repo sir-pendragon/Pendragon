@@ -101,11 +101,11 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .card .spec{color:var(--muted);font-size:.82rem}
 .card.eq{border-color:var(--forest);box-shadow:inset 0 0 0 1px var(--forest)}
 .log{font-size:.85rem;max-height:40vh;overflow:auto;display:flex;flex-direction:column;gap:4px;padding:0;margin:0;list-style:none}
+.tl[hidden]{display:none}
 .tl{display:grid;grid-template-columns:auto auto auto 1fr;gap:0 10px;font-size:.82rem;max-height:34vh;overflow:auto;margin:6px 0 10px}
 .tl>div{padding:4px 0;border-bottom:1px dashed var(--line)}
 .tl .th{color:var(--muted);font-size:.74rem;position:sticky;top:0;background:var(--panel)}
 .tl .bad{color:var(--bad)}
-.lh2{font-size:.9rem;color:var(--muted);margin:4px 0}
 .log li{border-bottom:1px dashed var(--line);padding:3px 0}
 .hint{font-size:.85rem;color:var(--muted)}
 h3{margin-top:2px}
@@ -265,9 +265,9 @@ h3{margin-top:2px}
     <div id="p-trip">
     <div class="loghead"><h2>旅の記録</h2><span class="logbtns"><button id="btn-set" aria-label="設定">⚙ 設定</button><button id="btn-reset">リセット</button></span></div>
     <div class="profile"><img src="img/hero.webp" width="96" height="96" alt="主人公の自転車旅行者"><div class="res" id="summary"></div></div>
+    <div class="subtabs" id="tl-tabs"><button data-v="tl" aria-selected="true">旅履歴</button><button data-v="log" aria-selected="false">できごと</button></div>
     <div class="tl" id="tl"></div>
-    <h3 class="lh2">できごと</h3>
-    <ul class="log" id="log"></ul>
+    <ul class="log" id="log" hidden></ul>
     </div>
   </section>
 </div>
@@ -848,6 +848,7 @@ function shopClick(e){const b=e.target.closest('button[data-act]');if(!b)return;
 for(const id of ['p-gear','p-camp','p-shop'])$(id).addEventListener('click',shopClick);
 
 const CAL_S=t=>{const c=calendar(t);return `${c.year}年${c.month}月${c.week}週`;};
+$('tl-tabs').addEventListener('click',e=>{const b=e.target.closest('button[data-v]');if(!b)return;document.querySelectorAll('#tl-tabs button').forEach(x=>x.setAttribute('aria-selected',x===b));$('tl').hidden=b.dataset.v!=='tl';$('log').hidden=b.dataset.v!=='log';});
 function renderLog(){$('log').innerHTML=S.log.map(l=>`<li>${logLine(l)}</li>`).join('');
   $('tl').innerHTML=S.tl.length?`<div class="th">日付</div><div class="th">行き先</div><div class="th">写真</div><div class="th">遭遇</div>`+S.tl.map(([t,pid,q,k])=>`<div>${CAL_S(t)}</div><div>${PREF[pid].name}</div><div>${q<0?'<span class="bad">遅刻</span>':q+'点'}</div><div>${k?k.split(',').map(x=>(ENEMY[x]||{name:x}).name).join('・'):'なし'}</div>`).join(''):'<div class="hint" style="grid-column:1/-1">まだ旅に出ていません</div>';
   const sp=sponsor();$('summary').innerHTML=`<span>称号</span><span>${title(S.fame)}</span><span>スポンサー</span><span>${sp[2]}（${yen(sp[1])}/週）</span><span>投稿数</span><span>${S.stats.posts}</span><span>最高写真</span><span>${S.stats.bestQ}点</span><span>勝敗</span><span>${S.stats.wins}勝 ${S.stats.losses}敗</span>`;}
