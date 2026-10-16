@@ -1307,10 +1307,10 @@ function shareText(){const L=[`日本巡る自転車旅 ${calLabel(S.turn)}`,`�
 function loadImg(src){return new Promise(r=>{const i=new Image();i.onload=()=>r(i);i.onerror=()=>r(null);i.src=src;});}
 async function shareCard(){const W=1200,H=630,cv=document.createElement('canvas');cv.width=W;cv.height=H;const g=cv.getContext('2d');
   try{await Promise.all([document.fonts.load('700 40px "Zen Kaku Gothic New"'),document.fonts.load('40px "DotGothic16"')]);}catch(e){}
-  const sp=sponsor(),[bg,hero,logo,spi]=await Promise.all([loadImg('img/title.webp'),loadImg('img/hero.webp'),loadImg('img/logo.webp'),loadImg('img/sponsor_'+SPONSOR.indexOf(sp)+'.webp')]);
+  const sp=sponsor(),sg=(S.visits[S.loc]||0)>=1?sightOf(S.loc,S.visits[S.loc]):null,[bg,hero,logo,spi]=await Promise.all([loadImg(sg?'img/sights/'+sg[0]+'.webp':'img/title.webp'),loadImg('img/hero.webp'),loadImg('img/logo.webp'),loadImg('img/sponsor_'+SPONSOR.indexOf(sp)+'.webp')]);
   g.fillStyle='#2a2118';g.fillRect(0,0,W,H);
   if(bg){const s=Math.max(W/bg.width,H/bg.height),w=bg.width*s,h=bg.height*s;g.drawImage(bg,(W-w)/2,(H-h)*0.55,w,h);}
-  g.fillStyle='rgba(24,17,10,.62)';g.fillRect(0,0,W,H);
+  const gr=g.createLinearGradient(0,0,W,0);gr.addColorStop(0,'rgba(24,17,10,.82)');gr.addColorStop(.55,'rgba(24,17,10,.55)');gr.addColorStop(1,'rgba(24,17,10,.18)');g.fillStyle=gr;g.fillRect(0,0,W,H);
   if(logo){g.drawImage(logo,36,14,300,Math.round(300*logo.height/logo.width));}
   const F='"Zen Kaku Gothic New","DotGothic16",sans-serif';
   if(hero){g.save();g.beginPath();g.roundRect(48,190,300,300,22);g.clip();g.drawImage(hero,48,190,300,300);g.restore();g.lineWidth=4;g.strokeStyle='#e9c46a';g.beginPath();g.roundRect(48,190,300,300,22);g.stroke();}
@@ -1321,6 +1321,7 @@ async function shareCard(){const W=1200,H=630,cv=document.createElement('canvas'
   if(LASTRES&&LASTRES.place){g.font=`700 30px ${F}`;g.fillStyle='#cfe8c4';g.fillText(LASTRES.late?`${LASTRES.place}：遅刻…`:`${LASTRES.place}で投稿成功！ ${LASTRES.df>=0?'+':'-'}${fol(Math.abs(LASTRES.df))}`,390,500);}
   if(spi){const h=210,w=Math.round(h*spi.width/spi.height);g.drawImage(spi,W-w-36,H-h-60,w,h);g.font=`700 22px ${F}`;g.fillStyle='#f4ead5';g.textAlign='right';g.fillText('スポンサー：'+sp[2],W-36,H-26);g.textAlign='left';}
   g.fillStyle='#e9c46a';g.font=`700 30px ${F}`;g.fillText('#日本巡る自転車旅',48,H-26);
+  if(sg){g.font=`700 26px ${F}`;g.fillStyle='#f4ead5';g.fillText(`${PREF[S.loc].name}の名所：${sg[1]}`,390,556);}
   return new Promise(r=>cv.toBlob(r,'image/png'));}
 async function doShare(noteEl){const note=noteEl||$('share-note');note.textContent='画像を作っています…';
   let blob;try{blob=await shareCard();}catch(e){blob=null;}
