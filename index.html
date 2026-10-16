@@ -534,6 +534,7 @@ const URBAN=new Set(['東京','神奈川','埼玉','千葉','愛知','大阪','�
 const bearSeason=m=>m>=4&&m<=11;
 // 動物（いのしし・牡鹿・熊）に出会う確率は、行き先へのなじみ度で変わる。地元の人は出る場所や時間を知っている。いちばん低い倍率を使う
 const HABU=new Set(['沖縄']);// ハブ：沖縄限定。沖縄出身の主人公は遭遇しない（ヒグマも同様に北海道出身は遭遇しない）
+const WILD_BASE=.55;// 生き物（いのしし・鹿・クマ・ハブ）は出にくく：スロットごとに出る確率の基本値（地元補正と掛け算）
 const WILDK=new Set(['animal','deer','bear','brownbear','habu']);
 function familiar(p){const own=PREF[S.home];let f=1,why='';
   const set=(v,w)=>{if(v<f){f=v;why=w;}};
@@ -995,14 +996,16 @@ function startTrip(p,rinko){snap();{const i=new Image();i.src='img/late.webp';}{
   if(rinko){S.money-=ti.rinko;log(`${p.name}へ輪行（${yen(ti.rinko)}）`);}
   const f=S.forecast[p.id];const enc=[];
   if(!rinko&&!stay){const pool=[];if(p.terrain==='hill')pool.push('hill','hill','pass');if(p.terrain==='hill'&&p.diff>=3)pool.push('pass','pass');if(p.terrain==='rough'){pool.push('rough','rough');pool.push('lost');if(p.diff>=4)pool.push('lost');}if(p.name!=='北海道'){if(p.terrain==='rough')pool.push('animal');if(WILD.has(p.region))pool.push('animal');}
-    if(HABU.has(p.name)&&PREF[S.home].name!=='沖縄')pool.push('habu');if(DEER.has(p.name))pool.push('deer','deer');if(calendar(S.turn).year>=2&&bearSeason(calendar(S.turn).month)){if(BROWNBEAR.has(p.name)&&PREF[S.home].name!=='北海道')pool.push('brownbear');if(BLACKBEAR.has(p.name)&&(!RAREBEAR.has(p.name)||Math.random()<.5))pool.push('bear');}if(calendar(S.turn).year>=2&&URBAN.has(p.name))pool.push(urbanEnemy());
-    if(f.wx==='rain')pool.push('rain','rain');if(f.wx==='wind')pool.push('wind','wind');if(f.wx==='typhoon')pool.push('typhoon','typhoon');if(f.wx==='snow')pool.push('snow','snow');if(f.wx==='heat')pool.push('heat','heat');if(pool.length===0)pool.push('hill','animal');
+    if(HABU.has(p.name)&&PREF[S.home].name!=='沖縄')pool.push('habu');if(DEER.has(p.name))pool.push('deer');if(calendar(S.turn).year>=2&&bearSeason(calendar(S.turn).month)){if(BROWNBEAR.has(p.name)&&PREF[S.home].name!=='北海道')pool.push('brownbear');if(BLACKBEAR.has(p.name)&&(!RAREBEAR.has(p.name)||Math.random()<.5))pool.push('bear');}if(calendar(S.turn).year>=2&&URBAN.has(p.name))pool.push(urbanEnemy());
+    {const wk={rain:'rain',wind:'wind',typhoon:'typhoon',snow:'snow',heat:'heat'}[f.wx];if(wk)for(let i=0;i<(wk==='typhoon'?5:4);i++)pool.push(wk);}// 天候の試練は出やすく（予報の天気を重く）if(pool.length===0)pool.push('hill','animal');
     const fam=familiar(p).f;
-    for(let i=0;i<ti.enc;i++){const k=pool[rnd(0,pool.length-1)];if(WILDK.has(k)&&Math.random()>fam)continue;enc.push(k);}// 地元・馴染み宿・同じ地方では、動物の枠が減る
-    if(f.wx==='typhoon'&&enc.length&&!enc.includes('typhoon'))enc[enc.length-1]='typhoon';}
+    for(let i=0;i<ti.enc;i++){const k=pool[rnd(0,pool.length-1)];if(WILDK.has(k)&&Math.random()>fam*WILD_BASE)continue;enc.push(k);}// 地元・馴染み宿・同じ地方では、動物の枠が減る
+    if(!enc.length&&ti.enc>0){const nw=pool.filter(k=>!WILDK.has(k));enc.push(nw.length?nw[rnd(0,nw.length-1)]:'hill');}// 生き物が出なかった旅でも、最低1回は試練がある
+    if(f.wx==='typhoon'&&enc.length&&!enc.includes('typhoon'))enc[enc.length-1]='typhoon';
+    else if(['rain','wind','snow','heat'].includes(f.wx)&&enc.length&&!enc.includes(f.wx)&&Math.random()<.75)enc[enc.length-1]=f.wx;}// 荒れた天気の日は、ほぼ必ず天候の試練がある
   // 輪行（沖縄は輪行しか行けない）でも、現地のキャンプ場の近くで、その県限定のボス（ハブ・ヒグマ）に会うことがある（約5割。地元補正あり）
   if(rinko&&!stay){const bs=[];if(HABU.has(p.name)&&PREF[S.home].name!=='沖縄')bs.push('habu');if(calendar(S.turn).year>=2&&bearSeason(calendar(S.turn).month)&&BROWNBEAR.has(p.name)&&PREF[S.home].name!=='北海道')bs.push('brownbear');
-    const fm=familiar(p).f;for(const k of bs)if(Math.random()<.5*fm)enc.push(k);}
+    const fm=familiar(p).f;for(const k of bs)if(Math.random()<.3*fm)enc.push(k);}
   const ev=eventAt(S.turn,p.id);
   if((p.scen>=5||ev)&&Math.random()<(ev?(stay?.3:.6):stay?.15:.4))enc.push('rival');
   INTRIP=true;const nEnc=Math.max(1,enc.filter(k=>k!=='rival').length);trip={p,rinko,stay,enc,ev,i:0,late:false,sec:rinko?5:Math.max(3,Math.round(ti.d/nEnc)),rk:Math.max(1000,Math.round(ti.rinko/nEnc/100)*100)};S.loc=p.id;if(stay){S.mp-=Math.max(0,15-bikeStats().comfy);}
