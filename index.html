@@ -1314,8 +1314,10 @@ async function shareCard(){const W=1200,H=630,cv=document.createElement('canvas'
   const F='"Zen Kaku Gothic New","DotGothic16",sans-serif';
   if(logo)g.drawImage(logo,36,14,300,Math.round(300*logo.height/logo.width));
   if(hero){const x=40,y=H-250,z=210;g.save();g.beginPath();g.roundRect(x,y,z,z,18);g.clip();g.drawImage(hero,x,y,z,z);g.restore();g.lineWidth=4;g.strokeStyle='#e9c46a';g.beginPath();g.roundRect(x,y,z,z,18);g.stroke();}
-  if(spi){const h=190,w=Math.round(h*spi.width/spi.height);g.drawImage(spi,W-w-36,H-h-36,w,h);}
-  if(sg){g.font=`700 30px ${F}`;const t=`${PREF[S.loc].name}の名所：${sg[1]}`,tw=g.measureText(t).width;g.fillStyle='rgba(24,17,10,.7)';g.beginPath();g.roundRect(W/2-tw/2-16-60,H-70,tw+32,48,10);g.fill();g.fillStyle='#f4ead5';g.fillText(t,W/2-tw/2-60,H-36);}
+  const pill=(t,x,y,fs,al)=>{g.font=`700 ${fs}px ${F}`;const w=g.measureText(t).width+28,h=fs+18,l=al==='r'?x-w:al==='c'?x-w/2:x;g.fillStyle='rgba(24,17,10,.72)';g.beginPath();g.roundRect(l,y,w,h,10);g.fill();g.fillStyle='#f4ead5';g.fillText(t,l+14,y+fs+3);return l;};
+  if(spi){const h=170,w=Math.round(h*spi.width/spi.height);g.drawImage(spi,W-w-36,H-h-96,w,h);pill('スポンサー：'+sp[2],W-36,H-70,26,'r');}
+  if(sg)pill(`${PREF[S.loc].name}の名所：${sg[1]}`,270,H-146,28,'l');
+  pill('称号：'+title(S.fame),270,H-76,32,'l');
   return new Promise(r=>cv.toBlob(r,'image/png'));}
 async function doShare(noteEl){const note=noteEl||$('share-note');note.textContent='画像を作っています…';
   let blob;try{blob=await shareCard();}catch(e){blob=null;}
