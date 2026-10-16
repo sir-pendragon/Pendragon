@@ -1000,9 +1000,12 @@ function startTrip(p,rinko){snap();{const i=new Image();i.src='img/late.webp';}{
     const fam=familiar(p).f;
     for(let i=0;i<ti.enc;i++){const k=pool[rnd(0,pool.length-1)];if(WILDK.has(k)&&Math.random()>fam)continue;enc.push(k);}// 地元・馴染み宿・同じ地方では、動物の枠が減る
     if(f.wx==='typhoon'&&enc.length&&!enc.includes('typhoon'))enc[enc.length-1]='typhoon';}
+  // 輪行（沖縄は輪行しか行けない）でも、現地のキャンプ場の近くで、その県限定のボス（ハブ・ヒグマ）に会うことがある（約5割。地元補正あり）
+  if(rinko&&!stay){const bs=[];if(HABU.has(p.name)&&PREF[S.home].name!=='沖縄')bs.push('habu');if(calendar(S.turn).year>=2&&bearSeason(calendar(S.turn).month)&&BROWNBEAR.has(p.name)&&PREF[S.home].name!=='北海道')bs.push('brownbear');
+    const fm=familiar(p).f;for(const k of bs)if(Math.random()<.5*fm)enc.push(k);}
   const ev=eventAt(S.turn,p.id);
   if((p.scen>=5||ev)&&Math.random()<(ev?(stay?.3:.6):stay?.15:.4))enc.push('rival');
-  INTRIP=true;const nEnc=Math.max(1,enc.filter(k=>k!=='rival').length);trip={p,rinko,stay,enc,ev,i:0,late:false,sec:Math.max(3,Math.round(ti.d/nEnc)),rk:Math.max(1000,Math.round(ti.rinko/nEnc/100)*100)};S.loc=p.id;if(stay){S.mp-=Math.max(0,15-bikeStats().comfy);}
+  INTRIP=true;const nEnc=Math.max(1,enc.filter(k=>k!=='rival').length);trip={p,rinko,stay,enc,ev,i:0,late:false,sec:rinko?5:Math.max(3,Math.round(ti.d/nEnc)),rk:Math.max(1000,Math.round(ti.rinko/nEnc/100)*100)};S.loc=p.id;if(stay){S.mp-=Math.max(0,15-bikeStats().comfy);}
   S.sel=S.loc;render();nextEncounter();}
 // ツチノコ：試練の1回ごとに3%で気配が出る（1回の旅で1回まで）。試練ではなく撮影チャンス。成功は初回+20万人、2回目以降+5万人
 const TC_P=.03;
