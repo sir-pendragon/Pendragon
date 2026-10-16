@@ -658,29 +658,31 @@ function renderMap(){const svg=$('map');const mk=JSON.stringify([S.loc,S.sel,S.v
   s+=top;
   const SPR={"tarp_tp2":[565,199],"shelter_sh2":[355,185],"bike_gravel":[190,144],"bike_cross":[185,142],"bike_road":[176,136],"fire_fire3":[480,470],"bike_mama":[162,126],"fire_fire2":[241,200],"tarp_tp1":[476,166],"shelter_sh3":[560,401],"bike_tigrav":[194,122],"tarp_tp3":[760,586],"shelter_sh1":[481,185],"bike_mtb":[202,134],"camp_ground":[451,193],"fire_fire1":[197,153],"bike_fold":[143,124],"tree_spring":[256,338],"tree_summer":[256,338],"tree_autumn":[256,338],"tree_winter":[256,338],"part_tripod":[128,128],"part_cam":[128,128],"part_drone":[128,128],"part_comfy":[128,128]};
   // 新しいギアの絵が届くまでの代用：近い既存の絵を使い、DCFは薄いグリーンに寄せる。絵が届いたら STAND から外し、SPR に寸法を足す
-  const STAND={shelter_sh4:'shelter_sh2',shelter_sh5:'shelter_sh3',tarp_tp4:'tarp_tp2'};
-  const FILT={shelter_sh4:'hue-rotate(60deg) saturate(.55) brightness(1.3)',tarp_tp4:'hue-rotate(60deg) saturate(.55) brightness(1.3)'};
-  const put=(key,cx,by,k)=>{const kk=STAND[key]||key,d=SPR[kk];if(!d)return '';const w=d[0]*k,hh=d[1]*k;return `<image href="img/${kk}.webp" x="${(cx-w/2).toFixed(1)}" y="${(by-hh).toFixed(1)}" width="${w.toFixed(1)}" height="${hh.toFixed(1)}"${FILT[key]?` style="filter:${FILT[key]}"`:''}/>`;};
-  // 配置は、近い既存の寝床・タープと同じ決まりを使う（DCFテント＝入門テント、薪ストーブ用テント＝山岳テント、DCFタープ＝ヘキサ）
+  Object.assign(SPR,{shelter_sh4:[700,406],shelter_sh5:[700,558],shelter_sh5_chim:[700,558],tarp_tp4:[800,437]});// 新しい絵の寸法（DCFテント・薪ストーブ用テント本体と煙突・DCFタープ）
+  const put=(key,cx,by,k)=>{const d=SPR[key];if(!d)return '';const w=d[0]*k,hh=d[1]*k;return `<image href="img/${key}.webp" x="${(cx-w/2).toFixed(1)}" y="${(by-hh).toFixed(1)}" width="${w.toFixed(1)}" height="${hh.toFixed(1)}"/>`;};
+  // 配置の決まり（重なり順・位置）は、近い既存のものと同じにする（DCFテント＝入門テント、薪ストーブ用テント＝山岳テント、DCFタープ＝ヘキサ）。大きさと接地は新しい絵に合わせて個別に決める
   const A_SH={sh4:'sh2',sh5:'sh3'},A_TP={tp4:'tp2'};const shA=A_SH[S.gear.shelter]||S.gear.shelter,tpA=A_TP[S.gear.tarp]||S.gear.tarp;
   // 山岳テントの絵は下端に杭・ガイロープが長く伸びていて、本体の底が下端より約8単位上にある。入門テント(約3単位)と地面の高さを揃えるため下げる
-  const SH3_DROP=4,fk={fire1:.115,fire2:.115,fire3:.085,fire4:0},sk={sh1:.165,sh2:.16,sh3:.085},tk={tp1:.27,tp2:.215,tp3:.125};// タープは寝床（特にハンモックの杭の間）を覆える幅にする
+  const SH3_DROP=4,fk={fire1:.115,fire2:.115,fire3:.085,fire4:0},sk={sh1:.165,sh2:.16,sh3:.085,sh4:.08,sh5:.0657},tk={tp1:.27,tp2:.215,tp3:.125,tp4:.17};
+  const DROP={sh2:0,sh3:SH3_DROP,sh4:4,sh5:.5};// タープは寝床（特にハンモックの杭の間）を覆える幅にする
   // 山岳テントは背が高く、そのままだとタープの屋根を突き抜ける。テントごとにタープの大きさ・位置を決める [scale, 接地のy]
   // 接地yを413にして、タープのポールの根元をテントの前の地面に出す（403だとポールがテントの床に刺さって見える）
-  const TARP_FIT={sh3:{tp1:[.30,413],tp2:[.30,413],tp3:[.175,420,20]},sh2:{tp1:[.27,413],tp2:[.215,413],tp3:[.175,420,20]}};const tf=(S.gear.tarp&&TARP_FIT[shA]&&TARP_FIT[shA][tpA])||[tk[tpA],403,0];// [scale, 接地y, 横ずれ]
+  const PB=(437-235)*.17;// DCFタープの絵：ポールの根元から絵の下端まで（単位）
+  const TARP_FIT={sh3:{tp1:[.30,413],tp2:[.30,413],tp3:[.175,420,20],tp4:[.17,413+PB]},sh2:{tp1:[.27,413],tp2:[.215,413],tp3:[.175,420,20],tp4:[.17,413+PB]}};const tf=(S.gear.tarp&&TARP_FIT[shA]&&(TARP_FIT[shA][S.gear.tarp]||TARP_FIT[shA][tpA]))||[tk[S.gear.tarp]||tk[tpA],403+(S.gear.tarp==='tp4'?PB:0),0];// [scale, 接地y, 横ずれ]
   // 大型タープ＋テントのときは、テントをさらにタープの奥（地図の上側）に置く
   const hasTent=shA==='sh2'||shA==='sh3';
-  const UNDER=tpA==='tp3'&&hasTent?{x:264,by:shA==='sh3'?397:392,k:shA==='sh3'?.1:.16}:null;
+  const UK={sh2:[.16,392],sh3:[.1,397],sh4:[.08,396],sh5:[.077,393]};// 大型タープの奥に置くときの [大きさ, 接地y]
+  const UNDER=tpA==='tp3'&&hasTent?{x:264,by:UK[S.gear.shelter][1],k:UK[S.gear.shelter][0]}:null;
   // 簡易・ヘキサタープの下では、テントの底の線を約3.3単位下げる（タープの脚の接地線に近づける）
   const TENT_LOW=hasTent&&(tpA==='tp1'||tpA==='tp2')?3.3:0;
   // 簡易・ヘキサ：布(奥)→テント→ポール(手前)。テントの頂点が布の手前に出て、屋根の下に入って見える。大型タープだけは布を手前に重ねてテントを隠す
   const BEHIND=tpA==='tp3'&&hasTent;
   const tarpS=S.gear.tarp?put('tarp_'+S.gear.tarp,252+(tf[2]||0),tf[1],tf[0]):'';
-  const tpos=UNDER?{x:UNDER.x,by:UNDER.by,k:UNDER.k}:{x:252,by:408+(shA==='sh3'?SH3_DROP:0)+TENT_LOW,k:sk[shA]};
-  const chim=S.gear.shelter==='sh5'&&stoveOn()?chimney(tpos.x,tpos.by,tpos.k):null;// 薪ストーブ用テント＋薪ストーブ＋冬：煙突と煙
+  const tpos=UNDER?{x:UNDER.x,by:UNDER.by,k:UNDER.k}:{x:252,by:408+(DROP[S.gear.shelter]||0)+TENT_LOW,k:sk[S.gear.shelter]||sk[shA]};
+  const chim=S.gear.shelter==='sh5'&&stoveOn()?chimney(tpos.x,tpos.by,tpos.k,put):null;// 薪ストーブ用テント＋薪ストーブ＋冬：煙突と煙
   const shS=S.gear.shelter?put('shelter_'+S.gear.shelter,tpos.x,tpos.by,tpos.k):'';
   s+=`<g style="pointer-events:none">${put('camp_ground',272,462,244/451)}${put('tree_'+season(calendar(S.turn).mi),332,380,.385)}`
-   +(BEHIND?shS+tarpS+(chim?chim.pipe:''):tarpS+shS+(hasTent&&TARP_FRONT[tpA]?tarpPart(tpA,252+(tf[2]||0),tf[1],tf[0]):'')+(chim?chim.pipe:''))
+   +(BEHIND?shS+tarpS+(chim?chim.pipe:''):tarpS+shS+(hasTent&&TARP_FRONT[S.gear.tarp]?tarpPart(S.gear.tarp,252+(tf[2]||0),tf[1],tf[0]):'')+(chim?chim.pipe:''))
    +(S.parts.includes('tripod')?put('part_tripod',222,424,.2)+(S.parts.includes('cam')?put('part_cam',222,402,.1):''):(S.parts.includes('cam')?put('part_cam',312,430,.1):''))
    +(S.parts.includes('comfy')?put('part_comfy',204,418,.2):'')
    +put('bike_'+S.bike,332,419,.26)
@@ -688,20 +690,18 @@ function renderMap(){const svg=$('map');const mk=JSON.stringify([S.loc,S.sel,S.v
    +(S.parts.includes('drone')?`<g class="drone">${put('part_drone',300,392,.15)}</g>`:'');
   s+=`<g id="hero" style="pointer-events:none"><ellipse id="hs" cy="0" ry="1.8" fill="#000" opacity=".28"/><g id="hf">${HFR.map(k=>`<image id="hi_${k}" href="img/hero_${k}.webp" width="${HDIM[k[0]][0]*HK}" height="${HDIM[k[0]][1]*HK}" style="display:none"/>`).join('')}</g><text id="hz1" style="font-size:6px;fill:#fff;paint-order:stroke;stroke:#234;stroke-width:1.5px">z</text><text id="hz2" style="font-size:5px;fill:#fff;paint-order:stroke;stroke:#234;stroke-width:1.5px">z</text></g>`
    +(S.gear.shelter==='sh1'?hamFront(sk.sh1):'')
-   +(hasTent?(UNDER?zzzFx(UNDER.by-(shA==='sh3'?44:34),UNDER.x-252):zzzFx((shA==='sh3'?372+SH3_DROP:378)+TENT_LOW)):'')
+   +(hasTent?zzzFx(tpos.by-SPR['shelter_'+S.gear.shelter][1]*tpos.k+(S.gear.shelter==='sh5'?10:1),tpos.x-252):'')
    +(chim?chim.smoke:'');svg.innerHTML=s;HLAST=null;drawHero();}
 // テントで寝ている間、テントの上に立ちのぼる「Z z z」（ty：テントの頂点のy）
 function zzzFx(ty,dx=0){return `<g id="zzz" style="display:none;pointer-events:none"><text class="zq" x="${258+dx}" y="${ty+6}" style="font-size:9px">Z</text><text class="zq zq2" x="${265+dx}" y="${ty}" style="font-size:7px">z</text><text class="zq zq3" x="${271+dx}" y="${ty-6}" style="font-size:5.5px">z</text></g>`;}
 // テントの手前に重ねるタープの部分（元の絵の座標 [x0,x1,y0,y1]、絵のサイズ）
 //  ヘキサ(tp2)：中央ポール x=245〜259。簡易(tp1)：屋根の明るい面 y=0〜53（濃い帯＝屋根の裏側はテントの奥のまま）
-const TARP_FRONT={tp1:{size:[476,166],r:[0,476,0,53]},tp2:{size:[565,199],r:[245,259,0,199]}};
+const TARP_FRONT={tp1:{size:[476,166],r:[0,476,0,53]},tp2:{size:[565,199],r:[245,259,0,199]},tp4:{size:[800,437],r:[396,414,0,236]}};
 function tarpPart(key,cx,by,k){const f=TARP_FRONT[key],w=f.size[0]*k,hh=f.size[1]*k,x=cx-w/2,y=by-hh,r=f.r;
-  const dcf=S.gear.tarp==='tp4';// DCFタープは、絵が届くまでヘキサの絵を薄いグリーンにして代用
-  return `<clipPath id="tpart"><rect x="${(x+r[0]*k).toFixed(1)}" y="${(y+r[2]*k).toFixed(1)}" width="${((r[1]-r[0])*k).toFixed(1)}" height="${((r[3]-r[2])*k).toFixed(1)}"/></clipPath><image href="img/tarp_${key}.webp" x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${w.toFixed(1)}" height="${hh.toFixed(1)}" clip-path="url(#tpart)"${dcf?' style="filter:hue-rotate(60deg) saturate(.55) brightness(1.3)"':''}/>`;}
-// 薪ストーブ用テントの煙突と煙（tx,by,k：テントの置き位置。屋根の頂点の少し右から煙突を立てる）
-function chimney(tx,by,k){const top=by-401*k,x=tx+11,y=top+11,h=19;// 山岳テントの絵（560×401）基準の目安
-  const pipe=`<g class="chim"><rect x="${x-1.3}" y="${y-h}" width="2.6" height="${h}" fill="#4a4f57" stroke="#1f2226" stroke-width=".5"/><rect x="${x-.3}" y="${y-h}" width=".7" height="${h}" fill="#8c939c" opacity=".7"/><path d="M${x-3} ${y-h}l3 -2.6l3 2.6z" fill="#2a2d33" stroke="#1f2226" stroke-width=".4"/></g>`;
-  const sx=x,sy=y-h-3;
+  return `<clipPath id="tpart"><rect x="${(x+r[0]*k).toFixed(1)}" y="${(y+r[2]*k).toFixed(1)}" width="${((r[1]-r[0])*k).toFixed(1)}" height="${((r[3]-r[2])*k).toFixed(1)}"/></clipPath><image href="img/tarp_${key}.webp" x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${w.toFixed(1)}" height="${hh.toFixed(1)}" clip-path="url(#tpart)"/>`;}
+// 薪ストーブ用テントの煙突（絵の重ね絵）と煙。煙突の頂部は、絵の上端から約5px（700×558の絵の x=243）
+function chimney(tx,by,k,put){const pipe=put('shelter_sh5_chim',tx,by,k);
+  const sx=tx-700*k/2+243*k,sy=by-558*k+3*k-1;
   const smoke=`<g id="smoke" style="pointer-events:none"><defs><radialGradient id="smg"><stop offset="0" stop-color="#ffffff" stop-opacity="1"/><stop offset=".6" stop-color="#e3e7eb" stop-opacity=".85"/><stop offset="1" stop-color="#c2c9d0" stop-opacity="0"/></radialGradient></defs><circle class="sm sm1" cx="${sx}" cy="${sy}" r="2.6"/><circle class="sm sm2" cx="${sx}" cy="${sy}" r="3.2"/><circle class="sm sm3" cx="${sx}" cy="${sy}" r="3.8"/><circle class="sm sm4" cx="${sx}" cy="${sy}" r="4.2"/></g>`;
   return {pipe,smoke};}
 // ハンモックで寝るとき、寝袋の下半分を手前の布で隠す（同じ絵を、布の手前側だけ切り抜いてキャラの上に重ねる）
@@ -773,7 +773,7 @@ function renderList(){$('sitelist').innerHTML=PREF.map(p=>`<button data-id="${p.
 function owns(kind,id){return S.owned[kind==='bike'?'bikes':kind==='cloth'?'cloth':kind==='gear'?'gear':'parts'].includes(id);}
 function isEq(kind,item){return kind==='bike'?S.bike===item.id:kind==='cloth'?S.cloth===item.id:kind==='gear'?S.gear[item.slot]===item.id:S.parts.includes(item.id);}
 // 新しいギアの絵が届くまでは、近い既存のアイコンを代わりに表示する（読み込みに失敗したときだけ切り替わる）
-const ICON_FB={fire4:'icon_g_fire3',sh4:'icon_g_sh2',sh5:'icon_g_sh3',tp4:'icon_g_tp3'};
+const ICON_FB={fire4:'icon_g_fire3'};
 addEventListener('error',e=>{const i=e.target;if(i&&i.tagName==='IMG'&&i.dataset&&i.dataset.fb){const f='img/'+i.dataset.fb+'.webp';i.dataset.fb='';i.src=f;}},true);
 function card(item,kind,mode){const eq=isEq(kind,item),own=owns(kind,item.id);
   const spec=kind==='bike'?`登坂${bv(item,'climb')} 悪路${bv(item,'rough')} 巡航${bv(item,'cruise')} 耐候${bv(item,'wx')}${item.fold?' 輪行半額':''}`:
