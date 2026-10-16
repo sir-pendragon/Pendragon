@@ -297,19 +297,19 @@ button:disabled{opacity:.45;cursor:not-allowed}
 
 <div class="app" id="app">
   <div class="status">
-    <div class="stat" style="grid-column:1/-1"><span class="lb"><img class="si" src="img/icon_fame.webp" width="16" height="16" alt="">フォロワー</span><b id="d-fame">0</b></div>
-    <div class="stat"><span class="lb"><img class="si" src="img/icon_money.webp" width="16" height="16" alt="">所持金</span><b id="d-money">¥30,000</b></div>
-    <div class="stat"><span class="lb"><img class="si" src="img/icon_loc.webp" width="16" height="16" alt="">現在地</span><b id="d-loc">東京</b></div>
-    <div class="stat"><span class="lb"><img class="si" src="img/icon_hp.webp" width="16" height="16" alt="">体力</span><b id="d-hp">100</b><div class="bar"><i id="b-hp" style="width:100%"></i></div></div>
-    <div class="stat"><span class="lb"><img class="si" src="img/icon_mp.webp" width="16" height="16" alt="">気力</span><b id="d-mp">100</b><div class="bar mp"><i id="b-mp" style="width:100%"></i></div></div>
-    <div class="stat" style="grid-column:1/-1"><span class="lb"><img class="si" src="img/icon_inn.webp" width="16" height="16" alt="">都道府県クリア数</span><b id="d-fam">0 / 47</b></div>
+    <div class="stat" style="grid-column:1/-1"><span class="lb"><img loading="lazy" class="si" src="img/icon_fame.webp" width="16" height="16" alt="">フォロワー</span><b id="d-fame">0</b></div>
+    <div class="stat"><span class="lb"><img loading="lazy" class="si" src="img/icon_money.webp" width="16" height="16" alt="">所持金</span><b id="d-money">¥30,000</b></div>
+    <div class="stat"><span class="lb"><img loading="lazy" class="si" src="img/icon_loc.webp" width="16" height="16" alt="">現在地</span><b id="d-loc">東京</b></div>
+    <div class="stat"><span class="lb"><img loading="lazy" class="si" src="img/icon_hp.webp" width="16" height="16" alt="">体力</span><b id="d-hp">100</b><div class="bar"><i id="b-hp" style="width:100%"></i></div></div>
+    <div class="stat"><span class="lb"><img loading="lazy" class="si" src="img/icon_mp.webp" width="16" height="16" alt="">気力</span><b id="d-mp">100</b><div class="bar mp"><i id="b-mp" style="width:100%"></i></div></div>
+    <div class="stat" style="grid-column:1/-1"><span class="lb"><img loading="lazy" class="si" src="img/icon_inn.webp" width="16" height="16" alt="">都道府県クリア数</span><b id="d-fam">0 / 47</b></div>
   </div>
   <div class="tabs" role="tablist">
-    <button role="tab" aria-selected="true" data-tab="map" id="tab-map"><img class="ti" src="img/icon_map.webp" width="22" height="22" alt="">地図</button>
-    <button role="tab" aria-selected="false" data-tab="gear" id="tab-gear"><img class="ti" src="img/icon_bike.webp" width="22" height="22" alt="">自転車</button>
-    <button role="tab" aria-selected="false" data-tab="camp" id="tab-camp"><img class="ti" src="img/icon_gear.webp" width="22" height="22" alt="">ギア</button>
-    <button role="tab" aria-selected="false" data-tab="shop" id="tab-shop"><img class="ti" src="img/icon_shop.webp" width="22" height="22" alt="">店</button>
-    <button role="tab" aria-selected="false" data-tab="log" id="tab-log"><img class="ti" src="img/icon_log.webp" width="22" height="22" alt="">記録</button>
+    <button role="tab" aria-selected="true" data-tab="map" id="tab-map"><img loading="lazy" class="ti" src="img/icon_map.webp" width="22" height="22" alt="">地図</button>
+    <button role="tab" aria-selected="false" data-tab="gear" id="tab-gear"><img loading="lazy" class="ti" src="img/icon_bike.webp" width="22" height="22" alt="">自転車</button>
+    <button role="tab" aria-selected="false" data-tab="camp" id="tab-camp"><img loading="lazy" class="ti" src="img/icon_gear.webp" width="22" height="22" alt="">ギア</button>
+    <button role="tab" aria-selected="false" data-tab="shop" id="tab-shop"><img loading="lazy" class="ti" src="img/icon_shop.webp" width="22" height="22" alt="">店</button>
+    <button role="tab" aria-selected="false" data-tab="log" id="tab-log"><img loading="lazy" class="ti" src="img/icon_log.webp" width="22" height="22" alt="">記録</button>
   </div>
 
   <section class="panel" id="p-map">
@@ -320,14 +320,14 @@ button:disabled{opacity:.45;cursor:not-allowed}
   </section>
 
   <section class="panel" id="p-gear" hidden>
-    <div class="subtabs" id="gear-tabs"><button data-sub="bike" aria-selected="true"><img class="wi" src="img/icon_bike.webp" width="128" height="128" alt="">自転車</button><button data-sub="cloth" aria-selected="false"><img class="wi" src="img/icon_cloth.webp" width="128" height="128" alt="">衣類</button><button data-sub="part" aria-selected="false"><img class="wi" src="img/icon_part.webp" width="128" height="128" alt="">パーツ</button></div>
+    <div class="subtabs" id="gear-tabs"><button data-sub="bike" aria-selected="true"><img loading="lazy" class="wi" src="img/icon_bike.webp" width="128" height="128" alt="">自転車</button><button data-sub="cloth" aria-selected="false"><img loading="lazy" class="wi" src="img/icon_cloth.webp" width="128" height="128" alt="">衣類</button><button data-sub="part" aria-selected="false"><img loading="lazy" class="wi" src="img/icon_part.webp" width="128" height="128" alt="">パーツ</button></div>
     <div class="campsec" data-sub="bike"><p class="hint">持っている自転車。新しいものは「店」で買えます。</p><div class="shop" id="eq-bike"></div></div>
     <div class="campsec" data-sub="cloth" hidden><p class="hint">持っている衣類。気温に合わせて着替えます。</p><div class="shop" id="eq-cloth"></div></div>
     <div class="campsec" data-sub="part" hidden><p class="hint">パーツは3つまで付けられます。</p><div class="shop" id="eq-part"></div></div>
   </section>
 
   <section class="panel" id="p-camp" hidden>
-    <div class="subtabs" id="camp-tabs"><button data-sub="shelter" aria-selected="true"><img class="wi" src="img/icon_shelter.webp" width="128" height="128" alt="">テント</button><button data-sub="tarp" aria-selected="false"><img class="wi" src="img/icon_tarp.webp" width="128" height="128" alt="">タープ</button><button data-sub="fire" aria-selected="false"><img class="wi" src="img/icon_fire.webp" width="128" height="128" alt="">焚き火台</button></div>
+    <div class="subtabs" id="camp-tabs"><button data-sub="shelter" aria-selected="true"><img loading="lazy" class="wi" src="img/icon_shelter.webp" width="128" height="128" alt="">テント</button><button data-sub="tarp" aria-selected="false"><img loading="lazy" class="wi" src="img/icon_tarp.webp" width="128" height="128" alt="">タープ</button><button data-sub="fire" aria-selected="false"><img loading="lazy" class="wi" src="img/icon_fire.webp" width="128" height="128" alt="">焚き火台</button></div>
     <div class="campsec" data-sub="shelter"><p class="hint">寝床（テント・ハンモック）。体力・気力が回復します。</p><div class="shop" id="eq-shelter"></div></div>
     <div class="campsec" data-sub="tarp" hidden><p class="hint">雨から守ります。</p><div class="shop" id="eq-tarp"></div></div>
     <div class="campsec" data-sub="fire" hidden><p class="hint">気力が回復します。</p><div class="shop" id="eq-fire"></div></div>
@@ -335,7 +335,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 
   <section class="panel" id="p-shop" hidden>
     <p class="hint">買うとすぐ装備されます（パーツは空きがある場合）。売却はできません。</p>
-    <div class="subtabs" id="shop-tabs"><button data-sub="bike" aria-selected="true"><img class="wi" src="img/icon_bike.webp" width="128" height="128" alt="">自転車</button><button data-sub="cloth" aria-selected="false"><img class="wi" src="img/icon_cloth.webp" width="128" height="128" alt="">衣類</button><button data-sub="part" aria-selected="false"><img class="wi" src="img/icon_part.webp" width="128" height="128" alt="">パーツ</button><button data-sub="fire" aria-selected="false"><img class="wi" src="img/icon_fire.webp" width="128" height="128" alt="">焚き火台</button><button data-sub="shelter" aria-selected="false"><img class="wi" src="img/icon_shelter.webp" width="128" height="128" alt="">寝床</button><button data-sub="tarp" aria-selected="false"><img class="wi" src="img/icon_tarp.webp" width="128" height="128" alt="">タープ</button><button data-sub="food" aria-selected="false"><img class="wi" src="img/icon_food.webp" width="128" height="128" alt="">補給食</button><button data-sub="forge" aria-selected="false"><img class="wi" src="img/icon_custom.webp" width="128" height="128" alt="">カスタム</button></div>
+    <div class="subtabs" id="shop-tabs"><button data-sub="bike" aria-selected="true"><img loading="lazy" class="wi" src="img/icon_bike.webp" width="128" height="128" alt="">自転車</button><button data-sub="cloth" aria-selected="false"><img loading="lazy" class="wi" src="img/icon_cloth.webp" width="128" height="128" alt="">衣類</button><button data-sub="part" aria-selected="false"><img loading="lazy" class="wi" src="img/icon_part.webp" width="128" height="128" alt="">パーツ</button><button data-sub="fire" aria-selected="false"><img loading="lazy" class="wi" src="img/icon_fire.webp" width="128" height="128" alt="">焚き火台</button><button data-sub="shelter" aria-selected="false"><img loading="lazy" class="wi" src="img/icon_shelter.webp" width="128" height="128" alt="">寝床</button><button data-sub="tarp" aria-selected="false"><img loading="lazy" class="wi" src="img/icon_tarp.webp" width="128" height="128" alt="">タープ</button><button data-sub="food" aria-selected="false"><img loading="lazy" class="wi" src="img/icon_food.webp" width="128" height="128" alt="">補給食</button><button data-sub="forge" aria-selected="false"><img loading="lazy" class="wi" src="img/icon_custom.webp" width="128" height="128" alt="">カスタム</button></div>
     <div class="shopsec" data-sub="bike"><div class="photo pic" style="transform:none;margin:0 0 8px"><img style="aspect-ratio:9/4" src="img/shop_bike.webp" width="768" height="512" loading="lazy" alt="自転車店の店内"></div><div class="shop" id="shop-bike"></div></div>
     <div class="shopsec" data-sub="cloth" hidden><div class="photo pic" style="transform:none;margin:0 0 8px"><img style="aspect-ratio:9/4" src="img/shop_cloth.webp" width="768" height="512" loading="lazy" alt="衣類店の店内"></div><div class="shop" id="shop-cloth"></div></div>
     <div class="shopsec" data-sub="part" hidden><div class="photo pic" style="transform:none;margin:0 0 8px"><img style="aspect-ratio:9/4" src="img/shop_part.webp" width="768" height="512" loading="lazy" alt="パーツ店の店内"></div><div class="shop" id="shop-part"></div></div>
@@ -384,7 +384,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 <div class="overlay" id="ov-battle" hidden>
   <div class="modal" id="battle-box">
     <div class="bt-kms" id="bt-km"></div>
-    <div class="route"><i id="bt-hp"></i><img id="bt-bike" src="img/icon_bike_mama.webp" width="128" height="128" alt=""><img class="flag" id="bt-goal" src="img/icon_g_sh2.webp" width="128" height="128" alt="キャンプ場"></div>
+    <div class="route"><i id="bt-hp"></i><img loading="lazy" id="bt-bike" src="img/icon_bike_mama.webp" width="128" height="128" alt=""><img loading="lazy" class="flag" id="bt-goal" src="img/icon_g_sh2.webp" width="128" height="128" alt="キャンプ場"></div>
     <div class="hint" id="bt-info"></div>
     <div class="enemy"><h2 id="bt-title">試練</h2><div class="face" id="bt-face">⛰️</div><div id="bt-nx"></div><div id="bt-name">坂</div></div>
     <div class="blog" id="bt-log"></div>
@@ -589,7 +589,7 @@ const EVENTS=[
  {m:7,w:3,pref:'京都',name:'祇園祭',img:'ev_kyoto'},{m:8,w:1,pref:'青森',name:'ねぶた祭',img:'ev_aomori_nebuta'},{m:8,w:1,pref:'秋田',name:'竿燈まつり',img:'ev_akita'},
  {m:8,w:2,pref:'徳島',name:'阿波おどり',img:'ev_tokushima'},{m:9,w:2,pref:'大阪',name:'だんじり祭',img:'ev_osaka'},
  {m:10,w:2,pref:'長崎',name:'長崎くんち',img:'ev_nagasaki'},{m:11,w:2,pref:'栃木',name:'奥日光の紅葉',img:'ev_tochigi'}];
-const EVI='<img class="wi" src="img/icon_event.webp" width="128" height="128" alt="">';// 催事アイコン（文中用）
+const EVI='<img loading="lazy" class="wi" src="img/icon_event.webp" width="128" height="128" alt="">';// 催事アイコン（文中用）
 function eventAt(turn,id){const c=calendar(turn);return EVENTS.find(e=>e.m===c.month&&e.w===c.week&&e.pref===PREF[id].name)||null;}
 // キャンプで食べる地方の名物
 const FOOD={'北海道':'石狩鍋','青森':'せんべい汁','岩手':'わんこそば','宮城':'牛タン焼き','秋田':'きりたんぽ鍋','山形':'芋煮','福島':'喜多方ラーメン','茨城':'納豆ご飯','栃木':'宇都宮餃子','群馬':'焼きまんじゅう','埼玉':'ねぎ味噌うどん','千葉':'ピーナッツ味噌ご飯','東京':'もんじゃ焼き','神奈川':'横浜ラーメン','新潟':'のっぺ汁','富山':'ます寿司','石川':'治部煮','福井':'越前おろしそば','山梨':'ほうとう','長野':'信州そば','岐阜':'飛騨牛の朴葉味噌焼き','静岡':'桜えびのかき揚げ丼','愛知':'ひつまぶし','三重':'伊勢うどん','滋賀':'鮒ずし茶漬け','京都':'湯豆腐','大阪':'お好み焼き','兵庫':'明石焼き','奈良':'柿の葉寿司','和歌山':'和歌山ラーメン','鳥取':'松葉ガニ汁','島根':'出雲そば','岡山':'デミカツ丼','広島':'牡蠣めし','山口':'瓦そば','徳島':'徳島ラーメン','香川':'讃岐うどん','愛媛':'鯛めし','高知':'鰹のたたき','福岡':'もつ鍋','佐賀':'呼子のイカ刺し','長崎':'ちゃんぽん','熊本':'馬刺し','大分':'とり天','宮崎':'チキン南蛮','鹿児島':'黒豚しゃぶしゃぶ','沖縄':'ゴーヤチャンプルー'};
@@ -963,20 +963,20 @@ function card(item,kind,mode){const eq=isEq(kind,item),own=owns(kind,item.id);
   if(mode==='shop'){act=own?`<span class="pill">所持</span>`:`<button data-act="buy" ${S.money>=item.price?'':'disabled'}>購入 ${yen(item.price)}</button>`;}
   else if(eq)act=(kind==='part'||kind==='gear')?`<button data-act="unequip">外す</button>`:`<span class="pill">装備中</span>`;
   else act=`<button data-act="equip" ${kind==='part'&&S.parts.length>=3||kind==='gear'&&item.req&&S.gear.shelter!==item.req?'disabled':''}>装備</button>`;
-  return `<div class="card ${eq?'eq':''}" data-kind="${kind}" data-id="${item.id}"><div class="name"><span class="nm"><img class="ci" ${(kind==='gear'||kind==='part')&&ICON_FB[item.id]?`data-fb="${ICON_FB[item.id]}" `:''}src="img/${kind==='gear'?'icon_g_'+item.id:(kind==='part'?'part_'+item.id:kind==='cloth'?'cloth_'+item.id:'icon_bike_'+item.id)}.webp" width="28" height="28" alt="">${item.name}${(kind==='bike'||kind==='part')&&plv(item.id)?` <b>${tierOf(kind,plv(item.id)).replace('製','')}</b>`:''}</span>${act}</div><div class="spec">${spec}</div></div>`;}
+  return `<div class="card ${eq?'eq':''}" data-kind="${kind}" data-id="${item.id}"><div class="name"><span class="nm"><img loading="lazy" class="ci" ${(kind==='gear'||kind==='part')&&ICON_FB[item.id]?`data-fb="${ICON_FB[item.id]}" `:''}src="img/${kind==='gear'?'icon_g_'+item.id:(kind==='part'?'part_'+item.id:kind==='cloth'?'cloth_'+item.id:'icon_bike_'+item.id)}.webp" width="28" height="28" alt="">${item.name}${(kind==='bike'||kind==='part')&&plv(item.id)?` <b>${tierOf(kind,plv(item.id)).replace('製','')}</b>`:''}</span>${act}</div><div class="spec">${spec}</div></div>`;}
 function renderShop(){const lists={bike:BIKES,cloth:CLOTHES,part:PARTS};
   for(const [k,l] of Object.entries(lists)){$('shop-'+k).innerHTML=l.map(i=>card(i,k,'shop')).join('');
     const own=l.filter(i=>owns(k,i.id));$('eq-'+k).innerHTML=own.length?own.map(i=>card(i,k,'equip')).join(''):'<div class="hint">なし</div>';}
   for(const slot of Object.keys(GEAR)){const l=GEAR_ITEMS.filter(i=>i.slot===slot);$('shop-'+slot).innerHTML=l.map(i=>card(i,'gear','shop')).join('');
     const own=l.filter(i=>owns('gear',i.id));$('eq-'+slot).innerHTML=noneCard(slot)+own.map(i=>card(i,'gear','equip')).join('');}
-  $('shop-food').innerHTML=`<div class="card"><div class="name"><span class="nm"><img class="ci" src="img/icon_food.webp" width="28" height="28" alt="">補給食</span><span class="cnt${S.food?' has':''}"><b>${S.food}</b>/${FOOD_MAX}</span><button data-food="1" ${S.money>=FOOD_PRICE&&S.food<FOOD_MAX?'':'disabled'}>購入 ${yen(FOOD_PRICE)}</button></div><div class="spec">試練の最中に食べると体力+25 気力+10。</div></div><div class="card"><div class="name"><span class="nm"><img class="ci" src="img/icon_food_nagano.webp" width="28" height="28" alt="" onerror="this.onerror=null;this.src='img/icon_food.webp'">長野県の補給食</span><span class="cnt${S.food2?' has':''}"><b>${S.food2}</b>/${NAGANO.max}</span><button data-food2="1" ${S.money>=NAGANO.price&&S.food2<NAGANO.max?'':'disabled'}>購入 ${yen(NAGANO.price)}</button></div><div class="spec">赤マムシドリンク風の元気ドリンク。体力+${NAGANO.hp} 気力+${NAGANO.mp}。</div></div>`;renderForge();}
+  $('shop-food').innerHTML=`<div class="card"><div class="name"><span class="nm"><img loading="lazy" class="ci" src="img/icon_food.webp" width="28" height="28" alt="">補給食</span><span class="cnt${S.food?' has':''}"><b>${S.food}</b>/${FOOD_MAX}</span><button data-food="1" ${S.money>=FOOD_PRICE&&S.food<FOOD_MAX?'':'disabled'}>購入 ${yen(FOOD_PRICE)}</button></div><div class="spec">試練の最中に食べると体力+25 気力+10。</div></div><div class="card"><div class="name"><span class="nm"><img loading="lazy" class="ci" src="img/icon_food_nagano.webp" width="28" height="28" alt="" onerror="this.onerror=null;this.src='img/icon_food.webp'">長野県の補給食</span><span class="cnt${S.food2?' has':''}"><b>${S.food2}</b>/${NAGANO.max}</span><button data-food2="1" ${S.money>=NAGANO.price&&S.food2<NAGANO.max?'':'disabled'}>購入 ${yen(NAGANO.price)}</button></div><div class="spec">赤マムシドリンク風の元気ドリンク。体力+${NAGANO.hp} 気力+${NAGANO.mp}。</div></div>`;renderForge();}
 function renderForge(){
   const row=(kind,item)=>{const lv=plv(item.id),nx=lv+1,keys=kind==='bike'?bikeBoost(item):['climb','rough','cruise','wx','photo','comfy'].filter(k=>item[k]);
     const fx=keys.map(k=>STATJ[k]+(k==='comfy'?'-1':'+1')).join(' ');
-    const act=lv>=3?'<span class="pill">最大</span>':`<button data-forge="${kind}:${item.id}" ${S.money>=upCost(kind,item,nx)?'':'disabled'}><img class="wi" src="img/icon_upgrade.webp" width="128" height="128" alt=""><span>${tierOf(kind,nx)}<small>${yen(upCost(kind,item,nx))}</small></span></button>`;
-    return `<div class="card"><div class="name"><span class="nm"><img class="ci" src="img/${kind==='bike'?'icon_bike_':'part_'}${item.id}.webp" width="28" height="28" alt="">${item.name}${lv?` <b>${tierOf(kind,lv).replace('製','')}</b>`:''}</span>${act}</div><div class="spec">1段階ごとに ${fx}${lv?`（現在 ${tierOf(kind,lv)}）`:''}</div></div>`;};
-  $('shop-forge').innerHTML=BIKES.filter(i=>owns('bike',i.id)&&!NOCUSTOM.has(i.id)).map(i=>row('bike',i)).join('')+BIKES.filter(b=>b.fold&&owns('bike',b.id)).map(b=>{const lv=rkLv(b.id),nx=lv+1,act=lv>=3?'<span class="pill">最大</span>':`<button data-rk="${b.id}" ${S.money>=RK_COST[lv]?'':'disabled'}><img class="wi" src="img/icon_upgrade.webp" width="128" height="128" alt=""><span>${RK_TIER[lv]}<small>${yen(RK_COST[lv])}</small></span></button>`;
-    return `<div class="card"><div class="name"><span class="nm"><img class="ci" src="img/icon_bike_${b.id}.webp" width="28" height="28" alt="">${b.name}</span>${act}</div><div class="spec">${lv?`装備中：${RK_TIER[lv-1]}　`:''}輪行費 ×${RK_RATE[lv]}${lv<3?` → ×${RK_RATE[nx]}`:''}</div></div>`;}).join('')+(BIKES.some(i=>NOCUSTOM.has(i.id)&&owns('bike',i.id))?'<div class="hint">チタン製の自転車は、完成された一台なので、フレームのカスタムはできません（折りたたみ式・分割式は、輪行用の装備だけ強化できます）。</div>':'')+PARTS.filter(i=>!i.anti&&owns('part',i.id)).map(i=>row('part',i)).join('');}
+    const act=lv>=3?'<span class="pill">最大</span>':`<button data-forge="${kind}:${item.id}" ${S.money>=upCost(kind,item,nx)?'':'disabled'}><img loading="lazy" class="wi" src="img/icon_upgrade.webp" width="128" height="128" alt=""><span>${tierOf(kind,nx)}<small>${yen(upCost(kind,item,nx))}</small></span></button>`;
+    return `<div class="card"><div class="name"><span class="nm"><img loading="lazy" class="ci" src="img/${kind==='bike'?'icon_bike_':'part_'}${item.id}.webp" width="28" height="28" alt="">${item.name}${lv?` <b>${tierOf(kind,lv).replace('製','')}</b>`:''}</span>${act}</div><div class="spec">1段階ごとに ${fx}${lv?`（現在 ${tierOf(kind,lv)}）`:''}</div></div>`;};
+  $('shop-forge').innerHTML=BIKES.filter(i=>owns('bike',i.id)&&!NOCUSTOM.has(i.id)).map(i=>row('bike',i)).join('')+BIKES.filter(b=>b.fold&&owns('bike',b.id)).map(b=>{const lv=rkLv(b.id),nx=lv+1,act=lv>=3?'<span class="pill">最大</span>':`<button data-rk="${b.id}" ${S.money>=RK_COST[lv]?'':'disabled'}><img loading="lazy" class="wi" src="img/icon_upgrade.webp" width="128" height="128" alt=""><span>${RK_TIER[lv]}<small>${yen(RK_COST[lv])}</small></span></button>`;
+    return `<div class="card"><div class="name"><span class="nm"><img loading="lazy" class="ci" src="img/icon_bike_${b.id}.webp" width="28" height="28" alt="">${b.name}</span>${act}</div><div class="spec">${lv?`装備中：${RK_TIER[lv-1]}　`:''}輪行費 ×${RK_RATE[lv]}${lv<3?` → ×${RK_RATE[nx]}`:''}</div></div>`;}).join('')+(BIKES.some(i=>NOCUSTOM.has(i.id)&&owns('bike',i.id))?'<div class="hint">チタン製の自転車は、完成された一台なので、フレームのカスタムはできません（折りたたみ式・分割式は、輪行用の装備だけ強化できます）。</div>':'')+PARTS.filter(i=>!i.anti&&owns('part',i.id)).map(i=>row('part',i)).join('');}
 $('shop-forge').addEventListener('click',e=>{const rb=e.target.closest('button[data-rk]');if(rb){const bid=rb.dataset.rk,bk=BIKES.find(x=>x.id===bid);if(!bk||!bk.fold||!owns('bike',bid))return;const lv=rkLv(bid);if(lv>=3||S.money<RK_COST[lv])return;const c=RK_COST[lv];
     askPay(`${bk.name}に「${RK_TIER[lv]}」を付けますか？（輪行費が×${RK_RATE[lv+1]}に）`,c,()=>{S.money-=c;S.plus[bid]=lv+1;log(`${bk.name}に${RK_TIER[lv]}を付けた（${yen(c)}）`);render();});return;}
   const b=e.target.closest('button[data-forge]');if(!b)return;
@@ -988,7 +988,7 @@ $('shop-food').addEventListener('click',e=>{if(e.target.closest('button[data-foo
   askPay('補給食を買いますか？',FOOD_PRICE,()=>{S.money-=FOOD_PRICE;S.food++;log(`補給食を購入（${yen(FOOD_PRICE)}）`);render();});});
 const NONE_TXT={fire:['焚き火なし','気力回復の上乗せなし'],shelter:['寝床なし（地面に直接寝る）','体力・気力の上乗せなし'],tarp:['タープなし','雨ガード0%']};
 function noneCard(slot){const on=!S.gear[slot],[n,s]=NONE_TXT[slot];
-  return `<div class="card ${on?'eq':''}" data-kind="gear" data-slot="${slot}" data-none="1"><div class="name"><span class="nm"><img class="ci" src="img/icon_${slot}.webp" width="28" height="28" alt="" style="opacity:.4">${n}</span>${on?'<span class="pill">装備なし</span>':'<button data-act="unequip">外す</button>'}</div><div class="spec">${s}</div></div>`;}
+  return `<div class="card ${on?'eq':''}" data-kind="gear" data-slot="${slot}" data-none="1"><div class="name"><span class="nm"><img loading="lazy" class="ci" src="img/icon_${slot}.webp" width="28" height="28" alt="" style="opacity:.4">${n}</span>${on?'<span class="pill">装備なし</span>':'<button data-act="unequip">外す</button>'}</div><div class="spec">${s}</div></div>`;}
 function shopClick(e){const b=e.target.closest('button[data-act]');if(!b)return;const c=b.closest('.card'),kind=c.dataset.kind,id=c.dataset.id;
   if(c.dataset.none){S.gear[c.dataset.slot]=null;render();return;}
   const list=kind==='bike'?BIKES:kind==='cloth'?CLOTHES:kind==='gear'?GEAR_ITEMS:PARTS,item=list.find(x=>x.id===id),key=kind==='bike'?'bikes':kind==='cloth'?'cloth':kind==='gear'?'gear':'parts';
@@ -1004,7 +1004,7 @@ const CAL_S=t=>{const c=calendar(t);return `${c.year}年${c.month}月${c.week}�
 $('tl-tabs').addEventListener('click',e=>{const b=e.target.closest('button[data-v]');if(!b)return;document.querySelectorAll('#tl-tabs button').forEach(x=>x.setAttribute('aria-selected',x===b));$('tl').hidden=b.dataset.v!=='tl';$('log').hidden=b.dataset.v!=='log';});
 function renderLog(){$('log').innerHTML=S.log.map(l=>`<li>${logLine(l)}</li>`).join('');
   $('tl').innerHTML=S.tl.length?`<div class="th">日付</div><div class="th">行き先</div><div class="th">写真</div><div class="th">遭遇</div>`+S.tl.map(([t,pid,q,k])=>`<div>${CAL_S(t)}</div><div>${PREF[pid].name}</div><div>${q<0?'<span class="bad">遅刻</span>':q+'点'}</div><div>${tlDec(k).length?tlDec(k).map(x=>(ENEMY[x]||{name:x==='tsuchi'?'ツチノコ':x}).name).join('・'):'なし'}</div>`).join(''):'<div class="hint" style="grid-column:1/-1">まだ旅に出ていません</div>';
-  const sp=sponsor();$('summary').innerHTML=`<span>称号</span><span>${title(S.fame)}</span><span>スポンサー</span><span><img class="spi" src="img/sponsor_${SPONSOR.indexOf(sp)}.webp" alt="" onerror="this.remove()">${sp[2]}<br><small>${yen(sp[1])}/週</small></span><span>投稿数</span><span>${S.stats.posts}</span><span>最高写真</span><span>${S.stats.bestQ}点</span><span>試練制覇</span><span>${S.stats.wins}回</span>`;}
+  const sp=sponsor();$('summary').innerHTML=`<span>称号</span><span>${title(S.fame)}</span><span>スポンサー</span><span><img loading="lazy" class="spi" src="img/sponsor_${SPONSOR.indexOf(sp)}.webp" alt="" onerror="this.remove()">${sp[2]}<br><small>${yen(sp[1])}/週</small></span><span>投稿数</span><span>${S.stats.posts}</span><span>最高写真</span><span>${S.stats.bestQ}点</span><span>試練制覇</span><span>${S.stats.wins}回</span>`;}
 
 $('shop-tabs').addEventListener('click',e=>{const b=e.target.closest('button[data-sub]');if(!b)return;document.querySelectorAll('#shop-tabs button').forEach(x=>x.setAttribute('aria-selected',x===b));document.querySelectorAll('.shopsec').forEach(s=>s.hidden=s.dataset.sub!==b.dataset.sub);});
 document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tabs button').forEach(x=>x.setAttribute('aria-selected',x===b));
@@ -1110,7 +1110,7 @@ let B=null;
 function startBattle(kind){tstat(kind)[0]++;const e=ENEMY[kind],p=trip.p,c=calendar(S.turn);const scale=1+.4*(p.diff-1)+.2*(c.year-1);
   const hp=kind==='rival'?Math.round(40+FL()/3):Math.round(e.hp*scale);
   B={kind,e,hp,max:hp,limit:e.limit,turn:1,charge:0,cut:1,next:rollNext(),atk:Math.round(e.atk*scale*(S.parts.includes('spray')&&(kind==='bear'||kind==='brownbear')||S.parts.includes('oil')&&(kind==='car'||kind==='bike')?.5:1))};
-  $('ov-battle').hidden=false;playSE('se_encounter');playBGM('bgm_battle');if(kind!=='rival')tutBattle();$('bt-face').innerHTML=e.img?`<img src="${e.img}" alt="${e.name}" width="190" height="190" onerror="this.replaceWith(document.createTextNode('${e.face}'))">`:e.face;$('bt-name').textContent=`区間 ${trip.i+1}/${trip.enc.length}`;
+  $('ov-battle').hidden=false;playSE('se_encounter');playBGM('bgm_battle');if(kind!=='rival')tutBattle();$('bt-face').innerHTML=e.img?`<img loading="lazy" src="${e.img}" alt="${e.name}" width="190" height="190" onerror="this.replaceWith(document.createTextNode('${e.face}'))">`:e.face;$('bt-name').textContent=`区間 ${trip.i+1}/${trip.enc.length}`;
   $('bt-title').textContent=kind==='rival'?'SNSの試練':e.name;
   blog(kind==='rival'?`ライバルも同じ撮影スポットを狙っている！\n${e.hint}。日没まで あと${B.limit}時間。`:`${WILDK.has(kind)?e.name+'に遭遇した！':e.name+'の区間に入った。'}\n${e.hint}。日没まで あと${B.limit}時間。`);renderBattle();}
 function blog(t){$('bt-log').textContent=t;}
@@ -1209,7 +1209,7 @@ function askCamp(p){const dish=FOOD[p.name]||FOODR[p.region]||'名物料理',fee
   const mpn=S.mp<25?20:S.mp<50?10:0;
   $('camp-sum').innerHTML=`${p.site}に到着。${WX_J[f.wx]} ${f.temp}℃<br>気力 ${S.mp}${mpn?`（気力不足で写真-${mpn}）`:''}<br>今夜はどう過ごす？`;
   const CI=['camp_c_eat','camp_c_night','camp_c_dawn','camp_c_sleep'];
-  $('camp-btns').innerHTML=opts.map((o,i)=>`<button data-i="${i}" ${o[3]?'disabled':''}><img src="img/${CI[i]}.webp" width="40" height="40" alt=""><span>${o[0]}<small>${o[1]}</small></span></button>`).join('');
+  $('camp-btns').innerHTML=opts.map((o,i)=>`<button data-i="${i}" ${o[3]?'disabled':''}><img loading="lazy" src="img/${CI[i]}.webp" width="40" height="40" alt=""><span>${o[0]}<small>${o[1]}</small></span></button>`).join('');
   $('camp-btns').querySelectorAll('button').forEach(b=>b.onclick=()=>{$('ov-camp').hidden=true;endTrip2(opts[+b.dataset.i][2]);});
   $('ov-camp').hidden=false;$('camp-btns').querySelector('button:not([disabled])').focus();}
 function endTrip2(camp){const p=trip.p,f=S.forecast[p.id],st=bikeStats(),cl=CLOTHES.find(c=>c.id===S.cloth);
