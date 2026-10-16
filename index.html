@@ -631,9 +631,10 @@ function newGame(HOME){INTRIP=false;S={turn:1,fame:0,money:DEBUG?10000000:30000,
 // 旅の最中（出発〜結果を閉じるまで）は保存しない。途中で閉じても旅の前の状態に戻るだけで、バトルや費用の食い逃げができない
 let TS=null;// 旅の前の数値（週の変化をポップアップに出すため）
 function snap(){TS={money:S.money,fame:S.fame,hp:S.hp,mp:S.mp,fam:S.fam.filter(Boolean).length,inc:0,fee:0,became:null};}
-// デバッグモード：Cloudflare版（*.pages.dev）だけ有効。画面には何も出ず、新しく始めたときの所持金が1,000万円になるだけ。プレイヤー用URLでは無効
-const DEBUG_HOSTS=['pages.dev'];
-const isDebugHost=h=>DEBUG_HOSTS.some(d=>h===d||h.endsWith('.'+d));
+// デバッグモード：Cloudflareのプレビュー版（xxxx.pendragon-2tf.pages.dev）だけ有効。本番（pendragon-2tf.pages.dev）や他のURLでは無効。
+// 画面には何も出ず、新しく始めたときの所持金が1,000万円になるだけ
+const PROD_HOST='pendragon-2tf.pages.dev';
+const isDebugHost=h=>h.endsWith('.'+PROD_HOST);
 const DEBUG=isDebugHost(location.hostname);
 let INTRIP=false;const SAVE_V=6,LOG_MAX=80,TL_MAX=60,WXL=['sun','cloud','rain','wind','typhoon','snow','heat'];
 // セーブ(v6)：馴染み宿(fam)は訪問回数3以上と同じなので保存しない／予報は(気温+30)*5+天気番号の数値に詰める／ログは「週の通し番号|本文」
