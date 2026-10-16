@@ -167,6 +167,15 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .card .name{font-weight:700;display:flex;justify-content:space-between;gap:6px}
 .card .spec{color:var(--muted);font-size:var(--fs-m)}
 .card.eq{border-color:var(--forest);box-shadow:inset 0 0 0 1px var(--forest)}
+.feed{max-height:40vh;overflow:auto;margin:6px 0 10px;border-top:1px solid var(--line)}.feed[hidden]{display:none}
+.post{display:flex;gap:8px;padding:8px 2px;border-bottom:1px solid var(--line);font-size:var(--fs-m)}
+.post .av{flex:none;width:36px;height:36px;border-radius:50%;overflow:hidden;background:var(--bg);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;color:var(--muted)}
+.post .av img{width:100%;height:100%;object-fit:cover;border:0;border-radius:0}
+.post .pb{flex:1;min-width:0}.post .ph{display:flex;gap:6px;align-items:baseline;flex-wrap:wrap;line-height:1.3}.post .ph span{color:var(--muted);font-size:var(--fs-s)}
+.post .pt{margin-top:2px;overflow-wrap:anywhere;line-height:1.45}
+.post .pimg{display:block;width:100%;height:auto;aspect-ratio:3/2;object-fit:cover;border-radius:12px;border:1px solid var(--line);margin-top:6px}
+.post .pa{display:flex;justify-content:space-between;max-width:280px;color:var(--muted);font-size:var(--fs-s);margin-top:6px}
+.post .rp{margin-top:6px;padding:5px 8px;border-left:3px solid var(--line);color:var(--muted);font-size:var(--fs-s);line-height:1.4}.post .rp b{color:var(--fg)}
 .log{font-size:var(--fs-m);max-height:40vh;overflow:auto;display:flex;flex-direction:column;gap:4px;padding:0;margin:0;list-style:none}
 .tl[hidden]{display:none}
 .tl{display:grid;grid-template-columns:auto auto auto 1fr;gap:0 10px;font-size:var(--fs-m);max-height:34vh;overflow:auto;margin:6px 0 10px}
@@ -360,9 +369,9 @@ button:disabled{opacity:.45;cursor:not-allowed}
     <div id="p-trip">
     <div class="loghead"><h2>旅の記録</h2><span class="logbtns"><button id="btn-set" aria-label="設定">⚙ 設定</button><button id="btn-reset">リセット</button></span></div>
     <div class="profile"><div class="pcol"><img loading="lazy" decoding="async" src="img/hero.webp" width="84" height="84" alt="主人公の自転車旅行者"><button id="btn-share" class="primary">SNSに投稿<small>（画像つき）</small></button></div><div class="res" id="summary"></div></div><p class="hint" id="share-note" style="margin:4px 0 0"></p>
-    <div class="subtabs" id="tl-tabs"><button data-v="tl" aria-selected="true">旅履歴</button><button data-v="log" aria-selected="false">できごと</button></div>
+    <div class="subtabs" id="tl-tabs"><button data-v="tl" aria-selected="true">旅履歴</button><button data-v="log" aria-selected="false">自分のSNS</button></div>
     <div class="tl" id="tl"></div>
-    <ul class="log" id="log" hidden></ul>
+    <div class="feed" id="log" hidden></div>
     </div>
   </section>
 </div>
@@ -678,7 +687,7 @@ const tstat=k=>S.stats.en[k]||(S.stats.en[k]=[0,0,0]);
 const trialKindsCleared=()=>TRIAL_KEYS.filter(k=>(S.stats.en[k]||[0,0,0])[1]>0).length;
 // 毎週のスポンサー料。称号（フォロワー数）に応じて増える [必要フォロワー, 週額, スポンサー]
 const SPONSOR=[[0,2000,'地元の自転車店'],[2000,3000,'アウトドア用品店'],[20000,5000,'自転車メーカー'],[200000,10000,'旅行会社'],[1000000,20000,'大手スポーツブランド'],[2000000,30000,'鉄道会社']];
-function spCongrats(o,n){const im=$('sp-img');im.hidden=true;im.onload=()=>{im.hidden=false;};im.src='img/sponsor_'+SPONSOR.indexOf(n)+'.webp';$('sp-new').textContent=n[2];$('sp-amt').textContent=`毎週のスポンサー料：${yen(o[1])} → ${yen(n[1])}`;$('sp-from').textContent=`これまで：${o[2]}`;$('ov-spon').hidden=false;playSE('se_win');}
+function spCongrats(o,n){log(`スポンサー「${n[2]}」がつきました（毎週${yen(n[1])}）`);const im=$('sp-img');im.hidden=true;im.onload=()=>{im.hidden=false;};im.src='img/sponsor_'+SPONSOR.indexOf(n)+'.webp';$('sp-new').textContent=n[2];$('sp-amt').textContent=`毎週のスポンサー料：${yen(o[1])} → ${yen(n[1])}`;$('sp-from').textContent=`これまで：${o[2]}`;$('ov-spon').hidden=false;playSE('se_win');}
 function spOf(f){let r=SPONSOR[0];for(const x of SPONSOR)if(f>=x[0])r=x;return r;}
 function sponsor(){return spOf(S.fame);}
 const TITLES=[[0,'無名'],[2000,'駆け出し'],[20000,'注目の新人'],[200000,'人気配信者'],[1000000,'カリスマ'],[2000000,'伝説']];
@@ -1002,7 +1011,26 @@ for(const id of ['p-gear','p-camp','p-shop'])$(id).addEventListener('click',shop
 
 const CAL_S=t=>{const c=calendar(t);return `${c.year}年${c.month}月${c.week}週`;};
 $('tl-tabs').addEventListener('click',e=>{const b=e.target.closest('button[data-v]');if(!b)return;document.querySelectorAll('#tl-tabs button').forEach(x=>x.setAttribute('aria-selected',x===b));$('tl').hidden=b.dataset.v!=='tl';$('log').hidden=b.dataset.v!=='log';});
-function renderLog(){$('log').innerHTML=S.log.map(l=>`<li>${logLine(l)}</li>`).join('');
+// ---------- 自分のSNS（できごと）----------
+const esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const hs=(a,b,c)=>{let h=Math.imul(a+1,73856093)^Math.imul(b+7,19349663)^Math.imul(c+13,83492791);h=Math.imul(h^(h>>>13),1274126177);return (h^(h>>>16))>>>0;};
+const FANS=[['ゆうた','yuta_ride'],['みなみ','minami_cmp'],['ペダル太郎','pedal_taro'],['ソロキャン好き','solo_cmp'],['ツーリング部','tour_club'],['はるか','haruka_88'],['峠の主','touge_nushi'],['のんびり旅人','nonbiri_trip']];
+const RPL=[[70,['これは神写真…！','保存しました。壁紙にします','構図が最高すぎる','ここ行きたくなった！']],[40,['いい景色ですね〜','安全運転で！次も楽しみ','コーヒー飲みたくなる写真','応援してます']],[0,['お疲れさま！','次はもっと撮れるはず','無事に着いてよかった','天気が惜しかったね']]];
+const TRIP_AV='img/hero.webp';
+function postHtml(p){return `<article class="post"><div class="av">${p.av?`<img loading="lazy" src="${p.av}" width="40" height="40" alt="">`:`<span>${esc(p.ini||'？')}</span>`}</div><div class="pb"><div class="ph"><b>${esc(p.name)}</b><span>@${esc(p.id)}・${p.when}</span></div><div class="pt">${esc(p.text).replace(/\n/g,'<br>')}</div>${p.img?`<img class="pimg" loading="lazy" src="${p.img}" width="480" height="320" alt="${esc(p.alt||'')}">`:''}${p.n?`<div class="pa"><span>💬 ${p.n[0]}</span><span>🔁 ${p.n[1]}</span><span>♥ ${p.n[2]}</span></div>`:''}${p.rp?`<div class="rp"><b>${esc(p.rp[0])}</b> <span>@${esc(p.rp[1])}</span><br>${esc(p.rp[2])}</div>`:''}</div></article>`;}
+function feedItems(){const out=[],seen={};
+  [...S.tl].reverse().forEach(e=>{const [t,pid,q]=e;if(q>=0){seen[pid]=(seen[pid]||0)+1;e.vn=seen[pid];}});
+  S.tl.forEach(e=>{const [t,pid,q,k]=e,p=PREF[pid],enc=tlDec(k).map(x=>(ENEMY[x]||{name:x==='tsuchi'?'ツチノコ':x}).name),h=hs(t,pid,q+2);
+    if(q<0){out.push({t,r:1,p:{name:'旅の自転車乗り',id:'jitensha_tabi',av:TRIP_AV,when:CAL_S(t),text:`日没に間に合わず…${p.name}のキャンプ場は遅刻でした。次こそ！${enc.length?`\n道中：${enc.join('・')}`:''}`,n:[h%2,0,1+h%7]}});return;}
+    const sg=sightOf(pid,e.vn||1),lk=Math.round(q*q/12+h%25+3),band=RPL.find(b=>q>=b[0]),fan=FANS[h%FANS.length];
+    out.push({t,r:1,p:{name:'旅の自転車乗り',id:'jitensha_tabi',av:TRIP_AV,when:CAL_S(t),text:`${p.name}の${p.site}に到着！\n写真 ${q}点${enc.length?`｜道中：${enc.join('・')}`:''}\n#日本巡る自転車旅`,img:'img/sights/'+sg[0]+'.webp',alt:sg[1],n:[Math.round(lk*.06)+1,Math.round(lk*.18),lk],rp:[fan[0],fan[1],band[1][(h>>>5)%band[1].length]]}});});
+  S.log.forEach(l=>{const m=/^(\d+)\|(.*)$/s.exec(l);if(!m)return;const t=+m[1],x=m[2],when=CAL_S(t);let mm;
+    if(mm=/^スポンサー「(.+)」がつきました/.exec(x)){const i=SPONSOR.findIndex(z=>z[2]===mm[1]),pay=i>=0?SPONSOR[i][1]:0;out.push({t,r:0,p:{name:mm[1],id:'sponsor_'+Math.max(i,0),av:i>=0?'img/sponsor_'+i+'.webp':'',ini:'S',when,text:`旅の自転車乗りさん、いつも応援しています！${pay?`今週から毎週${yen(pay)}の応援金をお届けします。`:''}\n#日本巡る自転車旅`}});}
+    else if(x==='ライバルより先に撮影スポットへ着いた')out.push({t,r:2,p:{name:'ライバル配信者',id:'rival_cam',ini:'R',when,text:'くっ、先に撮られた…！次は負けない。#映え勝負'}});
+    else if(x==='ライバルに先を越された')out.push({t,r:2,p:{name:'ライバル配信者',id:'rival_cam',ini:'R',when,text:'撮影スポットは先にいただき！この景色は私のもの。#映え勝負'}});
+    else out.push({t,r:3,p:{name:'旅の自転車乗り',id:'jitensha_tabi',av:TRIP_AV,when,text:x}});});
+  return out.sort((a,b)=>b.t-a.t||a.r-b.r).slice(0,40);}
+function renderLog(){const it=feedItems();$('log').innerHTML=it.length?it.map(i=>postHtml(i.p)).join(''):'<div class="hint" style="padding:6px 2px">まだ投稿がありません</div>';
   $('tl').innerHTML=S.tl.length?`<div class="th">日付</div><div class="th">行き先</div><div class="th">写真</div><div class="th">遭遇</div>`+S.tl.map(([t,pid,q,k])=>`<div>${CAL_S(t)}</div><div>${PREF[pid].name}</div><div>${q<0?'<span class="bad">遅刻</span>':q+'点'}</div><div>${tlDec(k).length?tlDec(k).map(x=>(ENEMY[x]||{name:x==='tsuchi'?'ツチノコ':x}).name).join('・'):'なし'}</div>`).join(''):'<div class="hint" style="grid-column:1/-1">まだ旅に出ていません</div>';
   const sp=sponsor();$('summary').innerHTML=`<span>称号</span><span>${title(S.fame)}</span><span>スポンサー</span><span><img loading="lazy" class="spi" src="img/sponsor_${SPONSOR.indexOf(sp)}.webp" alt="" onerror="this.remove()">${sp[2]}<br><small>${yen(sp[1])}/週</small></span><span>投稿数</span><span>${S.stats.posts}</span><span>最高写真</span><span>${S.stats.bestQ}点</span><span>試練制覇</span><span>${S.stats.wins}回</span>`;}
 
@@ -1180,7 +1208,7 @@ function cmd(k){if(!B||!trip||$('ov-battle').hidden||B.hp<=0||trip.late)return;
   else if(k==='rinko'){if(!$('ov-pay').dataset.ok){askPay('輪行で区間を飛ばしますか？',trip.rk,()=>{$('ov-pay').dataset.ok='1';cmd('rinko');});return;}delete $('ov-pay').dataset.ok;S.money-=trip.rk;t='輪行で区間を飛ばした！';log(`${B.e.name}の区間を輪行（${yen(trip.rk)}）`);S.stats.wins++;tstat(B.kind)[1]++;trip.i++;$('ov-battle').hidden=true;battleOver();nextEncounter();return;}
   else if(k==='escape'){tstat(B.kind)[2]++;trip.late=true;$('ov-battle').hidden=true;battleOver();nextEncounter();return;}
   B.hp-=dmg;if(dmg>0&&B.hp>0)playSE('se_hit');
-  if(B.hp<=0){blog(t+(isRival()?'\n先に撮影スポットに着いた！':(WILDK.has(B.kind)?'\n'+B.e.name+'を振り切った！':'\nこの区間を走り切った！')));S.stats.wins++;tstat(B.kind)[1]++;playSE('se_win');renderBattle();$('bt-cmds').innerHTML=`<button class="primary c-atk" data-cmd="next">キャンプ場へ向かう</button>`;
+  if(B.hp<=0){blog(t+(isRival()?'\n先に撮影スポットに着いた！':(WILDK.has(B.kind)?'\n'+B.e.name+'を振り切った！':'\nこの区間を走り切った！')));S.stats.wins++;tstat(B.kind)[1]++;if(isRival())log('ライバルより先に撮影スポットへ着いた');playSE('se_win');renderBattle();$('bt-cmds').innerHTML=`<button class="primary c-atk" data-cmd="next">キャンプ場へ向かう</button>`;
     $('bt-cmds').querySelector('button').onclick=()=>{trip.i++;$('ov-battle').hidden=true;battleOver();nextEncounter();};return;}
   // enemy acts
   // 予告した勢い（NEXT）と、作戦・身構えによる軽減（B.cut）を掛ける
@@ -1194,7 +1222,7 @@ function cmd(k){if(!B||!trip||$('ov-battle').hidden||B.hp<=0||trip.late)return;
   if(S.hp<=0){blog(t+'\n'+et+'\n試練に失敗…体力が尽きて、もう漕げない');fail('体力切れ');return;}
   if(B.turn>B.limit){blog(t+'\n'+et+'\n試練に失敗…日が暮れて、キャンプ場に遅刻した');fail('日没');return;}
   blog(t+'\n'+et);renderBattle();}
-function fail(why){tstat(B.kind)[2]++;trip.late=true;renderBattle();
+function fail(why){tstat(B.kind)[2]++;if(B.kind==='rival')log('ライバルに先を越された');trip.late=true;renderBattle();
   $('bt-cmds').innerHTML=`<button class="primary c-atk">とぼとぼ向かう</button>`;$('bt-cmds').querySelector('button').onclick=()=>{$('ov-battle').hidden=true;battleOver();endTrip();};}
 
 // ---------- camp result ----------
