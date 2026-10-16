@@ -955,8 +955,8 @@ function renderBattle(){const pr=Math.min(100,Math.max(0,(1-B.hp/B.max)*100));$(
     ['tactic',...TACT[B.kind]],
     ['food','補給食','体力+25 気+10'],
     ['rinko',`輪行 ${yen(ti.rinko)}`,'電車で飛ばす']];
-  // 新しい敵の作戦は、近い意味の既存アイコンを使う（専用アイコンが届いたら tac_敵名.webp を置けば差し替えられる）
-  const TACI={pass:'tac_hill',deer:'tac_animal',bear:'tac_animal',brownbear:'tac_animal',car:'tac_wind',bike:'tac_wind'};
+  // 作戦アイコンは tac_敵名.webp（ヒグマはツキノワグマと共用）
+  const TACI={brownbear:'tac_bear'};
   const RC={push:'atk',post:'atk',kiai:'gold',rest:'heal',food:'heal',guard:'def',tactic:'def',rinko:'sub',escape:'sub'};
   const ic={tactic:TACI[B.kind]||'tac_'+B.kind,guard:'cmd_guard',food:'icon_food'};
   $('bt-cmds').innerHTML=cmds.map(([k,l,s])=>`<button data-cmd="${k}" class="${ic[k]?'ic ':''}c-${RC[k]||'nrm'}" ${k==='kiai'&&S.mp<20||k==='rinko'&&S.money<ti.rinko||k==='push'&&S.hp<=15||k==='food'&&S.food<=0||k==='tactic'&&!tacOK()?'disabled':''}>${ic[k]?`<img src="img/${ic[k]}.webp" width="30" height="30" alt=""><span>${l}<small>${s}</small></span>`:`${l}<small>${s}</small>`}</button>`).join('');}
