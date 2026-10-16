@@ -218,6 +218,14 @@ h3{margin-top:2px}
 .cmds button{--c1:#7a6a55;--c2:#5a4c3b;text-align:left;line-height:1.25;min-height:58px;padding:8px 10px 10px;font-weight:700;color:#fff7e6;text-shadow:0 1px 1px rgba(0,0,0,.55);background:linear-gradient(var(--c1),var(--c2));border:1px solid rgba(0,0,0,.45);border-bottom:4px solid rgba(0,0,0,.45);border-radius:10px;box-shadow:inset 0 1px 0 rgba(255,255,255,.28),0 2px 5px rgba(0,0,0,.35);transition:transform .06s}
 .cmds button:active:not(:disabled){transform:translateY(2px);border-bottom-width:2px;box-shadow:inset 0 1px 0 rgba(255,255,255,.2)}
 .cmds button:disabled{opacity:.4;filter:grayscale(.6)}
+.card .name .cnt{margin-left:auto;margin-right:6px;white-space:nowrap;font-size:var(--fs-s);font-weight:400;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:2px 9px;align-self:center}
+#shop-food .name .nm{white-space:nowrap;flex:none;font-size:.86rem;gap:4px}
+#shop-food .name .nm .ci{width:24px;height:24px}
+@media (max-width:380px){#shop-food .name .nm{white-space:normal;flex:1 1 0;min-width:0}#shop-food .name .cnt{margin-left:0}}
+#shop-food .name button{white-space:nowrap;padding:6px 8px;font-size:.85rem}
+.card .name .cnt b{font-size:1.25rem;font-weight:700;margin:0 1px;color:var(--fg)}
+.card .name .cnt.has{border-color:#d9a734;background:rgba(217,167,52,.15)}
+.card .name .cnt.has b{color:#f0c75a}
 .cmds button.wide{grid-column:1/-1}
 .cmds button.primary{grid-column:1/-1;text-align:center;padding:14px;font-size:var(--fs-xl)}
 .cmds button{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:var(--fs-l)}
@@ -914,7 +922,7 @@ function renderShop(){const lists={bike:BIKES,cloth:CLOTHES,part:PARTS};
     const own=l.filter(i=>owns(k,i.id));$('eq-'+k).innerHTML=own.length?own.map(i=>card(i,k,'equip')).join(''):'<div class="hint">なし</div>';}
   for(const slot of Object.keys(GEAR)){const l=GEAR_ITEMS.filter(i=>i.slot===slot);$('shop-'+slot).innerHTML=l.map(i=>card(i,'gear','shop')).join('');
     const own=l.filter(i=>owns('gear',i.id));$('eq-'+slot).innerHTML=noneCard(slot)+own.map(i=>card(i,'gear','equip')).join('');}
-  $('shop-food').innerHTML=`<div class="card"><div class="name"><span class="nm"><img class="ci" src="img/icon_food.webp" width="28" height="28" alt="">補給食</span><button data-food="1" ${S.money>=FOOD_PRICE&&S.food<FOOD_MAX?'':'disabled'}>購入 ${yen(FOOD_PRICE)}</button></div><div class="spec">試練の最中に食べると体力+25 気力+10。所持 ${S.food} / ${FOOD_MAX}個</div></div><div class="card"><div class="name"><span class="nm"><img class="ci" src="img/icon_food_nagano.webp" width="28" height="28" alt="" onerror="this.onerror=null;this.src='img/icon_food.webp'">長野県の補給食</span><button data-food2="1" ${S.money>=NAGANO.price&&S.food2<NAGANO.max?'':'disabled'}>購入 ${yen(NAGANO.price)}</button></div><div class="spec">赤マムシドリンク風の元気ドリンク。体力+${NAGANO.hp} 気力+${NAGANO.mp}。所持 ${S.food2} / ${NAGANO.max}個</div></div>`;renderForge();}
+  $('shop-food').innerHTML=`<div class="card"><div class="name"><span class="nm"><img class="ci" src="img/icon_food.webp" width="28" height="28" alt="">補給食</span><span class="cnt${S.food?' has':''}"><b>${S.food}</b>/${FOOD_MAX}</span><button data-food="1" ${S.money>=FOOD_PRICE&&S.food<FOOD_MAX?'':'disabled'}>購入 ${yen(FOOD_PRICE)}</button></div><div class="spec">試練の最中に食べると体力+25 気力+10。</div></div><div class="card"><div class="name"><span class="nm"><img class="ci" src="img/icon_food_nagano.webp" width="28" height="28" alt="" onerror="this.onerror=null;this.src='img/icon_food.webp'">長野県の補給食</span><span class="cnt${S.food2?' has':''}"><b>${S.food2}</b>/${NAGANO.max}</span><button data-food2="1" ${S.money>=NAGANO.price&&S.food2<NAGANO.max?'':'disabled'}>購入 ${yen(NAGANO.price)}</button></div><div class="spec">赤マムシドリンク風の元気ドリンク。体力+${NAGANO.hp} 気力+${NAGANO.mp}。</div></div>`;renderForge();}
 function renderForge(){
   const row=(kind,item)=>{const lv=plv(item.id),nx=lv+1,keys=kind==='bike'?bikeBoost(item):['climb','rough','cruise','wx','photo','comfy'].filter(k=>item[k]);
     const fx=keys.map(k=>STATJ[k]+(k==='comfy'?'-1':'+1')).join(' ');
