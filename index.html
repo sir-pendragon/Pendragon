@@ -677,11 +677,11 @@ const TRIAL_KEYS=[...Object.keys(ENEMY),'tsuchi'];
 const tstat=k=>S.stats.en[k]||(S.stats.en[k]=[0,0,0]);
 const trialKindsCleared=()=>TRIAL_KEYS.filter(k=>(S.stats.en[k]||[0,0,0])[1]>0).length;
 // 毎週のスポンサー料。称号（フォロワー数）に応じて増える [必要フォロワー, 週額, スポンサー]
-const SPONSOR=[[0,2000,'地元の自転車店'],[1000,3000,'アウトドア用品店'],[10000,5000,'自転車メーカー'],[100000,10000,'旅行会社'],[500000,20000,'大手スポーツブランド'],[1000000,30000,'鉄道会社']];
+const SPONSOR=[[0,2000,'地元の自転車店'],[2000,3000,'アウトドア用品店'],[20000,5000,'自転車メーカー'],[200000,10000,'旅行会社'],[1000000,20000,'大手スポーツブランド'],[2000000,30000,'鉄道会社']];
 function spCongrats(o,n){const im=$('sp-img');im.hidden=true;im.onload=()=>{im.hidden=false;};im.src='img/sponsor_'+SPONSOR.indexOf(n)+'.webp';$('sp-new').textContent=n[2];$('sp-amt').textContent=`毎週のスポンサー料：${yen(o[1])} → ${yen(n[1])}`;$('sp-from').textContent=`これまで：${o[2]}`;$('ov-spon').hidden=false;playSE('se_win');}
 function spOf(f){let r=SPONSOR[0];for(const x of SPONSOR)if(f>=x[0])r=x;return r;}
 function sponsor(){return spOf(S.fame);}
-const TITLES=[[0,'無名'],[1000,'駆け出し'],[10000,'注目の新人'],[100000,'人気配信者'],[500000,'カリスマ'],[1000000,'伝説']];
+const TITLES=[[0,'無名'],[2000,'駆け出し'],[20000,'注目の新人'],[200000,'人気配信者'],[1000000,'カリスマ'],[2000000,'伝説']];
 const fol=n=>n<10000?Math.round(n).toLocaleString('ja-JP')+'人':(Math.floor(n/1000)/10).toLocaleString('ja-JP',{maximumFractionDigits:1}).replace(/\.0$/,'')+'万人';
 const sfol=n=>(n>0?'+':n<0?'-':'')+fol(Math.abs(n));
 
