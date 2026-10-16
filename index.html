@@ -502,6 +502,8 @@ const PARTS=[
  {id:'tire',name:'太タイヤ',price:12000,rough:2},
  {id:'aero',name:'エアロバー',price:15000,cruise:2},
  {id:'fender',name:'フルフェンダー',price:8000,wx:2},
+ {id:'spray',name:'熊スプレー',price:12000,anti:'bear'},
+ {id:'oil',name:'撒き油',price:8000,anti:'road'},
  {id:'tripod',name:'三脚',price:10000,photo:5},
  {id:'cam',name:'ミラーレスカメラ',price:80000,photo:15},
  {id:'drone',name:'ドローン',price:120000,photo:25},
@@ -529,11 +531,11 @@ const GEAR_ITEMS=Object.entries(GEAR).flatMap(([slot,g])=>g.items.map(i=>({...i,
 const ENEMY={
  hill:{name:'激坂',face:'⛰️',img:'img/enemy_hill.webp',hp:40,atk:8,limit:5,stat:'climb',hint:'登坂力が効く'},
  animal:{name:'いのしし',face:'🐗',img:'img/enemy_animal.webp',hp:30,atk:12,limit:4,stat:'cruise',hint:'巡航力で振り切る'},
- pass:{name:'峠',face:'🏔️',img:'img/enemy_pass.webp',hp:50,atk:8,limit:7,stat:'climb',hint:'長い登り。登坂力が効く'},
+ pass:{name:'峠',face:'🏔️',img:'img/enemy_pass.webp',hp:44,atk:7,limit:7,stat:'climb',hint:'長い登り。登坂力が効く'},
  deer:{name:'牡鹿',face:'🦌',img:'img/enemy_deer.webp',hp:32,atk:11,limit:4,stat:'cruise',hint:'巡航力で振り切る。止まって待つ手もある'},
  bear:{name:'ツキノワグマ',face:'🐻',img:'img/enemy_bear.webp',hp:44,atk:13,limit:5,stat:'cruise',mp:6,hint:'危険。クマ鈴で追い払いたい'},
  brownbear:{name:'ヒグマ',face:'🐻',img:'img/enemy_brownbear.webp',hp:46,atk:14,limit:5,stat:'cruise',mp:7,hint:'最も危険。逃げるのは難しい'},
- car:{name:'暴走車',face:'🚗',img:'img/enemy_car.webp',hp:40,atk:13,limit:4,stat:'cruise',mp:4,hint:'巡航力で振り切る。路肩に避けたい'},
+ car:{name:'暴走車',face:'🚗',img:'img/enemy_car.webp',hp:36,atk:12,limit:4,stat:'cruise',mp:4,hint:'巡航力で振り切る。路肩に避けたい'},
  bike:{name:'暴走バイク',face:'🏍️',img:'img/enemy_bike.webp',hp:36,atk:12,limit:4,stat:'cruise',mp:3,hint:'巡航力で振り切る。脇道へ逃げたい'},
  wind:{name:'強風',face:'🌬️',img:'img/enemy_wind.webp',hp:35,atk:6,limit:5,stat:'cruise',mp:4,hint:'巡航力が効く。気力も削られる'},
  rain:{name:'大雨',face:'🌧️',img:'img/enemy_rain.webp',hp:35,atk:7,limit:5,stat:'wx',mp:5,hint:'耐候力が効く'},
@@ -762,7 +764,7 @@ function renderDetail(){const p=PREF[S.sel],f=S.forecast[p.id],ti=travelInfo(p),
   const fit=f.temp<cl.lo?`❄️ 衣類が寒い（${cl.lo-f.temp}℃不足）`:f.temp>cl.hi?`🔥 衣類が暑い（${f.temp-cl.hi}℃超過）`:'👕 衣類OK';
   const ev=eventAt(S.turn,p.id),fee=S.fam[p.id]?Math.round(p.fee/2):p.fee;
   const enemies=[];if(p.terrain==='hill')enemies.push('激坂','峠');if(hasBoar(p))enemies.push('いのしし');
-  if(DEER.has(p.name))enemies.push('牡鹿');if(bearSeason(calendar(S.turn).month)){if(BROWNBEAR.has(p.name))enemies.push('ヒグマ');if(BLACKBEAR.has(p.name))enemies.push(RAREBEAR.has(p.name)?'ツキノワグマ(まれ)':'ツキノワグマ');}if(URBAN.has(p.name))enemies.push(ENEMY[urbanEnemy()].name);
+  if(DEER.has(p.name))enemies.push('牡鹿');if(calendar(S.turn).year>=2&&bearSeason(calendar(S.turn).month)){if(BROWNBEAR.has(p.name))enemies.push('ヒグマ');if(BLACKBEAR.has(p.name))enemies.push(RAREBEAR.has(p.name)?'ツキノワグマ(まれ)':'ツキノワグマ');}if(calendar(S.turn).year>=2&&URBAN.has(p.name))enemies.push(ENEMY[urbanEnemy()].name);
   if(f.wx==='rain')enemies.push('大雨');if(f.wx==='wind')enemies.push('強風');if(f.wx==='typhoon')enemies.push('台風');if(p.scen>=5||ev)enemies.push('ライバル?');
   $('info').innerHTML=`<h3>${p.site}</h3><div class="hint">${p.name}・${p.region}</div>${badge}
   <div class="kv"><span>地形</span><span>${TERRAIN[p.terrain]}（${'★'.repeat(p.diff)}）</span><span>景観</span><span>${'📷'.repeat(p.scen)}</span>
@@ -782,18 +784,18 @@ function renderList(){$('sitelist').innerHTML=PREF.map(p=>`<button data-id="${p.
 function owns(kind,id){return S.owned[kind==='bike'?'bikes':kind==='cloth'?'cloth':kind==='gear'?'gear':'parts'].includes(id);}
 function isEq(kind,item){return kind==='bike'?S.bike===item.id:kind==='cloth'?S.cloth===item.id:kind==='gear'?S.gear[item.slot]===item.id:S.parts.includes(item.id);}
 // 新しいギアの絵が届くまでは、近い既存のアイコンを代わりに表示する（読み込みに失敗したときだけ切り替わる）
-const ICON_FB={};
+const ICON_FB={spray:'tac_animal',oil:'tac_wind'};
 addEventListener('error',e=>{const i=e.target;if(i&&i.tagName==='IMG'&&i.dataset&&i.dataset.fb){const f='img/'+i.dataset.fb+'.webp';i.dataset.fb='';i.src=f;}},true);
 function card(item,kind,mode){const eq=isEq(kind,item),own=owns(kind,item.id);
   const spec=kind==='bike'?`登坂${bv(item,'climb')} 悪路${bv(item,'rough')} 巡航${bv(item,'cruise')} 耐候${bv(item,'wx')}${item.fold?' 輪行半額':''}`:
    kind==='cloth'?`快適 ${item.lo}℃〜${item.hi}℃`:
    kind==='gear'?[item.mp?`気力+${item.mp}`:'',item.hp?`体力+${item.hp}`:'',item.photo?`写真+${item.photo}`:'',item.guard?`雨ガード${Math.round(item.guard*100)}%`:'',item.climb?`登坂+${item.climb}`:'',item.cruise?`巡航+${item.cruise}`:'',item.winter?'冬のみ有効':'',item.req?`要：${(GEAR_ITEMS.find(x=>x.id===item.req)||{}).name}`:''].filter(Boolean).join(' '):
-   Object.entries(item).filter(([k])=>['climb','rough','cruise','wx','photo','comfy'].includes(k)).map(([k,v])=>({climb:'登坂',rough:'悪路',cruise:'巡航',wx:'耐候',photo:'写真',comfy:'気力消費'}[k]+(k==='comfy'?'-':'+')+v)).join(' ');
+   item.anti?(item.anti==='bear'?'クマの攻撃力が半分':'暴走車・暴走バイクの攻撃力が半分'):Object.entries(item).filter(([k])=>['climb','rough','cruise','wx','photo','comfy'].includes(k)).map(([k,v])=>({climb:'登坂',rough:'悪路',cruise:'巡航',wx:'耐候',photo:'写真',comfy:'気力消費'}[k]+(k==='comfy'?'-':'+')+v)).join(' ');
   let act='';
   if(mode==='shop'){act=own?`<span class="pill">所持</span>`:`<button data-act="buy" ${S.money>=item.price?'':'disabled'}>購入 ${yen(item.price)}</button>`;}
   else if(eq)act=(kind==='part'||kind==='gear')?`<button data-act="unequip">外す</button>`:`<span class="pill">装備中</span>`;
   else act=`<button data-act="equip" ${kind==='part'&&S.parts.length>=3||kind==='gear'&&item.req&&S.gear.shelter!==item.req?'disabled':''}>装備</button>`;
-  return `<div class="card ${eq?'eq':''}" data-kind="${kind}" data-id="${item.id}"><div class="name"><span class="nm"><img class="ci" ${kind==='gear'&&ICON_FB[item.id]?`data-fb="${ICON_FB[item.id]}" `:''}src="img/${kind==='gear'?'icon_g_'+item.id:(kind==='part'?'part_'+item.id:kind==='cloth'?'cloth_'+item.id:'icon_bike_'+item.id)}.webp" width="28" height="28" alt="">${item.name}${(kind==='bike'||kind==='part')&&plv(item.id)?` <b>${tierOf(kind,plv(item.id)).replace('製','')}</b>`:''}</span>${act}</div><div class="spec">${spec}</div></div>`;}
+  return `<div class="card ${eq?'eq':''}" data-kind="${kind}" data-id="${item.id}"><div class="name"><span class="nm"><img class="ci" ${(kind==='gear'||kind==='part')&&ICON_FB[item.id]?`data-fb="${ICON_FB[item.id]}" `:''}src="img/${kind==='gear'?'icon_g_'+item.id:(kind==='part'?'part_'+item.id:kind==='cloth'?'cloth_'+item.id:'icon_bike_'+item.id)}.webp" width="28" height="28" alt="">${item.name}${(kind==='bike'||kind==='part')&&plv(item.id)?` <b>${tierOf(kind,plv(item.id)).replace('製','')}</b>`:''}</span>${act}</div><div class="spec">${spec}</div></div>`;}
 function renderShop(){const lists={bike:BIKES,cloth:CLOTHES,part:PARTS};
   for(const [k,l] of Object.entries(lists)){$('shop-'+k).innerHTML=l.map(i=>card(i,k,'shop')).join('');
     const own=l.filter(i=>owns(k,i.id));$('eq-'+k).innerHTML=own.length?own.map(i=>card(i,k,'equip')).join(''):'<div class="hint">なし</div>';}
@@ -805,7 +807,7 @@ function renderForge(){
     const fx=keys.map(k=>STATJ[k]+(k==='comfy'?'-1':'+1')).join(' ');
     const act=lv>=3?'<span class="pill">最大</span>':`<button data-forge="${kind}:${item.id}" ${S.money>=upCost(kind,item,nx)?'':'disabled'}><img class="wi" src="img/icon_upgrade.webp" width="128" height="128" alt=""><span>${tierOf(kind,nx)}<small>${yen(upCost(kind,item,nx))}</small></span></button>`;
     return `<div class="card"><div class="name"><span class="nm"><img class="ci" src="img/${kind==='bike'?'icon_bike_':'part_'}${item.id}.webp" width="28" height="28" alt="">${item.name}${lv?` <b>${tierOf(kind,lv).replace('製','')}</b>`:''}</span>${act}</div><div class="spec">1段階ごとに ${fx}${lv?`（現在 ${tierOf(kind,lv)}）`:''}</div></div>`;};
-  $('shop-forge').innerHTML=BIKES.filter(i=>owns('bike',i.id)).map(i=>row('bike',i)).join('')+PARTS.filter(i=>owns('part',i.id)).map(i=>row('part',i)).join('');}
+  $('shop-forge').innerHTML=BIKES.filter(i=>owns('bike',i.id)).map(i=>row('bike',i)).join('')+PARTS.filter(i=>!i.anti&&owns('part',i.id)).map(i=>row('part',i)).join('');}
 $('shop-forge').addEventListener('click',e=>{const b=e.target.closest('button[data-forge]');if(!b)return;
   const [kind,id]=b.dataset.forge.split(':'),item=(kind==='bike'?BIKES:PARTS).find(x=>x.id===id),nx=plv(id)+1;if(!item||nx>3)return;
   const c=upCost(kind,item,nx);if(S.money<c)return;
@@ -860,7 +862,7 @@ function startTrip(p,rinko){snap();{const i=new Image();i.src='img/late.webp';}{
   if(rinko){S.money-=ti.rinko;log(`${p.name}へ輪行（${yen(ti.rinko)}）`);}
   const f=S.forecast[p.id];const enc=[];
   if(!rinko&&!stay){const pool=[];if(p.terrain==='hill')pool.push('hill','hill','pass');if(p.terrain==='hill'&&p.diff>=3)pool.push('pass','pass');if(p.terrain==='rough')pool.push('hill');if(p.name!=='北海道'){if(p.terrain==='rough')pool.push('animal');if(WILD.has(p.region))pool.push('animal');}
-    if(DEER.has(p.name))pool.push('deer','deer');if(bearSeason(calendar(S.turn).month)){if(BROWNBEAR.has(p.name))pool.push('brownbear');if(BLACKBEAR.has(p.name)&&(!RAREBEAR.has(p.name)||Math.random()<.5))pool.push('bear');}if(URBAN.has(p.name))pool.push(urbanEnemy());
+    if(DEER.has(p.name))pool.push('deer','deer');if(calendar(S.turn).year>=2&&bearSeason(calendar(S.turn).month)){if(BROWNBEAR.has(p.name))pool.push('brownbear');if(BLACKBEAR.has(p.name)&&(!RAREBEAR.has(p.name)||Math.random()<.5))pool.push('bear');}if(calendar(S.turn).year>=2&&URBAN.has(p.name))pool.push(urbanEnemy());
     if(f.wx==='rain')pool.push('rain','rain');if(f.wx==='wind')pool.push('wind','wind');if(f.wx==='typhoon')pool.push('typhoon','typhoon');if(pool.length===0)pool.push('hill','animal');
     const fam=familiar(p).f;
     for(let i=0;i<ti.enc;i++){const k=pool[rnd(0,pool.length-1)];if(WILDK.has(k)&&Math.random()>fam)continue;enc.push(k);}// 地元・馴染み宿・同じ地方では、動物の枠が減る
@@ -899,7 +901,7 @@ $('set-se-v').onchange=()=>playSE('se_photo');
 let B=null;
 function startBattle(kind){const e=ENEMY[kind],p=trip.p,c=calendar(S.turn);const scale=1+.4*(p.diff-1)+.2*(c.year-1);
   const hp=kind==='rival'?Math.round(40+FL()/3):Math.round(e.hp*scale);
-  B={kind,e,hp,max:hp,limit:e.limit,turn:1,charge:0,cut:1,next:rollNext(),atk:Math.round(e.atk*scale)};
+  B={kind,e,hp,max:hp,limit:e.limit,turn:1,charge:0,cut:1,next:rollNext(),atk:Math.round(e.atk*scale*(S.parts.includes('spray')&&(kind==='bear'||kind==='brownbear')||S.parts.includes('oil')&&(kind==='car'||kind==='bike')?.5:1))};
   $('ov-battle').hidden=false;playSE('se_encounter');playBGM('bgm_battle');$('bt-face').innerHTML=e.img?`<img src="${e.img}" alt="${e.name}" width="104" height="104" onerror="this.replaceWith(document.createTextNode('${e.face}'))">`:e.face;$('bt-name').textContent=`区間 ${trip.i+1}/${trip.enc.length}：${e.name}`;
   $('bt-title').textContent=kind==='rival'?'SNSバトル！':`${e.name}が立ちはだかる！`;
   blog(kind==='rival'?`ライバルも同じ撮影スポットを狙っている！\n${e.hint}。日没まで あと${B.limit}時間。`:`${e.name}の区間に入った。\n${e.hint}。日没まで あと${B.limit}時間。`);renderBattle();}
