@@ -167,15 +167,15 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .card .name{font-weight:700;display:flex;justify-content:space-between;gap:6px}
 .card .spec{color:var(--muted);font-size:var(--fs-m)}
 .card.eq{border-color:var(--forest);box-shadow:inset 0 0 0 1px var(--forest)}
-.feed{max-height:40vh;overflow:auto;margin:6px 0 10px;border-top:1px solid var(--line)}.feed[hidden]{display:none}
-.post{display:flex;gap:8px;padding:8px 2px;border-bottom:1px solid var(--line);font-size:var(--fs-m)}
-.post .av{flex:none;width:36px;height:36px;border-radius:50%;overflow:hidden;background:var(--bg);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;color:var(--muted)}
+.feed{margin:4px 0 8px;border-top:1px solid var(--line)}.feed[hidden]{display:none}
+.post{display:flex;gap:6px;padding:5px 0;border-bottom:1px solid var(--line);font-size:var(--fs-s);line-height:1.35}
+.post .av{flex:none;width:32px;height:32px;border-radius:50%;overflow:hidden;background:var(--bg);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;color:var(--muted)}
 .post .av img{width:100%;height:100%;object-fit:cover;border:0;border-radius:0}
-.post .pb{flex:1;min-width:0}.post .ph{display:flex;gap:6px;align-items:baseline;flex-wrap:wrap;line-height:1.3}.post .ph span{color:var(--muted);font-size:var(--fs-s)}
-.post .pt{margin-top:2px;overflow-wrap:anywhere;line-height:1.45}
-.post .pimg{display:block;width:100%;height:auto;aspect-ratio:3/2;object-fit:cover;border-radius:12px;border:1px solid var(--line);margin-top:6px}
-.post .pa{display:flex;justify-content:space-between;max-width:280px;color:var(--muted);font-size:var(--fs-s);margin-top:6px}
-.post .rp{margin-top:6px;padding:5px 8px;border-left:3px solid var(--line);color:var(--muted);font-size:var(--fs-s);line-height:1.4}.post .rp b{color:var(--fg)}
+.post .pb{flex:1;min-width:0}.post .ph{display:flex;gap:5px;align-items:baseline;flex-wrap:wrap;line-height:1.25}.post .ph b{font-size:var(--fs-m)}.post .ph span{color:var(--muted);font-size:var(--fs-xs)}
+.post .pt{margin-top:1px;overflow-wrap:anywhere}
+.post .pimg{display:block;width:100%;height:auto;aspect-ratio:3/2;object-fit:cover;border-radius:10px;border:1px solid var(--line);margin-top:4px}
+.post .pa{display:flex;justify-content:space-between;max-width:260px;color:var(--muted);font-size:var(--fs-xs);margin-top:3px}
+.post .rp{margin-top:3px;padding:2px 6px;border-left:3px solid var(--line);color:var(--muted);font-size:var(--fs-xs);line-height:1.3}.post .rp b{color:var(--fg)}
 .log{font-size:var(--fs-m);max-height:40vh;overflow:auto;display:flex;flex-direction:column;gap:4px;padding:0;margin:0;list-style:none}
 .tl[hidden]{display:none}
 .tl{display:grid;grid-template-columns:auto auto auto 1fr;gap:0 10px;font-size:var(--fs-m);max-height:34vh;overflow:auto;margin:6px 0 10px}
@@ -1015,21 +1015,23 @@ $('tl-tabs').addEventListener('click',e=>{const b=e.target.closest('button[data-
 const esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const hs=(a,b,c)=>{let h=Math.imul(a+1,73856093)^Math.imul(b+7,19349663)^Math.imul(c+13,83492791);h=Math.imul(h^(h>>>13),1274126177);return (h^(h>>>16))>>>0;};
 const FANS=[['ゆうた','yuta_ride'],['みなみ','minami_cmp'],['ペダル太郎','pedal_taro'],['ソロキャン好き','solo_cmp'],['ツーリング部','tour_club'],['はるか','haruka_88'],['峠の主','touge_nushi'],['のんびり旅人','nonbiri_trip']];
-const RPL=[[70,['これは神写真…！','保存しました。壁紙にします','構図が最高すぎる','ここ行きたくなった！']],[40,['いい景色ですね〜','安全運転で！次も楽しみ','コーヒー飲みたくなる写真','応援してます']],[0,['お疲れさま！','次はもっと撮れるはず','無事に着いてよかった','天気が惜しかったね']]];
+const RPL=[[70,['これは神写真…！😭','保存しました。壁紙にします📱','構図が最高すぎる✨','ここ行きたくなった！','プロの撮影かと思った👏','いいねじゃ足りない…❤️']],[40,['いい景色ですね〜☺️','安全運転で！次も楽しみ🚴','コーヒー飲みたくなる写真☕','応援してます📣','この空気感好き','のんびりしてて癒される']],[0,['お疲れさま！👍','次はもっと撮れるはず💪','無事に着いてよかった😌','天気が惜しかったね…☁️','リベンジ待ってます🔥','ゆっくり休んでね🏕️']]];
 const TRIP_AV='img/hero.webp';
 function postHtml(p){return `<article class="post"><div class="av">${p.av?`<img loading="lazy" src="${p.av}" width="40" height="40" alt="">`:`<span>${esc(p.ini||'？')}</span>`}</div><div class="pb"><div class="ph"><b>${esc(p.name)}</b><span>@${esc(p.id)}・${p.when}</span></div><div class="pt">${esc(p.text).replace(/\n/g,'<br>')}</div>${p.img?`<img class="pimg" loading="lazy" src="${p.img}" width="480" height="320" alt="${esc(p.alt||'')}">`:''}${p.n?`<div class="pa"><span>💬 ${p.n[0]}</span><span>🔁 ${p.n[1]}</span><span>♥ ${p.n[2]}</span></div>`:''}${p.rp?`<div class="rp"><b>${esc(p.rp[0])}</b> <span>@${esc(p.rp[1])}</span><br>${esc(p.rp[2])}</div>`:''}</div></article>`;}
 function feedItems(){const out=[],seen={};
   [...S.tl].reverse().forEach(e=>{const [t,pid,q]=e;if(q>=0){seen[pid]=(seen[pid]||0)+1;e.vn=seen[pid];}});
-  S.tl.forEach(e=>{const [t,pid,q,k]=e,p=PREF[pid],enc=tlDec(k).map(x=>(ENEMY[x]||{name:x==='tsuchi'?'ツチノコ':x}).name),h=hs(t,pid,q+2);
-    if(q<0){out.push({t,r:1,p:{name:'旅の自転車乗り',id:'jitensha_tabi',av:TRIP_AV,when:CAL_S(t),text:`日没に間に合わず…${p.name}のキャンプ場は遅刻でした。次こそ！${enc.length?`\n道中：${enc.join('・')}`:''}`,n:[h%2,0,1+h%7]}});return;}
-    const sg=sightOf(pid,e.vn||1),lk=Math.round(q*q/12+h%25+3),band=RPL.find(b=>q>=b[0]),fan=FANS[h%FANS.length];
-    out.push({t,r:1,p:{name:'旅の自転車乗り',id:'jitensha_tabi',av:TRIP_AV,when:CAL_S(t),text:`${p.name}の${p.site}に到着！\n写真 ${q}点${enc.length?`｜道中：${enc.join('・')}`:''}\n#日本巡る自転車旅`,img:'img/sights/'+sg[0]+'.webp',alt:sg[1],n:[Math.round(lk*.06)+1,Math.round(lk*.18),lk],rp:[fan[0],fan[1],band[1][(h>>>5)%band[1].length]]}});});
+  const pick=(a,h)=>a[h%a.length];
+  S.tl.forEach(e=>{const [t,pid,q,k]=e,p=PREF[pid],enc=tlDec(k).map(x=>(ENEMY[x]||{name:x==='tsuchi'?'ツチノコ':x}).name),h=hs(t,pid,q+2),en=enc.length?pick(enc,h>>>3):'';
+    if(q<0){out.push({t,r:1,p:{name:'旅の自転車乗り',id:'jitensha_tabi',av:TRIP_AV,when:CAL_S(t),text:pick([`日没に間に合わず…😭 ${p.name}のキャンプ場は遅刻でした。次こそ！`,`暗くなっちゃった🌙 ${p.name}はまた今度…`,en?`${en}にやられて遅刻💦 ${p.name}、次はリベンジ！`:`ペース配分をミスった…💦 ${p.name}は遅刻でした`],h),n:[h%2,0,1+h%7]}});return;}
+    const sg=sightOf(pid,e.vn||1),lk=Math.round(q*q/12+h%25+3),band=RPL.find(b=>q>=b[0]),fan=FANS[h%FANS.length],pl=`${p.name}の${p.site}`;
+    const head=q>=70?pick([`${pl}に到着〜！🚴✨\n景色が最高すぎた…写真${q}点！`,`${pl}で絶景ゲット📷\n${q}点！これは自信作`,`ついに${pl}！🏕️\n写真${q}点、神回です`],h):q>=40?pick([`${pl}に到着！🏕️\n写真${q}点。いい旅だった〜`,`${pl}までなんとか走り切った🚴\n${q}点、まずまず！`],h):pick([`${pl}に着いたけど、写真は${q}点…😅\n次はリベンジ！`,`${pl}到着🏕️ 天気がいまいちで${q}点💦`],h);
+    out.push({t,r:1,p:{name:'旅の自転車乗り',id:'jitensha_tabi',av:TRIP_AV,when:CAL_S(t),text:head+(en?`\n道中で${en}に遭遇💥`:'')+'\n#日本巡る自転車旅',img:'img/sights/'+sg[0]+'.webp',alt:sg[1],n:[Math.round(lk*.06)+1,Math.round(lk*.18),lk],rp:[fan[0],fan[1],pick(band[1],h>>>5)]}});});
   S.log.forEach(l=>{const m=/^(\d+)\|(.*)$/s.exec(l);if(!m)return;const t=+m[1],x=m[2],when=CAL_S(t);let mm;
     if(mm=/^スポンサー「(.+)」がつきました/.exec(x)){const i=SPONSOR.findIndex(z=>z[2]===mm[1]),pay=i>=0?SPONSOR[i][1]:0;out.push({t,r:0,p:{name:mm[1],id:'sponsor_'+Math.max(i,0),av:i>=0?'img/sponsor_'+i+'.webp':'',ini:'S',when,text:`旅の自転車乗りさん、いつも応援しています！${pay?`今週から毎週${yen(pay)}の応援金をお届けします。`:''}\n#日本巡る自転車旅`}});}
     else if(x==='ライバルより先に撮影スポットへ着いた')out.push({t,r:2,p:{name:'ライバル配信者',id:'rival_cam',ini:'R',when,text:'くっ、先に撮られた…！次は負けない。#映え勝負'}});
     else if(x==='ライバルに先を越された')out.push({t,r:2,p:{name:'ライバル配信者',id:'rival_cam',ini:'R',when,text:'撮影スポットは先にいただき！この景色は私のもの。#映え勝負'}});
-    else out.push({t,r:3,p:{name:'旅の自転車乗り',id:'jitensha_tabi',av:TRIP_AV,when,text:x}});});
-  return out.sort((a,b)=>b.t-a.t||a.r-b.r).slice(0,40);}
+    else out.push({t,r:3,p:{name:'旅の自転車乗り',id:'jitensha_tabi',av:TRIP_AV,when,text:(/ツチノコ/.test(x)?'🐍✨ ':/購入/.test(x)?'🛒 ':/輪行/.test(x)?'🚃 ':/カスタム|付けた/.test(x)?'🔧 ':'')+x}});});
+  return out.sort((a,b)=>b.t-a.t||a.r-b.r).slice(0,30);}
 function renderLog(){const it=feedItems();$('log').innerHTML=it.length?it.map(i=>postHtml(i.p)).join(''):'<div class="hint" style="padding:6px 2px">まだ投稿がありません</div>';
   $('tl').innerHTML=S.tl.length?`<div class="th">日付</div><div class="th">行き先</div><div class="th">写真</div><div class="th">遭遇</div>`+S.tl.map(([t,pid,q,k])=>`<div>${CAL_S(t)}</div><div>${PREF[pid].name}</div><div>${q<0?'<span class="bad">遅刻</span>':q+'点'}</div><div>${tlDec(k).length?tlDec(k).map(x=>(ENEMY[x]||{name:x==='tsuchi'?'ツチノコ':x}).name).join('・'):'なし'}</div>`).join(''):'<div class="hint" style="grid-column:1/-1">まだ旅に出ていません</div>';
   const sp=sponsor();$('summary').innerHTML=`<span>称号</span><span>${title(S.fame)}</span><span>スポンサー</span><span><img loading="lazy" class="spi" src="img/sponsor_${SPONSOR.indexOf(sp)}.webp" alt="" onerror="this.remove()">${sp[2]}<br><small>${yen(sp[1])}/週</small></span><span>投稿数</span><span>${S.stats.posts}</span><span>最高写真</span><span>${S.stats.bestQ}点</span><span>試練制覇</span><span>${S.stats.wins}回</span>`;}
