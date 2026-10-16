@@ -135,14 +135,19 @@ h3{margin-top:2px}
 #btn-set{font-size:.85rem}
 .logbtns{display:flex;gap:8px}
 .modal{margin:auto;background:var(--panel);border:2px solid var(--fg);border-radius:10px;padding:16px;max-width:520px;width:100%;display:flex;flex-direction:column;gap:12px;box-shadow:0 10px 40px rgba(0,0,0,.3)}
-.enemy{display:flex;gap:12px;align-items:center}
-.enemy .face{font-size:7rem;line-height:1;flex:none;width:230px;height:230px;margin-right:-84px;display:flex;align-items:center;justify-content:center}
+.enemy{display:flex;justify-content:center;align-items:center}
+.enemy .face{font-size:7rem;line-height:1;flex:none;width:190px;height:190px;margin:0 auto;display:flex;align-items:center;justify-content:center}
 .enemy .hp{flex:1;min-width:0;position:relative;z-index:1;text-shadow:0 1px 3px rgba(0,0,0,.7)}
 .route{position:relative;height:46px;margin:6px 42px 8px 16px}
 .route::before{content:"";position:absolute;left:0;right:0;bottom:0;height:16px;border-radius:8px;background:var(--line);box-shadow:inset 0 1px 3px rgba(0,0,0,.25)}
 .route i{position:absolute;left:0;bottom:0;height:16px;border-radius:8px;background:var(--forest);width:0;transition:width .35s}
 .route img{position:absolute;bottom:6px;width:34px;height:34px;transform:translateX(-50%);object-fit:contain;transition:left .35s}
 .route img.flag{position:absolute;left:auto;right:-40px;bottom:2px;width:38px;height:38px;transform:none;transition:none}
+.bt-nx{grid-column:1/-1}
+#bt-info{display:grid;grid-template-columns:1fr 1fr;gap:2px 14px;margin:2px 0 6px}
+#bt-info br{display:none}
+#bt-info .bt-km{font-size:.95rem;white-space:nowrap}
+#bt-info .bt-bar{margin:0}
 .bt-km{font-family:var(--display);font-size:1.05rem;color:var(--fg)}
 .bt-bar{display:flex;align-items:center;gap:6px;margin:3px 0;font-family:var(--display);font-size:1.05rem;color:var(--fg);font-variant-numeric:tabular-nums}
 .bt-bar .bar{flex:1;min-width:0}
@@ -179,7 +184,7 @@ h3{margin-top:2px}
 .profile{display:flex;gap:10px;align-items:flex-start;margin:6px 0 12px}
 .profile img{flex:none;width:84px;height:84px;object-fit:cover;border-radius:8px;border:1px solid var(--line);background:var(--bg)}
 .profile .res{flex:1;min-width:0;gap:1px 10px;font-size:.8rem;line-height:1.35}
-.enemy .face img{display:block;width:100%;height:100%;object-fit:contain;-webkit-mask-image:linear-gradient(90deg,#000 52%,transparent 100%);mask-image:linear-gradient(90deg,#000 52%,transparent 100%)}
+.enemy .face img{display:block;width:100%;height:100%;object-fit:contain}
 .loghead{display:flex;justify-content:space-between;align-items:center;gap:8px}
 .res{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-variant-numeric:tabular-nums}
 .res span:nth-child(odd){color:var(--muted)}
@@ -290,9 +295,8 @@ h3{margin-top:2px}
   <div class="modal" id="battle-box">
     <div class="bt-head"><h2 id="bt-title">バトル</h2><div id="bt-name">坂</div></div>
     <div class="route"><i id="bt-hp"></i><img id="bt-bike" src="img/icon_bike_mama.webp" width="128" height="128" alt=""><img class="flag" id="bt-goal" src="img/icon_g_sh2.webp" width="128" height="128" alt="キャンプ場"></div>
-    <div class="enemy"><div class="face" id="bt-face">⛰️</div>
-      <div class="hp">
-      <div class="hint" id="bt-info"></div></div></div>
+    <div class="hint" id="bt-info"></div>
+    <div class="enemy"><div class="face" id="bt-face">⛰️</div></div>
     <div class="blog" id="bt-log"></div>
     <div class="cmds" id="bt-cmds"></div>
   </div>
@@ -925,7 +929,7 @@ let B=null;
 function startBattle(kind){const e=ENEMY[kind],p=trip.p,c=calendar(S.turn);const scale=1+.4*(p.diff-1)+.2*(c.year-1);
   const hp=kind==='rival'?Math.round(40+FL()/3):Math.round(e.hp*scale);
   B={kind,e,hp,max:hp,limit:e.limit,turn:1,charge:0,cut:1,next:rollNext(),atk:Math.round(e.atk*scale*(S.parts.includes('spray')&&(kind==='bear'||kind==='brownbear')||S.parts.includes('oil')&&(kind==='car'||kind==='bike')?.5:1))};
-  $('ov-battle').hidden=false;playSE('se_encounter');playBGM('bgm_battle');$('bt-face').innerHTML=e.img?`<img src="${e.img}" alt="${e.name}" width="230" height="230" onerror="this.replaceWith(document.createTextNode('${e.face}'))">`:e.face;$('bt-name').textContent=`区間 ${trip.i+1}/${trip.enc.length}：${e.name}`;
+  $('ov-battle').hidden=false;playSE('se_encounter');playBGM('bgm_battle');$('bt-face').innerHTML=e.img?`<img src="${e.img}" alt="${e.name}" width="190" height="190" onerror="this.replaceWith(document.createTextNode('${e.face}'))">`:e.face;$('bt-name').textContent=`区間 ${trip.i+1}/${trip.enc.length}：${e.name}`;
   $('bt-title').textContent=kind==='rival'?'SNSバトル！':`${e.name}が立ちはだかる！`;
   blog(kind==='rival'?`ライバルも同じ撮影スポットを狙っている！\n${e.hint}。日没まで あと${B.limit}時間。`:`${e.name}の区間に入った。\n${e.hint}。日没まで あと${B.limit}時間。`);renderBattle();}
 function blog(t){$('bt-log').textContent=t;}
@@ -938,7 +942,7 @@ const HIT={hill:'坂がきつい',animal:'いのししに足止めされた',pas
 function tacOK(){const k=B.kind;return k==='hill'?S.hp>5:k==='animal'?S.mp>=5:k==='pass'||k==='deer'||k==='car'||k==='bike'?S.mp>=3:k==='bear'||k==='brownbear'?S.mp>=8:k==='rival'?S.mp>=8:k==='rain'?!!S.gear.tarp&&S.mp>=3:k==='typhoon'?!!S.gear.shelter&&S.mp>=4:k==='wind'?S.mp>=3:true;}
 function playerPower(){const st=bikeStats();if(B.kind==='rival')return 8+FL()/8+st.photo/2;return st[B.e.stat]*4;}
 function renderBattle(){const pr=Math.min(100,Math.max(0,(1-B.hp/B.max)*100));$('bt-hp').style.width=pr+'%';$('bt-bike').style.left=pr+'%';$('bt-bike').src=isRival()?'img/part_cam.webp':'img/icon_bike_'+S.bike+'.webp';$('bt-goal').src=isRival()?'img/part_tripod.webp':'img/icon_g_sh2.webp';
-  $('bt-info').innerHTML=`<span class="bt-km">${B.hp<=0?(isRival()?'撮影スポットに到着！':'区間ゴール！'):LEFT()+' '+fmtD(B.hp)}</span><br><span class="bt-km">日没まで あと${B.limit-B.turn+1}時間</span><div class="bt-bar"><span>体力</span><div class="bar"><i style="width:${Math.max(0,S.hp)}%"></i></div><b>${S.hp}</b></div><div class="bt-bar"><span>気力</span><div class="bar mp"><i style="width:${Math.max(0,S.mp)}%"></i></div><b>${S.mp}</b></div>${isRival()?`<span class="bt-km">フォロワー ${fol(S.fame)}</span><br>`:''}次の${isRival()?'ライバル':'敵'}の勢い：${B.next==='heavy'?`<b style="color:var(--bad)">${NEXT.heavy[0]}</b>`:NEXT[B.next][0]}　補給食${S.food}個`;
+  $('bt-info').innerHTML=`<span class="bt-km">${B.hp<=0?(isRival()?'撮影スポットに到着！':'区間ゴール！'):LEFT()+' '+fmtD(B.hp)}</span><br><span class="bt-km">日没まで あと${B.limit-B.turn+1}時間</span><div class="bt-bar"><span>体力</span><div class="bar"><i style="width:${Math.max(0,S.hp)}%"></i></div><b>${S.hp}</b></div><div class="bt-bar"><span>気力</span><div class="bar mp"><i style="width:${Math.max(0,S.mp)}%"></i></div><b>${S.mp}</b></div>${isRival()?`<span class="bt-nx">フォロワー ${fol(S.fame)}</span>`:''}<span class="bt-nx">次の${isRival()?'ライバル':'敵'}の勢い：${B.next==='heavy'?`<b style="color:var(--bad)">${NEXT.heavy[0]}</b>`:NEXT[B.next][0]}　補給食${S.food}個</span>`;
   const st=bikeStats(),ti={rinko:trip.rk};const pw=playerPower(),pd=v=>fmtD(v);
   const cmds=B.kind==='rival'?[
     ['post','映え投稿で勝負',`約${pd(pw+4)}詰める`],
