@@ -7,6 +7,10 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="img/apple-touch-icon.png">
 <meta name="theme-color" content="#2a2118">
+<meta name="description" content="47都道府県のキャンプ場を巡る、自転車旅インフルエンサーのブラウザRPG。">
+<meta property="og:type" content="website"><meta property="og:title" content="日本巡る自転車旅"><meta property="og:description" content="47都道府県のキャンプ場を巡る、自転車旅インフルエンサーのブラウザRPG。">
+<meta property="og:image" content="https://pendragon-2tf.pages.dev/img/ogp.jpg"><meta property="og:url" content="https://pendragon-2tf.pages.dev/">
+<meta name="twitter:card" content="summary_large_image"><meta name="twitter:image" content="https://pendragon-2tf.pages.dev/img/ogp.jpg">
 <title>日本巡る自転車旅</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Zen+Kaku+Gothic+New:wght@400;700&family=Zen+Old+Mincho:wght@500;700&display=swap">
@@ -355,6 +359,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
     <div id="p-trip">
     <div class="loghead"><h2>旅の記録</h2><span class="logbtns"><button id="btn-set" aria-label="設定">⚙ 設定</button><button id="btn-reset">リセット</button></span></div>
     <div class="profile"><img loading="lazy" decoding="async" src="img/hero.webp" width="84" height="84" alt="主人公の自転車旅行者"><div class="res" id="summary"></div></div>
+    <button id="btn-share" class="primary" style="width:100%;margin-top:8px">Xでシェア（旅の記録を投稿）</button><p class="hint" id="share-note" style="margin:4px 0 0"></p>
     <div class="subtabs" id="tl-tabs"><button data-v="tl" aria-selected="true">旅履歴</button><button data-v="log" aria-selected="false">できごと</button></div>
     <div class="tl" id="tl"></div>
     <ul class="log" id="log" hidden></ul>
@@ -1240,7 +1245,7 @@ function endTrip2(camp){const p=trip.p,f=S.forecast[p.id],st=bikeStats(),cl=CLOT
   S.sel=S.loc;render();showResult(html,advance);}
 function restHome(){const ti=travelInfo(PREF[S.home]);if(S.loc!==S.home){const forced=S.money<ti.rinko;if(!forced&&!$('ov-pay').dataset.ok){askPay('輪行で自宅に帰って休みますか？',ti.rinko,()=>{$('ov-pay').dataset.ok='1';restHome();});return;}delete $('ov-pay').dataset.ok;}const forced2=S.loc!==S.home&&S.money<ti.rinko,pen=forced2?floss(30,.04):floss(10,.015);snap();if(S.loc!==S.home&&!forced2)S.money-=ti.rinko;INTRIP=true;S.loc=S.home;S.hp=100;S.mp=100;S.fame=Math.max(0,S.fame-pen);
   log(forced2?`所持金が尽きて強制帰宅。フォロワー-${fol(pen)}`:`自宅で休養。フォロワー-${fol(pen)}`);S.sel=S.loc;render();showResult(`<h2>自宅で休養</h2><div class="photo pic"><img src="img/rest.webp" width="720" height="480" alt="自宅の和室で大の字になって昼寝する旅行者"><div class="cap"><div>${PREF[S.home].name}の自宅</div><div>💤 一日中ごろごろ</div></div></div><p>${forced2?`所持金が尽きて旅を続けられず、自宅へ連れ戻された…。体力・気力は全回復したが、フォロワー-${fol(pen)}。`:`体力・気力が全回復した。投稿がなく フォロワー-${fol(pen)}。`}</p>`,advance);}
-function showResult(html,then){$('result-box').innerHTML=html+`<button class="primary" id="res-ok">次の週末へ</button>`;$('ov-result').hidden=false;$('res-ok').onclick=()=>{$('ov-result').hidden=true;then();};}
+function showResult(html,then,share){$('result-box').innerHTML=html+(share?`<button id="res-share">Xでシェア</button><p class="hint" id="res-note" style="margin:0"></p>`:'')+`<button class="primary" id="res-ok">次の週末へ</button>`;$('ov-result').hidden=false;$('res-ok').onclick=()=>{$('ov-result').hidden=true;then();};}
 function turnPopup(){const t=TS;TS=null;if(!t)return;const e=$('pop'),sg=n=>(n>0?'+':n<0?'-':'')+Math.abs(n);
   const spv=t.sp?t.sp[1]:0,dm=S.money-t.money,other=dm-(t.inc-t.fee)-spv,dh=S.hp-t.hp,dp=S.mp-t.mp,df=S.fame-t.fame,fc=S.fam.filter(Boolean).length;
   const R=[];if(t.inc)R.push(['SNSからの収入','+'+yen(t.inc)]);if(spv)R.push([`スポンサー料（${t.sp[2]}）`,'+'+yen(spv)]);if(t.fee)R.push(['利用料','-'+yen(t.fee)]);if(other)R.push(['輪行費・治療費など',(other<0?'-':'+')+yen(Math.abs(other))]);
@@ -1254,10 +1259,10 @@ function yearEval(y){const n=trialKindsCleared(),fc=famCount();
   return {score,rank:pace>=8000?'S':pace>=5000?'A':pace>=2500?'B':'C',goal:Math.min(47,10*y),n,fc};}
 function finishAdvance(){
   if(TS){const o=spOf(TS.fame),n=sponsor();if(n[0]>o[0])spCongrats(o,n);}
-  if((S.turn-1)%52===0){const y=calendar(S.turn-1).year;showResult(`<h2>${y}年目 決算</h2><div class="res"><span>都道府県クリア数</span><span>${famCount()} / 47</span><span>フォロワー</span><span>${fol(S.fame)}（${title(S.fame)}）</span><span>所持金</span><span>${yen(S.money)}</span><span>試練制覇</span><span>${S.stats.wins}回</span>${(()=>{const v=yearEval(y);return `<span>突破した試練の種類</span><span>${v.n} / ${TRIAL_KEYS.length}</span><span>年間目標</span><span>累計${v.goal}県制覇 ${v.fc>=v.goal?'✅ 達成':'❌ 未達'}</span><span>年間評価</span><span><img class="rank" src="img/rank_${v.rank.toLowerCase()}.webp" width="128" height="128" alt="${v.rank}"><b>${v.rank}</b>（${v.score.toLocaleString('ja-JP')}pt）</span>`;})()}</div><p class="hint">${y+1}年目は敵が少し強くなる。</p>`,()=>{render();turnPopup();});render();return;}
-  const tt=TS?{df:S.fame-TS.fame,dm:S.money-TS.money,late:!TS.inc}:null;render();turnPopup();if(S.turn===2&&TUTI===3&&!tutSeen())tutShow(4,tt);}
+  if((S.turn-1)%52===0){const y=calendar(S.turn-1).year;showResult(`<h2>${y}年目 決算</h2><div class="res"><span>都道府県クリア数</span><span>${famCount()} / 47</span><span>フォロワー</span><span>${fol(S.fame)}（${title(S.fame)}）</span><span>所持金</span><span>${yen(S.money)}</span><span>試練制覇</span><span>${S.stats.wins}回</span>${(()=>{const v=yearEval(y);return `<span>突破した試練の種類</span><span>${v.n} / ${TRIAL_KEYS.length}</span><span>年間目標</span><span>累計${v.goal}県制覇 ${v.fc>=v.goal?'✅ 達成':'❌ 未達'}</span><span>年間評価</span><span><img class="rank" src="img/rank_${v.rank.toLowerCase()}.webp" width="128" height="128" alt="${v.rank}"><b>${v.rank}</b>（${v.score.toLocaleString('ja-JP')}pt）</span>`;})()}</div><p class="hint">${y+1}年目は敵が少し強くなる。</p>`,()=>{render();turnPopup();},true);render();return;}
+  const tt=TS?{df:S.fame-TS.fame,dm:S.money-TS.money,late:!TS.inc}:null;if(tt)LASTRES={place:(PREF[S.loc]||{}).name||'',df:tt.df,late:tt.late};render();turnPopup();if(S.turn===2&&TUTI===3&&!tutSeen())tutShow(4,tt);}
 function advance(){INTRIP=false;const sp=sponsor();S.money+=sp[1];if(TS)TS.sp=sp;S.turn++;rollForecast();S.sel=S.loc;
-  if(famCount()===47&&TS&&TS.fam<47){showResult(`<h2>🎉 全国クリア！</h2><p>47か所すべてを馴染み宿にした。伝説の自転車インフルエンサー誕生。</p><div class="res"><span>達成</span><span>${calLabel(S.turn)}</span><span>フォロワー</span><span>${fol(S.fame)}</span><span>所持金</span><span>${yen(S.money)}</span></div>`,finishAdvance);render();return;}
+  if(famCount()===47&&TS&&TS.fam<47){showResult(`<h2>🎉 全国クリア！</h2><p>47か所すべてを馴染み宿にした。伝説の自転車インフルエンサー誕生。</p><div class="res"><span>達成</span><span>${calLabel(S.turn)}</span><span>フォロワー</span><span>${fol(S.fame)}</span><span>所持金</span><span>${yen(S.money)}</span></div>`,finishAdvance,true);render();return;}
   finishAdvance();}
 
 addEventListener('pagehide',save);
@@ -1292,6 +1297,40 @@ function tutBattle(){let seen=true;try{seen=localStorage.getItem('cc_tutb')==='1
   $('ov-tut').hidden=false;}
 $('set-tut').onclick=()=>{$('ov-set').hidden=true;try{localStorage.removeItem('cc_tut');localStorage.removeItem('cc_tutb');}catch(e){}$('tab-map').click();tutShow(0);};
 function tutSeen(){try{return localStorage.getItem('cc_tut')==='1';}catch(e){return true;}}
+
+// ---------- Xでシェア（旅の記録を、イラスト入りの画像と文章で投稿） ----------
+let LASTRES=null;
+const SHARE_URL='https://pendragon-2tf.pages.dev/';
+function shareText(){const L=[`日本巡る自転車旅 ${calLabel(S.turn)}`,`称号：${title(S.fame)}　フォロワー ${fol(S.fame)}`,`都道府県クリア ${famCount()} / 47`];
+  if(LASTRES&&LASTRES.place)L.push(LASTRES.late?`${LASTRES.place}では遅刻して投稿できず…`:`${LASTRES.place}で投稿成功！ フォロワー ${LASTRES.df>=0?'+':'-'}${fol(Math.abs(LASTRES.df))}`);
+  L.push('#日本巡る自転車旅',SHARE_URL);return L.join('\n');}
+function loadImg(src){return new Promise(r=>{const i=new Image();i.onload=()=>r(i);i.onerror=()=>r(null);i.src=src;});}
+async function shareCard(){const W=1200,H=630,cv=document.createElement('canvas');cv.width=W;cv.height=H;const g=cv.getContext('2d');
+  try{await Promise.all([document.fonts.load('700 40px "Zen Kaku Gothic New"'),document.fonts.load('40px "DotGothic16"')]);}catch(e){}
+  const sp=sponsor(),[bg,hero,logo,spi]=await Promise.all([loadImg('img/title.webp'),loadImg('img/hero.webp'),loadImg('img/logo.webp'),loadImg('img/sponsor_'+SPONSOR.indexOf(sp)+'.webp')]);
+  g.fillStyle='#2a2118';g.fillRect(0,0,W,H);
+  if(bg){const s=Math.max(W/bg.width,H/bg.height),w=bg.width*s,h=bg.height*s;g.drawImage(bg,(W-w)/2,(H-h)*0.55,w,h);}
+  g.fillStyle='rgba(24,17,10,.62)';g.fillRect(0,0,W,H);
+  if(logo){g.drawImage(logo,36,14,300,Math.round(300*logo.height/logo.width));}
+  const F='"Zen Kaku Gothic New","DotGothic16",sans-serif';
+  if(hero){g.save();g.beginPath();g.roundRect(48,190,300,300,22);g.clip();g.drawImage(hero,48,190,300,300);g.restore();g.lineWidth=4;g.strokeStyle='#e9c46a';g.beginPath();g.roundRect(48,190,300,300,22);g.stroke();}
+  g.textBaseline='alphabetic';g.fillStyle='#f4ead5';g.font=`700 34px ${F}`;g.fillText(calLabel(S.turn),390,236);
+  g.fillStyle='#e9c46a';g.font=`700 60px ${F}`;g.fillText(title(S.fame),390,310);
+  g.fillStyle='#f4ead5';g.font=`700 46px ${F}`;g.fillText('フォロワー '+fol(S.fame),390,382);
+  g.fillText(`都道府県クリア ${famCount()} / 47`,390,448);
+  if(LASTRES&&LASTRES.place){g.font=`700 30px ${F}`;g.fillStyle='#cfe8c4';g.fillText(LASTRES.late?`${LASTRES.place}：遅刻…`:`${LASTRES.place}で投稿成功！ ${LASTRES.df>=0?'+':'-'}${fol(Math.abs(LASTRES.df))}`,390,500);}
+  if(spi){const h=210,w=Math.round(h*spi.width/spi.height);g.drawImage(spi,W-w-36,H-h-60,w,h);g.font=`700 22px ${F}`;g.fillStyle='#f4ead5';g.textAlign='right';g.fillText('スポンサー：'+sp[2],W-36,H-26);g.textAlign='left';}
+  g.fillStyle='#e9c46a';g.font=`700 30px ${F}`;g.fillText('#日本巡る自転車旅',48,H-26);
+  return new Promise(r=>cv.toBlob(r,'image/png'));}
+async function doShare(noteEl){const note=noteEl||$('share-note');note.textContent='画像を作っています…';
+  let blob;try{blob=await shareCard();}catch(e){blob=null;}
+  const text=shareText();let file=null;if(blob){try{file=new File([blob],'nihon-meguru-jitensha-tabi.png',{type:'image/png'});}catch(e){}}
+  try{if(file&&navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],text});note.textContent='';return;}}catch(e){if(e&&e.name==='AbortError'){note.textContent='';return;}}
+  if(blob){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='nihon-meguru-jitensha-tabi.png';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000);}
+  window.open('https://x.com/intent/post?text='+encodeURIComponent(text),'_blank','noopener');
+  note.textContent=blob?'画像を保存しました。Xの投稿画面で、その画像を添付してください。':'Xの投稿画面を開きました。';}
+$('btn-share').onclick=()=>doShare();
+$('result-box').addEventListener('click',e=>{if(e.target.closest('#res-share'))doShare($('res-note'));});
 // ---------- boot ----------
 $('start-pref').innerHTML=PREF.map(p=>`<option value="${p.id}">${p.name}（${p.site}）</option>`).join('');$('start-pref').value='12';
 $('btn-new').onclick=()=>{newGame(+$('start-pref').value);$('ov-title').hidden=true;render();if(!tutSeen())tutShow(0);};
