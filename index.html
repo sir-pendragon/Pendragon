@@ -271,7 +271,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .row{display:flex;gap:8px;flex-wrap:wrap}
 .row>*{flex:1}
 .profile{display:flex;gap:10px;align-items:flex-start;margin:0}
-.profile img{flex:none;width:84px;height:84px;object-fit:cover;border-radius:8px;border:1px solid var(--line);background:var(--bg)}
+.profile .pcol{flex:none;width:84px;display:flex;flex-direction:column;gap:6px}.profile .pcol button{width:84px;padding:5px 2px;font-size:12px;line-height:1.25}.profile .pcol button small{display:block;font-size:10px}#share-note:empty{display:none}.profile img{flex:none;width:84px;height:84px;object-fit:cover;border-radius:8px;border:1px solid var(--line);background:var(--bg)}
 .profile .res{flex:1;min-width:0;gap:1px 10px;font-size:var(--fs-s);line-height:1.35}
 .enemy .face img{display:block;width:100%;height:100%;object-fit:contain}
 .loghead{display:flex;justify-content:space-between;align-items:center;gap:8px}
@@ -358,8 +358,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
     </div>
     <div id="p-trip">
     <div class="loghead"><h2>旅の記録</h2><span class="logbtns"><button id="btn-set" aria-label="設定">⚙ 設定</button><button id="btn-reset">リセット</button></span></div>
-    <div class="profile"><img loading="lazy" decoding="async" src="img/hero.webp" width="84" height="84" alt="主人公の自転車旅行者"><div class="res" id="summary"></div></div>
-    <button id="btn-share" class="primary" style="width:100%;margin-top:8px">SNSに投稿（画像つき）</button><p class="hint" id="share-note" style="margin:4px 0 0"></p>
+    <div class="profile"><div class="pcol"><img loading="lazy" decoding="async" src="img/hero.webp" width="84" height="84" alt="主人公の自転車旅行者"><button id="btn-share" class="primary">SNSに投稿<small>（画像つき）</small></button></div><div class="res" id="summary"></div></div><p class="hint" id="share-note" style="margin:4px 0 0"></p>
     <div class="subtabs" id="tl-tabs"><button data-v="tl" aria-selected="true">旅履歴</button><button data-v="log" aria-selected="false">できごと</button></div>
     <div class="tl" id="tl"></div>
     <ul class="log" id="log" hidden></ul>
