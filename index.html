@@ -212,7 +212,9 @@ h3{margin-top:2px}
 .photo.pic .cap{position:absolute;left:0;right:0;bottom:0;padding:18px 10px 6px;background:linear-gradient(transparent,rgba(0,0,0,.7));line-height:1.25}
 .photo.pic .q{font-size:1.5rem}
 .photo.pic .cap div:last-child{font-size:var(--fs-s);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.title{text-align:center;gap:16px;overflow:hidden}
+.title{text-align:center;gap:8px;overflow:hidden}
+.title .hero>img{aspect-ratio:10/9;object-fit:cover;object-position:28% 60%}
+.title>p:not(.copy):not(.hint){font-size:.92rem;line-height:1.35;margin:0}
 .hero{position:relative;margin:-16px -16px 0}
 .hero img{display:block;width:100%;height:auto;aspect-ratio:3/2;background:#2b2f4a}
 .title .logo{position:absolute;top:3%;left:0;right:0;margin:0;text-align:center;font-size:0;line-height:0;filter:drop-shadow(0 3px 8px rgba(20,16,40,.6))}
@@ -228,11 +230,11 @@ h3{margin-top:2px}
 .res{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-variant-numeric:tabular-nums}
 .res span:nth-child(odd){color:var(--muted)}
 @media (prefers-reduced-motion:no-preference){ .shake{animation:shake .35s} @keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}} }
-.rules-box{border:1px solid #b89a5e;background:#e6d3a0;color:#3a2d1c;border-radius:8px;padding:8px 10px;margin:.6em 0}
-.rules-box .rules-h{margin:0 0 .2em;font-size:13px;text-align:left;color:#3a2d1c}
-.rules-box .hint{margin:0;font-size:var(--fs-s);color:#4d3e28}
+.rules-box{border:1px solid #b89a5e;background:#e6d3a0;color:#3a2d1c;border-radius:8px;padding:5px 9px;margin:0}
+.rules-box .rules-h{margin:0 0 1px;font-size:12px;text-align:left;color:#3a2d1c}
+.rules-box .hint{margin:0;font-size:var(--fs-xs);line-height:1.35;color:#4d3e28}
 .copy{text-align:center;margin:1em 0 0;font-size:11px}
-#ov-title label[for=start-pref]{display:block;text-align:left;margin:.4em 0 0;line-height:1.2}
+#ov-title label[for=start-pref]{display:block;text-align:left;margin:2px 0 0;line-height:1.2}
 #start-pref{margin:2px 0 6px}
 .sg-reg{margin:14px 0 4px;font-size:var(--fs-l);border-bottom:1px solid var(--line)}
 .sg-pref{margin:6px 0}.sg-h{display:flex;justify-content:space-between;font-size:var(--fs-s);margin-bottom:2px}.sg-h span{color:var(--muted)}
