@@ -980,7 +980,7 @@ let trip=null;
 function askPay(what,price,yes){
   $('pay-t').textContent=what;
   $('pay-sum').innerHTML=[['支払い',yen(price)],['所持金',yen(S.money)],['支払い後',yen(S.money-price)]].map(r=>`<span>${r[0]}</span><span>${r[1]}</span>`).join('');
-  $('pay-yes').onclick=()=>{$('ov-pay').hidden=true;yes();};$('pay-no').onclick=()=>{$('ov-pay').hidden=true;};
+  $('pay-yes').onclick=()=>{$('ov-pay').hidden=true;playSE('se_buy');yes();};$('pay-no').onclick=()=>{$('ov-pay').hidden=true;};
   $('ov-pay').hidden=false;$('pay-no').focus();}
 function askGo(p,rinko){const ti=travelInfo(p),f=S.forecast[p.id],nm=(l,id)=>(l.find(x=>x.id===id)||{}).name,cl=CLOTHES.find(c=>c.id===S.cloth);
   const how=p.id===S.loc?'同じ場所（気力-15）':rinko?`輪行 ${yen(ti.rinko)}`:`自走 ${ti.d}km（遭遇${ti.enc}回）`;
