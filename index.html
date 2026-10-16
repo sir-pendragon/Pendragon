@@ -1188,7 +1188,7 @@ function endTrip2(camp){const p=trip.p,f=S.forecast[p.id],st=bikeStats(),cl=CLOT
   const g=gearFx(),wet=['rain','snow','typhoon'].includes(f.wx),harsh=wet||season(calendar(S.turn).mi)==='winter';
   const heat=f.wx==='heat',harshMp=heat?Math.round(Math.max(0,8-st.comfy)*(1-g.guard)):harsh&&!(stoveOn()&&!wet)?Math.round(Math.max(0,10-st.comfy)*(1-(wet?g.guard:0))):0;S.mp-=harshMp;
   const wetHp=wet?Math.round((f.wx==='typhoon'?20:12)*(1-g.guard)):0;S.hp-=wetHp;
-  const recHp=4+g.hp+fm+(camp.hp||0),recMp=4+g.mp+fm+(camp.mp||0),sn=n=>(n>=0?'+':'')+n;
+  const recHp=15+g.hp+fm+(camp.hp||0),recMp=15+g.mp+fm+(camp.mp||0),sn=n=>(n>=0?'+':'')+n;
   const campRows=`${camp.label?`<span>過ごし方</span><span>${camp.label}${cc?`（-${yen(cc)}）`:''}</span>`:''}${fm?'<span>馴染み宿特典</span><span>利用料半額・回復+4</span>':''}<span>キャンプ回復</span><span>体力${sn(recHp)} 気力${sn(recMp)}</span>${wetHp?`<span>雨ざらし</span><span>体力-${wetHp}</span>`:''}${harshMp?`<span>厳しい環境</span><span>気力-${harshMp}</span>`:''}`;
   const lateL=floss(20,.025);if(trip.late){S.fame=Math.max(0,S.fame-lateL);
     html=`<h2>遅刻…</h2><div class="photo pic"><img src="img/late.webp" width="720" height="480" alt="日没後にキャンプ場へ着いた自転車旅行者"><div class="cap"><div>${p.site}</div><div>${WX_J[f.wx]} ${f.temp}℃ ・ 📷 撮影できず</div></div></div><p>${p.site}に着いたのは日没後。写真は撮れず、投稿できなかった。</p><div class="res"><span>フォロワー</span><span>-${fol(lateL)}</span><span>利用料</span><span>-${yen(fee)}</span>${cold?`<span>衣類不適</span><span>体力-${cold}</span>`:''}${campRows}</div>`;
