@@ -1,4 +1,8 @@
+# 画像・音は、同じファイル名で差し替えることがあるので、長期キャッシュにしない。
+# 1時間はそのまま使い、その後は裏で更新を確認する（古い絵が1週間残る問題の回避）。
 /img/*
-  Cache-Control: public, max-age=604800
+  Cache-Control: public, max-age=3600, stale-while-revalidate=86400
 /audio/*
-  Cache-Control: public, max-age=604800
+  Cache-Control: public, max-age=86400, stale-while-revalidate=604800
+/index.html
+  Cache-Control: public, max-age=0, must-revalidate
