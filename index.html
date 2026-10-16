@@ -946,7 +946,7 @@ function renderDetail(){const p=PREF[S.sel],f=S.forecast[p.id],ti=travelInfo(p),
   $('info').innerHTML=`<h3>${p.site}</h3><div class="hint">${p.name}・${p.region}</div>${badge}
   <div class="kv"><span>地形</span><span>${TERRAIN[p.terrain]}（${'★'.repeat(p.diff)}）</span><span>景観</span><span>${'📷'.repeat(p.scen)}</span>
   <span>予報</span><span>${WX_J[f.wx]} ${f.temp}℃<br>${fit}</span><span>距離</span><span>${stay?'同じ場所（気力-15）':ti.d+'km<br>'+(ti.ride?'遭遇'+ti.enc+'回':'自走不可')}</span>
-  <span>想定</span><span>${enemies.join('・')||'特になし'}${(()=>{const q=familiar(p);return q.f<1?`<br>${q.why}：動物に出会う確率×${q.f}`:''})()}</span>${ev?`<span>催事</span><span>${EVI}${ev.name}<br>写真+12・フォロワー×1.5</span>`:''}${S.fam[p.id]?'<span>特典</span><span>利用料半額・回復+4</span>':''}<span>利用料</span><span>${yen(fee)}</span></div>`;
+  <span>想定</span><span>${(stay?enemies.filter(n=>['大雨','強風','台風','大雪','炎天下','ライバル?'].includes(n)):enemies).join('・')||'特になし'}${stay?'':(()=>{const q=familiar(p);return q.f<1?`<br>${q.why}：動物に出会う確率×${q.f}`:''})()}</span>${ev?`<span>催事</span><span>${EVI}${ev.name}<br>写真+12・フォロワー×1.5</span>`:''}${S.fam[p.id]?'<span>特典</span><span>利用料半額・回復+4</span>':''}<span>利用料</span><span>${yen(fee)}</span></div>`;
   $('detail').innerHTML=`
   <div class="acts">${stay?`<button class="primary" id="go-stay">自転車旅に行く<small>${p.name}（現在地）</small></button><button disabled>輪行で旅に行く<small>${p.name}（現在地）</small></button>`:
    `<button class="primary" id="go-ride" ${ti.ride?'':'disabled'}>自転車旅に行く<small>${p.name}${ti.ride?'へ':'は遠すぎる'}</small></button>
@@ -1084,6 +1084,7 @@ function startTrip(p,rinko){snap();{const i=new Image();i.src='img/late.webp';}{
     if(!enc.length&&ti.enc>0){const nw=pool.filter(k=>!WILDK.has(k));enc.push(nw.length?nw[rnd(0,nw.length-1)]:'hill');}// 生き物が出なかった旅でも、最低1回は試練がある
     if(f.wx==='typhoon'&&enc.length&&!enc.includes('typhoon'))enc[enc.length-1]='typhoon';
     else if(['rain','wind','snow','heat'].includes(f.wx)&&enc.length&&!enc.includes(f.wx)&&Math.random()<.75)enc[enc.length-1]=f.wx;}// 荒れた天気の日は、ほぼ必ず天候の試練がある
+  else if(f.wx==='typhoon')enc.push('typhoon');else if(['rain','wind','snow','heat'].includes(f.wx)&&Math.random()<.75)enc.push(f.wx);// 連泊：荒れた天気の日だけ、天候の試練が1回ある（生き物・坂などは出ない）
   // 輪行（沖縄は輪行しか行けない）でも、現地のキャンプ場の近くで、その県限定のボス（ハブ・ヒグマ）に会うことがある（約5割。地元補正あり）
   if(rinko&&!stay){const bs=[];if(HABU.has(p.name)&&PREF[S.home].name!=='沖縄')bs.push('habu');if(calendar(S.turn).year>=2&&bearSeason(calendar(S.turn).month)&&BROWNBEAR.has(p.name)&&PREF[S.home].name!=='北海道')bs.push('brownbear');
     const fm=familiar(p).f;for(const k of bs)if(Math.random()<.3*fm)enc.push(k);}
