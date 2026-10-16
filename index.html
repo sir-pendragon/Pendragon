@@ -489,7 +489,8 @@ const hasBoar=p=>p.name!=='北海道'&&(p.terrain==='rough'||WILD.has(p.region))
 const URBAN=new Set(['東京','神奈川','埼玉','千葉','愛知','大阪','京都','兵庫','福岡','宮城']);
 const bearSeason=m=>m>=4&&m<=11;
 // 動物（いのしし・牡鹿・熊）に出会う確率は、行き先へのなじみ度で変わる。地元の人は出る場所や時間を知っている。いちばん低い倍率を使う
-const WILDK=new Set(['animal','deer','bear','brownbear']);
+const HABU=new Set(['沖縄']);// ハブ：沖縄限定。沖縄出身の主人公は遭遇しない（ヒグマも同様に北海道出身は遭遇しない）
+const WILDK=new Set(['animal','deer','bear','brownbear','habu']);
 function familiar(p){const own=PREF[S.home];let f=1,why='';
   const set=(v,w)=>{if(v<f){f=v;why=w;}};
   if(p.region===own.region)set(.8,'同じ地方');if(S.fam[p.id])set(.7,'馴染み宿');if(p.id===S.home)set(.5,'地元');return {f,why};}
@@ -514,7 +515,7 @@ const FOOD={'北海道':'石狩鍋','東北':'きりたんぽ鍋','関東':'も�
 // 敵ごとの作戦コマンド [ボタン名, 説明]
 const TACT={hill:['ギア落とし','体力-5 被害半減'],rough:['空気圧を下げる','気力-3 被害半減'],lost:['地図で道を探す','気力-3 被害半減'],animal:['ベルで気をそらす','気力-5 7割で振り切る'],
  pass:['小休止','気力-3 体力+10'],deer:['止まってやり過ごす','気力-3 体力+5'],
- bear:['クマ鈴で距離を取る','気力-8 6割で逃げ切る'],brownbear:['クマ鈴で距離を取る','気力-8 4割で逃げ切る'],car:['路肩に寄る','気力-3 被害大減'],bike:['脇道へ逃げる','気力-3 被害なし'],
+ bear:['クマ鈴で距離を取る','気力-8 6割で逃げ切る'],brownbear:['クマ鈴で距離を取る','気力-8 4割で逃げ切る'],habu:['そっと距離を取る','気力-6 5割で逃げ切る'],car:['路肩に寄る','気力-3 被害大減'],bike:['脇道へ逃げる','気力-3 被害なし'],
  wind:['ドラフティング','気力-3 被害なし'],rain:['タープで雨宿り','気力-3 体力+12'],
  typhoon:['ビバーク','気力-4 体力+15'],snow:['雪を凌ぐ','気力-3 体力+10'],heat:['水分補給','気力-3 体力+10'],rival:['タグ戦略','気力-8 投稿1.5倍']};
 // 次の敵の出方（バトル中に予告する）
@@ -591,6 +592,7 @@ const ENEMY={
  pass:{name:'峠',face:'🏔️',img:'img/enemy_pass.webp',hp:44,atk:7,limit:7,stat:'climb',hint:'長い登り。登坂力が効く'},
  deer:{name:'牡鹿',face:'🦌',img:'img/enemy_deer.webp',hp:32,atk:11,limit:4,stat:'cruise',hint:'巡航力で振り切れ。止まってやり過ごす手もある'},
  bear:{name:'ツキノワグマ',face:'🐻',img:'img/enemy_bear.webp',hp:44,atk:13,limit:5,stat:'cruise',mp:6,hint:'危険。刺激せず、距離を取って逃げ切れ'},
+ habu:{name:'ハブ',face:'🐍',img:'img/enemy_habu.webp',hp:40,atk:13,limit:4,stat:'cruise',mp:6,hint:'猛毒。刺激せず、距離を取って逃げ切れ'},
  brownbear:{name:'ヒグマ',face:'🐻',img:'img/enemy_brownbear.webp',hp:46,atk:14,limit:5,stat:'cruise',mp:7,hint:'最も危険。必死に逃げ切れ'},
  car:{name:'暴走車',face:'🚗',img:'img/enemy_car.webp',hp:36,atk:12,limit:4,stat:'cruise',mp:4,hint:'巡航力で振り切れ。路肩に避けたい'},
  bike:{name:'暴走バイク',face:'🏍️',img:'img/enemy_bike.webp',hp:36,atk:12,limit:4,stat:'cruise',mp:3,hint:'巡航力で振り切れ。脇道へ逃げたい'},
@@ -843,7 +845,7 @@ function renderDetail(){const p=PREF[S.sel],f=S.forecast[p.id],ti=travelInfo(p),
   const fit=f.temp<cl.lo?`❄️ 衣類が寒い（${cl.lo-f.temp}℃不足）`:f.temp>cl.hi?`🔥 衣類が暑い（${f.temp-cl.hi}℃超過）`:'👕 衣類OK';
   const ev=eventAt(S.turn,p.id),fee=S.fam[p.id]?Math.round(p.fee/2):p.fee;
   const enemies=[];if(p.terrain==='hill')enemies.push('激坂','峠');if(p.terrain==='rough'){enemies.push('ダート','廃道');}if(hasBoar(p))enemies.push('いのしし');
-  if(DEER.has(p.name))enemies.push('牡鹿');if(calendar(S.turn).year>=2&&bearSeason(calendar(S.turn).month)){if(BROWNBEAR.has(p.name))enemies.push('ヒグマ');if(BLACKBEAR.has(p.name))enemies.push(RAREBEAR.has(p.name)?'ツキノワグマ(まれ)':'ツキノワグマ');}if(calendar(S.turn).year>=2&&URBAN.has(p.name))enemies.push(ENEMY[urbanEnemy()].name);
+  if(HABU.has(p.name)&&PREF[S.home].name!=='沖縄')enemies.push('ハブ');if(DEER.has(p.name))enemies.push('牡鹿');if(calendar(S.turn).year>=2&&bearSeason(calendar(S.turn).month)){if(BROWNBEAR.has(p.name)&&PREF[S.home].name!=='北海道')enemies.push('ヒグマ');if(BLACKBEAR.has(p.name))enemies.push(RAREBEAR.has(p.name)?'ツキノワグマ(まれ)':'ツキノワグマ');}if(calendar(S.turn).year>=2&&URBAN.has(p.name))enemies.push(ENEMY[urbanEnemy()].name);
   if(f.wx==='rain')enemies.push('大雨');if(f.wx==='wind')enemies.push('強風');if(f.wx==='typhoon')enemies.push('台風');if(f.wx==='snow')enemies.push('大雪');if(f.wx==='heat')enemies.push('炎天下');if(p.scen>=5||ev)enemies.push('ライバル?');
   $('info').innerHTML=`<h3>${p.site}</h3><div class="hint">${p.name}・${p.region}</div>${badge}
   <div class="kv"><span>地形</span><span>${TERRAIN[p.terrain]}（${'★'.repeat(p.diff)}）</span><span>景観</span><span>${'📷'.repeat(p.scen)}</span>
@@ -944,7 +946,7 @@ function startTrip(p,rinko){snap();{const i=new Image();i.src='img/late.webp';}{
   if(rinko){S.money-=ti.rinko;log(`${p.name}へ輪行（${yen(ti.rinko)}）`);}
   const f=S.forecast[p.id];const enc=[];
   if(!rinko&&!stay){const pool=[];if(p.terrain==='hill')pool.push('hill','hill','pass');if(p.terrain==='hill'&&p.diff>=3)pool.push('pass','pass');if(p.terrain==='rough'){pool.push('rough','rough');pool.push('lost');if(p.diff>=4)pool.push('lost');}if(p.name!=='北海道'){if(p.terrain==='rough')pool.push('animal');if(WILD.has(p.region))pool.push('animal');}
-    if(DEER.has(p.name))pool.push('deer','deer');if(calendar(S.turn).year>=2&&bearSeason(calendar(S.turn).month)){if(BROWNBEAR.has(p.name))pool.push('brownbear');if(BLACKBEAR.has(p.name)&&(!RAREBEAR.has(p.name)||Math.random()<.5))pool.push('bear');}if(calendar(S.turn).year>=2&&URBAN.has(p.name))pool.push(urbanEnemy());
+    if(HABU.has(p.name)&&PREF[S.home].name!=='沖縄')pool.push('habu');if(DEER.has(p.name))pool.push('deer','deer');if(calendar(S.turn).year>=2&&bearSeason(calendar(S.turn).month)){if(BROWNBEAR.has(p.name)&&PREF[S.home].name!=='北海道')pool.push('brownbear');if(BLACKBEAR.has(p.name)&&(!RAREBEAR.has(p.name)||Math.random()<.5))pool.push('bear');}if(calendar(S.turn).year>=2&&URBAN.has(p.name))pool.push(urbanEnemy());
     if(f.wx==='rain')pool.push('rain','rain');if(f.wx==='wind')pool.push('wind','wind');if(f.wx==='typhoon')pool.push('typhoon','typhoon');if(f.wx==='snow')pool.push('snow','snow');if(f.wx==='heat')pool.push('heat','heat');if(pool.length===0)pool.push('hill','animal');
     const fam=familiar(p).f;
     for(let i=0;i<ti.enc;i++){const k=pool[rnd(0,pool.length-1)];if(WILDK.has(k)&&Math.random()>fam)continue;enc.push(k);}// 地元・馴染み宿・同じ地方では、動物の枠が減る
@@ -993,8 +995,8 @@ const isRival=()=>B.kind==='rival';
 function kmOf(v){const L=isRival()?400:trip.sec;return Math.max(0,v)/B.max*L;}
 function fmtD(v){const x=kmOf(v);return isRival()?Math.round(x)+'m':(x>=10?Math.round(x):x.toFixed(1))+'km';}
 const LEFT=()=>isRival()?'撮影スポットまで':'ゴールまで';
-const HIT={hill:'坂がきつい',animal:'いのししに追いつかれ、突進された',pass:'長い登りに脚を削られた',snow:'吹雪に視界を奪われた',heat:'炎天下で頭がくらくらする',rough:'荒れたダートにハンドルを取られた',lost:'藪に埋もれた道を見失いかけた',deer:'鹿が飛び出して急ブレーキ。逃げ遅れた',bear:'ツキノワグマに迫られた！全力で逃げる',brownbear:'ヒグマに迫られた！必死で逃げる',car:'暴走車に幅寄せされた',bike:'暴走バイクが横をかすめた',wind:'向かい風に押し戻された',rain:'冷たい雨に体温を奪われた',typhoon:'暴風雨にあおられた'};
-function tacOK(){const k=B.kind;return k==='hill'?S.hp>5:k==='animal'?S.mp>=5:k==='pass'||k==='heat'||k==='rough'||k==='lost'||k==='deer'||k==='car'||k==='bike'?S.mp>=3:k==='bear'||k==='brownbear'?S.mp>=8:k==='rival'?S.mp>=8:k==='rain'||k==='snow'?!!(S.gear.tarp||S.gear.shelter)&&S.mp>=3:k==='typhoon'?!!S.gear.shelter&&S.mp>=4:k==='wind'?S.mp>=3:true;}
+const HIT={hill:'坂がきつい',animal:'いのししに追いつかれ、突進された',pass:'長い登りに脚を削られた',snow:'吹雪に視界を奪われた',heat:'炎天下で頭がくらくらする',rough:'荒れたダートにハンドルを取られた',lost:'藪に埋もれた道を見失いかけた',deer:'鹿が飛び出して急ブレーキ。逃げ遅れた',bear:'ツキノワグマに迫られた！全力で逃げる',brownbear:'ヒグマに迫られた！必死で逃げる',habu:'ハブに咬まれかけた！慌てて逃げる',car:'暴走車に幅寄せされた',bike:'暴走バイクが横をかすめた',wind:'向かい風に押し戻された',rain:'冷たい雨に体温を奪われた',typhoon:'暴風雨にあおられた'};
+function tacOK(){const k=B.kind;return k==='hill'?S.hp>5:k==='animal'?S.mp>=5:k==='pass'||k==='heat'||k==='rough'||k==='lost'||k==='deer'||k==='car'||k==='bike'?S.mp>=3:k==='bear'||k==='brownbear'?S.mp>=8:k==='habu'?S.mp>=6:k==='rival'?S.mp>=8:k==='rain'||k==='snow'?!!(S.gear.tarp||S.gear.shelter)&&S.mp>=3:k==='typhoon'?!!S.gear.shelter&&S.mp>=4:k==='wind'?S.mp>=3:true;}
 function playerPower(){const st=bikeStats();if(B.kind==='rival')return 8+FL()/8+st.photo/2;return st[B.e.stat]*4;}
 function renderBattle(){const pr=Math.min(100,Math.max(0,(1-B.hp/B.max)*100));$('bt-hp').style.width=pr+'%';$('bt-bike').style.left=pr+'%';$('bt-bike').src=isRival()?'img/part_cam.webp':'img/icon_bike_'+S.bike+'.webp';$('bt-goal').src=isRival()?'img/part_tripod.webp':'img/icon_g_sh2.webp';
   $('bt-km').innerHTML=`<span class="bt-km">${B.hp<=0?(isRival()?'撮影スポットに到着！':'区間ゴール！'):LEFT()+' '+fmtD(B.hp)}</span><span class="bt-km">日没まで あと${B.limit-B.turn+1}時間</span>`;
@@ -1017,7 +1019,7 @@ function renderBattle(){const pr=Math.min(100,Math.max(0,(1-B.hp/B.max)*100));$(
     ['food','補給食','体力+25 気+10'],
     ['rinko',`輪行 ${yen(ti.rinko)}`,'電車で飛ばす']];
   // 作戦アイコンは tac_敵名.webp（ヒグマはツキノワグマと共用）
-  const TACI={brownbear:'tac_bear'};
+  const TACI={brownbear:'tac_bear',habu:'tac_deer'};
   const RC={push:'atk',post:'atk',kiai:'gold',rest:'heal',food:'heal',guard:'def',tactic:'def',rinko:'sub',escape:'sub'};
   const ic={tactic:TACI[B.kind]||'tac_'+B.kind,guard:'cmd_guard',food:'icon_food'};
   $('bt-cmds').innerHTML=cmds.map(([k,l,s])=>`<button data-cmd="${k}" class="${ic[k]?'ic ':''}c-${RC[k]||'nrm'}" ${k==='kiai'&&S.mp<20||k==='rinko'&&S.money<ti.rinko||k==='push'&&S.hp<=15||k==='food'&&S.food<=0||k==='tactic'&&!tacOK()?'disabled':''}>${ic[k]?`<img src="img/${ic[k]}.webp" width="30" height="30" alt=""><span>${l}<small>${s}</small></span>`:`${l}<small>${s}</small>`}</button>`).join('');}
@@ -1036,6 +1038,7 @@ function cmd(k){let t='';let dmg=0;const mult=B.charge||1;B.cut=1;
     else if(kd==='pass'){S.mp-=3;S.hp=Math.min(100,S.hp+10);B.cut=.5;t='休憩所でひと息ついた。体力+10';}
     else if(kd==='deer'){S.mp-=3;S.hp=Math.min(100,S.hp+5);B.cut=0;t='自転車を止めて、鹿が通り過ぎるのをやり過ごした。体力+5';}
     else if(kd==='brownbear'){S.mp-=8;if(Math.random()<.4){B.cut=0;dmg=6;t=`クマ鈴を鳴らしながら、ゆっくり後退。ヒグマが背を向けた隙に逃げ切った！${fmtD(dmg)}進んだ`;}else t='クマ鈴を鳴らしたが、ヒグマは距離を詰めてくる…';}
+    else if(kd==='habu'){S.mp-=6;if(Math.random()<.5){B.cut=0;dmg=6;t=`息を殺して、ハブから目を離さず後ずさり。距離を取って逃げ切った！${fmtD(dmg)}進んだ`;}else t='そっと下がったが、ハブが鎌首をもたげてにじり寄ってくる…';}
     else if(kd==='bear'){S.mp-=8;if(Math.random()<.6){B.cut=0;dmg=6;t=`クマ鈴を鳴らしながら、ゆっくり後退。ツキノワグマが離れた隙に逃げ切った！${fmtD(dmg)}進んだ`;}else t='クマ鈴を鳴らしたが、熊はついてくる…';}
     else if(kd==='car'){S.mp-=3;B.cut=.2;dmg=Math.round(playerPower()*.4*mult);B.charge=0;t=`路肩に寄って車をやり過ごした。${fmtD(dmg)}進んだ`;}
     else if(kd==='bike'){S.mp-=3;B.cut=0;dmg=6;t=`脇道へそれて暴走バイクをかわした。${fmtD(dmg)}進んだ`;}
