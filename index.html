@@ -239,7 +239,7 @@ h3{margin-top:2px}
     <div class="stat"><span class="lb"><img class="si" src="img/icon_loc.webp" width="16" height="16" alt="">現在地</span><b id="d-loc">東京</b></div>
     <div class="stat"><span class="lb"><img class="si" src="img/icon_hp.webp" width="16" height="16" alt="">体力</span><b id="d-hp">100</b><div class="bar"><i id="b-hp" style="width:100%"></i></div></div>
     <div class="stat"><span class="lb"><img class="si" src="img/icon_mp.webp" width="16" height="16" alt="">気力</span><b id="d-mp">100</b><div class="bar mp"><i id="b-mp" style="width:100%"></i></div></div>
-    <div class="stat" style="grid-column:1/-1"><span class="lb"><img class="si" src="img/icon_inn.webp" width="16" height="16" alt="">都道府県制覇数</span><b id="d-fam">0 / 47</b></div>
+    <div class="stat" style="grid-column:1/-1"><span class="lb"><img class="si" src="img/icon_inn.webp" width="16" height="16" alt="">都道府県クリア数</span><b id="d-fam">0 / 47</b></div>
   </div>
   <div class="tabs" role="tablist">
     <button role="tab" aria-selected="true" data-tab="map" id="tab-map"><img class="ti" src="img/icon_map.webp" width="22" height="22" alt="">地図</button>
@@ -519,8 +519,8 @@ const FOOD_PRICE=800,FOOD_MAX=5;
 const ACH=[
  {id:'first',name:'初投稿',desc:'初めて写真を投稿する',ok:()=>S.stats.posts>=1},
  {id:'fam1',name:'初めての馴染み宿',desc:'馴染み宿を1つ作る',ok:()=>famCount()>=1},
- {id:'fam10',name:'10県制覇',desc:'馴染み宿を10県にする',ok:()=>famCount()>=10},
- {id:'fam24',name:'制覇の折り返し',desc:'馴染み宿を24県にする',ok:()=>famCount()>=24},
+ {id:'fam10',name:'10県クリア',desc:'馴染み宿を10県にする',ok:()=>famCount()>=10},
+ {id:'fam24',name:'クリアの折り返し',desc:'馴染み宿を24県にする',ok:()=>famCount()>=24},
  {id:'vis47',name:'日本一周',desc:'47都道府県すべてを訪れる',ok:()=>S.visits.every(v=>v>0)},
  {id:'f1',name:'フォロワー1万人',desc:'フォロワーが1万人を超える',ok:()=>S.fame>=10000},
  {id:'f2',name:'フォロワー10万人',desc:'フォロワーが10万人を超える',ok:()=>S.fame>=100000},
@@ -1108,7 +1108,7 @@ function turnPopup(){const t=TS;TS=null;if(!t)return;const e=$('pop'),sg=n=>(n>0
   const spv=t.sp?t.sp[1]:0,dm=S.money-t.money,other=dm-(t.inc-t.fee)-spv,dh=S.hp-t.hp,dp=S.mp-t.mp,df=S.fame-t.fame,fc=S.fam.filter(Boolean).length;
   const R=[];if(t.inc)R.push(['SNSからの収入','+'+yen(t.inc)]);if(spv)R.push([`スポンサー料（${t.sp[2]}）`,'+'+yen(spv)]);if(t.fee)R.push(['利用料','-'+yen(t.fee)]);if(other)R.push(['輪行費・治療費など',(other<0?'-':'+')+yen(Math.abs(other))]);
   if(df)R.push(['フォロワー',`${sfol(df)}（${fol(S.fame)}）`]);if(dh)R.push(['体力',`${sg(dh)}（${S.hp}）`]);if(dp)R.push(['気力',`${sg(dp)}（${S.mp}）`]);
-  if(t.became)R.push(['🏅 馴染み宿',t.became]);if(NEWACH.length){R.push(['🏆 実績',NEWACH.join('、')]);NEWACH=[];}if(fc!==t.fam)R.push(['都道府県制覇数',`${fc} / 47`]);
+  if(t.became)R.push(['🏅 馴染み宿',t.became]);if(NEWACH.length){R.push(['🏆 実績',NEWACH.join('、')]);NEWACH=[];}if(fc!==t.fam)R.push(['都道府県クリア数',`${fc} / 47`]);
   e.innerHTML=`<h3>${calLabel(S.turn)}</h3><div class="res">${R.map(r=>`<span>${r[0]}</span><span>${r[1]}</span>`).join('')}<span class="tot">残高</span><span class="tot"><b>${yen(S.money)}</b></span></div><button class="primary" id="pop-x">閉じる</button>`;
   const tb=document.querySelector('.tabs').getBoundingClientRect();e.style.top=Math.max(8,Math.min(tb.top,innerHeight-260))+'px';e.hidden=false;playSE('se_turn');$('pop-x').focus({preventScroll:true});}
 $('pop').onclick=e=>{if(e.target.id==='pop-x')$('pop').hidden=true;};
@@ -1119,8 +1119,8 @@ function yearEval(y){const n=Object.keys(S.ach).length,fc=famCount();
   const score=Math.round(S.fame/100+fc*300+n*200+Math.max(0,S.money)/1000+S.stats.wins*10),pace=score/y;
   return {score,rank:pace>=8000?'S':pace>=5000?'A':pace>=2500?'B':'C',goal:Math.min(47,10*y),n,fc};}
 function advance(){INTRIP=false;const sp=sponsor();S.money+=sp[1];if(TS)TS.sp=sp;S.turn++;NEWACH=checkAch();
-  if(famCount()===47){showResult(`<h2>🎉 全国制覇！</h2><p>47か所すべてを馴染み宿にした。伝説の自転車インフルエンサー誕生。</p><div class="res"><span>達成</span><span>${calLabel(S.turn)}</span><span>フォロワー</span><span>${fol(S.fame)}</span><span>所持金</span><span>${yen(S.money)}</span></div>`,()=>{render();turnPopup();});render();return;}
-  if((S.turn-1)%52===0){const y=calendar(S.turn-1).year;rollForecast();S.sel=S.loc;showResult(`<h2>${y}年目 決算</h2><div class="res"><span>都道府県制覇数</span><span>${famCount()} / 47</span><span>フォロワー</span><span>${fol(S.fame)}（${title(S.fame)}）</span><span>所持金</span><span>${yen(S.money)}</span><span>試練制覇</span><span>${S.stats.wins}回</span>${(()=>{const v=yearEval(y);return `<span>実績</span><span>${v.n} / ${ACH.length}</span><span>年間目標</span><span>累計${v.goal}県制覇 ${v.fc>=v.goal?'✅ 達成':'❌ 未達'}</span><span>年間評価</span><span><img class="rank" src="img/rank_${v.rank.toLowerCase()}.webp" width="128" height="128" alt="${v.rank}"><b>${v.rank}</b>（${v.score.toLocaleString('ja-JP')}pt）</span>`;})()}</div><p class="hint">${y+1}年目は敵が少し強くなる。</p>`,()=>{render();turnPopup();});render();return;}
+  if(famCount()===47){showResult(`<h2>🎉 全国クリア！</h2><p>47か所すべてを馴染み宿にした。伝説の自転車インフルエンサー誕生。</p><div class="res"><span>達成</span><span>${calLabel(S.turn)}</span><span>フォロワー</span><span>${fol(S.fame)}</span><span>所持金</span><span>${yen(S.money)}</span></div>`,()=>{render();turnPopup();});render();return;}
+  if((S.turn-1)%52===0){const y=calendar(S.turn-1).year;rollForecast();S.sel=S.loc;showResult(`<h2>${y}年目 決算</h2><div class="res"><span>都道府県クリア数</span><span>${famCount()} / 47</span><span>フォロワー</span><span>${fol(S.fame)}（${title(S.fame)}）</span><span>所持金</span><span>${yen(S.money)}</span><span>試練制覇</span><span>${S.stats.wins}回</span>${(()=>{const v=yearEval(y);return `<span>実績</span><span>${v.n} / ${ACH.length}</span><span>年間目標</span><span>累計${v.goal}県制覇 ${v.fc>=v.goal?'✅ 達成':'❌ 未達'}</span><span>年間評価</span><span><img class="rank" src="img/rank_${v.rank.toLowerCase()}.webp" width="128" height="128" alt="${v.rank}"><b>${v.rank}</b>（${v.score.toLocaleString('ja-JP')}pt）</span>`;})()}</div><p class="hint">${y+1}年目は敵が少し強くなる。</p>`,()=>{render();turnPopup();});render();return;}
   rollForecast();S.sel=S.loc;render();turnPopup();}
 
 addEventListener('pagehide',save);
