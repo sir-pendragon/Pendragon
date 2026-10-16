@@ -402,6 +402,14 @@ button:disabled{opacity:.45;cursor:not-allowed}
 <div class="overlay" id="ov-sight" hidden>
   <div class="modal"><img id="sg-img" alt="" decoding="async"><h2 id="sg-name"></h2><button class="primary" id="sg-x">閉じる</button></div>
 </div>
+<div class="overlay" id="ov-tut" hidden style="z-index:20">
+  <div class="modal">
+    <span class="hint" id="tut-n"></span>
+    <h2 id="tut-h"></h2>
+    <p id="tut-p" style="margin:0;line-height:1.7"></p>
+    <div class="row"><button id="tut-skip">スキップ</button><button class="primary" id="tut-next">次へ</button></div>
+  </div>
+</div>
 <div class="overlay" id="ov-set" hidden>
   <div class="modal">
     <h2>設定</h2>
@@ -411,7 +419,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
     <h3>出典</h3>
     <p class="hint">地図：地球地図日本（国土地理院）を加工して作成</p>
     <p class="hint">効果音（レジ）：<a href="https://otologic.jp" target="_blank" rel="noopener noreferrer">OtoLogic</a></p>
-    <button class="primary" id="set-close">閉じる</button>
+    <button id="set-tut">チュートリアルをもう一度見る</button><button class="primary" id="set-close">閉じる</button>
   </div>
 </div>
 <div class="overlay" id="ov-result" hidden>
@@ -1075,7 +1083,7 @@ let B=null;
 function startBattle(kind){tstat(kind)[0]++;const e=ENEMY[kind],p=trip.p,c=calendar(S.turn);const scale=1+.4*(p.diff-1)+.2*(c.year-1);
   const hp=kind==='rival'?Math.round(40+FL()/3):Math.round(e.hp*scale);
   B={kind,e,hp,max:hp,limit:e.limit,turn:1,charge:0,cut:1,next:rollNext(),atk:Math.round(e.atk*scale*(S.parts.includes('spray')&&(kind==='bear'||kind==='brownbear')||S.parts.includes('oil')&&(kind==='car'||kind==='bike')?.5:1))};
-  $('ov-battle').hidden=false;playSE('se_encounter');playBGM('bgm_battle');$('bt-face').innerHTML=e.img?`<img src="${e.img}" alt="${e.name}" width="190" height="190" onerror="this.replaceWith(document.createTextNode('${e.face}'))">`:e.face;$('bt-name').textContent=`区間 ${trip.i+1}/${trip.enc.length}`;
+  $('ov-battle').hidden=false;playSE('se_encounter');playBGM('bgm_battle');if(kind!=='rival')tutBattle();$('bt-face').innerHTML=e.img?`<img src="${e.img}" alt="${e.name}" width="190" height="190" onerror="this.replaceWith(document.createTextNode('${e.face}'))">`:e.face;$('bt-name').textContent=`区間 ${trip.i+1}/${trip.enc.length}`;
   $('bt-title').textContent=kind==='rival'?'SNSの試練':e.name;
   blog(kind==='rival'?`ライバルも同じ撮影スポットを狙っている！\n${e.hint}。日没まで あと${B.limit}時間。`:`${WILDK.has(kind)?e.name+'に遭遇した！':e.name+'の区間に入った。'}\n${e.hint}。日没まで あと${B.limit}時間。`);renderBattle();}
 function blog(t){$('bt-log').textContent=t;}
@@ -1224,15 +1232,36 @@ function yearEval(y){const n=trialKindsCleared(),fc=famCount();
   return {score,rank:pace>=8000?'S':pace>=5000?'A':pace>=2500?'B':'C',goal:Math.min(47,10*y),n,fc};}
 function finishAdvance(){
   if((S.turn-1)%52===0){const y=calendar(S.turn-1).year;showResult(`<h2>${y}年目 決算</h2><div class="res"><span>都道府県クリア数</span><span>${famCount()} / 47</span><span>フォロワー</span><span>${fol(S.fame)}（${title(S.fame)}）</span><span>所持金</span><span>${yen(S.money)}</span><span>試練制覇</span><span>${S.stats.wins}回</span>${(()=>{const v=yearEval(y);return `<span>突破した試練の種類</span><span>${v.n} / ${TRIAL_KEYS.length}</span><span>年間目標</span><span>累計${v.goal}県制覇 ${v.fc>=v.goal?'✅ 達成':'❌ 未達'}</span><span>年間評価</span><span><img class="rank" src="img/rank_${v.rank.toLowerCase()}.webp" width="128" height="128" alt="${v.rank}"><b>${v.rank}</b>（${v.score.toLocaleString('ja-JP')}pt）</span>`;})()}</div><p class="hint">${y+1}年目は敵が少し強くなる。</p>`,()=>{render();turnPopup();});render();return;}
-  render();turnPopup();}
+  render();turnPopup();if(S.turn===2&&TUTI===2&&!tutSeen())tutShow(3);}
 function advance(){INTRIP=false;const sp=sponsor();S.money+=sp[1];if(TS)TS.sp=sp;S.turn++;rollForecast();S.sel=S.loc;
   if(famCount()===47&&TS&&TS.fam<47){showResult(`<h2>🎉 全国クリア！</h2><p>47か所すべてを馴染み宿にした。伝説の自転車インフルエンサー誕生。</p><div class="res"><span>達成</span><span>${calLabel(S.turn)}</span><span>フォロワー</span><span>${fol(S.fame)}</span><span>所持金</span><span>${yen(S.money)}</span></div>`,finishAdvance);render();return;}
   finishAdvance();}
 
 addEventListener('pagehide',save);
+
+// ---------- チュートリアル ----------
+const TUT=[
+ ['目標','47都道府県のキャンプ場を、それぞれ「馴染み宿」にすれば全国クリアで、旅は終わりです。\n同じ場所に3回、無事に着いて撮影できると馴染み宿になります。1年は52週、毎週末が1ターンです。'],
+ ['まずは買い物',`所持金は ${yen(30000)}。画面下の「店」タブで装備を買えます。\nハンモック（${yen(8000)}）を買うと、島でキャラが寝ます。タープ（${yen(5000)}）と焚き火台（${yen(6000)}）も、買ってから旅に出ましょう。\n全部買っても ${yen(30000-8000-5000-6000)} 残ります。旅の利用料も残しておくと安心です。`],
+ ['出発','最初は地元のキャンプ場から。「地図」タブで自宅の県を選んで、「自転車旅に行く」を押します。\n道中で坂や動物などの試練が出ます。コマンドを選んで乗り越えましょう。'],
+ ['帰ってきたら','お疲れさまでした！結果は「記録」タブでいつでも見られます。\n体力や気力が減ったら「自宅で休む」で回復できます。次の週末も、旅に出かけましょう。']];
+let TUTI=-1;
+function tutDone(){try{localStorage.setItem('cc_tut','1');}catch(e){}}
+function tutShow(i){TUTI=i;$('tut-skip').textContent='スキップ';$('tut-n').textContent=`チュートリアル ${i+1} / ${TUT.length}`;$('tut-h').textContent=TUT[i][0];$('tut-p').innerHTML=TUT[i][1].split('\n').join('<br>');
+  $('tut-next').textContent=(i===2||i===3)?'閉じる':'次へ';$('tut-skip').hidden=(i===3);$('ov-tut').hidden=false;}
+function tutEnd(){$('ov-tut').hidden=true;if(TUTI===3||TUTI<0)tutDone();}
+$('tut-next').onclick=()=>{if(TUTI===0||TUTI===1){tutShow(TUTI+1);}else if(TUTI===10){$('ov-tut').hidden=true;try{localStorage.setItem('cc_tutb','1');}catch(e){}TUTI=TUTP;}else{$('ov-tut').hidden=true;if(TUTI===3)tutDone();}};
+$('tut-skip').onclick=()=>{tutDone();try{localStorage.setItem('cc_tutb','1');}catch(e){}TUTI=-1;$('ov-tut').hidden=true;};
+let TUTP=-1;
+function tutBattle(){let seen=true;try{seen=localStorage.getItem('cc_tutb')==='1';}catch(e){}if(seen)return;TUTP=TUTI;TUTI=10;
+  $('tut-n').textContent='バトルの遊び方';$('tut-h').textContent='試練の進め方';
+  $('tut-p').innerHTML='敵の体力を減らしきると、その区間を走り切れます。制限ターンを超えるか、自分の体力が0になると遅刻です。<br><br><b>気合い</b>：気力を20使い、次の行動が3倍進みます。強い敵を一気に抜けたいときに。<br><b>身構える</b>：敵の攻撃を受ける被害を7割減らします。敵の「次の強さ」が強いときに使いましょう。<br><b>休む</b>：体力を回復します。体力が減ってきたら使いましょう。';
+  $('tut-next').textContent='閉じる';$('tut-skip').hidden=false;$('tut-skip').textContent='もう表示しない';$('ov-tut').hidden=false;}
+$('set-tut').onclick=()=>{$('ov-set').hidden=true;try{localStorage.removeItem('cc_tut');localStorage.removeItem('cc_tutb');}catch(e){}tutShow(0);};
+function tutSeen(){try{return localStorage.getItem('cc_tut')==='1';}catch(e){return true;}}
 // ---------- boot ----------
 $('start-pref').innerHTML=PREF.map(p=>`<option value="${p.id}">${p.name}（${p.site}）</option>`).join('');$('start-pref').value='12';
-$('btn-new').onclick=()=>{newGame(+$('start-pref').value);$('ov-title').hidden=true;render();};
+$('btn-new').onclick=()=>{newGame(+$('start-pref').value);$('ov-title').hidden=true;render();if(!tutSeen())tutShow(0);};
 $('btn-cont').onclick=()=>{$('ov-title').hidden=true;render();};
 $('btn-reset').onclick=()=>{if($('btn-reset').textContent==='本当に消す？'){try{localStorage.removeItem('charicamp');}catch(e){}S=null;TS=null;trip=null;B=null;INTRIP=false;LASTSAVE='';$('pop').hidden=true;$('btn-cont').hidden=true;$('ov-title').hidden=false;$('btn-reset').textContent='リセット';$('tab-map').click();}else{$('btn-reset').textContent='本当に消す？';setTimeout(()=>$('btn-reset').textContent='リセット',3000);}};
 const saved=load();if(saved){S=saved;if(!S.forecast)rollForecast();$('btn-cont').hidden=false;render();}
