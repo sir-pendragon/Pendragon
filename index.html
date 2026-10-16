@@ -409,6 +409,17 @@ button:disabled{opacity:.45;cursor:not-allowed}
 <div class="overlay" id="ov-sight" hidden>
   <div class="modal"><img id="sg-img" alt="" decoding="async"><h2 id="sg-name"></h2><button class="primary" id="sg-x">閉じる</button></div>
 </div>
+<div class="overlay" id="ov-spon" hidden style="z-index:30">
+  <div class="modal" style="text-align:center">
+    <h2>🎉 おめでとう！</h2>
+    <p style="margin:0">新しいスポンサーがつきました！</p>
+    <p style="margin:0;font-size:1.4em"><b id="sp-new"></b></p>
+    <p class="hint" id="sp-from" style="margin:0"></p>
+    <p id="sp-amt" style="margin:0"></p>
+    <p class="hint" style="margin:0">フォロワーが増えるほど、スポンサー料も上がります。</p>
+    <button class="primary" id="sp-ok">やったー！</button>
+  </div>
+</div>
 <div class="overlay" id="ov-tut" hidden style="z-index:20">
   <div class="modal">
     <span class="hint" id="tut-n"></span>
@@ -660,7 +671,9 @@ const tstat=k=>S.stats.en[k]||(S.stats.en[k]=[0,0,0]);
 const trialKindsCleared=()=>TRIAL_KEYS.filter(k=>(S.stats.en[k]||[0,0,0])[1]>0).length;
 // 毎週のスポンサー料。称号（フォロワー数）に応じて増える [必要フォロワー, 週額, スポンサー]
 const SPONSOR=[[0,2000,'地元の自転車店'],[1000,3000,'アウトドア用品店'],[10000,5000,'自転車メーカー'],[100000,10000,'旅行会社'],[500000,20000,'大手スポーツブランド'],[1000000,30000,'鉄道会社']];
-function sponsor(){let r=SPONSOR[0];for(const x of SPONSOR)if(S.fame>=x[0])r=x;return r;}
+function spCongrats(o,n){$('sp-new').textContent=n[2];$('sp-amt').textContent=`毎週のスポンサー料：${yen(o[1])} → ${yen(n[1])}`;$('sp-from').textContent=`これまで：${o[2]}`;$('ov-spon').hidden=false;playSE('se_win');}
+function spOf(f){let r=SPONSOR[0];for(const x of SPONSOR)if(f>=x[0])r=x;return r;}
+function sponsor(){return spOf(S.fame);}
 const TITLES=[[0,'無名'],[1000,'駆け出し'],[10000,'注目の新人'],[100000,'人気配信者'],[500000,'カリスマ'],[1000000,'伝説']];
 const fol=n=>n<10000?Math.round(n).toLocaleString('ja-JP')+'人':(Math.floor(n/1000)/10).toLocaleString('ja-JP',{maximumFractionDigits:1}).replace(/\.0$/,'')+'万人';
 const sfol=n=>(n>0?'+':n<0?'-':'')+fol(Math.abs(n));
@@ -1238,6 +1251,7 @@ function yearEval(y){const n=trialKindsCleared(),fc=famCount();
   const score=Math.round(S.fame/100+fc*300+n*200+Math.max(0,S.money)/1000+S.stats.wins*10),pace=score/y;
   return {score,rank:pace>=8000?'S':pace>=5000?'A':pace>=2500?'B':'C',goal:Math.min(47,10*y),n,fc};}
 function finishAdvance(){
+  if(TS){const o=spOf(TS.fame),n=sponsor();if(n[0]>o[0])spCongrats(o,n);}
   if((S.turn-1)%52===0){const y=calendar(S.turn-1).year;showResult(`<h2>${y}年目 決算</h2><div class="res"><span>都道府県クリア数</span><span>${famCount()} / 47</span><span>フォロワー</span><span>${fol(S.fame)}（${title(S.fame)}）</span><span>所持金</span><span>${yen(S.money)}</span><span>試練制覇</span><span>${S.stats.wins}回</span>${(()=>{const v=yearEval(y);return `<span>突破した試練の種類</span><span>${v.n} / ${TRIAL_KEYS.length}</span><span>年間目標</span><span>累計${v.goal}県制覇 ${v.fc>=v.goal?'✅ 達成':'❌ 未達'}</span><span>年間評価</span><span><img class="rank" src="img/rank_${v.rank.toLowerCase()}.webp" width="128" height="128" alt="${v.rank}"><b>${v.rank}</b>（${v.score.toLocaleString('ja-JP')}pt）</span>`;})()}</div><p class="hint">${y+1}年目は敵が少し強くなる。</p>`,()=>{render();turnPopup();});render();return;}
   const tt=TS?{df:S.fame-TS.fame,dm:S.money-TS.money,late:!TS.inc}:null;render();turnPopup();if(S.turn===2&&TUTI===2&&!tutSeen())tutShow(3,tt);}
 function advance(){INTRIP=false;const sp=sponsor();S.money+=sp[1];if(TS)TS.sp=sp;S.turn++;rollForecast();S.sel=S.loc;
@@ -1252,6 +1266,7 @@ const TUT=[
  ['まずは買い物',`所持金は ${yen(30000)}。画面下の「店」タブで装備を買えます。\nハンモック（${yen(8000)}）を買うと、島でキャラが寝ます。タープ（${yen(5000)}）と焚き火台（${yen(6000)}）も、買ってから旅に出ましょう。\n全部買っても ${yen(30000-8000-5000-6000)} 残ります。旅の利用料も残しておくと安心です。`],
  ['出発','最初は地元のキャンプ場から。「地図」タブで自宅の県を選んで、「自転車旅に行く」を押します。\n道中で坂や動物などの試練が出ます。コマンドを選んで乗り越えましょう。'],
  ['帰ってきたら','お疲れさまでした！結果は「記録」タブでいつでも見られます。\n体力や気力が減ったら「自宅で休む」で回復できます。次の週末も、旅に出かけましょう。']];
+$('sp-ok').onclick=()=>{$('ov-spon').hidden=true;};
 let TUTI=-1,TUTP=-1;
 function tutDone(){try{localStorage.setItem('cc_tut','1');}catch(e){}}
 function tutPos(){const bub=$('tut-bub');if(!bub||bub.hidden)return;const box=bub.parentElement,sv=$('map');if(!sv)return;
