@@ -47,6 +47,14 @@ test('stay: bad weather asks to go home or stay; staying starts only the weather
   setup(wx,0.5);const hp=q.S.hp;q.startTrip(q.PREF[12],false);assert.equal(c.$('ov-storm').hidden,false,wx);assert.equal(q.inTrip,false,'nothing happens before choosing');assert.equal(q.S.mp,100);c.$('st-stay').click();assert.equal(c.$('ov-storm').hidden,true);assert.equal(q.inTrip,true);assert.equal(JSON.stringify(q.trip.enc.filter(k=>k!=='rival')),JSON.stringify([wx]),wx);}
  setup('typhoon',0.99);q.startTrip(q.PREF[12],false);assert.equal(c.$('ov-storm').hidden,false);c.$('st-stay').click();assert.equal(JSON.stringify(q.trip.enc.filter(k=>k!=='rival')),'["typhoon"]');
  setup('rain',0.5);q.S.hp=40;q.S.mp=30;q.startTrip(q.PREF[12],false);c.$('st-home').click();assert.equal(c.$('ov-storm').hidden,true);assert.equal(q.S.hp,100);assert.equal(q.S.mp,100);assert.ok(q.S.log[0].includes('自宅で休養'));});
+test('consecutive stays raise the weather chance (75% / 90% / 100%) and the counter resets',c=>{const {q,w}=c;q.quiet();const setup=(n,rnd)=>{clear(c);c.$('ov-storm').hidden=true;q.newGame(12);q.S.money=1e8;q.S.stay=n;q.S.forecast=Object.fromEntries(q.PREF.map(x=>[x.id,{temp:15,wx:'rain'}]));w.Math.random=()=>rnd;};
+ const asks=(n,rnd)=>{setup(n,rnd);q.startTrip(q.PREF[12],false);return !c.$('ov-storm').hidden;};
+ assert.equal(asks(0,0.8),false);assert.equal(asks(1,0.8),true);assert.equal(asks(1,0.95),false);assert.equal(asks(2,0.99),true);assert.equal(asks(7,0.99),true);
+ setup(0,0.99);q.startTrip(q.PREF[12],false);assert.equal(q.S.stay,1,'first stay without weather still counts');
+ setup(1,0.5);q.startTrip(q.PREF[12],false);assert.equal(q.S.stay,1,'unchanged until the choice');c.$('st-stay').click();assert.equal(q.S.stay,2);
+ setup(2,0.5);q.startTrip(q.PREF[13],false);assert.equal(q.S.stay,0,'moving elsewhere resets');
+ setup(2,0.5);q.restHome();assert.equal(q.S.stay,0,'resting at home resets');
+ setup(2,0.5);q.save();const r=q.load();assert.equal(r.stay,2,'saved and loaded');});
 test('three camps unlock familiarity and three sights',c=>{const {q}=c;for(let i=0;i<3;i++){q.startTrip(q.PREF[12],false);c.$('camp-btns').querySelector('[data-i="3"]').click();c.$('res-ok').click();}assert.equal(q.S.fam[12],true);q.renderSights();assert.equal(c.$('sightbook').querySelectorAll('button').length,3);});
 test('weekly sponsor paid once and calendar advances once',c=>{const {q}=c;q.S.fame=2000;const m=q.S.money;q.snap();q.advance();assert.equal(q.S.money,m+3000);assert.equal(q.S.turn,2);});
 test('completion refreshes forecast',c=>{c.q.S.fam.fill(true);c.q.snap();const f=c.q.S.forecast;c.q.advance();assert.notEqual(c.q.S.forecast,f);});
