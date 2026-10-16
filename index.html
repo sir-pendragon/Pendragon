@@ -16,6 +16,8 @@
   --display:'DotGothic16','Zen Kaku Gothic New',system-ui,sans-serif;
   --body:'Zen Kaku Gothic New','Hiragino Sans','Noto Sans JP',system-ui,sans-serif;
 }
+/* 暗い色のアイコンも濃い茶のパネル上で見えるよう、明るい縁取りを付ける */
+.ci,.wi,.ti,.si,#bt-cmds button img,#ov-camp .row button img,#bt-bike{filter:drop-shadow(0 0 1px rgba(255,246,225,.95)) drop-shadow(0 0 2px rgba(255,246,225,.45))}
 html,body{height:100%}
 body{background:var(--page);color:var(--fg);font-family:var(--body);font-size:15px;line-height:1.5;
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:10px;padding-bottom:64px;margin:0;-webkit-text-size-adjust:100%;text-size-adjust:100%}
