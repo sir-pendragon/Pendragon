@@ -127,7 +127,8 @@ h3{margin-top:2px}
 #pop .res b{color:var(--fg)}
 #pop .tot{border-top:1px dashed var(--line);margin-top:2px;padding-top:2px}
 @media (prefers-reduced-motion:no-preference){#pop{animation:popin .25s ease-out}@keyframes popin{from{opacity:0;transform:translateX(-50%) translateY(-8px)}}}
-#btn-set{position:fixed;right:max(12px,env(safe-area-inset-right,0px));bottom:max(12px,env(safe-area-inset-bottom,0px));z-index:8;padding:6px 12px;font-size:.85rem;border-radius:999px;box-shadow:0 2px 10px rgba(0,0,0,.35);opacity:.92}
+#btn-set{font-size:.85rem}
+.logbtns{display:flex;gap:8px}
 .modal{margin:auto;background:var(--panel);border:2px solid var(--fg);border-radius:10px;padding:16px;max-width:520px;width:100%;display:flex;flex-direction:column;gap:12px;box-shadow:0 10px 40px rgba(0,0,0,.3)}
 .enemy{display:flex;gap:12px;align-items:center}
 .enemy .face{font-size:6.2rem;line-height:1;flex:none;width:150px;height:150px;display:flex;align-items:center;justify-content:center}
@@ -257,7 +258,7 @@ h3{margin-top:2px}
     <div id="sightbook"></div>
     </div>
     <div id="p-trip">
-    <div class="loghead"><h2>旅の記録</h2><button id="btn-reset">リセット</button></div>
+    <div class="loghead"><h2>旅の記録</h2><span class="logbtns"><button id="btn-set" aria-label="設定">⚙ 設定</button><button id="btn-reset">リセット</button></span></div>
     <div class="profile"><img src="img/hero.webp" width="96" height="96" alt="主人公の自転車旅行者"><div class="res" id="summary"></div></div>
     <ul class="log" id="log"></ul>
     </div>
@@ -291,7 +292,6 @@ h3{margin-top:2px}
 </div>
 
 <div id="pop" role="status" hidden></div>
-<button id="btn-set" aria-label="設定">⚙ 設定</button>
 <div class="overlay" id="ov-go" hidden>
   <div class="modal">
     <h2>この装備で行きますか？</h2>
