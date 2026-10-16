@@ -1255,7 +1255,7 @@ function yearEval(y){const n=trialKindsCleared(),fc=famCount();
 function finishAdvance(){
   if(TS){const o=spOf(TS.fame),n=sponsor();if(n[0]>o[0])spCongrats(o,n);}
   if((S.turn-1)%52===0){const y=calendar(S.turn-1).year;showResult(`<h2>${y}年目 決算</h2><div class="res"><span>都道府県クリア数</span><span>${famCount()} / 47</span><span>フォロワー</span><span>${fol(S.fame)}（${title(S.fame)}）</span><span>所持金</span><span>${yen(S.money)}</span><span>試練制覇</span><span>${S.stats.wins}回</span>${(()=>{const v=yearEval(y);return `<span>突破した試練の種類</span><span>${v.n} / ${TRIAL_KEYS.length}</span><span>年間目標</span><span>累計${v.goal}県制覇 ${v.fc>=v.goal?'✅ 達成':'❌ 未達'}</span><span>年間評価</span><span><img class="rank" src="img/rank_${v.rank.toLowerCase()}.webp" width="128" height="128" alt="${v.rank}"><b>${v.rank}</b>（${v.score.toLocaleString('ja-JP')}pt）</span>`;})()}</div><p class="hint">${y+1}年目は敵が少し強くなる。</p>`,()=>{render();turnPopup();});render();return;}
-  const tt=TS?{df:S.fame-TS.fame,dm:S.money-TS.money,late:!TS.inc}:null;render();turnPopup();if(S.turn===2&&TUTI===2&&!tutSeen())tutShow(3,tt);}
+  const tt=TS?{df:S.fame-TS.fame,dm:S.money-TS.money,late:!TS.inc}:null;render();turnPopup();if(S.turn===2&&TUTI===3&&!tutSeen())tutShow(4,tt);}
 function advance(){INTRIP=false;const sp=sponsor();S.money+=sp[1];if(TS)TS.sp=sp;S.turn++;rollForecast();S.sel=S.loc;
   if(famCount()===47&&TS&&TS.fam<47){showResult(`<h2>🎉 全国クリア！</h2><p>47か所すべてを馴染み宿にした。伝説の自転車インフルエンサー誕生。</p><div class="res"><span>達成</span><span>${calLabel(S.turn)}</span><span>フォロワー</span><span>${fol(S.fame)}</span><span>所持金</span><span>${yen(S.money)}</span></div>`,finishAdvance);render();return;}
   finishAdvance();}
@@ -1264,7 +1264,8 @@ addEventListener('pagehide',save);
 
 // ---------- チュートリアル ----------
 const TUT=[
- ['目標','47都道府県のキャンプ場を、それぞれ「馴染み宿」にすれば全国クリアで、旅は終わりです。\n同じ場所に3回、無事に着いて撮影できると馴染み宿になります。1年は52週、毎週末が1ターンです。\n毎週、スポンサーの「地元の自転車店」から ¥2,000 が入ります。フォロワーが増えると、スポンサーも変わります。'],
+ ['目標','47都道府県のキャンプ場を、それぞれ「馴染み宿」にすれば全国クリアで、旅は終わりです。\n同じ場所に3回、無事に着いて撮影できると馴染み宿になります。1年は52週、毎週末が1ターンです。'],
+ ['スポンサー','毎週、スポンサーの「地元の自転車店」から ¥2,000 が入ります。\nフォロワーが増えると、スポンサーが変わり、もらえる金額も増えます。'],
  ['まずは買い物',`所持金は ${yen(30000)}。画面下の「店」タブで装備を買えます。\nハンモック（${yen(8000)}）を買うと、島でキャラが寝ます。タープ（${yen(5000)}）と焚き火台（${yen(6000)}）も、買ってから旅に出ましょう。\n全部買っても ${yen(30000-8000-5000-6000)} 残ります。旅の利用料も残しておくと安心です。`],
  ['出発','最初は地元のキャンプ場から。「地図」タブで自宅の県を選んで、「自転車旅に行く」を押します。\n道中で坂や動物などの試練が出ます。コマンドを選んで乗り越えましょう。'],
  ['帰ってきたら','お疲れさまでした！結果は「記録」タブでいつでも見られます。\n体力や気力が減ったら「自宅で休む」で回復できます。次の週末も、旅に出かけましょう。']];
@@ -1279,9 +1280,9 @@ function tutPos(){const bub=$('tut-bub');if(!bub||bub.hidden)return;const box=bu
   bub.style.left=left+'px';bub.style.top=top+'px';bub.style.setProperty('--tx',Math.min(Math.max(18,px-left),bw-18)+'px');}
 function tutResult(x){const f=x.df,m=x.dm,fs=f>0?`<b>+${fol(f)}</b>増えました`:f<0?`<b>-${fol(-f)}</b>減りました`:'増減なし',ms=m>0?`<b>+${yen(m)}</b>増えました`:m<0?`<b>-${yen(-m)}</b>減りました`:'増減なし';
   return `今回の旅の結果です。<br>フォロワー：${fs}（現在 ${fol(S.fame)}）<br>お金：${ms}（残高 ${yen(S.money)}）<br>`+(x.late?'今回は遅刻で、写真が撮れませんでした。投稿できるとフォロワーとお金が増えます。':'撮影して投稿できたので、フォロワーとお金が入りました。キャンプ場の利用料などは引かれます。');}
-function tutShow(i,x){TUTI=i;$('tb-n').textContent=`チュートリアル ${i+1} / ${TUT.length}`;$('tb-h').textContent=TUT[i][0];$('tb-p').innerHTML=(i===3&&x?tutResult(x)+'<br><br>':'')+TUT[i][1].split('\n').join('<br>');
-  {const im=$('tb-img');im.hidden=true;if(i===0){im.onload=()=>{im.hidden=false;tutPos();};im.src='img/sponsor_0.webp';}}$('tb-next').textContent=(i===2||i===3)?'閉じる':'次へ';$('tb-skip').hidden=(i===3);$('tut-bub').hidden=false;tutPos();}
-$('tb-next').onclick=()=>{if(TUTI===0||TUTI===1)tutShow(TUTI+1);else{$('tut-bub').hidden=true;if(TUTI===3)tutDone();}};
+function tutShow(i,x){TUTI=i;$('tb-n').textContent=`チュートリアル ${i+1} / ${TUT.length}`;$('tb-h').textContent=TUT[i][0];$('tb-p').innerHTML=(i===4&&x?tutResult(x)+'<br><br>':'')+TUT[i][1].split('\n').join('<br>');
+  {const im=$('tb-img');im.hidden=true;if(i===1){im.onload=()=>{im.hidden=false;tutPos();};im.src='img/sponsor_0.webp';}}$('tb-next').textContent=(i===3||i===4)?'閉じる':'次へ';$('tb-skip').hidden=(i===4);$('tut-bub').hidden=false;tutPos();}
+$('tb-next').onclick=()=>{if(TUTI<=2)tutShow(TUTI+1);else{$('tut-bub').hidden=true;if(TUTI===4)tutDone();}};
 $('tb-skip').onclick=()=>{tutDone();try{localStorage.setItem('cc_tutb','1');}catch(e){}TUTI=-1;$('tut-bub').hidden=true;};
 $('tut-next').onclick=()=>{$('ov-tut').hidden=true;try{localStorage.setItem('cc_tutb','1');}catch(e){}TUTI=TUTP;};
 $('tut-skip').onclick=()=>{tutDone();try{localStorage.setItem('cc_tutb','1');}catch(e){}TUTI=-1;$('ov-tut').hidden=true;$('tut-bub').hidden=true;};
