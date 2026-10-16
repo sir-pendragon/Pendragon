@@ -235,13 +235,13 @@ h3{margin-top:2px}
   <section class="panel" id="p-shop" hidden>
     <p class="hint">買うとすぐ装備されます（パーツは空きがある場合）。売却はできません。</p>
     <div class="subtabs" id="shop-tabs"><button data-sub="bike" aria-selected="true"><img class="wi" src="img/icon_bike.webp" width="128" height="128" alt="">自転車</button><button data-sub="cloth" aria-selected="false"><img class="wi" src="img/icon_cloth.webp" width="128" height="128" alt="">衣類</button><button data-sub="part" aria-selected="false"><img class="wi" src="img/icon_part.webp" width="128" height="128" alt="">パーツ</button><button data-sub="fire" aria-selected="false"><img class="wi" src="img/icon_fire.webp" width="128" height="128" alt="">焚き火台</button><button data-sub="shelter" aria-selected="false"><img class="wi" src="img/icon_shelter.webp" width="128" height="128" alt="">寝床</button><button data-sub="tarp" aria-selected="false"><img class="wi" src="img/icon_tarp.webp" width="128" height="128" alt="">タープ</button><button data-sub="food" aria-selected="false"><img class="wi" src="img/icon_food.webp" width="128" height="128" alt="">補給食</button><button data-sub="forge" aria-selected="false"><img class="wi" src="img/icon_custom.webp" width="128" height="128" alt="">カスタム</button></div>
-    <div class="shopsec" data-sub="bike"><div class="shop" id="shop-bike"></div></div>
-    <div class="shopsec" data-sub="cloth" hidden><div class="shop" id="shop-cloth"></div></div>
-    <div class="shopsec" data-sub="part" hidden><div class="shop" id="shop-part"></div></div>
-    <div class="shopsec" data-sub="fire" hidden><div class="shop" id="shop-fire"></div></div>
-    <div class="shopsec" data-sub="shelter" hidden><div class="shop" id="shop-shelter"></div></div>
-    <div class="shopsec" data-sub="tarp" hidden><div class="shop" id="shop-tarp"></div></div>
-    <div class="shopsec" data-sub="food" hidden><div class="shop" id="shop-food"></div></div>
+    <div class="shopsec" data-sub="bike"><div class="photo pic" style="transform:none;margin:0 0 8px"><img style="aspect-ratio:9/4" src="img/shop_bike.webp" width="768" height="512" loading="lazy" alt="自転車店の店内"></div><div class="shop" id="shop-bike"></div></div>
+    <div class="shopsec" data-sub="cloth" hidden><div class="photo pic" style="transform:none;margin:0 0 8px"><img style="aspect-ratio:9/4" src="img/shop_cloth.webp" width="768" height="512" loading="lazy" alt="衣類店の店内"></div><div class="shop" id="shop-cloth"></div></div>
+    <div class="shopsec" data-sub="part" hidden><div class="photo pic" style="transform:none;margin:0 0 8px"><img style="aspect-ratio:9/4" src="img/shop_part.webp" width="768" height="512" loading="lazy" alt="パーツ店の店内"></div><div class="shop" id="shop-part"></div></div>
+    <div class="shopsec" data-sub="fire" hidden><div class="photo pic" style="transform:none;margin:0 0 8px"><img style="aspect-ratio:9/4" src="img/shop_fire.webp" width="768" height="512" loading="lazy" alt="焚き火台の店の店内"></div><div class="shop" id="shop-fire"></div></div>
+    <div class="shopsec" data-sub="shelter" hidden><div class="photo pic" style="transform:none;margin:0 0 8px"><img style="aspect-ratio:9/4" src="img/shop_shelter.webp" width="768" height="512" loading="lazy" alt="寝床の店の店内"></div><div class="shop" id="shop-shelter"></div></div>
+    <div class="shopsec" data-sub="tarp" hidden><div class="photo pic" style="transform:none;margin:0 0 8px"><img style="aspect-ratio:9/4" src="img/shop_tarp.webp" width="768" height="512" loading="lazy" alt="タープの店の店内"></div><div class="shop" id="shop-tarp"></div></div>
+    <div class="shopsec" data-sub="food" hidden><div class="photo pic" style="transform:none;margin:0 0 8px"><img style="aspect-ratio:9/4" src="img/shop_food.webp" width="768" height="512" loading="lazy" alt="補給食の店の店内"></div><div class="shop" id="shop-food"></div></div>
     <div class="shopsec" data-sub="forge" hidden><div class="photo pic" style="transform:none;margin:0 0 8px"><img style="aspect-ratio:9/4" src="img/custom_shop.webp" width="768" height="512" alt="自転車のカスタム工房で整備士が自転車を調整している"></div><div class="shop" id="shop-forge"></div></div>
   </section>
 
@@ -794,7 +794,7 @@ function renderList(){$('sitelist').innerHTML=PREF.map(p=>`<button data-id="${p.
 function owns(kind,id){return S.owned[kind==='bike'?'bikes':kind==='cloth'?'cloth':kind==='gear'?'gear':'parts'].includes(id);}
 function isEq(kind,item){return kind==='bike'?S.bike===item.id:kind==='cloth'?S.cloth===item.id:kind==='gear'?S.gear[item.slot]===item.id:S.parts.includes(item.id);}
 // 新しいギアの絵が届くまでは、近い既存のアイコンを代わりに表示する（読み込みに失敗したときだけ切り替わる）
-const ICON_FB={spray:'tac_animal',oil:'tac_wind'};
+const ICON_FB={};
 addEventListener('error',e=>{const i=e.target;if(i&&i.tagName==='IMG'&&i.dataset&&i.dataset.fb){const f='img/'+i.dataset.fb+'.webp';i.dataset.fb='';i.src=f;}},true);
 function card(item,kind,mode){const eq=isEq(kind,item),own=owns(kind,item.id);
   const spec=kind==='bike'?`登坂${bv(item,'climb')} 悪路${bv(item,'rough')} 巡航${bv(item,'cruise')} 耐候${bv(item,'wx')}${item.fold?' 輪行半額':''}`:
