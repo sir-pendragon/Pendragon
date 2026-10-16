@@ -85,6 +85,8 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .wxfx.ty .rn{height:22px;width:2px;transform:rotate(28deg);animation-name:wxrain2}
 .wxfx.ty::before{content:"";position:absolute;inset:0;background:rgba(15,25,45,.32)}
 .wxfx.ty::after{content:"";position:absolute;inset:0;background:#fff;opacity:0;animation:wxflash 7s ease-out 2s infinite}
+.wxfx.ht::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 85% 8%,rgba(255,240,160,.8),rgba(255,170,60,.3) 45%,transparent 75%),rgba(255,150,40,.14);animation:wxheat 3.5s ease-in-out infinite}
+.wxfx.ht::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(0deg,rgba(255,255,255,.05) 0 2px,transparent 2px 7px);animation:wxshim 1.6s linear infinite}
 .wxfx.cl::before{content:"";position:absolute;inset:0;background:rgba(230,235,245,.1)}
 .wxfx.rn0::before{content:"";position:absolute;inset:0;background:rgba(30,50,90,.14)}
 @keyframes wxrain{0%{opacity:0;transform:translate(0,0) rotate(14deg)}10%{opacity:1}100%{opacity:.9;transform:translate(60px,520px) rotate(14deg)}}
@@ -92,6 +94,8 @@ button:disabled{opacity:.45;cursor:not-allowed}
 @keyframes wxsnow{0%{opacity:0;transform:translate(0,0)}8%{opacity:.95}50%{transform:translate(18px,260px)}100%{opacity:.9;transform:translate(-8px,520px)}}
 @keyframes wxwind{0%{opacity:0;transform:translateX(0)}15%{opacity:1}100%{opacity:0;transform:translateX(160vw)}}
 @keyframes wxleaf{0%{opacity:0;transform:translate(0,0) rotate(0)}15%{opacity:1}100%{opacity:.9;transform:translate(150vw,40px) rotate(720deg)}}
+@keyframes wxheat{50%{opacity:.7}}
+@keyframes wxshim{to{transform:translateY(7px)}}
 @keyframes wxflash{0%,3%{opacity:.55}6%{opacity:.1}9%{opacity:.4}14%,100%{opacity:0}}
 @media (prefers-reduced-motion:reduce){.wxfx i{display:none}}
 
@@ -506,7 +510,7 @@ const TACT={hill:['ギア落とし','体力-5 被害半減'],rough:['空気圧�
  pass:['小休止','気力-3 体力+10'],deer:['止まって待つ','気力-3 体力+5'],
  bear:['クマ鈴で後退','気力-8 撃退6割'],brownbear:['クマ鈴で後退','気力-8 撃退4割'],car:['路肩に寄る','気力-3 被害大減'],bike:['脇道へ逃げる','気力-3 被害なし'],
  wind:['ドラフティング','気力-3 被害なし'],rain:['タープで雨宿り','気力-3 体力+12'],
- typhoon:['ビバーク','気力-4 体力+15'],snow:['雪を凌ぐ','気力-3 体力+10'],rival:['タグ戦略','気力-8 投稿1.5倍']};
+ typhoon:['ビバーク','気力-4 体力+15'],snow:['雪を凌ぐ','気力-3 体力+10'],heat:['水分補給','気力-3 体力+10'],rival:['タグ戦略','気力-8 投稿1.5倍']};
 // 次の敵の出方（バトル中に予告する）
 const NEXT={heavy:['激しい！',1.7],normal:['ふつう',1],light:['弱まっている',.5]};
 function rollNext(){const r=Math.random();return r<.25?'heavy':r<.75?'normal':'light';}
@@ -586,6 +590,7 @@ const ENEMY={
  bike:{name:'暴走バイク',face:'🏍️',img:'img/enemy_bike.webp',hp:36,atk:12,limit:4,stat:'cruise',mp:3,hint:'巡航力で振り切る。脇道へ逃げたい'},
  wind:{name:'強風',face:'🌬️',img:'img/enemy_wind.webp',hp:35,atk:6,limit:5,stat:'cruise',mp:4,hint:'巡航力が効く。気力も削られる'},
  rain:{name:'大雨',face:'🌧️',img:'img/enemy_rain.webp',hp:35,atk:7,limit:5,stat:'wx',mp:5,hint:'耐候力が効く'},
+ heat:{name:'炎天下',face:'🥵',img:'img/enemy_heat.webp',hp:42,atk:9,limit:5,stat:'wx',mp:6,hint:'耐候力が効く。体力・気力ともに削られる'},
  snow:{name:'大雪',face:'❄️',img:'img/enemy_snow.webp',hp:45,atk:10,limit:5,stat:'wx',mp:5,hint:'耐候力が効く。タープや寝床で凌げる'},
  typhoon:{name:'台風',face:'🌀',img:'img/enemy_typhoon.webp',hp:70,atk:15,limit:6,stat:'wx',mp:6,hint:'耐候力が効く。無理は禁物'},
  rival:{name:'ライバルインフルエンサー',face:'🤳',img:'img/enemy_rival.webp',hp:40,atk:0,limit:5,stat:'fame',fame:4,hint:'フォロワーと撮影機材で押し切る'},
@@ -620,9 +625,9 @@ function newGame(HOME){INTRIP=false;S={turn:1,fame:0,money:30000,hp:100,mp:100,h
 // 旅の最中（出発〜結果を閉じるまで）は保存しない。途中で閉じても旅の前の状態に戻るだけで、バトルや費用の食い逃げができない
 let TS=null;// 旅の前の数値（週の変化をポップアップに出すため）
 function snap(){TS={money:S.money,fame:S.fame,hp:S.hp,mp:S.mp,fam:S.fam.filter(Boolean).length,inc:0,fee:0,became:null};}
-let INTRIP=false;const SAVE_V=5,LOG_MAX=80,TL_MAX=60,WXL=['sun','cloud','rain','wind','typhoon','snow'];
-// セーブ(v5)：馴染み宿(fam)は訪問回数3以上と同じなので保存しない／予報は(気温+30)*5+天気番号の数値に詰める／ログは「週の通し番号|本文」
-function pack(){const {sel,fam,forecast,...o}=S;o.v=SAVE_V;if(forecast)o.fc=PREF.map(p=>(Math.round(forecast[p.id].temp)+30)*6+WXL.indexOf(forecast[p.id].wx));return JSON.stringify(o);}
+let INTRIP=false;const SAVE_V=6,LOG_MAX=80,TL_MAX=60,WXL=['sun','cloud','rain','wind','typhoon','snow','heat'];
+// セーブ(v6)：馴染み宿(fam)は訪問回数3以上と同じなので保存しない／予報は(気温+30)*5+天気番号の数値に詰める／ログは「週の通し番号|本文」
+function pack(){const {sel,fam,forecast,...o}=S;o.v=SAVE_V;if(forecast)o.fc=PREF.map(p=>(Math.round(forecast[p.id].temp)+30)*7+WXL.indexOf(forecast[p.id].wx));return JSON.stringify(o);}
 let LASTSAVE='';// 直前に書いた内容。同じなら書き込まない（県をタップするだけの操作などでは何も変わらない）
 function save(){if(INTRIP)return;try{const j=pack();if(j===LASTSAVE)return;try{localStorage.setItem('charicamp',j);}catch(e){S.log.length=Math.min(S.log.length,20);localStorage.setItem('charicamp',pack());}LASTSAVE=j;}catch(e){}}
 function load(){try{const s=localStorage.getItem('charicamp');if(!s)return null;const o=JSON.parse(s);if(!o||typeof o!=='object')return null;
@@ -647,7 +652,7 @@ function load(){try{const s=localStorage.getItem('charicamp');if(!s)return null;
   o.food=num(o.food,0,0,FOOD_MAX);
   const a=o.ach&&typeof o.ach==='object'?o.ach:{};o.ach={};for(const x of ACH)if(a[x.id]!=null&&Number.isFinite(+a[x.id]))o.ach[x.id]=num(a[x.id],1,1,99999);
   let f=o.forecast&&typeof o.forecast==='object'?o.forecast:{};o.forecast=null;
-  if(Array.isArray(o.fc)&&o.fc.length===47&&o.fc.every(n=>Number.isInteger(n)&&n>=0&&n<6*100)){const M=(o.v||0)>=5?6:5;f={};o.fc.forEach((n,i)=>f[i]={temp:Math.floor(n/M)-30,wx:WXL[n%M]});}
+  if(Array.isArray(o.fc)&&o.fc.length===47&&o.fc.every(n=>Number.isInteger(n)&&n>=0&&n<7*100)){const M=(o.v||0)>=6?7:(o.v||0)>=5?6:5;f={};o.fc.forEach((n,i)=>f[i]={temp:Math.floor(n/M)-30,wx:WXL[n%M]});}
   delete o.fc;
   if(Object.keys(f).length===47&&Object.values(f).every(x=>x&&Number.isFinite(+x.temp)&&WXL.includes(x.wx)))o.forecast=f;
   o.v=SAVE_V;LASTSAVE='';return o;}catch(e){return null;}}
@@ -686,6 +691,7 @@ function rollForecast(){const c=calendar(S.turn),mi=c.mi,f={};const swing=rnd(-3
     const ty=[7,8,9].includes(mi)?(TYPHOON.has(p.name)?.25:.08):0;
     const wind=(WINDY.has(p.name)?.35:.15)*([0,1,2,10,11].includes(mi)?1.3:.7);
     if(r<ty)wx='typhoon';else if(r<ty+RAIN_P[mi])wx='rain';else if(r<ty+RAIN_P[mi]+wind)wx='wind';else if(Math.random()<.35)wx='cloud';
+    if((wx==='sun'||wx==='cloud')&&temp>=([6,7,8].includes(mi)?28:31))wx='heat';
     if(wx==='rain'&&temp<=3)wx='snow';else if(SNOWY.has(p.name)&&[11,0,1,2].includes(mi)&&temp<=5&&wx!=='typhoon'&&Math.random()<.15)wx='snow';
     f[p.id]={temp,wx};}
   S.forecast=f;}
@@ -698,7 +704,7 @@ function renderSights(){let got=0,full=0,html='',reg='';
       SIGHTS[p.id].map((s,i)=>i<n?`<button class="sg-c" data-sg="${s[0]}" data-n="${s[1]}"><img loading="lazy" src="img/sights/${s[0]}.webp" width="480" height="320" alt="${s[1]}"><small>${s[1]}</small></button>`:`<div class="sg-c lock"><span>？</span><small>未訪問</small></div>`).join('')+`</div></div>`;});
   $('sg-sum').textContent=`${got} / 141（コンプリート ${full}/47県）`;$('sightbook').innerHTML=html;}
 const sightOf=(id,v)=>SIGHTS[id][(Math.max(1,v)-1)%3];
-const WX_J={sun:'<img class="wi" src="img/wx_sun.webp" width="96" height="96" alt="">晴れ',cloud:'<img class="wi" src="img/wx_cloud.webp" width="96" height="96" alt="">曇り',snow:'<img class="wi" src="img/wx_snow.webp" width="96" height="96" alt="">大雪',rain:'<img class="wi" src="img/wx_rain.webp" width="96" height="96" alt="">雨',wind:'<img class="wi" src="img/wx_wind.webp" width="96" height="96" alt="">強風',typhoon:'<img class="wi" src="img/wx_typhoon.webp" width="96" height="96" alt="">台風'};
+const WX_J={sun:'<img class="wi" src="img/wx_sun.webp" width="96" height="96" alt="">晴れ',cloud:'<img class="wi" src="img/wx_cloud.webp" width="96" height="96" alt="">曇り',heat:'<span class="wi">🥵</span>炎天下',snow:'<img class="wi" src="img/wx_snow.webp" width="96" height="96" alt="">大雪',rain:'<img class="wi" src="img/wx_rain.webp" width="96" height="96" alt="">雨',wind:'<img class="wi" src="img/wx_wind.webp" width="96" height="96" alt="">強風',typhoon:'<img class="wi" src="img/wx_typhoon.webp" width="96" height="96" alt="">台風'};
 
 // ---------- rendering ----------
 // 天気演出（雨・雪・風・台風・曇り）。天気が変わったときだけ作り直す
@@ -710,7 +716,7 @@ function renderWx(){const el=$('wxfx');if(!el)return;const w=S.forecast&&S.forec
   if(w==='snow')for(let i=0;i<85;i++)h+=`<i class="sn" style="--x:${R(0,100)}%;--s:${R(2.5,6)}px;--d:-${R(0,8)}s;--t:${R(5,9)}s"></i>`;
   if(w==='wind'||w==='typhoon'){const n=w==='wind'?10:14;for(let i=0;i<n;i++)h+=`<i class="wd" style="--y:${R(4,92)}%;--s:${R(50,120)}px;--d:-${R(0,3)}s;--t:${R(w==='wind'?1.4:.9,w==='wind'?2.4:1.5)}s"></i>`;
     for(let i=0;i<(w==='wind'?4:6);i++)h+=`<i class="lf" style="--y:${R(10,85)}%;--d:-${R(0,5)}s;--t:${R(3,5)}s"></i>`;}
-  el.className='wxfx'+(w==='typhoon'?' ty':w==='cloud'?' cl':w==='rain'||w==='snow'?' rn0':'');el.innerHTML=h;}
+  el.className='wxfx'+(w==='typhoon'?' ty':w==='heat'?' ht':w==='cloud'?' cl':w==='rain'||w==='snow'?' rn0':'');el.innerHTML=h;}
 function render(){if(S.gear.fire==='fire4'&&S.gear.shelter!=='sh5')S.gear.fire=null;if(!$('p-sight').hidden&&!$('p-log').hidden)renderSights();if(!$('p-ach').hidden&&!$('p-log').hidden)renderAch();const c=calendar(S.turn);$('d-date').textContent=`${c.year}年目 ${c.month}月第${c.week}週`;$('d-wk').textContent=`（${(S.turn-1)%52+1}/52）`;$('d-season').innerHTML=SEASON_J[season(c.mi)];
   $('d-fame').textContent=`${fol(S.fame)}（${title(S.fame)}）`;$('d-money').textContent=yen(S.money);
   $('d-hp').textContent=S.hp;$('b-hp').style.width=Math.max(0,S.hp)+'%';$('d-mp').textContent=S.mp;$('b-mp').style.width=Math.max(0,S.mp)+'%';
@@ -827,7 +833,7 @@ function renderDetail(){const p=PREF[S.sel],f=S.forecast[p.id],ti=travelInfo(p),
   const ev=eventAt(S.turn,p.id),fee=S.fam[p.id]?Math.round(p.fee/2):p.fee;
   const enemies=[];if(p.terrain==='hill')enemies.push('激坂','峠');if(p.terrain==='rough'){enemies.push('ダート','廃道');}if(hasBoar(p))enemies.push('いのしし');
   if(DEER.has(p.name))enemies.push('牡鹿');if(calendar(S.turn).year>=2&&bearSeason(calendar(S.turn).month)){if(BROWNBEAR.has(p.name))enemies.push('ヒグマ');if(BLACKBEAR.has(p.name))enemies.push(RAREBEAR.has(p.name)?'ツキノワグマ(まれ)':'ツキノワグマ');}if(calendar(S.turn).year>=2&&URBAN.has(p.name))enemies.push(ENEMY[urbanEnemy()].name);
-  if(f.wx==='rain')enemies.push('大雨');if(f.wx==='wind')enemies.push('強風');if(f.wx==='typhoon')enemies.push('台風');if(f.wx==='snow')enemies.push('大雪');if(p.scen>=5||ev)enemies.push('ライバル?');
+  if(f.wx==='rain')enemies.push('大雨');if(f.wx==='wind')enemies.push('強風');if(f.wx==='typhoon')enemies.push('台風');if(f.wx==='snow')enemies.push('大雪');if(f.wx==='heat')enemies.push('炎天下');if(p.scen>=5||ev)enemies.push('ライバル?');
   $('info').innerHTML=`<h3>${p.site}</h3><div class="hint">${p.name}・${p.region}</div>${badge}
   <div class="kv"><span>地形</span><span>${TERRAIN[p.terrain]}（${'★'.repeat(p.diff)}）</span><span>景観</span><span>${'📷'.repeat(p.scen)}</span>
   <span>予報</span><span>${WX_J[f.wx]} ${f.temp}℃<br>${fit}</span><span>距離</span><span>${stay?'同じ場所（気力-15）':ti.d+'km<br>'+(ti.ride?'遭遇'+ti.enc+'回':'自走不可')}</span>
@@ -928,7 +934,7 @@ function startTrip(p,rinko){snap();{const i=new Image();i.src='img/late.webp';}{
   const f=S.forecast[p.id];const enc=[];
   if(!rinko&&!stay){const pool=[];if(p.terrain==='hill')pool.push('hill','hill','pass');if(p.terrain==='hill'&&p.diff>=3)pool.push('pass','pass');if(p.terrain==='rough'){pool.push('rough','rough');pool.push('lost');if(p.diff>=4)pool.push('lost');}if(p.name!=='北海道'){if(p.terrain==='rough')pool.push('animal');if(WILD.has(p.region))pool.push('animal');}
     if(DEER.has(p.name))pool.push('deer','deer');if(calendar(S.turn).year>=2&&bearSeason(calendar(S.turn).month)){if(BROWNBEAR.has(p.name))pool.push('brownbear');if(BLACKBEAR.has(p.name)&&(!RAREBEAR.has(p.name)||Math.random()<.5))pool.push('bear');}if(calendar(S.turn).year>=2&&URBAN.has(p.name))pool.push(urbanEnemy());
-    if(f.wx==='rain')pool.push('rain','rain');if(f.wx==='wind')pool.push('wind','wind');if(f.wx==='typhoon')pool.push('typhoon','typhoon');if(f.wx==='snow')pool.push('snow','snow');if(pool.length===0)pool.push('hill','animal');
+    if(f.wx==='rain')pool.push('rain','rain');if(f.wx==='wind')pool.push('wind','wind');if(f.wx==='typhoon')pool.push('typhoon','typhoon');if(f.wx==='snow')pool.push('snow','snow');if(f.wx==='heat')pool.push('heat','heat');if(pool.length===0)pool.push('hill','animal');
     const fam=familiar(p).f;
     for(let i=0;i<ti.enc;i++){const k=pool[rnd(0,pool.length-1)];if(WILDK.has(k)&&Math.random()>fam)continue;enc.push(k);}// 地元・馴染み宿・同じ地方では、動物の枠が減る
     if(f.wx==='typhoon'&&enc.length&&!enc.includes('typhoon'))enc[enc.length-1]='typhoon';}
@@ -976,8 +982,8 @@ const isRival=()=>B.kind==='rival';
 function kmOf(v){const L=isRival()?400:trip.sec;return Math.max(0,v)/B.max*L;}
 function fmtD(v){const x=kmOf(v);return isRival()?Math.round(x)+'m':(x>=10?Math.round(x):x.toFixed(1))+'km';}
 const LEFT=()=>isRival()?'撮影スポットまで':'ゴールまで';
-const HIT={hill:'坂がきつい',animal:'いのししに足止めされた',pass:'長い登りに脚を削られた',snow:'吹雪に視界を奪われた',rough:'荒れたダートにハンドルを取られた',lost:'藪に埋もれた道を見失いかけた',deer:'鹿が飛び出して急ブレーキ',bear:'ツキノワグマに遭遇！逃げるのに全力を使った',brownbear:'ヒグマに遭遇！必死に逃げた',car:'暴走車に幅寄せされた',bike:'暴走バイクが横をかすめた',wind:'向かい風に押し戻された',rain:'冷たい雨に体温を奪われた',typhoon:'暴風雨にあおられた'};
-function tacOK(){const k=B.kind;return k==='hill'?S.hp>5:k==='animal'?S.mp>=5:k==='pass'||k==='rough'||k==='lost'||k==='deer'||k==='car'||k==='bike'?S.mp>=3:k==='bear'||k==='brownbear'?S.mp>=8:k==='rival'?S.mp>=8:k==='rain'||k==='snow'?!!(S.gear.tarp||S.gear.shelter)&&S.mp>=3:k==='typhoon'?!!S.gear.shelter&&S.mp>=4:k==='wind'?S.mp>=3:true;}
+const HIT={hill:'坂がきつい',animal:'いのししに足止めされた',pass:'長い登りに脚を削られた',snow:'吹雪に視界を奪われた',heat:'炎天下で頭がくらくらする',rough:'荒れたダートにハンドルを取られた',lost:'藪に埋もれた道を見失いかけた',deer:'鹿が飛び出して急ブレーキ',bear:'ツキノワグマに遭遇！逃げるのに全力を使った',brownbear:'ヒグマに遭遇！必死に逃げた',car:'暴走車に幅寄せされた',bike:'暴走バイクが横をかすめた',wind:'向かい風に押し戻された',rain:'冷たい雨に体温を奪われた',typhoon:'暴風雨にあおられた'};
+function tacOK(){const k=B.kind;return k==='hill'?S.hp>5:k==='animal'?S.mp>=5:k==='pass'||k==='heat'||k==='rough'||k==='lost'||k==='deer'||k==='car'||k==='bike'?S.mp>=3:k==='bear'||k==='brownbear'?S.mp>=8:k==='rival'?S.mp>=8:k==='rain'||k==='snow'?!!(S.gear.tarp||S.gear.shelter)&&S.mp>=3:k==='typhoon'?!!S.gear.shelter&&S.mp>=4:k==='wind'?S.mp>=3:true;}
 function playerPower(){const st=bikeStats();if(B.kind==='rival')return 8+FL()/8+st.photo/2;return st[B.e.stat]*4;}
 function renderBattle(){const pr=Math.min(100,Math.max(0,(1-B.hp/B.max)*100));$('bt-hp').style.width=pr+'%';$('bt-bike').style.left=pr+'%';$('bt-bike').src=isRival()?'img/part_cam.webp':'img/icon_bike_'+S.bike+'.webp';$('bt-goal').src=isRival()?'img/part_tripod.webp':'img/icon_g_sh2.webp';
   $('bt-km').innerHTML=`<span class="bt-km">${B.hp<=0?(isRival()?'撮影スポットに到着！':'区間ゴール！'):LEFT()+' '+fmtD(B.hp)}</span><span class="bt-km">日没まで あと${B.limit-B.turn+1}時間</span>`;
@@ -1000,7 +1006,7 @@ function renderBattle(){const pr=Math.min(100,Math.max(0,(1-B.hp/B.max)*100));$(
     ['food','補給食','体力+25 気+10'],
     ['rinko',`輪行 ${yen(ti.rinko)}`,'電車で飛ばす']];
   // 作戦アイコンは tac_敵名.webp（ヒグマはツキノワグマと共用）
-  const TACI={brownbear:'tac_bear'};
+  const TACI={brownbear:'tac_bear',heat:'tac_rain'};
   const RC={push:'atk',post:'atk',kiai:'gold',rest:'heal',food:'heal',guard:'def',tactic:'def',rinko:'sub',escape:'sub'};
   const ic={tactic:TACI[B.kind]||'tac_'+B.kind,guard:'cmd_guard',food:'icon_food'};
   $('bt-cmds').innerHTML=cmds.map(([k,l,s])=>`<button data-cmd="${k}" class="${ic[k]?'ic ':''}c-${RC[k]||'nrm'}" ${k==='kiai'&&S.mp<20||k==='rinko'&&S.money<ti.rinko||k==='push'&&S.hp<=15||k==='food'&&S.food<=0||k==='tactic'&&!tacOK()?'disabled':''}>${ic[k]?`<img src="img/${ic[k]}.webp" width="30" height="30" alt=""><span>${l}<small>${s}</small></span>`:`${l}<small>${s}</small>`}</button>`).join('');}
@@ -1025,6 +1031,7 @@ function cmd(k){let t='';let dmg=0;const mult=B.charge||1;B.cut=1;
     else if(kd==='animal'){S.mp-=5;if(Math.random()<.7){B.cut=0;dmg=8;t=`ベルを鳴らすと動物が逃げていった！${fmtD(dmg)}進んだ`;}else t='ベルを鳴らしたが、動物は動かない…';}
     else if(kd==='wind'){S.mp-=3;B.cut=0;B.charge=Math.max(B.charge||0,1.5);t='トラックの陰に入って風をしのいだ。次の漕ぎ1.5倍';}
     else if(kd==='rain'){S.mp-=3;B.cut=0;S.hp=Math.min(100,S.hp+12);t='タープを張って雨宿りした。体力+12';}
+    else if(kd==='heat'){S.mp-=3;B.cut=.5;S.hp=Math.min(100,S.hp+10);t='木陰でボトルの水をがぶ飲みした。体力+10';}
     else if(kd==='snow'){S.mp-=3;B.cut=.5;S.hp=Math.min(100,S.hp+10);t='タープの下で雪をやり過ごした。体力+10';}
     else if(kd==='typhoon'){S.mp-=4;B.cut=.5;S.hp=Math.min(100,S.hp+15);t='寝床を広げてビバーク。体力+15';}
     else if(kd==='rival'){S.mp-=8;B.cut=0;B.charge=Math.max(B.charge||0,1.5);t='ハッシュタグを練り直した。次の投稿1.5倍';}}
@@ -1038,7 +1045,7 @@ function cmd(k){let t='';let dmg=0;const mult=B.charge||1;B.cut=1;
   const tm=NEXT[B.next][1]*B.cut;
   let et='';if(B.kind==='rival'){if(tm<=0)et='ライバルの投稿は伸びなかった。';else{const l=Math.max(1,Math.round(floss(20,.03)*tm));S.fame=Math.max(0,S.fame-l);et=`ライバルの投稿がバズった。フォロワー-${fol(l)}`;}}
   else if(tm<=0)et=`${B.e.name}をうまくやり過ごした。`;
-  else{const st=bikeStats();const red=['rain','snow','typhoon'].includes(B.kind)?Math.min(4,Math.floor(st.wx/2)):0;const d=Math.max(1,Math.round((B.atk+rnd(-2,2)-red)*tm));S.hp-=d;et=`${HIT[B.kind]||B.e.name}…体力-${d}`;
+  else{const st=bikeStats();const red=['rain','snow','typhoon','heat'].includes(B.kind)?Math.min(4,Math.floor(st.wx/2)):0;const d=Math.max(1,Math.round((B.atk+rnd(-2,2)-red)*tm));S.hp-=d;et=`${HIT[B.kind]||B.e.name}…体力-${d}`;
     if(B.e.mp){const m=Math.max(1,Math.round(B.e.mp*Math.min(1,tm)));S.mp-=m;et+=` 気力-${m}`;}}
   $('battle-box').classList.remove('shake');void $('battle-box').offsetWidth;$('battle-box').classList.add('shake');
   if(tm>0)setTimeout(()=>playSE('se_damage'),180);B.turn++;B.next=rollNext();
@@ -1072,14 +1079,14 @@ function endTrip2(camp){const p=trip.p,f=S.forecast[p.id],st=bikeStats(),cl=CLOT
   let cold=0;if(f.temp<cl.lo)cold=Math.min(40,(cl.lo-f.temp)*3);if(f.temp>cl.hi)cold=Math.min(40,(f.temp-cl.hi)*3);
   if(cold){S.hp-=cold;}
   const g=gearFx(),wet=['rain','snow','typhoon'].includes(f.wx),harsh=wet||season(calendar(S.turn).mi)==='winter';
-  const harshMp=harsh&&!(stoveOn()&&!wet)?Math.round(Math.max(0,10-st.comfy)*(1-(wet?g.guard:0))):0;S.mp-=harshMp;
+  const heat=f.wx==='heat',harshMp=heat?Math.round(Math.max(0,8-st.comfy)*(1-g.guard)):harsh&&!(stoveOn()&&!wet)?Math.round(Math.max(0,10-st.comfy)*(1-(wet?g.guard:0))):0;S.mp-=harshMp;
   const wetHp=wet?Math.round((f.wx==='typhoon'?20:12)*(1-g.guard)):0;S.hp-=wetHp;
   const recHp=4+g.hp+fm+(camp.hp||0),recMp=4+g.mp+fm+(camp.mp||0),sn=n=>(n>=0?'+':'')+n;
   const campRows=`${camp.label?`<span>過ごし方</span><span>${camp.label}${cc?`（-${yen(cc)}）`:''}</span>`:''}${fm?'<span>馴染み宿特典</span><span>利用料半額・回復+4</span>':''}<span>キャンプ回復</span><span>体力${sn(recHp)} 気力${sn(recMp)}</span>${wetHp?`<span>雨ざらし</span><span>体力-${wetHp}</span>`:''}${harshMp?`<span>厳しい環境</span><span>気力-${harshMp}</span>`:''}`;
   const lateL=floss(20,.025);if(trip.late){S.fame=Math.max(0,S.fame-lateL);
     html=`<h2>遅刻…</h2><div class="photo pic"><img src="img/late.webp" width="720" height="480" alt="日没後にキャンプ場へ着いた自転車旅行者"><div class="cap"><div>${p.site}</div><div>${WX_J[f.wx]} ${f.temp}℃ ・ 📷 撮影できず</div></div></div><p>${p.site}に着いたのは日没後。写真は撮れず、投稿できなかった。</p><div class="res"><span>フォロワー</span><span>-${fol(lateL)}</span><span>利用料</span><span>-${yen(fee)}</span>${cold?`<span>衣類不適</span><span>体力-${cold}</span>`:''}${campRows}</div>`;
     tlog(-1);}
-  else{const wb0={sun:10,cloud:0,rain:-15,wind:-5,snow:-10,typhoon:-25}[f.wx],wb=wet?Math.round(wb0*(1-g.guard)):wb0;let q=40+p.scen*8+st.photo+g.photo+wb+rnd(0,10)+(camp.q||0)+(trip.ev?12:0)-mpPen;if(trip.stay)q-=10;q=Math.max(10,Math.min(100,q));
+  else{const wb0={sun:10,cloud:0,rain:-15,wind:-5,snow:-10,heat:-5,typhoon:-25}[f.wx],wb=wet?Math.round(wb0*(1-g.guard)):wb0;let q=40+p.scen*8+st.photo+g.photo+wb+rnd(0,10)+(camp.q||0)+(trip.ev?12:0)-mpPen;if(trip.stay)q-=10;q=Math.max(10,Math.min(100,q));
     playSE('se_photo');S.visits[p.id]++;const became=!S.fam[p.id]&&S.visits[p.id]>=3;if(became)S.fam[p.id]=true;
     let fg=Math.round(q*3+S.fame*.03*q/70)+(S.visits[p.id]===1?300:0)+(became?1000:0);if(trip.ev){fg=Math.round(fg*1.5);S.stats.ev++;}if(f.wx==='typhoon')S.stats.tph++;
     const inc=300+q*25+Math.round(S.fame*.01);S.fame+=fg;S.money+=inc;if(TS){TS.inc=inc;TS.became=became?p.site:null;}S.stats.posts++;S.stats.bestQ=Math.max(S.stats.bestQ,q);
