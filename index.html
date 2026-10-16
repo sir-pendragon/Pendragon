@@ -70,6 +70,9 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .map path.sel{stroke:var(--fg);stroke-width:1.2}
 .map path.cur{stroke:var(--sky);stroke-width:1.6}
 .map text{font-family:var(--display);font-size:10px;fill:var(--fg);pointer-events:none}
+.map .sm{fill:url(#smg);opacity:0;transform-box:fill-box;transform-origin:center}
+@media (prefers-reduced-motion:no-preference){.map .sm{animation:smk 4.2s ease-out infinite}.map .sm2{animation-delay:1s}.map .sm3{animation-delay:2.1s}.map .sm4{animation-delay:3.1s}@keyframes smk{0%{opacity:0;transform:translate(0,0) scale(.5)}12%{opacity:1}100%{opacity:0;transform:translate(10px,-26px) scale(1.8)}}}
+@media (prefers-reduced-motion:reduce){.map .sm1{opacity:.8;transform:translate(1px,-6px)}.map .sm2{opacity:.6;transform:translate(3px,-13px) scale(1.3)}.map .sm3{opacity:.4;transform:translate(6px,-20px) scale(1.6)}}
 .map .zq{fill:#fff;paint-order:stroke;stroke:#234;stroke-width:1.6px;stroke-linejoin:round}
 @media (prefers-reduced-motion:no-preference){.map .zq{opacity:0;animation:zrise 2.7s ease-out infinite}.map .zq2{animation-delay:.9s}.map .zq3{animation-delay:1.8s}@keyframes zrise{0%{opacity:0;transform:translate(0,3px)}18%{opacity:1}75%{opacity:1}100%{opacity:0;transform:translate(8px,-14px)}}}
 .legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.8rem;color:var(--muted)}
@@ -507,15 +510,19 @@ const GEAR={
  fire:{label:'焚き火台（気力回復）',items:[
   {id:'fire1',name:'簡易焚き火台',price:6000,mp:6,photo:4},
   {id:'fire2',name:'ステンレス焚き火台',price:20000,mp:12,photo:8},
-  {id:'fire3',name:'チタン焚き火台＋焚き火シート',price:45000,mp:18,photo:12}]},
+  {id:'fire3',name:'チタン焚き火台＋焚き火シート',price:45000,mp:18,photo:12},
+  {id:'fire4',name:'薪ストーブ',price:70000,mp:30,photo:14,req:'sh5',winter:true}]},
  shelter:{label:'寝床：テントかハンモック（体力・気力回復）',items:[
   {id:'sh1',name:'ハンモック',price:8000,hp:6,mp:8,photo:3,guard:0},
   {id:'sh2',name:'入門ソロテント',price:15000,hp:12,mp:8,photo:5,guard:.2},
-  {id:'sh3',name:'軽量山岳テント',price:55000,hp:20,mp:14,photo:9,guard:.4}]},
+  {id:'sh3',name:'軽量山岳テント',price:55000,hp:20,mp:14,photo:9,guard:.4},
+  {id:'sh4',name:'DCFテント',price:180000,hp:24,mp:16,photo:10,guard:.55,climb:1,cruise:1},
+  {id:'sh5',name:'薪ストーブ用テント',price:90000,hp:18,mp:10,photo:7,guard:.35}]},
  tarp:{label:'タープ（雨から守る）',items:[
   {id:'tp1',name:'簡易タープ',price:5000,photo:2,guard:.4},
   {id:'tp2',name:'ヘキサタープ',price:18000,photo:5,guard:.7},
-  {id:'tp3',name:'大型ウイングタープ',price:40000,photo:8,guard:.9}]},
+  {id:'tp3',name:'大型ウイングタープ',price:40000,photo:8,guard:.9},
+  {id:'tp4',name:'DCFタープ',price:130000,photo:10,guard:.95,climb:1,cruise:1}]},
 };
 const GEAR_ITEMS=Object.entries(GEAR).flatMap(([slot,g])=>g.items.map(i=>({...i,slot})));
 const ENEMY={
@@ -579,6 +586,7 @@ function load(){try{const s=localStorage.getItem('charicamp');if(!s)return null;
   if(!o.owned.bikes.includes(o.bike))o.bike=o.owned.bikes[0];if(!o.owned.cloth.includes(o.cloth))o.cloth=o.owned.cloth[0];
   o.parts=(Array.isArray(o.parts)?o.parts:[]).filter(x=>o.owned.parts.includes(x)).slice(0,3);
   const g=o.gear&&typeof o.gear==='object'?o.gear:{};o.gear={};for(const k of ['fire','shelter','tarp'])o.gear[k]=GEAR_ITEMS.some(x=>x.slot===k&&x.id===g[k]&&o.owned.gear.includes(x.id))?g[k]:null;
+  if(o.gear.fire==='fire4'&&o.gear.shelter!=='sh5')o.gear.fire=null;
   o.log=(Array.isArray(o.log)?o.log:[]).filter(x=>typeof x==='string').slice(0,120);
   const st=o.stats&&typeof o.stats==='object'?o.stats:{};o.stats={wins:num(st.wins,0,0,1e9),losses:num(st.losses,0,0,1e9),posts:num(st.posts,0,0,1e9),bestQ:num(st.bestQ,0,0,100),tph:num(st.tph,0,0,1e9),ev:num(st.ev,0,0,1e9)};
   o.food=num(o.food,0,0,FOOD_MAX);
@@ -590,6 +598,7 @@ function log(t){S.log.unshift(`${calLabel(S.turn)} ${t}`);if(S.log.length>120)S.
 function calLabel(t){const c=calendar(t);return `${c.year}年目${c.month}月第${c.week}週`;}
 function bikeStats(){const b=BIKES.find(x=>x.id===S.bike);const st={climb:b.climb,rough:b.rough,cruise:b.cruise,wx:b.wx,photo:0,comfy:0,fold:!!b.fold};
   const bl=plv(b.id);if(bl)for(const k of bikeBoost(b))st[k]+=bl;// カスタム：得意な上位2能力が+段数
+  const gx=gearFx();st.climb+=gx.climb;st.cruise+=gx.cruise;// DCF（超軽量）のギア
   for(const pid of S.parts){const p=PARTS.find(x=>x.id===pid);for(const k of ['climb','rough','cruise','wx','photo','comfy']) if(p[k]) st[k]+=p[k]+plv(pid);}return st;}
 // ---------- カスタム（自転車・パーツを+1〜+3に改造） ----------
 const STATJ={climb:'登坂',rough:'悪路',cruise:'巡航',wx:'耐候',photo:'写真',comfy:'気力消費'};
@@ -600,10 +609,14 @@ const tierOf=(kind,lv)=>lv>0?TIER[kind==='bike'?'bike':'part'][lv-1]:'';
 const bv=(b,k)=>b[k]+(plv(b.id)&&bikeBoost(b).includes(k)?plv(b.id):0);// 強化後の能力値（表示用）
 function bikeBoost(b){return ['climb','rough','cruise','wx'].sort((x,y)=>b[y]-b[x]).slice(0,2);}
 function upCost(kind,item,lv){const u=kind==='bike'?Math.max(30000,Math.round(item.price*.3/1000)*1000):Math.max(10000,Math.round(item.price*.4/1000)*1000);return u*lv;}
-function gearFx(){let hp=0,mp=0,photo=0,sg=0,tg=0;const names=[];
+const isWinter=()=>season(calendar(S.turn).mi)==='winter';
+// 薪ストーブは、薪ストーブ用テントに装着していて、冬（12〜2月）のときだけ効く
+const stoveOn=()=>S.gear.fire==='fire4'&&S.gear.shelter==='sh5'&&isWinter();
+function gearFx(){let hp=0,mp=0,photo=0,sg=0,tg=0,climb=0,cruise=0;const names=[];
   for(const [slot,g] of Object.entries(GEAR)){const id=S.gear[slot];if(!id)continue;const it=g.items.find(x=>x.id===id);if(!it)continue;
-    names.push(it.name);hp+=it.hp||0;mp+=it.mp||0;photo+=it.photo||0;if(slot==='tarp')tg=it.guard;if(slot==='shelter')sg=it.guard||0;}
-  return {hp,mp,photo,guard:1-(1-tg)*(1-sg),names};}
+    if(id==='fire4'&&!stoveOn())continue;
+    names.push(it.name);hp+=it.hp||0;mp+=it.mp||0;photo+=it.photo||0;climb+=it.climb||0;cruise+=it.cruise||0;if(slot==='tarp')tg=it.guard;if(slot==='shelter')sg=it.guard||0;}
+  return {hp,mp,photo,climb,cruise,guard:1-(1-tg)*(1-sg),names};}
 function famCount(){return S.fam.filter(Boolean).length;}
 
 // forecast for this turn: per destination temp + weather, rolled once per turn so it is a real forecast
@@ -626,7 +639,7 @@ const sightOf=(id,v)=>SIGHTS[id][(Math.max(1,v)-1)%3];
 const WX_J={sun:'<img class="wi" src="img/wx_sun.webp" width="96" height="96" alt="">晴れ',cloud:'<img class="wi" src="img/wx_cloud.webp" width="96" height="96" alt="">曇り',rain:'<img class="wi" src="img/wx_rain.webp" width="96" height="96" alt="">雨',wind:'<img class="wi" src="img/wx_wind.webp" width="96" height="96" alt="">強風',typhoon:'<img class="wi" src="img/wx_typhoon.webp" width="96" height="96" alt="">台風'};
 
 // ---------- rendering ----------
-function render(){if(!$('p-sight').hidden&&!$('p-log').hidden)renderSights();if(!$('p-ach').hidden&&!$('p-log').hidden)renderAch();const c=calendar(S.turn);$('d-date').textContent=`${c.year}年目 ${c.month}月第${c.week}週（${S.turn}/52）`;$('d-season').innerHTML=SEASON_J[season(c.mi)];
+function render(){if(S.gear.fire==='fire4'&&S.gear.shelter!=='sh5')S.gear.fire=null;if(!$('p-sight').hidden&&!$('p-log').hidden)renderSights();if(!$('p-ach').hidden&&!$('p-log').hidden)renderAch();const c=calendar(S.turn);$('d-date').textContent=`${c.year}年目 ${c.month}月第${c.week}週（${S.turn}/52）`;$('d-season').innerHTML=SEASON_J[season(c.mi)];
   $('d-fame').textContent=`${fol(S.fame)}（${title(S.fame)}）`;$('d-money').textContent=yen(S.money);
   $('d-hp').textContent=S.hp;$('b-hp').style.width=Math.max(0,S.hp)+'%';$('d-mp').textContent=S.mp;$('b-mp').style.width=Math.max(0,S.mp)+'%';
   $('d-loc').textContent=PREF[S.loc].name;$('d-fam').textContent=`${famCount()} / 47`;
@@ -644,38 +657,53 @@ function renderMap(){const svg=$('map');const mk=JSON.stringify([S.loc,S.sel,S.v
     if(p.id===S.loc||p.id===S.sel)top+=d;else s+=d;}
   s+=top;
   const SPR={"tarp_tp2":[565,199],"shelter_sh2":[355,185],"bike_gravel":[190,144],"bike_cross":[185,142],"bike_road":[176,136],"fire_fire3":[480,470],"bike_mama":[162,126],"fire_fire2":[241,200],"tarp_tp1":[476,166],"shelter_sh3":[560,401],"bike_tigrav":[194,122],"tarp_tp3":[760,586],"shelter_sh1":[481,185],"bike_mtb":[202,134],"camp_ground":[451,193],"fire_fire1":[197,153],"bike_fold":[143,124],"tree_spring":[256,338],"tree_summer":[256,338],"tree_autumn":[256,338],"tree_winter":[256,338],"part_tripod":[128,128],"part_cam":[128,128],"part_drone":[128,128],"part_comfy":[128,128]};
-  const put=(key,cx,by,k)=>{const d=SPR[key];if(!d)return '';const w=d[0]*k,hh=d[1]*k;return `<image href="img/${key}.webp" x="${(cx-w/2).toFixed(1)}" y="${(by-hh).toFixed(1)}" width="${w.toFixed(1)}" height="${hh.toFixed(1)}"/>`;};
+  // 新しいギアの絵が届くまでの代用：近い既存の絵を使い、DCFは薄いグリーンに寄せる。絵が届いたら STAND から外し、SPR に寸法を足す
+  const STAND={shelter_sh4:'shelter_sh2',shelter_sh5:'shelter_sh3',tarp_tp4:'tarp_tp2'};
+  const FILT={shelter_sh4:'hue-rotate(60deg) saturate(.55) brightness(1.3)',tarp_tp4:'hue-rotate(60deg) saturate(.55) brightness(1.3)'};
+  const put=(key,cx,by,k)=>{const kk=STAND[key]||key,d=SPR[kk];if(!d)return '';const w=d[0]*k,hh=d[1]*k;return `<image href="img/${kk}.webp" x="${(cx-w/2).toFixed(1)}" y="${(by-hh).toFixed(1)}" width="${w.toFixed(1)}" height="${hh.toFixed(1)}"${FILT[key]?` style="filter:${FILT[key]}"`:''}/>`;};
+  // 配置は、近い既存の寝床・タープと同じ決まりを使う（DCFテント＝入門テント、薪ストーブ用テント＝山岳テント、DCFタープ＝ヘキサ）
+  const A_SH={sh4:'sh2',sh5:'sh3'},A_TP={tp4:'tp2'};const shA=A_SH[S.gear.shelter]||S.gear.shelter,tpA=A_TP[S.gear.tarp]||S.gear.tarp;
   // 山岳テントの絵は下端に杭・ガイロープが長く伸びていて、本体の底が下端より約8単位上にある。入門テント(約3単位)と地面の高さを揃えるため下げる
-  const SH3_DROP=4,fk={fire1:.115,fire2:.115,fire3:.085},sk={sh1:.165,sh2:.16,sh3:.085},tk={tp1:.27,tp2:.215,tp3:.125};// タープは寝床（特にハンモックの杭の間）を覆える幅にする
+  const SH3_DROP=4,fk={fire1:.115,fire2:.115,fire3:.085,fire4:0},sk={sh1:.165,sh2:.16,sh3:.085},tk={tp1:.27,tp2:.215,tp3:.125};// タープは寝床（特にハンモックの杭の間）を覆える幅にする
   // 山岳テントは背が高く、そのままだとタープの屋根を突き抜ける。テントごとにタープの大きさ・位置を決める [scale, 接地のy]
   // 接地yを413にして、タープのポールの根元をテントの前の地面に出す（403だとポールがテントの床に刺さって見える）
-  const TARP_FIT={sh3:{tp1:[.30,413],tp2:[.30,413],tp3:[.175,420,20]},sh2:{tp1:[.27,413],tp2:[.215,413],tp3:[.175,420,20]}};const tf=(S.gear.tarp&&TARP_FIT[S.gear.shelter]&&TARP_FIT[S.gear.shelter][S.gear.tarp])||[tk[S.gear.tarp],403,0];// [scale, 接地y, 横ずれ]
+  const TARP_FIT={sh3:{tp1:[.30,413],tp2:[.30,413],tp3:[.175,420,20]},sh2:{tp1:[.27,413],tp2:[.215,413],tp3:[.175,420,20]}};const tf=(S.gear.tarp&&TARP_FIT[shA]&&TARP_FIT[shA][tpA])||[tk[tpA],403,0];// [scale, 接地y, 横ずれ]
   // 大型タープ＋テントのときは、テントをさらにタープの奥（地図の上側）に置く
-  const UNDER=S.gear.tarp==='tp3'&&(S.gear.shelter==='sh2'||S.gear.shelter==='sh3')?{x:264,by:S.gear.shelter==='sh3'?397:392,k:S.gear.shelter==='sh3'?.1:.16}:null;
-  const hasTent=S.gear.shelter==='sh2'||S.gear.shelter==='sh3';
+  const hasTent=shA==='sh2'||shA==='sh3';
+  const UNDER=tpA==='tp3'&&hasTent?{x:264,by:shA==='sh3'?397:392,k:shA==='sh3'?.1:.16}:null;
   // 簡易・ヘキサタープの下では、テントの底の線を約3.3単位下げる（タープの脚の接地線に近づける）
-  const TENT_LOW=hasTent&&(S.gear.tarp==='tp1'||S.gear.tarp==='tp2')?3.3:0;
+  const TENT_LOW=hasTent&&(tpA==='tp1'||tpA==='tp2')?3.3:0;
   // 簡易・ヘキサ：布(奥)→テント→ポール(手前)。テントの頂点が布の手前に出て、屋根の下に入って見える。大型タープだけは布を手前に重ねてテントを隠す
-  const BEHIND=S.gear.tarp==='tp3'&&hasTent;
+  const BEHIND=tpA==='tp3'&&hasTent;
   const tarpS=S.gear.tarp?put('tarp_'+S.gear.tarp,252+(tf[2]||0),tf[1],tf[0]):'';
-  const shS=S.gear.shelter?(UNDER?put('shelter_'+S.gear.shelter,UNDER.x,UNDER.by,UNDER.k):put('shelter_'+S.gear.shelter,252,408+(S.gear.shelter==='sh3'?SH3_DROP:0)+TENT_LOW,sk[S.gear.shelter])):'';
+  const tpos=UNDER?{x:UNDER.x,by:UNDER.by,k:UNDER.k}:{x:252,by:408+(shA==='sh3'?SH3_DROP:0)+TENT_LOW,k:sk[shA]};
+  const chim=S.gear.shelter==='sh5'&&stoveOn()?chimney(tpos.x,tpos.by,tpos.k):null;// 薪ストーブ用テント＋薪ストーブ＋冬：煙突と煙
+  const shS=S.gear.shelter?put('shelter_'+S.gear.shelter,tpos.x,tpos.by,tpos.k):'';
   s+=`<g style="pointer-events:none">${put('camp_ground',272,462,244/451)}${put('tree_'+season(calendar(S.turn).mi),332,380,.385)}`
-   +(BEHIND?shS+tarpS:tarpS+shS+(hasTent&&TARP_FRONT[S.gear.tarp]?tarpPart(S.gear.tarp,252+(tf[2]||0),tf[1],tf[0]):''))
+   +(BEHIND?shS+tarpS+(chim?chim.pipe:''):tarpS+shS+(hasTent&&TARP_FRONT[tpA]?tarpPart(tpA,252+(tf[2]||0),tf[1],tf[0]):'')+(chim?chim.pipe:''))
    +(S.parts.includes('tripod')?put('part_tripod',222,424,.2)+(S.parts.includes('cam')?put('part_cam',222,402,.1):''):(S.parts.includes('cam')?put('part_cam',312,430,.1):''))
    +(S.parts.includes('comfy')?put('part_comfy',204,418,.2):'')
    +put('bike_'+S.bike,332,419,.26)
-   +(S.gear.fire?put('fire_'+S.gear.fire,283,424,fk[S.gear.fire]):'')+`</g>`
+   +(S.gear.fire&&S.gear.fire!=='fire4'?put('fire_'+S.gear.fire,283,424,fk[S.gear.fire]):'')+`</g>`
    +(S.parts.includes('drone')?`<g class="drone">${put('part_drone',300,392,.15)}</g>`:'');
   s+=`<g id="hero" style="pointer-events:none"><ellipse id="hs" cy="0" ry="1.8" fill="#000" opacity=".28"/><g id="hf">${HFR.map(k=>`<image id="hi_${k}" href="img/hero_${k}.webp" width="${HDIM[k[0]][0]*HK}" height="${HDIM[k[0]][1]*HK}" style="display:none"/>`).join('')}</g><text id="hz1" style="font-size:6px;fill:#fff;paint-order:stroke;stroke:#234;stroke-width:1.5px">z</text><text id="hz2" style="font-size:5px;fill:#fff;paint-order:stroke;stroke:#234;stroke-width:1.5px">z</text></g>`
    +(S.gear.shelter==='sh1'?hamFront(sk.sh1):'')
-   +(S.gear.shelter==='sh2'||S.gear.shelter==='sh3'?(UNDER?zzzFx(UNDER.by-(S.gear.shelter==='sh3'?44:34),UNDER.x-252):zzzFx((S.gear.shelter==='sh3'?372+SH3_DROP:378)+TENT_LOW)):'');svg.innerHTML=s;HLAST=null;drawHero();}
+   +(hasTent?(UNDER?zzzFx(UNDER.by-(shA==='sh3'?44:34),UNDER.x-252):zzzFx((shA==='sh3'?372+SH3_DROP:378)+TENT_LOW)):'')
+   +(chim?chim.smoke:'');svg.innerHTML=s;HLAST=null;drawHero();}
 // テントで寝ている間、テントの上に立ちのぼる「Z z z」（ty：テントの頂点のy）
 function zzzFx(ty,dx=0){return `<g id="zzz" style="display:none;pointer-events:none"><text class="zq" x="${258+dx}" y="${ty+6}" style="font-size:9px">Z</text><text class="zq zq2" x="${265+dx}" y="${ty}" style="font-size:7px">z</text><text class="zq zq3" x="${271+dx}" y="${ty-6}" style="font-size:5.5px">z</text></g>`;}
 // テントの手前に重ねるタープの部分（元の絵の座標 [x0,x1,y0,y1]、絵のサイズ）
 //  ヘキサ(tp2)：中央ポール x=245〜259。簡易(tp1)：屋根の明るい面 y=0〜53（濃い帯＝屋根の裏側はテントの奥のまま）
 const TARP_FRONT={tp1:{size:[476,166],r:[0,476,0,53]},tp2:{size:[565,199],r:[245,259,0,199]}};
 function tarpPart(key,cx,by,k){const f=TARP_FRONT[key],w=f.size[0]*k,hh=f.size[1]*k,x=cx-w/2,y=by-hh,r=f.r;
-  return `<clipPath id="tpart"><rect x="${(x+r[0]*k).toFixed(1)}" y="${(y+r[2]*k).toFixed(1)}" width="${((r[1]-r[0])*k).toFixed(1)}" height="${((r[3]-r[2])*k).toFixed(1)}"/></clipPath><image href="img/tarp_${key}.webp" x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${w.toFixed(1)}" height="${hh.toFixed(1)}" clip-path="url(#tpart)"/>`;}
+  const dcf=S.gear.tarp==='tp4';// DCFタープは、絵が届くまでヘキサの絵を薄いグリーンにして代用
+  return `<clipPath id="tpart"><rect x="${(x+r[0]*k).toFixed(1)}" y="${(y+r[2]*k).toFixed(1)}" width="${((r[1]-r[0])*k).toFixed(1)}" height="${((r[3]-r[2])*k).toFixed(1)}"/></clipPath><image href="img/tarp_${key}.webp" x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${w.toFixed(1)}" height="${hh.toFixed(1)}" clip-path="url(#tpart)"${dcf?' style="filter:hue-rotate(60deg) saturate(.55) brightness(1.3)"':''}/>`;}
+// 薪ストーブ用テントの煙突と煙（tx,by,k：テントの置き位置。屋根の頂点の少し右から煙突を立てる）
+function chimney(tx,by,k){const top=by-401*k,x=tx+11,y=top+11,h=19;// 山岳テントの絵（560×401）基準の目安
+  const pipe=`<g class="chim"><rect x="${x-1.3}" y="${y-h}" width="2.6" height="${h}" fill="#4a4f57" stroke="#1f2226" stroke-width=".5"/><rect x="${x-.3}" y="${y-h}" width=".7" height="${h}" fill="#8c939c" opacity=".7"/><path d="M${x-3} ${y-h}l3 -2.6l3 2.6z" fill="#2a2d33" stroke="#1f2226" stroke-width=".4"/></g>`;
+  const sx=x,sy=y-h-3;
+  const smoke=`<g id="smoke" style="pointer-events:none"><defs><radialGradient id="smg"><stop offset="0" stop-color="#ffffff" stop-opacity="1"/><stop offset=".6" stop-color="#e3e7eb" stop-opacity=".85"/><stop offset="1" stop-color="#c2c9d0" stop-opacity="0"/></radialGradient></defs><circle class="sm sm1" cx="${sx}" cy="${sy}" r="2.6"/><circle class="sm sm2" cx="${sx}" cy="${sy}" r="3.2"/><circle class="sm sm3" cx="${sx}" cy="${sy}" r="3.8"/><circle class="sm sm4" cx="${sx}" cy="${sy}" r="4.2"/></g>`;
+  return {pipe,smoke};}
 // ハンモックで寝るとき、寝袋の下半分を手前の布で隠す（同じ絵を、布の手前側だけ切り抜いてキャラの上に重ねる）
 const HAMF={x0:95,x1:425,y0:98};// 切り抜く範囲（元の絵の座標）。杭を含めず、布のたるみの手前側だけ
 function hamFront(k){const d=[481,185],w=d[0]*k,hh=d[1]*k,x=252-w/2,y=408-hh;
@@ -689,7 +717,7 @@ function heroPick(){const r=Math.random();
   if(r<.4)HERO.goal={x:215+Math.random()*90,mode:'walk',y:426};
   else if(r<.7)HERO.goal={x:254,mode:'sit',y:426};
   else{const sh=S&&S.gear&&S.gear.shelter;
-    HERO.goal=sh==='sh1'?{x:HAM.x,mode:'sleep',y:HAM.y,ham:true}:(sh==='sh2'||sh==='sh3')?{x:252,mode:'sleep',y:416,tent:true}:{x:240,mode:'sleep',y:416};}
+    HERO.goal=sh==='sh1'?{x:HAM.x,mode:'sleep',y:HAM.y,ham:true}:(sh==='sh2'||sh==='sh3'||sh==='sh4'||sh==='sh5')?{x:252,mode:'sleep',y:416,tent:true}:{x:240,mode:'sleep',y:416};}
   HERO.mode='walk';HERO.y=426;HERO.ham=false;HERO.tent=false;}
 const HFR=['w1','w2','w3','w4','s1','s2','z1','z2'];
 HFR.forEach(k=>{const i=new Image();i.src='img/hero_'+k+'.webp';});
@@ -744,16 +772,19 @@ function renderList(){$('sitelist').innerHTML=PREF.map(p=>`<button data-id="${p.
 
 function owns(kind,id){return S.owned[kind==='bike'?'bikes':kind==='cloth'?'cloth':kind==='gear'?'gear':'parts'].includes(id);}
 function isEq(kind,item){return kind==='bike'?S.bike===item.id:kind==='cloth'?S.cloth===item.id:kind==='gear'?S.gear[item.slot]===item.id:S.parts.includes(item.id);}
+// 新しいギアの絵が届くまでは、近い既存のアイコンを代わりに表示する（読み込みに失敗したときだけ切り替わる）
+const ICON_FB={fire4:'icon_g_fire3',sh4:'icon_g_sh2',sh5:'icon_g_sh3',tp4:'icon_g_tp3'};
+addEventListener('error',e=>{const i=e.target;if(i&&i.tagName==='IMG'&&i.dataset&&i.dataset.fb){const f='img/'+i.dataset.fb+'.webp';i.dataset.fb='';i.src=f;}},true);
 function card(item,kind,mode){const eq=isEq(kind,item),own=owns(kind,item.id);
   const spec=kind==='bike'?`登坂${bv(item,'climb')} 悪路${bv(item,'rough')} 巡航${bv(item,'cruise')} 耐候${bv(item,'wx')}${item.fold?' 輪行半額':''}`:
    kind==='cloth'?`快適 ${item.lo}℃〜${item.hi}℃`:
-   kind==='gear'?[item.mp?`気力+${item.mp}`:'',item.hp?`体力+${item.hp}`:'',item.photo?`写真+${item.photo}`:'',item.guard?`雨ガード${Math.round(item.guard*100)}%`:''].filter(Boolean).join(' '):
+   kind==='gear'?[item.mp?`気力+${item.mp}`:'',item.hp?`体力+${item.hp}`:'',item.photo?`写真+${item.photo}`:'',item.guard?`雨ガード${Math.round(item.guard*100)}%`:'',item.climb?`登坂+${item.climb}`:'',item.cruise?`巡航+${item.cruise}`:'',item.winter?'冬のみ有効':'',item.req?`要：${(GEAR_ITEMS.find(x=>x.id===item.req)||{}).name}`:''].filter(Boolean).join(' '):
    Object.entries(item).filter(([k])=>['climb','rough','cruise','wx','photo','comfy'].includes(k)).map(([k,v])=>({climb:'登坂',rough:'悪路',cruise:'巡航',wx:'耐候',photo:'写真',comfy:'気力消費'}[k]+(k==='comfy'?'-':'+')+v)).join(' ');
   let act='';
   if(mode==='shop'){act=own?`<span class="pill">所持</span>`:`<button data-act="buy" ${S.money>=item.price?'':'disabled'}>購入 ${yen(item.price)}</button>`;}
   else if(eq)act=(kind==='part'||kind==='gear')?`<button data-act="unequip">外す</button>`:`<span class="pill">装備中</span>`;
-  else act=`<button data-act="equip" ${kind==='part'&&S.parts.length>=3?'disabled':''}>装備</button>`;
-  return `<div class="card ${eq?'eq':''}" data-kind="${kind}" data-id="${item.id}"><div class="name"><span class="nm"><img class="ci" src="img/${kind==='gear'?'icon_g_'+item.id:(kind==='part'?'part_'+item.id:kind==='cloth'?'cloth_'+item.id:'icon_bike_'+item.id)}.webp" width="28" height="28" alt="">${item.name}${(kind==='bike'||kind==='part')&&plv(item.id)?` <b>${tierOf(kind,plv(item.id)).replace('製','')}</b>`:''}</span>${act}</div><div class="spec">${spec}</div></div>`;}
+  else act=`<button data-act="equip" ${kind==='part'&&S.parts.length>=3||kind==='gear'&&item.req&&S.gear.shelter!==item.req?'disabled':''}>装備</button>`;
+  return `<div class="card ${eq?'eq':''}" data-kind="${kind}" data-id="${item.id}"><div class="name"><span class="nm"><img class="ci" ${kind==='gear'&&ICON_FB[item.id]?`data-fb="${ICON_FB[item.id]}" `:''}src="img/${kind==='gear'?'icon_g_'+item.id:(kind==='part'?'part_'+item.id:kind==='cloth'?'cloth_'+item.id:'icon_bike_'+item.id)}.webp" width="28" height="28" alt="">${item.name}${(kind==='bike'||kind==='part')&&plv(item.id)?` <b>${tierOf(kind,plv(item.id)).replace('製','')}</b>`:''}</span>${act}</div><div class="spec">${spec}</div></div>`;}
 function renderShop(){const lists={bike:BIKES,cloth:CLOTHES,part:PARTS};
   for(const [k,l] of Object.entries(lists)){$('shop-'+k).innerHTML=l.map(i=>card(i,k,'shop')).join('');
     const own=l.filter(i=>owns(k,i.id));$('eq-'+k).innerHTML=own.length?own.map(i=>card(i,k,'equip')).join(''):'<div class="hint">なし</div>';}
@@ -780,7 +811,7 @@ function shopClick(e){const b=e.target.closest('button[data-act]');if(!b)return;
   const list=kind==='bike'?BIKES:kind==='cloth'?CLOTHES:kind==='gear'?GEAR_ITEMS:PARTS,item=list.find(x=>x.id===id),key=kind==='bike'?'bikes':kind==='cloth'?'cloth':kind==='gear'?'gear':'parts';
   if(b.dataset.act==='buy'){if(S.money<item.price)return;askPay(`「${item.name}」を購入しますか？`,item.price,()=>{S.money-=item.price;S.owned[key].push(id);log(`${item.name}を購入（${yen(item.price)}）`);equipIt();});return;}
   equipIt();
-  function equipIt(){if(b.dataset.act==='buy'||b.dataset.act==='equip'){if(kind==='bike')S.bike=id;else if(kind==='cloth')S.cloth=id;else if(kind==='gear')S.gear[item.slot]=id;else if(S.parts.length<3)S.parts.push(id);}
+  function equipIt(){if(b.dataset.act==='buy'||b.dataset.act==='equip'){if(kind==='bike')S.bike=id;else if(kind==='cloth')S.cloth=id;else if(kind==='gear'){if(item.req&&S.gear.shelter!==item.req)log(`${item.name}は${(GEAR_ITEMS.find(x=>x.id===item.req)||{}).name}を装備していないと使えない`);else S.gear[item.slot]=id;}else if(S.parts.length<3)S.parts.push(id);}
   if(b.dataset.act==='unequip'){if(kind==='gear')S.gear[item.slot]=null;else S.parts=S.parts.filter(x=>x!==id);}
   render();}}
 for(const id of ['p-gear','p-camp','p-shop'])$(id).addEventListener('click',shopClick);
@@ -958,7 +989,7 @@ function endTrip2(camp){const p=trip.p,f=S.forecast[p.id],st=bikeStats(),cl=CLOT
   let cold=0;if(f.temp<cl.lo)cold=Math.min(40,(cl.lo-f.temp)*3);if(f.temp>cl.hi)cold=Math.min(40,(f.temp-cl.hi)*3);
   if(cold){S.hp-=cold;}
   const g=gearFx(),wet=['rain','typhoon'].includes(f.wx),harsh=wet||season(calendar(S.turn).mi)==='winter';
-  const harshMp=harsh?Math.round(Math.max(0,10-st.comfy)*(1-(wet?g.guard:0))):0;S.mp-=harshMp;
+  const harshMp=harsh&&!(stoveOn()&&!wet)?Math.round(Math.max(0,10-st.comfy)*(1-(wet?g.guard:0))):0;S.mp-=harshMp;
   const wetHp=wet?Math.round((f.wx==='typhoon'?20:12)*(1-g.guard)):0;S.hp-=wetHp;
   const recHp=4+g.hp+fm+(camp.hp||0),recMp=4+g.mp+fm+(camp.mp||0),sn=n=>(n>=0?'+':'')+n;
   const campRows=`${camp.label?`<span>過ごし方</span><span>${camp.label}${cc?`（-${yen(cc)}）`:''}</span>`:''}${fm?'<span>馴染み宿特典</span><span>利用料半額・回復+4</span>':''}<span>キャンプ回復</span><span>体力${sn(recHp)} 気力${sn(recMp)}</span>${wetHp?`<span>雨ざらし</span><span>体力-${wetHp}</span>`:''}${harshMp?`<span>厳しい環境</span><span>気力-${harshMp}</span>`:''}`;
