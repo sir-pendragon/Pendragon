@@ -359,7 +359,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
     <div id="p-trip">
     <div class="loghead"><h2>旅の記録</h2><span class="logbtns"><button id="btn-set" aria-label="設定">⚙ 設定</button><button id="btn-reset">リセット</button></span></div>
     <div class="profile"><img loading="lazy" decoding="async" src="img/hero.webp" width="84" height="84" alt="主人公の自転車旅行者"><div class="res" id="summary"></div></div>
-    <button id="btn-share" class="primary" style="width:100%;margin-top:8px">Xでシェア（旅の記録を投稿）</button><p class="hint" id="share-note" style="margin:4px 0 0"></p>
+    <button id="btn-share" class="primary" style="width:100%;margin-top:8px">Xで投稿（文字＋リンク）</button><button id="btn-shimg" style="width:100%;margin-top:6px">画像を共有・保存</button><p class="hint" id="share-note" style="margin:4px 0 0"></p>
     <div class="subtabs" id="tl-tabs"><button data-v="tl" aria-selected="true">旅履歴</button><button data-v="log" aria-selected="false">できごと</button></div>
     <div class="tl" id="tl"></div>
     <ul class="log" id="log" hidden></ul>
@@ -1245,7 +1245,7 @@ function endTrip2(camp){const p=trip.p,f=S.forecast[p.id],st=bikeStats(),cl=CLOT
   S.sel=S.loc;render();showResult(html,advance);}
 function restHome(){const ti=travelInfo(PREF[S.home]);if(S.loc!==S.home){const forced=S.money<ti.rinko;if(!forced&&!$('ov-pay').dataset.ok){askPay('輪行で自宅に帰って休みますか？',ti.rinko,()=>{$('ov-pay').dataset.ok='1';restHome();});return;}delete $('ov-pay').dataset.ok;}const forced2=S.loc!==S.home&&S.money<ti.rinko,pen=forced2?floss(30,.04):floss(10,.015);snap();if(S.loc!==S.home&&!forced2)S.money-=ti.rinko;INTRIP=true;S.loc=S.home;S.hp=100;S.mp=100;S.fame=Math.max(0,S.fame-pen);
   log(forced2?`所持金が尽きて強制帰宅。フォロワー-${fol(pen)}`:`自宅で休養。フォロワー-${fol(pen)}`);S.sel=S.loc;render();showResult(`<h2>自宅で休養</h2><div class="photo pic"><img src="img/rest.webp" width="720" height="480" alt="自宅の和室で大の字になって昼寝する旅行者"><div class="cap"><div>${PREF[S.home].name}の自宅</div><div>💤 一日中ごろごろ</div></div></div><p>${forced2?`所持金が尽きて旅を続けられず、自宅へ連れ戻された…。体力・気力は全回復したが、フォロワー-${fol(pen)}。`:`体力・気力が全回復した。投稿がなく フォロワー-${fol(pen)}。`}</p>`,advance);}
-function showResult(html,then,share){$('result-box').innerHTML=html+(share?`<button id="res-share">Xでシェア</button><p class="hint" id="res-note" style="margin:0"></p>`:'')+`<button class="primary" id="res-ok">次の週末へ</button>`;$('ov-result').hidden=false;$('res-ok').onclick=()=>{$('ov-result').hidden=true;then();};}
+function showResult(html,then,share){$('result-box').innerHTML=html+(share?`<button id="res-share">Xで投稿（文字＋リンク）</button><button id="res-shimg">画像を共有・保存</button><p class="hint" id="res-note" style="margin:0"></p>`:'')+`<button class="primary" id="res-ok">次の週末へ</button>`;$('ov-result').hidden=false;$('res-ok').onclick=()=>{$('ov-result').hidden=true;then();};}
 function turnPopup(){const t=TS;TS=null;if(!t)return;const e=$('pop'),sg=n=>(n>0?'+':n<0?'-':'')+Math.abs(n);
   const spv=t.sp?t.sp[1]:0,dm=S.money-t.money,other=dm-(t.inc-t.fee)-spv,dh=S.hp-t.hp,dp=S.mp-t.mp,df=S.fame-t.fame,fc=S.fam.filter(Boolean).length;
   const R=[];if(t.inc)R.push(['SNSからの収入','+'+yen(t.inc)]);if(spv)R.push([`スポンサー料（${t.sp[2]}）`,'+'+yen(spv)]);if(t.fee)R.push(['利用料','-'+yen(t.fee)]);if(other)R.push(['輪行費・治療費など',(other<0?'-':'+')+yen(Math.abs(other))]);
@@ -1320,15 +1320,14 @@ async function shareCard(){const W=1200,H=630,cv=document.createElement('canvas'
   pill('称号：'+title(S.fame),40,H-146,32,'l');
   pill('フォロワー '+fol(S.fame),40,H-76,32,'l');
   return new Promise(r=>cv.toBlob(r,'image/png'));}
-async function doShare(noteEl){const note=noteEl||$('share-note');note.textContent='画像を作っています…';
+function shareX(noteEl){const note=noteEl||$('share-note');window.open('https://x.com/intent/post?text='+encodeURIComponent(shareText()),'_blank','noopener');note.textContent='Xの投稿画面を開きました。リンクのカードにゲームの画像が出ます。旅の画像も付けたいときは「画像を共有・保存」を使ってください。';}
+async function doShareImg(noteEl){const note=noteEl||$('share-note');note.textContent='画像を作っています…';
   let blob;try{blob=await shareCard();}catch(e){blob=null;}
   const text=shareText();let file=null;if(blob){try{file=new File([blob],'nihon-meguru-jitensha-tabi.png',{type:'image/png'});}catch(e){}}
   try{if(file&&navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],text});note.textContent='';return;}}catch(e){if(e&&e.name==='AbortError'){note.textContent='';return;}}
-  if(blob){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='nihon-meguru-jitensha-tabi.png';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000);}
-  window.open('https://x.com/intent/post?text='+encodeURIComponent(text),'_blank','noopener');
-  note.textContent=blob?'画像を保存しました。Xの投稿画面で、その画像を添付してください。':'Xの投稿画面を開きました。';}
-$('btn-share').onclick=()=>doShare();
-$('result-box').addEventListener('click',e=>{if(e.target.closest('#res-share'))doShare($('res-note'));});
+  if(blob){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='nihon-meguru-jitensha-tabi.png';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000);note.textContent='画像を保存しました。Xの投稿画面で添付してください。';}else note.textContent='画像を作れませんでした。';}
+$('btn-share').onclick=()=>shareX();$('btn-shimg').onclick=()=>doShareImg();
+$('result-box').addEventListener('click',e=>{if(e.target.closest('#res-shimg'))doShareImg($('res-note'));else if(e.target.closest('#res-share'))shareX($('res-note'));});
 // ---------- boot ----------
 $('start-pref').innerHTML=PREF.map(p=>`<option value="${p.id}">${p.name}（${p.site}）</option>`).join('');$('start-pref').value='12';
 $('btn-new').onclick=()=>{newGame(+$('start-pref').value);$('ov-title').hidden=true;render();if(!tutSeen())tutShow(0);};
