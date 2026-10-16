@@ -132,7 +132,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 @media (max-width:390px){.info{font-size:var(--fs-xs)}.info h3{font-size:var(--fs-s)}}
 .info .kv{display:grid;grid-template-columns:auto 1fr;gap:1px 6px}
 .info .kv span:nth-child(odd){color:var(--muted)}
-.info .pill{font-size:var(--fs-xs);padding:0 6px;display:inline-block;margin:2px 0}
+.info .pill{font-size:var(--fs-xs);padding:0 6px;display:inline-block;margin:2px 0;white-space:nowrap}
 .detail{display:grid;grid-template-columns:1fr auto;gap:8px 12px;align-items:start}
 .detail .acts{display:flex;flex-direction:row;gap:6px;grid-column:1/-1}
 .detail .acts button{flex:1 1 0;min-width:0;padding:8px 2px;font-size:var(--fs-s);line-height:1.25;white-space:nowrap;display:flex;flex-direction:column;align-items:center;gap:1px}
@@ -706,6 +706,9 @@ function bikeStats(){const b=BIKES.find(x=>x.id===S.bike);const st={climb:b.clim
   for(const pid of S.parts){const p=PARTS.find(x=>x.id===pid);for(const k of ['climb','rough','cruise','wx','photo','comfy']) if(p[k]) st[k]+=p[k]+plv(pid);}return st;}
 // ---------- カスタム（自転車・パーツを+1〜+3に改造） ----------
 const STATJ={climb:'登坂',rough:'悪路',cruise:'巡航',wx:'耐候',photo:'写真',comfy:'気力消費'};
+// チタン折りたたみ専用の「輪行カスタム」：輪行費の割合が段階的に下がる（素のチタン折りたたみは半額）
+const RK_RATE=[.5,.4,.3,.15],RK_COST=[8000,15000,30000],RK_TIER=['軽量輪行袋','専用ハードケース','超軽量カーボンケース'];
+const rkLv=()=>Math.min(3,(S.plus&&S.plus.fold)||0);
 const NOCUSTOM=new Set(['fold','tigrav']);// チタン製の自転車は、フレーム素材が完成形なのでカスタム（クロモリ→アルミ→カーボン）できない
 const plv=id=>NOCUSTOM.has(id)?0:(S.plus&&S.plus[id])||0;
 // カスタムの段階名。自転車はフレーム素材、パーツは仕様（効果は1段ごとに+1のまま）
@@ -862,7 +865,7 @@ if(!matchMedia('(prefers-reduced-motion: reduce)').matches)setInterval(heroTick,
 $('map').addEventListener('click',e=>{const c=e.target.closest('path');if(c){S.sel=+c.dataset.id;render();}});
 
 function travelInfo(p){const d=dist(PREF[S.loc],p);const st=bikeStats();
-  const rinko=Math.round((1000+d*8)*(st.fold?.5:1));const okinawa=p.name==='沖縄'||PREF[S.loc].name==='沖縄';
+  const rinko=Math.round((1000+d*8)*(st.fold?RK_RATE[rkLv()]:1));const okinawa=p.name==='沖縄'||PREF[S.loc].name==='沖縄';
   let enc=d===0?0:d<=120?1:d<=250?2:d<=400?3:99;if(enc>1&&enc<99&&S.fam[S.loc])enc--;// 馴染み宿から出発すると道を知っているので遭遇-1
   return {d,rinko:okinawa?rinko+6000:rinko,enc,ride:enc<99&&!okinawa};}
 
@@ -894,7 +897,7 @@ function isEq(kind,item){return kind==='bike'?S.bike===item.id:kind==='cloth'?S.
 const ICON_FB={};
 addEventListener('error',e=>{const i=e.target;if(i&&i.tagName==='IMG'&&i.dataset&&i.dataset.fb){const f='img/'+i.dataset.fb+'.webp';i.dataset.fb='';i.src=f;}},true);
 function card(item,kind,mode){const eq=isEq(kind,item),own=owns(kind,item.id);
-  const spec=kind==='bike'?`登坂${bv(item,'climb')} 悪路${bv(item,'rough')} 巡航${bv(item,'cruise')} 耐候${bv(item,'wx')}${item.fold?' 輪行半額':''}`:
+  const spec=kind==='bike'?`登坂${bv(item,'climb')} 悪路${bv(item,'rough')} 巡航${bv(item,'cruise')} 耐候${bv(item,'wx')}${item.fold?` 輪行費×${RK_RATE[rkLv()]}`:''}`:
    kind==='cloth'?`快適 ${item.lo}℃〜${item.hi}℃`:
    kind==='gear'?[item.mp?`気力+${item.mp}`:'',item.hp?`体力+${item.hp}`:'',item.photo?`写真+${item.photo}`:'',item.guard?`雨ガード${Math.round(item.guard*100)}%`:'',item.climb?`登坂+${item.climb}`:'',item.cruise?`巡航+${item.cruise}`:'',item.winter?'冬のみ有効':'',item.req?`要：${(GEAR_ITEMS.find(x=>x.id===item.req)||{}).name}`:''].filter(Boolean).join(' '):
    item.anti?(item.anti==='bear'?'クマから受ける被害が半分':'暴走車・暴走バイクから受ける被害が半分'):Object.entries(item).filter(([k])=>['climb','rough','cruise','wx','photo','comfy'].includes(k)).map(([k,v])=>({climb:'登坂',rough:'悪路',cruise:'巡航',wx:'耐候',photo:'写真',comfy:'気力消費'}[k]+(k==='comfy'?'-':'+')+v)).join(' ');
@@ -914,8 +917,11 @@ function renderForge(){
     const fx=keys.map(k=>STATJ[k]+(k==='comfy'?'-1':'+1')).join(' ');
     const act=lv>=3?'<span class="pill">最大</span>':`<button data-forge="${kind}:${item.id}" ${S.money>=upCost(kind,item,nx)?'':'disabled'}><img class="wi" src="img/icon_upgrade.webp" width="128" height="128" alt=""><span>${tierOf(kind,nx)}<small>${yen(upCost(kind,item,nx))}</small></span></button>`;
     return `<div class="card"><div class="name"><span class="nm"><img class="ci" src="img/${kind==='bike'?'icon_bike_':'part_'}${item.id}.webp" width="28" height="28" alt="">${item.name}${lv?` <b>${tierOf(kind,lv).replace('製','')}</b>`:''}</span>${act}</div><div class="spec">1段階ごとに ${fx}${lv?`（現在 ${tierOf(kind,lv)}）`:''}</div></div>`;};
-  $('shop-forge').innerHTML=BIKES.filter(i=>owns('bike',i.id)&&!NOCUSTOM.has(i.id)).map(i=>row('bike',i)).join('')+(BIKES.some(i=>NOCUSTOM.has(i.id)&&owns('bike',i.id))?'<div class="hint">チタン製の自転車（チタン折りたたみ・フルオーダー チタングラベル）は、完成された一台なので、カスタムできません。</div>':'')+PARTS.filter(i=>!i.anti&&owns('part',i.id)).map(i=>row('part',i)).join('');}
-$('shop-forge').addEventListener('click',e=>{const b=e.target.closest('button[data-forge]');if(!b)return;
+  $('shop-forge').innerHTML=BIKES.filter(i=>owns('bike',i.id)&&!NOCUSTOM.has(i.id)).map(i=>row('bike',i)).join('')+(owns('bike','fold')?(()=>{const lv=rkLv(),nx=lv+1,act=lv>=3?'<span class="pill">最大</span>':`<button data-rk="1" ${S.money>=RK_COST[lv]?'':'disabled'}><img class="wi" src="img/icon_upgrade.webp" width="128" height="128" alt=""><span>${RK_TIER[lv]}<small>${yen(RK_COST[lv])}</small></span></button>`;
+    return `<div class="card"><div class="name"><span class="nm"><img class="ci" src="img/icon_bike_fold.webp" width="28" height="28" alt="">チタン折りたたみ</span>${act}</div><div class="spec">${lv?`装備中：${RK_TIER[lv-1]}　`:''}輪行費 ×${RK_RATE[lv]}${lv<3?` → ×${RK_RATE[nx]}`:''}</div></div>`;})():'')+(BIKES.some(i=>NOCUSTOM.has(i.id)&&owns('bike',i.id))?'<div class="hint">チタン製の自転車は、完成された一台なので、フレームのカスタムはできません（折りたたみは、輪行用の装備だけ強化できます）。</div>':'')+PARTS.filter(i=>!i.anti&&owns('part',i.id)).map(i=>row('part',i)).join('');}
+$('shop-forge').addEventListener('click',e=>{const rb=e.target.closest('button[data-rk]');if(rb){const lv=rkLv();if(lv>=3||S.money<RK_COST[lv]||!owns('bike','fold'))return;const c=RK_COST[lv];
+    askPay(`チタン折りたたみに「${RK_TIER[lv]}」を付けますか？（輪行費が×${RK_RATE[lv+1]}に）`,c,()=>{S.money-=c;S.plus.fold=lv+1;log(`チタン折りたたみに${RK_TIER[lv]}を付けた（${yen(c)}）`);render();});return;}
+  const b=e.target.closest('button[data-forge]');if(!b)return;
   const [kind,id]=b.dataset.forge.split(':'),item=(kind==='bike'?BIKES:PARTS).find(x=>x.id===id),nx=plv(id)+1;if(!item||nx>3||NOCUSTOM.has(id))return;
   const c=upCost(kind,item,nx);if(S.money<c)return;
   askPay(`「${item.name}」を${tierOf(kind,nx)}にカスタムしますか？`,c,()=>{S.money-=c;S.plus[id]=nx;log(`${item.name}を${tierOf(kind,nx)}にカスタム（${yen(c)}）`);render();});});
