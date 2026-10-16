@@ -101,6 +101,11 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .card .spec{color:var(--muted);font-size:.82rem}
 .card.eq{border-color:var(--forest);box-shadow:inset 0 0 0 1px var(--forest)}
 .log{font-size:.85rem;max-height:40vh;overflow:auto;display:flex;flex-direction:column;gap:4px;padding:0;margin:0;list-style:none}
+.tl{display:grid;grid-template-columns:auto auto auto 1fr;gap:0 10px;font-size:.82rem;max-height:34vh;overflow:auto;margin:6px 0 10px}
+.tl>div{padding:4px 0;border-bottom:1px dashed var(--line)}
+.tl .th{color:var(--muted);font-size:.74rem;position:sticky;top:0;background:var(--panel)}
+.tl .bad{color:var(--bad)}
+.lh2{font-size:.9rem;color:var(--muted);margin:4px 0}
 .log li{border-bottom:1px dashed var(--line);padding:3px 0}
 .hint{font-size:.85rem;color:var(--muted)}
 h3{margin-top:2px}
@@ -260,6 +265,8 @@ h3{margin-top:2px}
     <div id="p-trip">
     <div class="loghead"><h2>旅の記録</h2><span class="logbtns"><button id="btn-set" aria-label="設定">⚙ 設定</button><button id="btn-reset">リセット</button></span></div>
     <div class="profile"><img src="img/hero.webp" width="96" height="96" alt="主人公の自転車旅行者"><div class="res" id="summary"></div></div>
+    <div class="tl" id="tl"></div>
+    <h3 class="lh2">できごと</h3>
     <ul class="log" id="log"></ul>
     </div>
   </section>
@@ -576,13 +583,13 @@ function title(f){let t=TITLES[0][1];for(const [n,s] of TITLES) if(f>=n) t=s;ret
 // ---------- state ----------
 let S=null;
 function newGame(HOME){INTRIP=false;S={turn:1,fame:0,money:30000,hp:100,mp:100,home:HOME,loc:HOME,bike:'mama',cloth:'plain',parts:[],gear:{fire:null,shelter:null,tarp:null},owned:{bikes:['mama'],cloth:['plain'],parts:[],gear:[]},
-  visits:Array(47).fill(0),fam:Array(47).fill(false),log:[],forecast:null,sel:HOME,food:0,plus:{},ach:{},stats:{wins:0,losses:0,posts:0,bestQ:0,tph:0,ev:0}};
+  visits:Array(47).fill(0),fam:Array(47).fill(false),log:[],tl:[],forecast:null,sel:HOME,food:0,plus:{},ach:{},stats:{wins:0,losses:0,posts:0,bestQ:0,tph:0,ev:0}};
   rollForecast();log(`春の週末。${PREF[HOME].name}の自宅から旅が始まる。`);save();}
 // ---------- セーブ ----------
 // 旅の最中（出発〜結果を閉じるまで）は保存しない。途中で閉じても旅の前の状態に戻るだけで、バトルや費用の食い逃げができない
 let TS=null;// 旅の前の数値（週の変化をポップアップに出すため）
 function snap(){TS={money:S.money,fame:S.fame,hp:S.hp,mp:S.mp,fam:S.fam.filter(Boolean).length,inc:0,fee:0,became:null};}
-let INTRIP=false;const SAVE_V=4,LOG_MAX=80,WXL=['sun','cloud','rain','wind','typhoon'];
+let INTRIP=false;const SAVE_V=4,LOG_MAX=80,TL_MAX=60,WXL=['sun','cloud','rain','wind','typhoon'];
 // セーブ(v4)：馴染み宿(fam)は訪問回数3以上と同じなので保存しない／予報は(気温+30)*5+天気番号の数値に詰める／ログは「週の通し番号|本文」
 function pack(){const {sel,fam,forecast,...o}=S;o.v=SAVE_V;if(forecast)o.fc=PREF.map(p=>(Math.round(forecast[p.id].temp)+30)*5+WXL.indexOf(forecast[p.id].wx));return JSON.stringify(o);}
 let LASTSAVE='';// 直前に書いた内容。同じなら書き込まない（県をタップするだけの操作などでは何も変わらない）
@@ -604,6 +611,7 @@ function load(){try{const s=localStorage.getItem('charicamp');if(!s)return null;
   const g=o.gear&&typeof o.gear==='object'?o.gear:{};o.gear={};for(const k of ['fire','shelter','tarp'])o.gear[k]=GEAR_ITEMS.some(x=>x.slot===k&&x.id===g[k]&&o.owned.gear.includes(x.id))?g[k]:null;
   if(o.gear.fire==='fire4'&&o.gear.shelter!=='sh5')o.gear.fire=null;
   o.log=(Array.isArray(o.log)?o.log:[]).filter(x=>typeof x==='string').slice(0,LOG_MAX);
+  o.tl=(Array.isArray(o.tl)?o.tl:[]).filter(x=>Array.isArray(x)&&x.length===4&&Number.isFinite(+x[0])&&PREF[x[1]]&&Number.isFinite(+x[2])&&typeof x[3]==='string').slice(0,TL_MAX);
   const st=o.stats&&typeof o.stats==='object'?o.stats:{};o.stats={wins:num(st.wins,0,0,1e9),losses:num(st.losses,0,0,1e9),posts:num(st.posts,0,0,1e9),bestQ:num(st.bestQ,0,0,100),tph:num(st.tph,0,0,1e9),ev:num(st.ev,0,0,1e9)};
   o.food=num(o.food,0,0,FOOD_MAX);
   const a=o.ach&&typeof o.ach==='object'?o.ach:{};o.ach={};for(const x of ACH)if(a[x.id]!=null&&Number.isFinite(+a[x.id]))o.ach[x.id]=num(a[x.id],1,1,99999);
@@ -612,6 +620,8 @@ function load(){try{const s=localStorage.getItem('charicamp');if(!s)return null;
   delete o.fc;
   if(Object.keys(f).length===47&&Object.values(f).every(x=>x&&Number.isFinite(+x.temp)&&WXL.includes(x.wx)))o.forecast=f;
   o.v=SAVE_V;LASTSAVE='';return o;}catch(e){return null;}}
+// 旅の一覧：[週の通し番号, 県番号, 写真点数(-1は遅刻), 遭遇した敵(カンマ区切り)]
+function tlog(q){const k=trip.late?trip.enc.slice(0,trip.i+1):trip.enc;S.tl.unshift([S.turn,trip.p.id,q,k.join(',')]);if(S.tl.length>TL_MAX)S.tl.length=TL_MAX;}
 function log(t){S.log.unshift(`${S.turn}|${t}`);if(S.log.length>LOG_MAX)S.log.length=LOG_MAX;}
 // ログ1行を表示用に戻す（v3以前の保存には日付入りの文字列がそのまま入っている）
 const logLine=l=>{const m=/^(\d+)\|(.*)$/s.exec(l);return m?`${calLabel(+m[1])} ${m[2]}`:l;};
@@ -837,7 +847,9 @@ function shopClick(e){const b=e.target.closest('button[data-act]');if(!b)return;
   render();}}
 for(const id of ['p-gear','p-camp','p-shop'])$(id).addEventListener('click',shopClick);
 
+const CAL_S=t=>{const c=calendar(t);return `${c.year}年${c.month}月${c.week}週`;};
 function renderLog(){$('log').innerHTML=S.log.map(l=>`<li>${logLine(l)}</li>`).join('');
+  $('tl').innerHTML=S.tl.length?`<div class="th">日付</div><div class="th">行き先</div><div class="th">写真</div><div class="th">遭遇</div>`+S.tl.map(([t,pid,q,k])=>`<div>${CAL_S(t)}</div><div>${PREF[pid].name}</div><div>${q<0?'<span class="bad">遅刻</span>':q+'点'}</div><div>${k?k.split(',').map(x=>(ENEMY[x]||{name:x}).name).join('・'):'なし'}</div>`).join(''):'<div class="hint" style="grid-column:1/-1">まだ旅に出ていません</div>';
   const sp=sponsor();$('summary').innerHTML=`<span>称号</span><span>${title(S.fame)}</span><span>スポンサー</span><span>${sp[2]}（${yen(sp[1])}/週）</span><span>投稿数</span><span>${S.stats.posts}</span><span>最高写真</span><span>${S.stats.bestQ}点</span><span>勝敗</span><span>${S.stats.wins}勝 ${S.stats.losses}敗</span>`;}
 
 $('shop-tabs').addEventListener('click',e=>{const b=e.target.closest('button[data-sub]');if(!b)return;document.querySelectorAll('#shop-tabs button').forEach(x=>x.setAttribute('aria-selected',x===b));document.querySelectorAll('.shopsec').forEach(s=>s.hidden=s.dataset.sub!==b.dataset.sub);});
@@ -969,7 +981,7 @@ function cmd(k){let t='';let dmg=0;const mult=B.charge||1;B.cut=1;
     else if(kd==='typhoon'){S.mp-=4;B.cut=.5;S.hp=Math.min(100,S.hp+15);t='寝床を広げてビバーク。体力+15';}
     else if(kd==='rival'){S.mp-=8;B.cut=0;B.charge=Math.max(B.charge||0,1.5);t='ハッシュタグを練り直した。次の投稿1.5倍';}}
   else if(k==='rinko'){if(!$('ov-pay').dataset.ok){askPay('輪行で区間を飛ばしますか？',trip.rk,()=>{$('ov-pay').dataset.ok='1';cmd('rinko');});return;}delete $('ov-pay').dataset.ok;S.money-=trip.rk;t='輪行で区間を飛ばした！';log(`${B.e.name}の区間を輪行（${yen(trip.rk)}）`);S.stats.wins++;trip.i++;$('ov-battle').hidden=true;battleOver();nextEncounter();return;}
-  else if(k==='escape'){trip.late=true;$('ov-battle').hidden=true;battleOver();log('ライバルに撮影スポットを譲った…');S.stats.losses++;nextEncounter();return;}
+  else if(k==='escape'){trip.late=true;$('ov-battle').hidden=true;battleOver();S.stats.losses++;nextEncounter();return;}
   B.hp-=dmg;if(dmg>0&&B.hp>0)playSE('se_hit');
   if(B.hp<=0){blog(t+(isRival()?'\n先に撮影スポットに着いた！':'\nこの区間を走り切った！'));S.stats.wins++;playSE('se_win');renderBattle();$('bt-cmds').innerHTML=`<button class="primary c-atk" data-cmd="next">キャンプ場へ向かう</button>`;
     $('bt-cmds').querySelector('button').onclick=()=>{trip.i++;$('ov-battle').hidden=true;battleOver();nextEncounter();};return;}
@@ -985,7 +997,7 @@ function cmd(k){let t='';let dmg=0;const mult=B.charge||1;B.cut=1;
   if(S.hp<=0){blog(t+'\n'+et+'\n体力が尽きた…もう漕げない');fail('体力切れ');return;}
   if(B.turn>B.limit){blog(t+'\n'+et+'\n日が暮れた…キャンプ場に遅刻した');fail('日没');return;}
   blog(t+'\n'+et);renderBattle();}
-function fail(why){S.stats.losses++;trip.late=true;log(`${B.e.name}の区間で遅れた（${why}）`);renderBattle();
+function fail(why){S.stats.losses++;trip.late=true;renderBattle();
   $('bt-cmds').innerHTML=`<button class="primary c-atk">とぼとぼ向かう</button>`;$('bt-cmds').querySelector('button').onclick=()=>{$('ov-battle').hidden=true;battleOver();endTrip();};}
 
 // ---------- camp result ----------
@@ -1018,7 +1030,7 @@ function endTrip2(camp){const p=trip.p,f=S.forecast[p.id],st=bikeStats(),cl=CLOT
   const campRows=`${camp.label?`<span>過ごし方</span><span>${camp.label}${cc?`（-${yen(cc)}）`:''}</span>`:''}${fm?'<span>馴染み宿特典</span><span>利用料半額・回復+4</span>':''}<span>キャンプ回復</span><span>体力${sn(recHp)} 気力${sn(recMp)}</span>${wetHp?`<span>雨ざらし</span><span>体力-${wetHp}</span>`:''}${harshMp?`<span>厳しい環境</span><span>気力-${harshMp}</span>`:''}`;
   const lateL=floss(20,.025);if(trip.late){S.fame=Math.max(0,S.fame-lateL);
     html=`<h2>遅刻…</h2><div class="photo pic"><img src="img/late.webp" width="720" height="480" alt="日没後にキャンプ場へ着いた自転車旅行者"><div class="cap"><div>${p.site}</div><div>${WX_J[f.wx]} ${f.temp}℃ ・ 📷 撮影できず</div></div></div><p>${p.site}に着いたのは日没後。写真は撮れず、投稿できなかった。</p><div class="res"><span>フォロワー</span><span>-${fol(lateL)}</span><span>利用料</span><span>-${yen(fee)}</span>${cold?`<span>衣類不適</span><span>体力-${cold}</span>`:''}${campRows}</div>`;
-    log(`${p.site}に遅刻。投稿なし`);}
+    tlog(-1);}
   else{const wb0={sun:10,cloud:0,rain:-15,wind:-5,typhoon:-25}[f.wx],wb=wet?Math.round(wb0*(1-g.guard)):wb0;let q=40+p.scen*8+st.photo+g.photo+wb+rnd(0,10)+(camp.q||0)+(trip.ev?12:0)-mpPen;if(trip.stay)q-=10;q=Math.max(10,Math.min(100,q));
     playSE('se_photo');S.visits[p.id]++;const became=!S.fam[p.id]&&S.visits[p.id]>=3;if(became)S.fam[p.id]=true;
     let fg=Math.round(q*3+S.fame*.03*q/70)+(S.visits[p.id]===1?300:0)+(became?1000:0);if(trip.ev){fg=Math.round(fg*1.5);S.stats.ev++;}if(f.wx==='typhoon')S.stats.tph++;
@@ -1027,7 +1039,7 @@ function endTrip2(camp){const p=trip.p,f=S.forecast[p.id],st=bikeStats(),cl=CLOT
       return `<div class="photo pic"><img src="img/${ev?ev.img:'sights/'+sid}.webp" width="${ev?768:480}" height="${ev?512:320}" alt="${ev?ev.name:sn}"><div class="cap"><div>${ev?ev.name:sn}</div><div class="q">📷 ${q}点</div><div>${WX_J[f.wx]} ${f.temp}℃ ・ ${p.site}</div></div></div>`;})()}
     <div class="res"><span>フォロワー</span><span>+${fol(fg)}${became?'（馴染み宿ボーナス込）':''}</span><span>SNS収入</span><span>+${yen(inc)}</span><span>利用料</span><span>-${yen(fee)}</span>
     <span>訪問</span><span>${Math.min(3,S.visits[p.id])}/3</span>${trip.ev?`<span>催事</span><span>${EVI}${trip.ev.name}（写真+12・フォロワー×1.5）</span>`:''}<span>ギア効果</span><span>写真+${g.photo}${wet?`（雨ガード${Math.round(g.guard*100)}%）`:''}</span>${mpPen?`<span>気力不足</span><span>写真-${mpPen}</span>`:''}${cold?`<span>衣類不適</span><span>体力-${cold}</span>`:''}${campRows}</div>`;
-    log(`${p.site}で投稿（${q}点）フォロワー+${fol(fg)} ${yen(inc)}${became?' 馴染み宿に！':''}`);}
+    tlog(q);}
   // natural recovery + advance
   S.hp=Math.min(100,S.hp+recHp);S.mp=Math.min(100,S.mp+recMp);
   if(S.hp<=0){const cure=Math.min(5000,Math.max(0,S.money));S.hp=30;S.money-=cure;html+=`<p class="hint">体力が尽きてダウン。治療費${yen(cure)}${cure<5000?'（所持金が足りず、払える分だけ）':''}。</p>`;}
