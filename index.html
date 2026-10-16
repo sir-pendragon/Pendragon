@@ -162,9 +162,9 @@ h3{margin-top:2px}
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:16px;z-index:10;overflow:auto;overscroll-behavior:contain}
 .setrow{display:grid;grid-template-columns:4.5em 4.5em 1fr;gap:8px;align-items:center}
 .setrow input[type=range]{width:100%;accent-color:var(--accent)}
-#pop{position:fixed;left:50%;transform:translateX(-50%) rotate(-.5deg);width:min(calc(100vw - 32px),420px);z-index:9;color:#2e2415;font-family:'Zen Old Mincho','Hiragino Mincho ProN','Yu Mincho',serif;border:1px solid #cdbd93;border-radius:3px;padding:14px 16px 12px;box-shadow:0 10px 28px rgba(0,0,0,.45),0 1px 0 rgba(255,255,255,.6) inset;
+#pop{position:fixed;left:50%;transform:translateX(-50%) rotate(-.5deg);width:min(calc(100vw - 32px),420px);z-index:9;color:#2e2415;font-family:'Zen Old Mincho','Hiragino Mincho ProN','Yu Mincho',serif;border:2px solid #000;border-radius:3px;padding:14px 16px 12px;box-shadow:0 0 0 1px rgba(0,0,0,.6),6px 8px 0 rgba(0,0,0,.75),0 14px 34px rgba(0,0,0,.65);
   background:linear-gradient(90deg,transparent 0 30px,rgba(190,70,60,.35) 30px 31px,transparent 31px),repeating-linear-gradient(transparent 0 26px,rgba(90,120,160,.22) 26px 27px),#f6efdc}
-#pop::before{content:"";position:absolute;left:0;right:0;top:-1px;height:8px;background:radial-gradient(circle at 6px 0,transparent 4px,#f6efdc 4.5px) 0 0/12px 8px repeat-x;filter:drop-shadow(0 -1px 0 #cdbd93)}
+#pop::before{content:"";position:absolute;left:0;right:0;top:-1px;height:8px;background:radial-gradient(circle at 6px 0,transparent 4px,#f6efdc 4.5px) 0 0/12px 8px repeat-x;filter:drop-shadow(0 -2px 0 #000)}
 #pop::after{content:"確認済";position:absolute;right:14px;top:14px;transform:rotate(-12deg);font-weight:700;font-size:.8rem;letter-spacing:.1em;white-space:nowrap;color:#c0392b;border:2px solid #c0392b;border-radius:4px;padding:5px 8px;opacity:.8;mix-blend-mode:multiply}
 #pop .doc-t{font-size:.72rem;letter-spacing:.4em;color:#6b5a3a;margin:0 0 2px 36px}
 #pop h3{margin:0 0 8px 36px;font-family:inherit;font-size:1.15rem;font-weight:700;color:#2e2415;border-bottom:2px solid #2e2415;padding-bottom:3px;width:max-content;max-width:calc(100% - 90px)}
