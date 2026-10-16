@@ -660,7 +660,9 @@ const GEAR={
  shelter:{label:'寝床：テントかハンモック（体力・気力回復）',items:[
   {id:'sh1',name:'ハンモック',price:8000,hp:6,mp:8,photo:3,guard:0},
   {id:'sh2',name:'入門ソロテント',price:15000,hp:12,mp:8,photo:5,guard:.2},
+  {id:'sh6',name:'軽量ハンモック',price:25000,hp:10,mp:11,photo:6,guard:0},
   {id:'sh3',name:'軽量山岳テント',price:55000,hp:20,mp:14,photo:9,guard:.4},
+  {id:'sh7',name:'軽量ハンモック【極】',price:70000,hp:14,mp:14,photo:8,guard:0},
   {id:'sh4',name:'DCFテント',price:180000,hp:24,mp:16,photo:10,guard:.55,climb:1,cruise:1},
   {id:'sh5',name:'薪ストーブ用テント',price:90000,hp:18,mp:10,photo:7,guard:.35}]},
  tarp:{label:'タープ（雨から守る）',items:[
@@ -852,14 +854,14 @@ function renderMap(){const svg=$('map');const mk=JSON.stringify([S.loc,S.sel,S.v
     const d=`<path data-id="${p.id}" class="${cls}" fill="url(#tex)" d="${AREAS[p.id].d}"/><path class="ov o${n}" fill="var(--a${n})" d="${AREAS[p.id].d}"/>`;
     if(p.id===S.loc||p.id===S.sel)top+=d;else s+=d;}
   s+=top;
-  const SPR={"tarp_tp2":[565,199],"shelter_sh2":[355,185],"bike_gravel":[190,144],"bike_cross":[185,142],"bike_road":[176,136],"fire_fire3":[480,470],"bike_mama":[162,126],"fire_fire2":[241,200],"tarp_tp1":[476,166],"shelter_sh3":[560,401],"bike_tigrav":[194,122],"tarp_tp3":[760,586],"shelter_sh1":[481,185],"bike_mtb":[202,134],"camp_ground":[451,193],"fire_fire1":[197,153],"bike_fold":[143,124],"tree_spring":[256,338],"tree_summer":[256,338],"tree_autumn":[256,338],"tree_winter":[256,338],"part_tripod":[128,128],"part_cam":[128,128],"part_drone":[128,128],"part_comfy":[128,128]};
+  const SPR={"tarp_tp2":[565,199],"shelter_sh2":[355,185],"bike_gravel":[190,144],"bike_cross":[185,142],"bike_road":[176,136],"fire_fire3":[480,470],"bike_mama":[162,126],"fire_fire2":[241,200],"tarp_tp1":[476,166],"shelter_sh3":[560,401],"bike_tigrav":[194,122],"tarp_tp3":[760,586],"shelter_sh1":[481,185],"shelter_sh6":[481,185],"shelter_sh7":[481,185],"bike_mtb":[202,134],"camp_ground":[451,193],"fire_fire1":[197,153],"bike_fold":[143,124],"tree_spring":[256,338],"tree_summer":[256,338],"tree_autumn":[256,338],"tree_winter":[256,338],"part_tripod":[128,128],"part_cam":[128,128],"part_drone":[128,128],"part_comfy":[128,128]};
   // 新しいギアの絵が届くまでの代用：近い既存の絵を使い、DCFは薄いグリーンに寄せる。絵が届いたら STAND から外し、SPR に寸法を足す
   Object.assign(SPR,{shelter_sh4:[700,381],shelter_sh5:[700,474],tarp_tp4:[800,248]});// 新しい絵の寸法（DCFテント・薪ストーブ用テント本体と煙突・DCFタープ）
   const put=(key,cx,by,k)=>{const d=SPR[key];if(!d)return '';const w=d[0]*k,hh=d[1]*k;return `<image href="img/${key}.webp" x="${(cx-w/2).toFixed(1)}" y="${(by-hh).toFixed(1)}" width="${w.toFixed(1)}" height="${hh.toFixed(1)}"/>`;};
   // 配置の決まり（重なり順・位置）は、近い既存のものと同じにする（DCFテント＝入門テント、薪ストーブ用テント＝山岳テント、DCFタープ＝ヘキサ）。大きさと接地は新しい絵に合わせて個別に決める
   const A_SH={sh4:'sh2',sh5:'sh3'},A_TP={tp4:'tp2'};const shA=A_SH[S.gear.shelter]||S.gear.shelter,tpA=A_TP[S.gear.tarp]||S.gear.tarp;
   // 山岳テントの絵は下端に杭・ガイロープが長く伸びていて、本体の底が下端より約8単位上にある。入門テント(約3単位)と地面の高さを揃えるため下げる
-  const SH3_DROP=4,fk={fire1:.115,fire2:.115,fire3:.085,fire4:0},sk={sh1:.165,sh2:.16,sh3:.085,sh4:.08,sh5:.0743},tk={tp1:.27,tp2:.215,tp3:.125,tp4:.18};
+  const SH3_DROP=4,fk={fire1:.115,fire2:.115,fire3:.085,fire4:0},sk={sh1:.165,sh6:.165,sh7:.165,sh2:.16,sh3:.085,sh4:.08,sh5:.0743},tk={tp1:.27,tp2:.215,tp3:.125,tp4:.18};
   const DROP={sh2:0,sh3:SH3_DROP,sh4:3.7,sh5:.1};// タープは寝床（特にハンモックの杭の間）を覆える幅にする
   // 山岳テントは背が高く、そのままだとタープの屋根を突き抜ける。テントごとにタープの大きさ・位置を決める [scale, 接地のy]
   // 接地yを413にして、タープのポールの根元をテントの前の地面に出す（403だとポールがテントの床に刺さって見える）
@@ -885,7 +887,7 @@ function renderMap(){const svg=$('map');const mk=JSON.stringify([S.loc,S.sel,S.v
    +(S.gear.fire&&S.gear.fire!=='fire4'?put('fire_'+S.gear.fire,318,438,fk[S.gear.fire]):'')+`</g>`
    +(S.parts.includes('drone')?`<g class="drone">${put('part_drone',300,392,.15)}</g>`:'');
   s+=`<g id="hero" style="pointer-events:none"><ellipse id="hs" cy="0" ry="1.8" fill="#000" opacity=".28"/><g id="hf">${HFR.map(k=>`<image id="hi_${k}" href="img/hero_${k}.webp" width="${HDIM[k[0]][0]*HK}" height="${HDIM[k[0]][1]*HK}" style="display:none"/>`).join('')}</g><text id="hz1" style="font-size:6px;fill:#fff;paint-order:stroke;stroke:#234;stroke-width:1.5px">z</text><text id="hz2" style="font-size:5px;fill:#fff;paint-order:stroke;stroke:#234;stroke-width:1.5px">z</text></g>`
-   +(S.gear.shelter==='sh1'?hamFront(sk.sh1):'')
+   +(isHam(S.gear.shelter)?hamFront(sk[S.gear.shelter],S.gear.shelter):'')
    +(hasTent?zzzFx(tpos.by-SPR['shelter_'+S.gear.shelter][1]*tpos.k+(S.gear.shelter==='sh5'?10:1),tpos.x-252):'')
    +(chim?chim.smoke:'');svg.innerHTML=s;HLAST=null;drawHero();}
 // テントで寝ている間、テントの上に立ちのぼる「Z z z」（ty：テントの頂点のy）
@@ -903,8 +905,9 @@ function chimney(tx,by,k,put){const px=tx-700*k/2+281*k,py=by-474*k+120*k,h=15,w
   return {pipe,smoke};}
 // ハンモックで寝るとき、寝袋の下半分を手前の布で隠す（同じ絵を、布の手前側だけ切り抜いてキャラの上に重ねる）
 const HAMF={x0:95,x1:425,y0:98};// 切り抜く範囲（元の絵の座標）。杭を含めず、布のたるみの手前側だけ
-function hamFront(k){const d=[481,185],w=d[0]*k,hh=d[1]*k,x=252-w/2,y=408-hh;
-  return `<clipPath id="hamclip"><rect x="${(x+HAMF.x0*k).toFixed(1)}" y="${(y+HAMF.y0*k).toFixed(1)}" width="${((HAMF.x1-HAMF.x0)*k).toFixed(1)}" height="${(hh-HAMF.y0*k).toFixed(1)}"/></clipPath><image id="hamf" href="img/shelter_sh1.webp" x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${w.toFixed(1)}" height="${hh.toFixed(1)}" clip-path="url(#hamclip)" style="display:none;pointer-events:none"/>`;}
+const isHam=id=>id==='sh1'||id==='sh6'||id==='sh7';
+function hamFront(k,id){const d=[481,185],w=d[0]*k,hh=d[1]*k,x=252-w/2,y=408-hh;
+  return `<clipPath id="hamclip"><rect x="${(x+HAMF.x0*k).toFixed(1)}" y="${(y+HAMF.y0*k).toFixed(1)}" width="${((HAMF.x1-HAMF.x0)*k).toFixed(1)}" height="${(hh-HAMF.y0*k).toFixed(1)}"/></clipPath><image id="hamf" href="img/shelter_${id}.webp" x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${w.toFixed(1)}" height="${hh.toFixed(1)}" clip-path="url(#hamclip)" style="display:none;pointer-events:none"/>`;}
 // ---- ドット絵の主人公：歩く／座って焚き火／寝る ----
 const HDIM={w:[90,141],s:[96,132],z:[162,78]},HK=.26;
 const HERO={ph:36,mode:'sit',x:254,y:426,dir:1,t:20,f:0,goal:null,ham:false,tent:false};
@@ -914,7 +917,7 @@ function heroPick(){const r=Math.random();
   if(r<.4)HERO.goal={x:215+Math.random()*90,mode:'walk',y:426};
   else if(r<.7)HERO.goal={x:254,mode:'sit',y:426};
   else{const sh=S&&S.gear&&S.gear.shelter;
-    HERO.goal=sh==='sh1'?{x:HAM.x,mode:'sleep',y:HAM.y,ham:true}:(sh==='sh2'||sh==='sh3'||sh==='sh4'||sh==='sh5')?{x:252,mode:'sleep',y:416,tent:true}:{x:240,mode:'sleep',y:416};}
+    HERO.goal=isHam(sh)?{x:HAM.x,mode:'sleep',y:HAM.y,ham:true}:(sh==='sh2'||sh==='sh3'||sh==='sh4'||sh==='sh5')?{x:252,mode:'sleep',y:416,tent:true}:{x:240,mode:'sleep',y:416};}
   HERO.mode='walk';HERO.y=426;HERO.ham=false;HERO.tent=false;}
 const HFR=['w1','w2','w3','w4','s1','s2','z1','z2'];
 HFR.forEach(k=>{const i=new Image();i.src='img/hero_'+k+'.webp';});
