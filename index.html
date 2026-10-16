@@ -57,8 +57,9 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .si{width:16px;height:16px;object-fit:contain}
 .card .nm{display:flex;align-items:center;gap:6px;min-width:0}
 .ci{width:28px;height:28px;flex:none;object-fit:contain}
-.subtabs{display:flex;gap:6px;flex-wrap:wrap;margin:2px 0 10px}
-.subtabs button{flex:1 1 auto;min-height:44px;padding:8px 10px;font-size:.88rem;white-space:nowrap}
+.subtabs{display:flex;gap:5px;flex-wrap:wrap;margin:2px 0 8px}
+.subtabs button{flex:1 1 0;min-width:22%;min-height:50px;padding:4px 2px;font-size:.78rem;white-space:nowrap;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px}
+.subtabs button .wi{width:1.6em;height:1.6em;margin:0}
 .subtabs button[aria-selected="true"],.tabs button[aria-selected="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
 .panel{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px;display:flex;flex-direction:column;gap:12px;min-width:0}
 .map{width:100%;max-width:100%;aspect-ratio:400/472;background:color-mix(in srgb,var(--sky) 10%,var(--panel));border-radius:8px;display:block}
@@ -226,7 +227,7 @@ h3{margin-top:2px}
 
   <section class="panel" id="p-shop" hidden>
     <p class="hint">買うとすぐ装備されます（パーツは空きがある場合）。売却はできません。</p>
-    <div class="subtabs" id="shop-tabs"><button data-sub="bike" aria-selected="true">自転車</button><button data-sub="cloth" aria-selected="false">衣類</button><button data-sub="part" aria-selected="false">パーツ</button><button data-sub="fire" aria-selected="false">焚き火台</button><button data-sub="shelter" aria-selected="false">寝床</button><button data-sub="tarp" aria-selected="false">タープ</button><button data-sub="food" aria-selected="false">補給食</button><button data-sub="forge" aria-selected="false"><img class="wi" src="img/icon_custom.webp" width="128" height="128" alt="">カスタム</button></div>
+    <div class="subtabs" id="shop-tabs"><button data-sub="bike" aria-selected="true"><img class="wi" src="img/icon_bike.webp" width="128" height="128" alt="">自転車</button><button data-sub="cloth" aria-selected="false"><img class="wi" src="img/icon_cloth.webp" width="128" height="128" alt="">衣類</button><button data-sub="part" aria-selected="false"><img class="wi" src="img/icon_part.webp" width="128" height="128" alt="">パーツ</button><button data-sub="fire" aria-selected="false"><img class="wi" src="img/icon_fire.webp" width="128" height="128" alt="">焚き火台</button><button data-sub="shelter" aria-selected="false"><img class="wi" src="img/icon_shelter.webp" width="128" height="128" alt="">寝床</button><button data-sub="tarp" aria-selected="false"><img class="wi" src="img/icon_tarp.webp" width="128" height="128" alt="">タープ</button><button data-sub="food" aria-selected="false"><img class="wi" src="img/icon_food.webp" width="128" height="128" alt="">補給食</button><button data-sub="forge" aria-selected="false"><img class="wi" src="img/icon_custom.webp" width="128" height="128" alt="">カスタム</button></div>
     <div class="shopsec" data-sub="bike"><div class="shop" id="shop-bike"></div></div>
     <div class="shopsec" data-sub="cloth" hidden><div class="shop" id="shop-cloth"></div></div>
     <div class="shopsec" data-sub="part" hidden><div class="shop" id="shop-part"></div></div>
@@ -234,7 +235,7 @@ h3{margin-top:2px}
     <div class="shopsec" data-sub="shelter" hidden><div class="shop" id="shop-shelter"></div></div>
     <div class="shopsec" data-sub="tarp" hidden><div class="shop" id="shop-tarp"></div></div>
     <div class="shopsec" data-sub="food" hidden><div class="shop" id="shop-food"></div></div>
-    <div class="shopsec" data-sub="forge" hidden><div class="photo pic" style="transform:none;margin:0 0 8px"><img src="img/custom_shop.webp" width="768" height="512" alt="自転車のカスタム工房で整備士が自転車を調整している"></div><div class="shop" id="shop-forge"></div></div>
+    <div class="shopsec" data-sub="forge" hidden><div class="photo pic" style="transform:none;margin:0 0 8px"><img style="aspect-ratio:9/4" src="img/custom_shop.webp" width="768" height="512" alt="自転車のカスタム工房で整備士が自転車を調整している"></div><div class="shop" id="shop-forge"></div></div>
   </section>
 
   <section class="panel" id="p-log" hidden>
