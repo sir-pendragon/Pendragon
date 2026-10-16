@@ -148,8 +148,8 @@ h3{margin-top:2px}
 #battle-box .blog{margin-top:2px}
 #battle-box .enemy{margin-top:-4px}
 #bt-info{margin:0 0 2px!important}
-.bt-nx{grid-column:1/-1}
-#bt-info{display:grid;grid-template-columns:1fr 1fr;gap:2px 14px;margin:2px 0 6px}
+#bt-nx{position:absolute;left:0;bottom:0;z-index:1;display:flex;flex-direction:column;gap:1px;font-size:.78rem;color:var(--fg);text-shadow:0 1px 3px rgba(0,0,0,.9)}
+#bt-info{display:grid;grid-template-columns:1fr;gap:2px;margin:2px 0 6px}
 #bt-info br{display:none}
 #bt-km .bt-km{font-size:.95rem;white-space:nowrap}
 #bt-info .bt-bar{margin:0}
@@ -301,7 +301,7 @@ h3{margin-top:2px}
     <div class="bt-kms" id="bt-km"></div>
     <div class="route"><i id="bt-hp"></i><img id="bt-bike" src="img/icon_bike_mama.webp" width="128" height="128" alt=""><img class="flag" id="bt-goal" src="img/icon_g_sh2.webp" width="128" height="128" alt="キャンプ場"></div>
     <div class="hint" id="bt-info"></div>
-    <div class="enemy"><h2 id="bt-title">バトル</h2><div class="face" id="bt-face">⛰️</div><div id="bt-name">坂</div></div>
+    <div class="enemy"><h2 id="bt-title">バトル</h2><div class="face" id="bt-face">⛰️</div><div id="bt-nx"></div><div id="bt-name">坂</div></div>
     <div class="blog" id="bt-log"></div>
     <div class="cmds" id="bt-cmds"></div>
   </div>
@@ -948,7 +948,8 @@ function tacOK(){const k=B.kind;return k==='hill'?S.hp>5:k==='animal'?S.mp>=5:k=
 function playerPower(){const st=bikeStats();if(B.kind==='rival')return 8+FL()/8+st.photo/2;return st[B.e.stat]*4;}
 function renderBattle(){const pr=Math.min(100,Math.max(0,(1-B.hp/B.max)*100));$('bt-hp').style.width=pr+'%';$('bt-bike').style.left=pr+'%';$('bt-bike').src=isRival()?'img/part_cam.webp':'img/icon_bike_'+S.bike+'.webp';$('bt-goal').src=isRival()?'img/part_tripod.webp':'img/icon_g_sh2.webp';
   $('bt-km').innerHTML=`<span class="bt-km">${B.hp<=0?(isRival()?'撮影スポットに到着！':'区間ゴール！'):LEFT()+' '+fmtD(B.hp)}</span><span class="bt-km">日没まで あと${B.limit-B.turn+1}時間</span>`;
-  $('bt-info').innerHTML=`<div class="bt-bar"><span>体力</span><div class="bar"><i style="width:${Math.max(0,S.hp)}%"></i></div><b>${S.hp}</b></div><div class="bt-bar"><span>気力</span><div class="bar mp"><i style="width:${Math.max(0,S.mp)}%"></i></div><b>${S.mp}</b></div>${isRival()?`<span class="bt-nx">フォロワー ${fol(S.fame)}</span>`:''}<span class="bt-nx">次の${isRival()?'ライバル':'敵'}の勢い：${B.next==='heavy'?`<b style="color:var(--bad)">${NEXT.heavy[0]}</b>`:NEXT[B.next][0]}　補給食${S.food}個</span>`;
+  $('bt-info').innerHTML=`<div class="bt-bar"><span>体力</span><div class="bar"><i style="width:${Math.max(0,S.hp)}%"></i></div><b>${S.hp}</b></div><div class="bt-bar"><span>気力</span><div class="bar mp"><i style="width:${Math.max(0,S.mp)}%"></i></div><b>${S.mp}</b></div>`;
+  $('bt-nx').innerHTML=`${isRival()?`<span>フォロワー ${fol(S.fame)}</span>`:''}<span>次の${isRival()?'ライバル':'敵'}の勢い：${B.next==='heavy'?`<b style="color:var(--bad)">${NEXT.heavy[0]}</b>`:NEXT[B.next][0]}</span><span>補給食 ${S.food}個</span>`;
   const st=bikeStats(),ti={rinko:trip.rk};const pw=playerPower(),pd=v=>fmtD(v);
   const cmds=B.kind==='rival'?[
     ['post','映え投稿で勝負',`約${pd(pw+4)}詰める`],
