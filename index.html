@@ -1268,7 +1268,7 @@ const TUT=[
  ['スポンサー','毎週、スポンサーの「地元の自転車店」から ¥2,000 が入ります。\nフォロワーが増えると、スポンサーが変わり、もらえる金額も増えます。'],
  ['まずは買い物',`所持金は ${yen(30000)}。画面下の「店」タブで装備を買えます。\nハンモック（${yen(8000)}）を買うと、島でキャラが寝ます。タープ（${yen(5000)}）と焚き火台（${yen(6000)}）も、買ってから旅に出ましょう。\n全部買っても ${yen(30000-8000-5000-6000)} 残ります。旅の利用料も残しておくと安心です。`],
  ['出発','最初は地元のキャンプ場から。「地図」タブで自宅の県を選んで、「自転車旅に行く」を押します。\n道中で坂や動物などの試練が出ます。コマンドを選んで乗り越えましょう。'],
- ['帰ってきたら','お疲れさまでした！結果は「記録」タブでいつでも見られます。\n体力や気力が減ったら「自宅で休む」で回復できます。次の週末も、旅に出かけましょう。']];
+ ['帰ってきたら','疲れたら「自宅で休む」で回復。結果は「記録」タブで見られます。\n次の週末も、旅に出かけましょう。']];
 $('sp-ok').onclick=()=>{$('ov-spon').hidden=true;};
 let TUTI=-1,TUTP=-1;
 function tutDone(){try{localStorage.setItem('cc_tut','1');}catch(e){}}
@@ -1278,9 +1278,9 @@ function tutPos(){const bub=$('tut-bub');if(!bub||bub.hidden)return;const box=bu
   const px=ox+HERO.x*sc,py=oy+(HERO.y-HERO.ph)*sc,bw=bub.offsetWidth,bh=bub.offsetHeight;
   let left=Math.min(Math.max(4,px-bw/2),br.width-bw-4),top=Math.max(4,py-bh-14);
   bub.style.left=left+'px';bub.style.top=top+'px';bub.style.setProperty('--tx',Math.min(Math.max(18,px-left),bw-18)+'px');}
-function tutResult(x){const f=x.df,m=x.dm,fs=f>0?`<b>+${fol(f)}</b>増えました`:f<0?`<b>-${fol(-f)}</b>減りました`:'増減なし',ms=m>0?`<b>+${yen(m)}</b>増えました`:m<0?`<b>-${yen(-m)}</b>減りました`:'増減なし';
-  return `今回の旅の結果です。<br>フォロワー：${fs}（現在 ${fol(S.fame)}）<br>お金：${ms}（残高 ${yen(S.money)}）<br>`+(x.late?'今回は遅刻で、写真が撮れませんでした。投稿できるとフォロワーとお金が増えます。':'撮影して投稿できたので、フォロワーとお金が入りました。キャンプ場の利用料などは引かれます。');}
-function tutShow(i,x){TUTI=i;$('tb-n').textContent=`チュートリアル ${i+1} / ${TUT.length}`;$('tb-h').textContent=TUT[i][0];$('tb-p').innerHTML=(i===4&&x?tutResult(x)+'<br><br>':'')+TUT[i][1].split('\n').join('<br>');
+function tutResult(x){const f=x.df,m=x.dm,sg=(n,t)=>n>0?`+${t}`:n<0?`-${t}`:'±0';
+  return `<span style="white-space:nowrap">フォロワー <b>${sg(f,fol(Math.abs(f)))}</b></span>、<span style="white-space:nowrap">お金 <b>${sg(m,yen(Math.abs(m)))}</b></span>。`+(x.late?'遅刻で、投稿できませんでした。':'投稿できたので増えました。');}
+function tutShow(i,x){TUTI=i;$('tb-n').textContent=`チュートリアル ${i+1} / ${TUT.length}`;$('tb-h').textContent=TUT[i][0];$('tb-p').innerHTML=(i===4&&x?tutResult(x)+'<br>':'')+TUT[i][1].split('\n').join('<br>');
   {const im=$('tb-img');im.hidden=true;if(i===1){im.onload=()=>{im.hidden=false;tutPos();};im.src='img/sponsor_0.webp';}}$('tb-next').textContent=(i===3||i===4)?'閉じる':'次へ';$('tb-skip').hidden=(i===4);$('tut-bub').hidden=false;tutPos();}
 $('tb-next').onclick=()=>{if(TUTI<=2)tutShow(TUTI+1);else{$('tut-bub').hidden=true;if(TUTI===4)tutDone();}};
 $('tb-skip').onclick=()=>{tutDone();try{localStorage.setItem('cc_tutb','1');}catch(e){}TUTI=-1;$('tut-bub').hidden=true;};
