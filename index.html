@@ -1018,6 +1018,8 @@ const FANS=[['ゆうた','yuta_ride'],['みなみ','minami_cmp'],['ペダル太�
 const RPL=[[70,['これは神写真…！😭','保存しました。壁紙にします📱','構図が最高すぎる✨','ここ行きたくなった！','プロの撮影かと思った👏','いいねじゃ足りない…❤️']],[40,['いい景色ですね〜☺️','安全運転で！次も楽しみ🚴','コーヒー飲みたくなる写真☕','応援してます📣','この空気感好き','のんびりしてて癒される']],[0,['お疲れさま！👍','次はもっと撮れるはず💪','無事に着いてよかった😌','天気が惜しかったね…☁️','リベンジ待ってます🔥','ゆっくり休んでね🏕️']]];
 const TRIP_AV='img/hero.webp';
 function postHtml(p){return `<article class="post"><div class="av">${p.av?`<img loading="lazy" src="${p.av}" width="40" height="40" alt="">`:`<span>${esc(p.ini||'？')}</span>`}</div><div class="pb"><div class="ph"><b>${esc(p.name)}</b><span>@${esc(p.id)}・${p.when}</span></div><div class="pt">${esc(p.text).replace(/\n/g,'<br>')}</div>${p.img?`<img class="pimg" loading="lazy" src="${p.img}" width="480" height="320" alt="${esc(p.alt||'')}">`:''}${p.n?`<div class="pa"><span>💬 ${p.n[0]}</span><span>🔁 ${p.n[1]}</span><span>♥ ${p.n[2]}</span></div>`:''}${p.rp?`<div class="rp"><b>${esc(p.rp[0])}</b> <span>@${esc(p.rp[1])}</span><br>${esc(p.rp[2])}</div>`:''}</div></article>`;}
+// ゲーム内ログの文章を、SNSの投稿らしく整える（フォロワー増減などの数値は出さない）
+function snsText(x){if(/^自宅で休養/.test(x))return '今週は自宅でゆっくり休養🛌';if(/強制帰宅/.test(x))return 'お金が尽きて、家に帰ることに…💸';return x.replace(/[。！]?\s*フォロワー[+\-−][^\s。！]*/g,m=>/^！/.test(m)?'！':'');}
 function feedItems(){const out=[],seen={};
   [...S.tl].reverse().forEach(e=>{const [t,pid,q]=e;if(q>=0){seen[pid]=(seen[pid]||0)+1;e.vn=seen[pid];}});
   const pick=(a,h)=>a[h%a.length];
@@ -1030,7 +1032,7 @@ function feedItems(){const out=[],seen={};
     if(mm=/^スポンサー「(.+)」がつきました/.exec(x)){const i=SPONSOR.findIndex(z=>z[2]===mm[1]),pay=i>=0?SPONSOR[i][1]:0;out.push({t,r:0,p:{name:mm[1],id:'sponsor_'+Math.max(i,0),av:i>=0?'img/sponsor_'+i+'.webp':'',ini:'S',when,text:`旅の自転車乗りさん、いつも応援しています！${pay?`今週から毎週${yen(pay)}の応援金をお届けします。`:''}\n#日本巡る自転車旅`}});}
     else if(x==='ライバルより先に撮影スポットへ着いた')out.push({t,r:2,p:{name:'ライバル配信者',id:'rival_cam',ini:'R',when,text:'くっ、先に撮られた…！次は負けない。#映え勝負'}});
     else if(x==='ライバルに先を越された')out.push({t,r:2,p:{name:'ライバル配信者',id:'rival_cam',ini:'R',when,text:'撮影スポットは先にいただき！この景色は私のもの。#映え勝負'}});
-    else out.push({t,r:3,p:{name:'旅の自転車乗り',id:'jitensha_tabi',av:TRIP_AV,when,text:(/ツチノコ/.test(x)?'🐍✨ ':/購入/.test(x)?'🛒 ':/輪行/.test(x)?'🚃 ':/カスタム|付けた/.test(x)?'🔧 ':'')+x}});});
+    else out.push({t,r:3,p:{name:'旅の自転車乗り',id:'jitensha_tabi',av:TRIP_AV,when,text:(/ツチノコ/.test(x)?'🐍✨ ':/購入/.test(x)?'🛒 ':/輪行/.test(x)?'🚃 ':/カスタム|付けた/.test(x)?'🔧 ':'')+snsText(x)}});});
   return out.sort((a,b)=>b.t-a.t||a.r-b.r).slice(0,30);}
 function renderLog(){const it=feedItems();$('log').innerHTML=it.length?it.map(i=>postHtml(i.p)).join(''):'<div class="hint" style="padding:6px 2px">まだ投稿がありません</div>';
   $('tl').innerHTML=S.tl.length?`<div class="th">日付</div><div class="th">行き先</div><div class="th">写真</div><div class="th">遭遇</div>`+S.tl.map(([t,pid,q,k])=>`<div>${CAL_S(t)}</div><div>${PREF[pid].name}</div><div>${q<0?'<span class="bad">遅刻</span>':q+'点'}</div><div>${tlDec(k).length?tlDec(k).map(x=>(ENEMY[x]||{name:x==='tsuchi'?'ツチノコ':x}).name).join('・'):'なし'}</div>`).join(''):'<div class="hint" style="grid-column:1/-1">まだ旅に出ていません</div>';
