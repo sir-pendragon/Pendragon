@@ -433,6 +433,11 @@ const RAREBEAR=new Set(['三重','奈良','和歌山','広島','島根','山口'
 const hasBoar=p=>p.name!=='北海道'&&(p.terrain==='rough'||WILD.has(p.region));
 const URBAN=new Set(['東京','神奈川','埼玉','千葉','愛知','大阪','京都','兵庫','福岡','宮城']);
 const bearSeason=m=>m>=4&&m<=11;
+// 動物（いのしし・牡鹿・熊）に出会う確率は、行き先へのなじみ度で変わる。地元の人は出る場所や時間を知っている。いちばん低い倍率を使う
+const WILDK=new Set(['animal','deer','bear','brownbear']);
+function familiar(p){const own=PREF[S.home];let f=1,why='';
+  const set=(v,w)=>{if(v<f){f=v;why=w;}};
+  if(p.region===own.region)set(.8,'同じ地方');if(S.fam[p.id])set(.7,'馴染み宿');if(p.id===S.home)set(.5,'地元');return {f,why};}
 // 都会の敵は、暴走車と暴走バイクを週ごとに交互に出す（奇数週は暴走車、偶数週は暴走バイク）
 const urbanEnemy=()=>S.turn%2?'car':'bike';
 const TERRAIN={hill:'坂が多い',rough:'悪路が多い',flat:'平坦'};
@@ -762,7 +767,7 @@ function renderDetail(){const p=PREF[S.sel],f=S.forecast[p.id],ti=travelInfo(p),
   $('info').innerHTML=`<h3>${p.site}</h3><div class="hint">${p.name}・${p.region}</div>${badge}
   <div class="kv"><span>地形</span><span>${TERRAIN[p.terrain]}（${'★'.repeat(p.diff)}）</span><span>景観</span><span>${'📷'.repeat(p.scen)}</span>
   <span>予報</span><span>${WX_J[f.wx]} ${f.temp}℃<br>${fit}</span><span>距離</span><span>${stay?'同じ場所（気力-15）':ti.d+'km<br>'+(ti.ride?'遭遇'+ti.enc+'回':'自走不可')}</span>
-  <span>想定</span><span>${enemies.join('・')||'特になし'}</span>${ev?`<span>催事</span><span>${EVI}${ev.name}<br>写真+12・フォロワー×1.5</span>`:''}${S.fam[p.id]?'<span>特典</span><span>利用料半額・回復+4</span>':''}<span>利用料</span><span>${yen(fee)}</span></div>`;
+  <span>想定</span><span>${enemies.join('・')||'特になし'}${(()=>{const q=familiar(p);return q.f<1?`<br>${q.why}：動物に出会う確率×${q.f}`:''})()}</span>${ev?`<span>催事</span><span>${EVI}${ev.name}<br>写真+12・フォロワー×1.5</span>`:''}${S.fam[p.id]?'<span>特典</span><span>利用料半額・回復+4</span>':''}<span>利用料</span><span>${yen(fee)}</span></div>`;
   $('detail').innerHTML=`
   <div class="acts">${stay?`<button class="primary" id="go-stay">自転車旅に行く<small>${p.name}（現在地）</small></button><button disabled>輪行で旅に行く<small>${p.name}（現在地）</small></button>`:
    `<button class="primary" id="go-ride" ${ti.ride?'':'disabled'}>自転車旅に行く<small>${p.name}${ti.ride?'へ':'は遠すぎる'}</small></button>
@@ -857,8 +862,9 @@ function startTrip(p,rinko){snap();{const i=new Image();i.src='img/late.webp';}{
   if(!rinko&&!stay){const pool=[];if(p.terrain==='hill')pool.push('hill','hill','pass');if(p.terrain==='hill'&&p.diff>=3)pool.push('pass','pass');if(p.terrain==='rough')pool.push('hill');if(p.name!=='北海道'){if(p.terrain==='rough')pool.push('animal');if(WILD.has(p.region))pool.push('animal');}
     if(DEER.has(p.name))pool.push('deer','deer');if(bearSeason(calendar(S.turn).month)){if(BROWNBEAR.has(p.name))pool.push('brownbear');if(BLACKBEAR.has(p.name)&&(!RAREBEAR.has(p.name)||Math.random()<.5))pool.push('bear');}if(URBAN.has(p.name))pool.push(urbanEnemy());
     if(f.wx==='rain')pool.push('rain','rain');if(f.wx==='wind')pool.push('wind','wind');if(f.wx==='typhoon')pool.push('typhoon','typhoon');if(pool.length===0)pool.push('hill','animal');
-    for(let i=0;i<ti.enc;i++)enc.push(pool[rnd(0,pool.length-1)]);
-    if(f.wx==='typhoon'&&!enc.includes('typhoon'))enc[enc.length-1]='typhoon';}
+    const fam=familiar(p).f;
+    for(let i=0;i<ti.enc;i++){const k=pool[rnd(0,pool.length-1)];if(WILDK.has(k)&&Math.random()>fam)continue;enc.push(k);}// 地元・馴染み宿・同じ地方では、動物の枠が減る
+    if(f.wx==='typhoon'&&enc.length&&!enc.includes('typhoon'))enc[enc.length-1]='typhoon';}
   const ev=eventAt(S.turn,p.id);
   if((p.scen>=5||ev)&&Math.random()<(ev?(stay?.3:.6):stay?.15:.4))enc.push('rival');
   INTRIP=true;const nEnc=Math.max(1,enc.filter(k=>k!=='rival').length);trip={p,rinko,stay,enc,ev,i:0,late:false,sec:Math.max(3,Math.round(ti.d/nEnc)),rk:Math.max(1000,Math.round(ti.rinko/nEnc/100)*100)};S.loc=p.id;if(stay){S.mp-=Math.max(0,15-bikeStats().comfy);}
