@@ -425,6 +425,14 @@ button:disabled{opacity:.45;cursor:not-allowed}
 <div class="overlay" id="ov-sight" hidden>
   <div class="modal"><img id="sg-img" alt="" decoding="async"><h2 id="sg-name"></h2><button class="primary" id="sg-x">閉じる</button></div>
 </div>
+<div class="overlay" id="ov-storm" hidden style="z-index:30">
+  <div class="modal" style="text-align:center">
+    <h2>⛈️ 天候が悪くなってきた…</h2>
+    <p style="margin:0" id="st-p"></p>
+    <p class="hint" style="margin:0">帰ると、自宅で休養します（自宅以外では輪行費がかかります）。<br>帰らないと、そのまま天候の試練になります。</p>
+    <div class="resbtns"><button id="st-home">帰る</button><button class="primary" id="st-stay">帰らない</button></div>
+  </div>
+</div>
 <div class="overlay" id="ov-spon" hidden style="z-index:30">
   <div class="modal" style="text-align:center">
     <h2>🎉 おめでとう！</h2>
@@ -1070,7 +1078,10 @@ $('sightbook').onclick=e=>{const b=e.target.closest('.sg-c[data-sg]');if(!b)retu
 $('sg-x').onclick=()=>{$('ov-sight').hidden=true;};
 $('go-no').onclick=()=>{$('ov-go').hidden=true;};
 $('go-eq').onclick=()=>{$('ov-go').hidden=true;$('tab-gear').click();};
-function startTrip(p,rinko){snap();{const i=new Image();i.src='img/late.webp';}{const i=new Image();i.src='img/sights/'+sightOf(p.id,S.visits[p.id]+1)[0]+'.webp';}const ti=travelInfo(p);const stay=p.id===S.loc;
+// 連泊（同じ場所）：荒れた天気の日だけ、天候の試練が起きうる。先に確率を確定し、起きる場合は「帰る／帰らない」を選ばせる
+function stayWx(f){if(f.wx==='typhoon')return 'typhoon';return ['rain','wind','snow','heat'].includes(f.wx)&&Math.random()<.75?f.wx:null;}
+function showStorm(p,rinko,k){$('st-p').textContent=`${ENEMY[k].name}になりそうだ。このまま続ける？`;$('st-home').onclick=()=>{$('ov-storm').hidden=true;restHome();};$('st-stay').onclick=()=>{$('ov-storm').hidden=true;startTrip(p,rinko,k);};$('ov-storm').hidden=false;playSE('se_encounter');}
+function startTrip(p,rinko,wx){if(p.id===S.loc&&wx===undefined){const k=stayWx(S.forecast[p.id]);if(k){showStorm(p,rinko,k);return;}wx=null;}snap();{const i=new Image();i.src='img/late.webp';}{const i=new Image();i.src='img/sights/'+sightOf(p.id,S.visits[p.id]+1)[0]+'.webp';}const ti=travelInfo(p);const stay=p.id===S.loc;
   if(rinko){S.money-=ti.rinko;log(`${p.name}へ輪行（${yen(ti.rinko)}）`);}
   const f=S.forecast[p.id];const enc=[];
   if(!stay){const pool=[];// 輪行でも、坂・悪路・天候・ツチノコは出る。生き物は出にくい（3割）。ヒグマ・ハブは下の「現地で3割」で別に判定する
@@ -1084,7 +1095,7 @@ function startTrip(p,rinko){snap();{const i=new Image();i.src='img/late.webp';}{
     if(!enc.length&&ti.enc>0){const nw=pool.filter(k=>!WILDK.has(k));enc.push(nw.length?nw[rnd(0,nw.length-1)]:'hill');}// 生き物が出なかった旅でも、最低1回は試練がある
     if(f.wx==='typhoon'&&enc.length&&!enc.includes('typhoon'))enc[enc.length-1]='typhoon';
     else if(['rain','wind','snow','heat'].includes(f.wx)&&enc.length&&!enc.includes(f.wx)&&Math.random()<.75)enc[enc.length-1]=f.wx;}// 荒れた天気の日は、ほぼ必ず天候の試練がある
-  else if(f.wx==='typhoon')enc.push('typhoon');else if(['rain','wind','snow','heat'].includes(f.wx)&&Math.random()<.75)enc.push(f.wx);// 連泊：荒れた天気の日だけ、天候の試練が1回ある（生き物・坂などは出ない）
+  else if(wx)enc.push(wx);// 連泊：天候の試練が確定したときだけ1回（生き物・坂などは出ない）
   // 輪行（沖縄は輪行しか行けない）でも、現地のキャンプ場の近くで、その県限定のボス（ハブ・ヒグマ）に会うことがある（約5割。地元補正あり）
   if(rinko&&!stay){const bs=[];if(HABU.has(p.name)&&PREF[S.home].name!=='沖縄')bs.push('habu');if(calendar(S.turn).year>=2&&bearSeason(calendar(S.turn).month)&&BROWNBEAR.has(p.name)&&PREF[S.home].name!=='北海道')bs.push('brownbear');
     const fm=familiar(p).f;for(const k of bs)if(Math.random()<.3*fm)enc.push(k);}
