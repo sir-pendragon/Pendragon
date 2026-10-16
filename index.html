@@ -32,8 +32,7 @@ body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:15px
 [hidden]{display:none!important}
 h1,h2,h3{font-family:var(--display);font-weight:400;margin:0;text-wrap:balance;letter-spacing:.02em}
 h1{font-size:1.6rem} h2{font-size:1.2rem} h3{font-size:1.05rem}
-button{font-family:var(--body);font-size:15px;border:1px solid var(--line);background:var(--panel);color:var(--fg);border-radius:6px;padding:8px 12px;cursor:pointer}
-button{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+button{font-family:var(--body);font-size:15px;border:1px solid var(--line);background:var(--panel);color:var(--fg);border-radius:6px;padding:8px 12px;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
 button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 select{font-family:var(--body);font-size:15px;border:1px solid var(--line);background:var(--panel);color:var(--fg);border-radius:6px;padding:8px;width:100%}
 button.primary{background:var(--accent);color:var(--accent-fg);border-color:var(--accent);font-weight:700}
@@ -86,8 +85,6 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .info .kv span:nth-child(odd){color:var(--muted)}
 .info .pill{font-size:.62rem;padding:0 6px;display:inline-block;margin:2px 0}
 .detail{display:grid;grid-template-columns:1fr auto;gap:8px 12px;align-items:start}
-.detail .kv{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;font-size:.9rem;min-width:0}
-.detail .kv span:nth-child(odd){color:var(--muted)}
 .detail .acts{display:flex;flex-direction:row;gap:6px;grid-column:1/-1}
 .detail .acts button{flex:1 1 0;min-width:0;padding:8px 2px;font-size:.76rem;line-height:1.25;white-space:nowrap;display:flex;flex-direction:column;align-items:center;gap:1px}
 @media (max-width:340px){.detail .acts button{font-size:.68rem}}
@@ -113,7 +110,6 @@ h3{margin-top:2px}
 .setrow input[type=range]{width:100%;accent-color:var(--accent)}
 #pop{position:fixed;left:50%;transform:translateX(-50%);width:min(calc(100vw - 32px),420px);z-index:9;background:var(--panel);border:2px solid var(--fg);border-radius:10px;padding:10px 14px;box-shadow:0 8px 30px rgba(0,0,0,.4)}
 #pop h3{margin:0 0 4px}
-#ov-sight .row{display:grid}
 #ov-go .row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 #ov-pay .row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 #ov-camp .row{display:grid;grid-template-columns:1fr;gap:8px}
@@ -569,14 +565,17 @@ function newGame(HOME){INTRIP=false;S={turn:1,fame:0,money:30000,hp:100,mp:100,h
 // 旅の最中（出発〜結果を閉じるまで）は保存しない。途中で閉じても旅の前の状態に戻るだけで、バトルや費用の食い逃げができない
 let TS=null;// 旅の前の数値（週の変化をポップアップに出すため）
 function snap(){TS={money:S.money,fame:S.fame,hp:S.hp,mp:S.mp,fam:S.fam.filter(Boolean).length,inc:0,fee:0,became:null};}
-let INTRIP=false;const SAVE_V=3;
-function save(){if(INTRIP)return;try{const {sel,...o}=S;o.v=SAVE_V;localStorage.setItem('charicamp',JSON.stringify(o));}catch(e){}}
+let INTRIP=false;const SAVE_V=4,LOG_MAX=80,WXL=['sun','cloud','rain','wind','typhoon'];
+// セーブ(v4)：馴染み宿(fam)は訪問回数3以上と同じなので保存しない／予報は(気温+30)*5+天気番号の数値に詰める／ログは「週の通し番号|本文」
+function pack(){const {sel,fam,forecast,...o}=S;o.v=SAVE_V;if(forecast)o.fc=PREF.map(p=>(Math.round(forecast[p.id].temp)+30)*5+WXL.indexOf(forecast[p.id].wx));return JSON.stringify(o);}
+let LASTSAVE='';// 直前に書いた内容。同じなら書き込まない（県をタップするだけの操作などでは何も変わらない）
+function save(){if(INTRIP)return;try{const j=pack();if(j===LASTSAVE)return;try{localStorage.setItem('charicamp',j);}catch(e){S.log.length=Math.min(S.log.length,20);localStorage.setItem('charicamp',pack());}LASTSAVE=j;}catch(e){}}
 function load(){try{const s=localStorage.getItem('charicamp');if(!s)return null;const o=JSON.parse(s);if(!o||typeof o!=='object')return null;
   const num=(v,d,lo,hi)=>Number.isFinite(+v)?Math.min(hi,Math.max(lo,Math.round(+v))):d;
   const has=(l,id)=>l.some(x=>x.id===id);
   o.turn=num(o.turn,1,1,99999);o.fame=num((o.v||0)<3?100*(Math.exp((+o.fame||0)/30)-1):o.fame,0,0,1e9);o.money=num(o.money,0,-1e9,1e12);o.hp=num(o.hp,100,1,100);o.mp=num(o.mp,100,1,100);
   o.home=num(o.home,12,0,46);o.loc=num(o.loc,o.home,0,46);o.sel=o.loc;
-  o.visits=Array.from({length:47},(_,i)=>num(o.visits&&o.visits[i],0,0,9999));o.fam=Array.from({length:47},(_,i)=>!!(o.fam&&o.fam[i]));
+  o.visits=Array.from({length:47},(_,i)=>num(o.visits&&o.visits[i],0,0,9999));o.fam=o.visits.map((v,i)=>v>=3||!!(o.fam&&o.fam[i]));// v3以前の保存にはfamがある
   o.owned=o.owned&&typeof o.owned==='object'?o.owned:{};
   o.owned.bikes=(Array.isArray(o.owned.bikes)?o.owned.bikes:[]).filter(x=>has(BIKES,x));if(!o.owned.bikes.includes('mama'))o.owned.bikes.unshift('mama');
   o.owned.cloth=(Array.isArray(o.owned.cloth)?o.owned.cloth:[]).filter(x=>has(CLOTHES,x));if(!o.owned.cloth.includes('plain'))o.owned.cloth.unshift('plain');
@@ -587,14 +586,18 @@ function load(){try{const s=localStorage.getItem('charicamp');if(!s)return null;
   o.parts=(Array.isArray(o.parts)?o.parts:[]).filter(x=>o.owned.parts.includes(x)).slice(0,3);
   const g=o.gear&&typeof o.gear==='object'?o.gear:{};o.gear={};for(const k of ['fire','shelter','tarp'])o.gear[k]=GEAR_ITEMS.some(x=>x.slot===k&&x.id===g[k]&&o.owned.gear.includes(x.id))?g[k]:null;
   if(o.gear.fire==='fire4'&&o.gear.shelter!=='sh5')o.gear.fire=null;
-  o.log=(Array.isArray(o.log)?o.log:[]).filter(x=>typeof x==='string').slice(0,120);
+  o.log=(Array.isArray(o.log)?o.log:[]).filter(x=>typeof x==='string').slice(0,LOG_MAX);
   const st=o.stats&&typeof o.stats==='object'?o.stats:{};o.stats={wins:num(st.wins,0,0,1e9),losses:num(st.losses,0,0,1e9),posts:num(st.posts,0,0,1e9),bestQ:num(st.bestQ,0,0,100),tph:num(st.tph,0,0,1e9),ev:num(st.ev,0,0,1e9)};
   o.food=num(o.food,0,0,FOOD_MAX);
   const a=o.ach&&typeof o.ach==='object'?o.ach:{};o.ach={};for(const x of ACH)if(a[x.id]!=null&&Number.isFinite(+a[x.id]))o.ach[x.id]=num(a[x.id],1,1,99999);
-  const f=o.forecast&&typeof o.forecast==='object'?o.forecast:{};o.forecast=null;
-  if(Object.keys(f).length===47&&Object.values(f).every(x=>x&&Number.isFinite(+x.temp)&&['sun','cloud','rain','wind','typhoon'].includes(x.wx)))o.forecast=f;
-  o.v=SAVE_V;return o;}catch(e){return null;}}
-function log(t){S.log.unshift(`${calLabel(S.turn)} ${t}`);if(S.log.length>120)S.log.length=120;}
+  let f=o.forecast&&typeof o.forecast==='object'?o.forecast:{};o.forecast=null;
+  if(Array.isArray(o.fc)&&o.fc.length===47&&o.fc.every(n=>Number.isInteger(n)&&n>=0&&n<5*100)){f={};o.fc.forEach((n,i)=>f[i]={temp:Math.floor(n/5)-30,wx:WXL[n%5]});}
+  delete o.fc;
+  if(Object.keys(f).length===47&&Object.values(f).every(x=>x&&Number.isFinite(+x.temp)&&WXL.includes(x.wx)))o.forecast=f;
+  o.v=SAVE_V;LASTSAVE='';return o;}catch(e){return null;}}
+function log(t){S.log.unshift(`${S.turn}|${t}`);if(S.log.length>LOG_MAX)S.log.length=LOG_MAX;}
+// ログ1行を表示用に戻す（v3以前の保存には日付入りの文字列がそのまま入っている）
+const logLine=l=>{const m=/^(\d+)\|(.*)$/s.exec(l);return m?`${calLabel(+m[1])} ${m[2]}`:l;};
 function calLabel(t){const c=calendar(t);return `${c.year}年目${c.month}月第${c.week}週`;}
 function bikeStats(){const b=BIKES.find(x=>x.id===S.bike);const st={climb:b.climb,rough:b.rough,cruise:b.cruise,wx:b.wx,photo:0,comfy:0,fold:!!b.fold};
   const bl=plv(b.id);if(bl)for(const k of bikeBoost(b))st[k]+=bl;// カスタム：得意な上位2能力が+段数
@@ -817,7 +820,7 @@ function shopClick(e){const b=e.target.closest('button[data-act]');if(!b)return;
   render();}}
 for(const id of ['p-gear','p-camp','p-shop'])$(id).addEventListener('click',shopClick);
 
-function renderLog(){$('log').innerHTML=S.log.map(l=>`<li>${l}</li>`).join('');
+function renderLog(){$('log').innerHTML=S.log.map(l=>`<li>${logLine(l)}</li>`).join('');
   const sp=sponsor();$('summary').innerHTML=`<span>称号</span><span>${title(S.fame)}</span><span>スポンサー</span><span>${sp[2]}（${yen(sp[1])}/週）</span><span>投稿数</span><span>${S.stats.posts}</span><span>最高写真</span><span>${S.stats.bestQ}点</span><span>勝敗</span><span>${S.stats.wins}勝 ${S.stats.losses}敗</span>`;}
 
 $('shop-tabs').addEventListener('click',e=>{const b=e.target.closest('button[data-sub]');if(!b)return;document.querySelectorAll('#shop-tabs button').forEach(x=>x.setAttribute('aria-selected',x===b));document.querySelectorAll('.shopsec').forEach(s=>s.hidden=s.dataset.sub!==b.dataset.sub);});
