@@ -56,7 +56,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .subtabs{display:flex;gap:5px;flex-wrap:wrap}
 .subtabs button{flex:1 1 0;min-width:22%;min-height:50px;padding:4px 2px;font-size:var(--fs-s);white-space:nowrap;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px}
 .subtabs button .wi{width:1.6em;height:1.6em;margin:0}
-#shop-tabs button,#camp-tabs button{min-height:44px}
+#shop-tabs button,#camp-tabs button,#gear-tabs button{min-height:44px}
 .campsec{display:flex;flex-direction:column;gap:8px}
 .campsec[hidden]{display:none}
 #log-tabs button,#tl-tabs button{min-height:34px;padding:5px 8px;font-size:var(--fs-m)}
@@ -284,10 +284,10 @@ h3{margin-top:2px}
   </section>
 
   <section class="panel" id="p-gear" hidden>
-    <p class="hint">持っている自転車装備。新しいものは「店」で買えます。</p>
-    <h2>自転車</h2><div class="shop" id="eq-bike"></div>
-    <h2>衣類</h2><div class="shop" id="eq-cloth"></div>
-    <h2>パーツ（3つまで）</h2><div class="shop" id="eq-part"></div>
+    <div class="subtabs" id="gear-tabs"><button data-sub="bike" aria-selected="true"><img class="wi" src="img/icon_bike.webp" width="128" height="128" alt="">自転車</button><button data-sub="cloth" aria-selected="false"><img class="wi" src="img/icon_cloth.webp" width="128" height="128" alt="">衣類</button><button data-sub="part" aria-selected="false"><img class="wi" src="img/icon_part.webp" width="128" height="128" alt="">パーツ</button></div>
+    <div class="campsec" data-sub="bike"><p class="hint">持っている自転車。新しいものは「店」で買えます。</p><div class="shop" id="eq-bike"></div></div>
+    <div class="campsec" data-sub="cloth" hidden><p class="hint">持っている衣類。気温に合わせて着替えます。</p><div class="shop" id="eq-cloth"></div></div>
+    <div class="campsec" data-sub="part" hidden><p class="hint">パーツは3つまで付けられます。</p><div class="shop" id="eq-part"></div></div>
   </section>
 
   <section class="panel" id="p-camp" hidden>
@@ -920,7 +920,7 @@ function shopClick(e){const b=e.target.closest('button[data-act]');if(!b)return;
   function equipIt(){if(b.dataset.act==='buy'||b.dataset.act==='equip'){if(kind==='bike')S.bike=id;else if(kind==='cloth')S.cloth=id;else if(kind==='gear'){if(item.req&&S.gear.shelter!==item.req)log(`${item.name}は${(GEAR_ITEMS.find(x=>x.id===item.req)||{}).name}を装備していないと使えない`);else S.gear[item.slot]=id;}else if(S.parts.length<3)S.parts.push(id);}
   if(b.dataset.act==='unequip'){if(kind==='gear')S.gear[item.slot]=null;else S.parts=S.parts.filter(x=>x!==id);}
   render();}}
-$('camp-tabs').addEventListener('click',e=>{const b=e.target.closest('button[data-sub]');if(!b)return;document.querySelectorAll('#camp-tabs button').forEach(x=>x.setAttribute('aria-selected',x===b));document.querySelectorAll('.campsec').forEach(c=>c.hidden=c.dataset.sub!==b.dataset.sub);});
+for(const tid of ['camp-tabs','gear-tabs'])$(tid).addEventListener('click',e=>{const b=e.target.closest('button[data-sub]');if(!b)return;const pn=$(tid).parentElement;$(tid).querySelectorAll('button').forEach(x=>x.setAttribute('aria-selected',x===b));pn.querySelectorAll('.campsec').forEach(c=>c.hidden=c.dataset.sub!==b.dataset.sub);});
 for(const id of ['p-gear','p-camp','p-shop'])$(id).addEventListener('click',shopClick);
 
 const CAL_S=t=>{const c=calendar(t);return `${c.year}年${c.month}月${c.week}週`;};
