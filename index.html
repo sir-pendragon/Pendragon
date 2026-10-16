@@ -77,7 +77,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .trl .num{text-align:right;font-variant-numeric:tabular-nums}
 .trl .z{opacity:.4}
 .trl .bad{color:var(--bad)}
-.trl .leg img{filter:brightness(0);opacity:.9}
+.trl .leg img{opacity:1}
 .trl .leg{font-weight:700}
 .panel h2{margin:2px 0 0}
 .map{width:100%;max-width:100%;aspect-ratio:400/472;background:color-mix(in srgb,var(--sky) 10%,var(--panel));border-radius:8px;display:block}
@@ -1022,7 +1022,7 @@ let LOGSUB='trip';
 function renderTrials(){let w=0,f=0;for(const k of TRIAL_KEYS){const v=S.stats.en[k]||[0,0,0];w+=v[1];f+=v[2];}
   $('ach-sum').textContent=`突破 ${w}回 ／ 失敗 ${f}回`;
   const row=k=>{const v=S.stats.en[k]||[0,0,0],z=v[0]?'':' z',cols=`<div class="num${z}">${v[0]}</div><div class="num${z}">${v[1]}</div><div class="num${z}${v[2]?' bad':''}">${v[2]}</div>`;
-    if(k==='tsuchi'){const got=v[1]>0;return `<div class="n${got?'':' leg'}"><img loading="lazy" decoding="async" src="img/tsuchinoko.webp" alt="">${got?'ツチノコ':'伝説の生き物'}</div>${cols}`;}
+    if(k==='tsuchi'){const got=v[1]>0;return `<div class="n${got?'':' leg'}"><img loading="lazy" decoding="async" src="img/${got?'tsuchinoko':'tsuchinoko_unknown'}.webp" alt="">${got?'ツチノコ':'伝説の生き物'}</div>${cols}`;}
     const e=ENEMY[k];return `<div class="n"><img loading="lazy" decoding="async" src="${e.img}" alt="" onerror="this.style.display='none'">${e.name.replace('インフルエンサー','')}</div>${cols}`;};
   $('achlist').innerHTML='<div class="th">試練</div><div class="th">遭遇</div><div class="th">突破</div><div class="th">失敗</div>'+TRIAL_KEYS.map(row).join('');}
 function showLogSub(){$('p-trip').hidden=LOGSUB!=='trip';$('p-sight').hidden=LOGSUB!=='sight';$('p-ach').hidden=LOGSUB!=='ach';if(LOGSUB==='ach')renderTrials();document.querySelectorAll('#log-tabs button').forEach(x=>x.setAttribute('aria-selected',x.dataset.sub===LOGSUB));if(LOGSUB==='sight')renderSights();}
