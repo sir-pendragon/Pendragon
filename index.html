@@ -706,7 +706,8 @@ function bikeStats(){const b=BIKES.find(x=>x.id===S.bike);const st={climb:b.clim
   for(const pid of S.parts){const p=PARTS.find(x=>x.id===pid);for(const k of ['climb','rough','cruise','wx','photo','comfy']) if(p[k]) st[k]+=p[k]+plv(pid);}return st;}
 // ---------- カスタム（自転車・パーツを+1〜+3に改造） ----------
 const STATJ={climb:'登坂',rough:'悪路',cruise:'巡航',wx:'耐候',photo:'写真',comfy:'気力消費'};
-const plv=id=>(S.plus&&S.plus[id])||0;
+const NOCUSTOM=new Set(['fold','tigrav']);// チタン製の自転車は、フレーム素材が完成形なのでカスタム（クロモリ→アルミ→カーボン）できない
+const plv=id=>NOCUSTOM.has(id)?0:(S.plus&&S.plus[id])||0;
 // カスタムの段階名。自転車はフレーム素材、パーツは仕様（効果は1段ごとに+1のまま）
 const TIER={bike:['クロモリ製','アルミ製','カーボン製'],part:['改良型','高性能','特注品']};
 const tierOf=(kind,lv)=>lv>0?TIER[kind==='bike'?'bike':'part'][lv-1]:'';
@@ -913,9 +914,9 @@ function renderForge(){
     const fx=keys.map(k=>STATJ[k]+(k==='comfy'?'-1':'+1')).join(' ');
     const act=lv>=3?'<span class="pill">最大</span>':`<button data-forge="${kind}:${item.id}" ${S.money>=upCost(kind,item,nx)?'':'disabled'}><img class="wi" src="img/icon_upgrade.webp" width="128" height="128" alt=""><span>${tierOf(kind,nx)}<small>${yen(upCost(kind,item,nx))}</small></span></button>`;
     return `<div class="card"><div class="name"><span class="nm"><img class="ci" src="img/${kind==='bike'?'icon_bike_':'part_'}${item.id}.webp" width="28" height="28" alt="">${item.name}${lv?` <b>${tierOf(kind,lv).replace('製','')}</b>`:''}</span>${act}</div><div class="spec">1段階ごとに ${fx}${lv?`（現在 ${tierOf(kind,lv)}）`:''}</div></div>`;};
-  $('shop-forge').innerHTML=BIKES.filter(i=>owns('bike',i.id)).map(i=>row('bike',i)).join('')+PARTS.filter(i=>!i.anti&&owns('part',i.id)).map(i=>row('part',i)).join('');}
+  $('shop-forge').innerHTML=BIKES.filter(i=>owns('bike',i.id)&&!NOCUSTOM.has(i.id)).map(i=>row('bike',i)).join('')+(BIKES.some(i=>NOCUSTOM.has(i.id)&&owns('bike',i.id))?'<div class="hint">チタン製の自転車（チタン折りたたみ・フルオーダー チタングラベル）は、完成された一台なので、カスタムできません。</div>':'')+PARTS.filter(i=>!i.anti&&owns('part',i.id)).map(i=>row('part',i)).join('');}
 $('shop-forge').addEventListener('click',e=>{const b=e.target.closest('button[data-forge]');if(!b)return;
-  const [kind,id]=b.dataset.forge.split(':'),item=(kind==='bike'?BIKES:PARTS).find(x=>x.id===id),nx=plv(id)+1;if(!item||nx>3)return;
+  const [kind,id]=b.dataset.forge.split(':'),item=(kind==='bike'?BIKES:PARTS).find(x=>x.id===id),nx=plv(id)+1;if(!item||nx>3||NOCUSTOM.has(id))return;
   const c=upCost(kind,item,nx);if(S.money<c)return;
   askPay(`「${item.name}」を${tierOf(kind,nx)}にカスタムしますか？`,c,()=>{S.money-=c;S.plus[id]=nx;log(`${item.name}を${tierOf(kind,nx)}にカスタム（${yen(c)}）`);render();});});
 $('shop-food').addEventListener('click',e=>{if(!e.target.closest('button[data-food]')||S.money<FOOD_PRICE||S.food>=FOOD_MAX)return;
