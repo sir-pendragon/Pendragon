@@ -427,9 +427,9 @@ button:disabled{opacity:.45;cursor:not-allowed}
 </div>
 <div class="overlay" id="ov-storm" hidden style="z-index:30">
   <div class="modal" style="text-align:center">
-    <h2>⛈️ 天候が悪くなってきた…</h2>
+    <h2 id="st-t">⛈️ 天候が悪くなってきた…</h2>
     <p style="margin:0" id="st-p"></p>
-    <p class="hint" style="margin:0">帰ると、自宅で休養します（自宅以外では輪行費がかかります）。<br>帰らないと、そのまま天候の試練になります。</p>
+    <p class="hint" style="margin:0" id="st-h">帰ると、自宅で休養します（自宅以外では輪行費がかかります）。<br>帰らないと、そのまま天候の試練になります。</p>
     <div class="resbtns"><button id="st-home">帰る</button><button class="primary" id="st-stay">帰らない</button></div>
   </div>
 </div>
@@ -616,6 +616,7 @@ const TACT={hill:['ギア落とし','体力-5 被害半減'],rough:['空気圧�
  pass:['小休止','気力-3 体力+10'],deer:['止まってやり過ごす','気力-3 体力+5'],
  bear:['クマ鈴で距離を取る','気力-8 6割で逃げ切る'],brownbear:['クマ鈴で距離を取る','気力-8 4割で逃げ切る'],habu:['そっと離れる','気力-6 5割で逃げ切る'],car:['路肩に寄る','気力-3 被害大減'],bike:['脇道へ逃げる','気力-3 被害なし'],
  wind:['ドラフティング','気力-3 被害なし'],rain:['タープで雨宿り','気力-3 体力+12'],
+ camper1:['やんわり注意','気力-5 6割で静まる'],camper2:['管理人に伝える','気力-3 被害大減'],camper3:['耳栓をして寝る','気力-3 体力+10'],
  typhoon:['ビバーク','気力-4 体力+15'],snow:['雪を凌ぐ','気力-3 体力+10'],heat:['水分補給','気力-3 体力+10'],rival:['タグ戦略','気力-8 投稿1.5倍']};
 // 次の敵の出方（バトル中に予告する）
 const NEXT={heavy:['激しい！',1.7],normal:['ふつう',1],light:['弱まっている',.5]};
@@ -689,6 +690,9 @@ const ENEMY={
  heat:{name:'炎天下',face:'🥵',img:'img/enemy_heat.webp',hp:42,atk:9,limit:5,stat:'wx',mp:6,hint:'耐候力が効く。体力・気力ともに削られる'},
  snow:{name:'大雪',face:'❄️',img:'img/enemy_snow.webp',hp:45,atk:10,limit:5,stat:'wx',mp:5,hint:'耐候力が効く。タープや寝床で凌げる'},
  typhoon:{name:'台風',face:'🌀',img:'img/enemy_typhoon.webp',hp:70,atk:15,limit:6,stat:'wx',mp:6,hint:'耐候力が効く。無理は禁物'},
+ camper1:{name:'迷惑キャンパー（酔っ払い）',face:'🍺',img:'img/enemy_camper1.webp',hp:70,atk:15,limit:6,stat:'wx',mp:6,camper:1,hint:'耐候力が効く。大声に気力を削られる'},
+ camper2:{name:'迷惑キャンパー（馬鹿騒ぎカップル）',face:'🎉',img:'img/enemy_camper2.webp',hp:70,atk:15,limit:6,stat:'wx',mp:6,camper:1,hint:'耐候力が効く。夜通しの騒ぎに気力を削られる'},
+ camper3:{name:'迷惑キャンパー（うるさい犬連れ）',face:'🐕',img:'img/enemy_camper3.webp',hp:70,atk:15,limit:6,stat:'wx',mp:6,camper:1,hint:'耐候力が効く。吠え声に気力を削られる'},
  rival:{name:'ライバルインフルエンサー',face:'🤳',img:'img/enemy_rival.webp',hp:40,atk:0,limit:5,stat:'fame',fame:4,hint:'フォロワーと撮影機材で押し切る'},
 };
 // 試練ごとの成績 [遭遇, 突破, 失敗]。ツチノコ（tsuchi）は撮影チャンス
@@ -768,7 +772,7 @@ function load(){try{const s=localStorage.getItem('charicamp');if(!s)return null;
   o.v=SAVE_V;LASTSAVE='';return o;}catch(e){return null;}}
 // 旅の一覧：[週の通し番号, 県番号, 写真点数(-1は遅刻), 遭遇した敵(カンマ区切り)]
 // 旅履歴の遭遇は、1文字コード（先頭に~）で保存して容量を節約する。順番は固定（追加は末尾へ）。コード化前の保存（敵名をカンマ区切り）も読める
-const TLK=['hill','animal','rough','lost','pass','deer','bear','habu','brownbear','car','bike','wind','rain','heat','snow','typhoon','rival','tsuchi'],TLC='abcdefghijklmnopqr';
+const TLK=['hill','animal','rough','lost','pass','deer','bear','habu','brownbear','car','bike','wind','rain','heat','snow','typhoon','rival','tsuchi','camper1','camper2','camper3'],TLC='abcdefghijklmnopqrstu';
 const tlEnc=a=>a.length?'~'+a.map(k=>TLC[TLK.indexOf(k)]||'').join(''):'';
 const tlDec=z=>z?z[0]==='~'?[...z.slice(1)].map(c=>TLK[TLC.indexOf(c)]).filter(Boolean):z.split(','):[];
 function tlog(q){const k=(trip.late?trip.enc.slice(0,trip.i+1):trip.enc).concat(trip.tc?['tsuchi']:[]);S.tl.unshift([S.turn,trip.p.id,q,tlEnc(k)]);if(S.tl.length>TL_MAX)S.tl.length=TL_MAX;}
@@ -957,8 +961,8 @@ function renderDetail(){const p=PREF[S.sel],f=S.forecast[p.id],ti=travelInfo(p),
   if(f.wx==='rain')enemies.push('大雨');if(f.wx==='wind')enemies.push('強風');if(f.wx==='typhoon')enemies.push('台風');if(f.wx==='snow')enemies.push('大雪');if(f.wx==='heat')enemies.push('炎天下');if(p.scen>=5||ev)enemies.push('ライバル?');
   $('info').innerHTML=`<h3>${p.site}</h3><div class="hint">${p.name}・${p.region}</div>${badge}
   <div class="kv"><span>地形</span><span>${TERRAIN[p.terrain]}（${'★'.repeat(p.diff)}）</span><span>景観</span><span>${'📷'.repeat(p.scen)}</span>
-  <span>予報</span><span>${WX_J[f.wx]} ${f.temp}℃<br>${fit}</span><span>距離</span><span>${stay?'同じ場所（気力-15）'+(S.stay>0?`<br>連泊${S.stay+1}日目：荒天になりやすい`:''):ti.d+'km<br>'+(ti.ride?'遭遇'+ti.enc+'回':'自走不可')}</span>
-  <span>想定</span><span>${(stay?enemies.filter(n=>['大雨','強風','台風','大雪','炎天下','ライバル?'].includes(n)):enemies).join('・')||'特になし'}${stay?'':(()=>{const q=familiar(p);return q.f<1?`<br>${q.why}：動物に出会う確率×${q.f}`:''})()}</span>${ev?`<span>催事</span><span>${EVI}${ev.name}<br>写真+12・フォロワー×1.5</span>`:''}${S.fam[p.id]?'<span>特典</span><span>利用料半額・回復+4</span>':''}<span>利用料</span><span>${yen(fee)}</span></div>`;
+  <span>予報</span><span>${WX_J[f.wx]} ${f.temp}℃<br>${fit}</span><span>距離</span><span>${stay?'同じ場所（気力-15）'+(S.stay>=2?`<br>連泊${S.stay+1}日目：迷惑キャンパーが現れる`:S.stay>0?`<br>連泊${S.stay+1}日目：荒天になりやすい`:''):ti.d+'km<br>'+(ti.ride?'遭遇'+ti.enc+'回':'自走不可')}</span>
+  <span>想定</span><span>${(stay?(S.stay>=2?['迷惑キャンパー']:[]).concat(enemies.filter(n=>[...(S.stay>=2?[]:['大雨','強風','台風','大雪','炎天下']),'ライバル?'].includes(n))):enemies).join('・')||'特になし'}${stay?'':(()=>{const q=familiar(p);return q.f<1?`<br>${q.why}：動物に出会う確率×${q.f}`:''})()}</span>${ev?`<span>催事</span><span>${EVI}${ev.name}<br>写真+12・フォロワー×1.5</span>`:''}${S.fam[p.id]?'<span>特典</span><span>利用料半額・回復+4</span>':''}<span>利用料</span><span>${yen(fee)}</span></div>`;
   $('detail').innerHTML=`
   <div class="acts">${stay?`<button class="primary" id="go-stay">自転車旅に行く<small>${p.name}（現在地）</small></button><button disabled>輪行で旅に行く<small>${p.name}（現在地）</small></button>`:
    `<button class="primary" id="go-ride" ${ti.ride?'':'disabled'}>自転車旅に行く<small>${p.name}${ti.ride?'へ':'は遠すぎる'}</small></button>
@@ -1084,8 +1088,10 @@ $('go-no').onclick=()=>{$('ov-go').hidden=true;};
 $('go-eq').onclick=()=>{$('ov-go').hidden=true;$('tab-gear').click();};
 // 連泊（同じ場所）：荒れた天気の日だけ、天候の試練が起きうる。先に確率を確定し、起きる場合は「帰る／帰らない」を選ばせる
 const STAY_P=[.75,.9,1];// 連泊1日目75%、2連泊目90%、3連泊目以降100%（荒天の日のみ。台風は常に100%）
-function stayWx(f){if(f.wx==='typhoon')return 'typhoon';return ['rain','wind','snow','heat'].includes(f.wx)&&Math.random()<STAY_P[Math.min(S.stay||0,2)]?f.wx:null;}
-function showStorm(p,rinko,k){$('st-p').textContent=`${ENEMY[k].name}になりそうだ。このまま続ける？`;$('st-home').onclick=()=>{$('ov-storm').hidden=true;restHome();};$('st-stay').onclick=()=>{$('ov-storm').hidden=true;startTrip(p,rinko,k);};$('ov-storm').hidden=false;playSE('se_encounter');}
+const CAMPERS=['camper1','camper2','camper3'];
+function stayWx(f){if((S.stay||0)>=2)return CAMPERS[rnd(0,2)];// 三連泊目以降は、天気に関係なく迷惑キャンパー（天候の試練の代わり）
+  if(f.wx==='typhoon')return 'typhoon';return ['rain','wind','snow','heat'].includes(f.wx)&&Math.random()<STAY_P[Math.min(S.stay||0,2)]?f.wx:null;}
+function showStorm(p,rinko,k){const cp=!!ENEMY[k].camper;$('st-t').textContent=cp?'🏕️ 隣のサイトが騒がしい…':'⛈️ 天候が悪くなってきた…';$('st-h').innerHTML=`帰ると、自宅で休養します（自宅以外では輪行費がかかります）。<br>帰らないと、そのまま${cp?'迷惑キャンパーの試練':'天候の試練'}になります。`;$('st-p').textContent=cp?`隣に${ENEMY[k].name.replace('迷惑キャンパー','').replace(/[（）]/g,'')}がいる。このまま続ける？`:`${ENEMY[k].name}になりそうだ。このまま続ける？`;$('st-home').onclick=()=>{$('ov-storm').hidden=true;restHome();};$('st-stay').onclick=()=>{$('ov-storm').hidden=true;startTrip(p,rinko,k);};$('ov-storm').hidden=false;playSE('se_encounter');}
 function startTrip(p,rinko,wx){if(p.id===S.loc&&wx===undefined){const k=stayWx(S.forecast[p.id]);if(k){showStorm(p,rinko,k);return;}wx=null;}snap();{const i=new Image();i.src='img/late.webp';}{const i=new Image();i.src='img/sights/'+sightOf(p.id,S.visits[p.id]+1)[0]+'.webp';}const ti=travelInfo(p);const stay=p.id===S.loc;
   if(rinko){S.money-=ti.rinko;log(`${p.name}へ輪行（${yen(ti.rinko)}）`);}
   const f=S.forecast[p.id];const enc=[];
@@ -1161,15 +1167,15 @@ function startBattle(kind){tstat(kind)[0]++;const e=ENEMY[kind],p=trip.p,c=calen
   B={kind,e,hp,max:hp,limit:e.limit,turn:1,charge:0,cut:1,next:rollNext(),atk:Math.round(e.atk*scale*(S.parts.includes('spray')&&(kind==='bear'||kind==='brownbear')||S.parts.includes('oil')&&(kind==='car'||kind==='bike')?.5:1))};
   $('ov-battle').hidden=false;playSE('se_encounter');playBGM('bgm_battle');if(kind!=='rival')tutBattle();$('bt-face').innerHTML=e.img?`<img loading="lazy" src="${e.img}" alt="${e.name}" width="190" height="190" onerror="this.replaceWith(document.createTextNode('${e.face}'))">`:e.face;$('bt-name').textContent=`区間 ${trip.i+1}/${trip.enc.length}`;
   $('bt-title').textContent=kind==='rival'?'SNSの試練':e.name;
-  blog(kind==='rival'?`ライバルも同じ撮影スポットを狙っている！\n${e.hint}。日没まで あと${B.limit}時間。`:`${WILDK.has(kind)?e.name+'に遭遇した！':e.name+'の区間に入った。'}\n${e.hint}。日没まで あと${B.limit}時間。`);renderBattle();}
+  blog(kind==='rival'?`ライバルも同じ撮影スポットを狙っている！\n${e.hint}。日没まで あと${B.limit}時間。`:`${e.camper?'隣のサイトに'+e.name+'がいる！夜になっても静かにならない。':WILDK.has(kind)?e.name+'に遭遇した！':e.name+'の区間に入った。'}\n${e.hint}。日没まで あと${B.limit}時間。`);renderBattle();}
 function blog(t){$('bt-log').textContent=t;}
 // 区間の距離（ライバル戦は撮影スポットまでのm）。内部の数値（hp）を距離に換算して表示する
 const isRival=()=>B.kind==='rival';
 function kmOf(v){const L=isRival()?400:trip.sec;return Math.max(0,v)/B.max*L;}
 function fmtD(v){const x=kmOf(v);return isRival()?Math.round(x)+'m':(x>=10?Math.round(x):x.toFixed(1))+'km';}
 const LEFT=()=>isRival()?'撮影スポットまで':'ゴールまで';
-const HIT={hill:'坂がきつい',animal:'いのししに追いつかれ、突進された',pass:'長い登りに脚を削られた',snow:'吹雪に視界を奪われた',heat:'炎天下で頭がくらくらする',rough:'荒れたダートにハンドルを取られた',lost:'藪に埋もれた道を見失いかけた',deer:'鹿が飛び出して急ブレーキ。逃げ遅れた',bear:'ツキノワグマに迫られた！全力で逃げる',brownbear:'ヒグマに迫られた！必死で逃げる',habu:'ハブに咬まれかけた！慌てて逃げる',car:'暴走車に幅寄せされた',bike:'暴走バイクが横をかすめた',wind:'向かい風に押し戻された',rain:'冷たい雨に体温を奪われた',typhoon:'暴風雨にあおられた'};
-function tacOK(){const k=B.kind;return k==='hill'?S.hp>5:k==='animal'?S.mp>=5:k==='pass'||k==='heat'||k==='rough'||k==='lost'||k==='deer'||k==='car'||k==='bike'?S.mp>=3:k==='bear'||k==='brownbear'?S.mp>=8:k==='habu'?S.mp>=6:k==='rival'?S.mp>=8:k==='rain'||k==='snow'?!!(S.gear.tarp||S.gear.shelter)&&S.mp>=3:k==='typhoon'?!!S.gear.shelter&&S.mp>=4:k==='wind'?S.mp>=3:true;}
+const HIT={hill:'坂がきつい',animal:'いのししに追いつかれ、突進された',pass:'長い登りに脚を削られた',snow:'吹雪に視界を奪われた',heat:'炎天下で頭がくらくらする',rough:'荒れたダートにハンドルを取られた',lost:'藪に埋もれた道を見失いかけた',deer:'鹿が飛び出して急ブレーキ。逃げ遅れた',bear:'ツキノワグマに迫られた！全力で逃げる',brownbear:'ヒグマに迫られた！必死で逃げる',habu:'ハブに咬まれかけた！慌てて逃げる',car:'暴走車に幅寄せされた',bike:'暴走バイクが横をかすめた',wind:'向かい風に押し戻された',rain:'冷たい雨に体温を奪われた',typhoon:'暴風雨にあおられた',camper1:'酒臭い大声に絡まれた',camper2:'夜通しの馬鹿騒ぎで眠れない',camper3:'犬の吠え声が鳴りやまない'};
+function tacOK(){const k=B.kind;return k==='hill'?S.hp>5:k==='animal'?S.mp>=5:k==='pass'||k==='heat'||k==='rough'||k==='lost'||k==='deer'||k==='car'||k==='bike'?S.mp>=3:k==='bear'||k==='brownbear'?S.mp>=8:k==='habu'?S.mp>=6:k==='rival'?S.mp>=8:k==='rain'||k==='snow'?!!(S.gear.tarp||S.gear.shelter)&&S.mp>=3:k==='typhoon'?!!S.gear.shelter&&S.mp>=4:k==='wind'?S.mp>=3:k==='camper1'?S.mp>=5:k==='camper2'||k==='camper3'?S.mp>=3:true;}
 function playerPower(){const st=bikeStats();if(B.kind==='rival')return 8+FL()/8+st.photo/2;return st[B.e.stat]*4;}
 function renderBattle(){const pr=Math.min(100,Math.max(0,(1-B.hp/B.max)*100));$('bt-hp').style.width=pr+'%';$('bt-bike').style.left=pr+'%';$('bt-bike').src=isRival()?'img/part_cam.webp':'img/icon_bike_'+S.bike+'.webp';$('bt-goal').src=isRival()?'img/part_tripod.webp':'img/icon_g_sh2.webp';
   $('bt-km').innerHTML=`<span class="bt-km">${B.hp<=0?(isRival()?'撮影スポットに到着！':'区間ゴール！'):LEFT()+' '+fmtD(B.hp)}</span><span class="bt-km">日没まで あと${B.limit-B.turn+1}時間</span>`;
@@ -1224,6 +1230,9 @@ function cmd(k){if(!B||!trip||$('ov-battle').hidden||B.hp<=0||trip.late)return;
     else if(kd==='rain'){S.mp-=3;B.cut=0;S.hp=Math.min(100,S.hp+12);t='タープを張って雨宿りした。体力+12';}
     else if(kd==='heat'){S.mp-=3;B.cut=.5;S.hp=Math.min(100,S.hp+10);t='木陰でボトルの水をがぶ飲みした。体力+10';}
     else if(kd==='snow'){S.mp-=3;B.cut=.5;S.hp=Math.min(100,S.hp+10);t='タープの下で雪をやり過ごした。体力+10';}
+    else if(kd==='camper1'){S.mp-=5;if(Math.random()<.6){B.cut=0;dmg=6;t=`穏やかに声をかけると、酔っ払いはおとなしく寝床へ帰っていった。${fmtD(dmg)}進んだ`;}else t='注意したが、酔っ払いに絡まれてしまった…';}
+    else if(kd==='camper2'){S.mp-=3;B.cut=.2;dmg=Math.round(playerPower()*.4*mult);B.charge=0;t=`管理人に連絡すると、騒ぎがだいぶ静まった。${fmtD(dmg)}進んだ`;}
+    else if(kd==='camper3'){S.mp-=3;B.cut=.5;S.hp=Math.min(100,S.hp+10);t='耳栓をして寝袋にもぐった。体力+10';}
     else if(kd==='typhoon'){S.mp-=4;B.cut=.5;S.hp=Math.min(100,S.hp+15);t='寝床を広げてビバーク。体力+15';}
     else if(kd==='rival'){S.mp-=8;B.cut=0;B.charge=Math.max(B.charge||0,1.5);t='ハッシュタグを練り直した。次の投稿1.5倍';}}
   else if(k==='rinko'){if(!$('ov-pay').dataset.ok){askPay('輪行で区間を飛ばしますか？',trip.rk,()=>{$('ov-pay').dataset.ok='1';cmd('rinko');});return;}delete $('ov-pay').dataset.ok;S.money-=trip.rk;t='輪行で区間を飛ばした！';log(`${B.e.name}の区間を輪行（${yen(trip.rk)}）`);S.stats.wins++;tstat(B.kind)[1]++;trip.i++;$('ov-battle').hidden=true;battleOver();nextEncounter();return;}
