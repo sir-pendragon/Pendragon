@@ -176,9 +176,9 @@ h3{margin-top:2px}
 .title p{margin:0}
 .row{display:flex;gap:8px;flex-wrap:wrap}
 .row>*{flex:1}
-.profile{display:flex;gap:12px;align-items:center}
-.profile img{flex:none;width:96px;height:96px;object-fit:cover;border-radius:8px;border:1px solid var(--line);background:var(--bg)}
-.profile .res{flex:1;min-width:0}
+.profile{display:flex;gap:10px;align-items:flex-start;margin:6px 0 12px}
+.profile img{flex:none;width:84px;height:84px;object-fit:cover;border-radius:8px;border:1px solid var(--line);background:var(--bg)}
+.profile .res{flex:1;min-width:0;gap:1px 10px;font-size:.8rem;line-height:1.35}
 .enemy .face img{display:block;width:150px;height:150px;object-fit:contain}
 .loghead{display:flex;justify-content:space-between;align-items:center;gap:8px}
 .res{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-variant-numeric:tabular-nums}
@@ -264,7 +264,7 @@ h3{margin-top:2px}
     </div>
     <div id="p-trip">
     <div class="loghead"><h2>旅の記録</h2><span class="logbtns"><button id="btn-set" aria-label="設定">⚙ 設定</button><button id="btn-reset">リセット</button></span></div>
-    <div class="profile"><img src="img/hero.webp" width="96" height="96" alt="主人公の自転車旅行者"><div class="res" id="summary"></div></div>
+    <div class="profile"><img src="img/hero.webp" width="84" height="84" alt="主人公の自転車旅行者"><div class="res" id="summary"></div></div>
     <div class="subtabs" id="tl-tabs"><button data-v="tl" aria-selected="true">旅履歴</button><button data-v="log" aria-selected="false">できごと</button></div>
     <div class="tl" id="tl"></div>
     <ul class="log" id="log" hidden></ul>
@@ -851,7 +851,7 @@ const CAL_S=t=>{const c=calendar(t);return `${c.year}年${c.month}月${c.week}�
 $('tl-tabs').addEventListener('click',e=>{const b=e.target.closest('button[data-v]');if(!b)return;document.querySelectorAll('#tl-tabs button').forEach(x=>x.setAttribute('aria-selected',x===b));$('tl').hidden=b.dataset.v!=='tl';$('log').hidden=b.dataset.v!=='log';});
 function renderLog(){$('log').innerHTML=S.log.map(l=>`<li>${logLine(l)}</li>`).join('');
   $('tl').innerHTML=S.tl.length?`<div class="th">日付</div><div class="th">行き先</div><div class="th">写真</div><div class="th">遭遇</div>`+S.tl.map(([t,pid,q,k])=>`<div>${CAL_S(t)}</div><div>${PREF[pid].name}</div><div>${q<0?'<span class="bad">遅刻</span>':q+'点'}</div><div>${k?k.split(',').map(x=>(ENEMY[x]||{name:x}).name).join('・'):'なし'}</div>`).join(''):'<div class="hint" style="grid-column:1/-1">まだ旅に出ていません</div>';
-  const sp=sponsor();$('summary').innerHTML=`<span>称号</span><span>${title(S.fame)}</span><span>スポンサー</span><span>${sp[2]}（${yen(sp[1])}/週）</span><span>投稿数</span><span>${S.stats.posts}</span><span>最高写真</span><span>${S.stats.bestQ}点</span><span>勝敗</span><span>${S.stats.wins}勝 ${S.stats.losses}敗</span>`;}
+  const sp=sponsor();$('summary').innerHTML=`<span>称号</span><span>${title(S.fame)}</span><span>スポンサー</span><span>${sp[2]}<br><small>${yen(sp[1])}/週</small></span><span>投稿数</span><span>${S.stats.posts}</span><span>最高写真</span><span>${S.stats.bestQ}点</span><span>勝敗</span><span>${S.stats.wins}勝 ${S.stats.losses}敗</span>`;}
 
 $('shop-tabs').addEventListener('click',e=>{const b=e.target.closest('button[data-sub]');if(!b)return;document.querySelectorAll('#shop-tabs button').forEach(x=>x.setAttribute('aria-selected',x===b));document.querySelectorAll('.shopsec').forEach(s=>s.hidden=s.dataset.sub!==b.dataset.sub);});
 document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tabs button').forEach(x=>x.setAttribute('aria-selected',x===b));
