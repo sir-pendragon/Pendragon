@@ -413,11 +413,11 @@ button:disabled{opacity:.45;cursor:not-allowed}
   <div class="modal" style="text-align:center">
     <h2>🎉 おめでとう！</h2>
     <p style="margin:0">新しいスポンサーがつきました！</p>
-    <p style="margin:0;font-size:1.4em"><b id="sp-new"></b></p>
+    <img id="sp-img" alt="" width="240" height="240" hidden style="align-self:center;max-width:70%;height:auto" onerror="this.hidden=true"><p style="margin:0;font-size:1.4em"><b id="sp-new"></b></p>
     <p class="hint" id="sp-from" style="margin:0"></p>
     <p id="sp-amt" style="margin:0"></p>
     <p class="hint" style="margin:0">フォロワーが増えるほど、スポンサー料も上がります。</p>
-    <button class="primary" id="sp-ok">やったー！</button>
+    <button class="primary" id="sp-ok">閉じる</button>
   </div>
 </div>
 <div class="overlay" id="ov-tut" hidden style="z-index:20">
@@ -671,7 +671,7 @@ const tstat=k=>S.stats.en[k]||(S.stats.en[k]=[0,0,0]);
 const trialKindsCleared=()=>TRIAL_KEYS.filter(k=>(S.stats.en[k]||[0,0,0])[1]>0).length;
 // 毎週のスポンサー料。称号（フォロワー数）に応じて増える [必要フォロワー, 週額, スポンサー]
 const SPONSOR=[[0,2000,'地元の自転車店'],[1000,3000,'アウトドア用品店'],[10000,5000,'自転車メーカー'],[100000,10000,'旅行会社'],[500000,20000,'大手スポーツブランド'],[1000000,30000,'鉄道会社']];
-function spCongrats(o,n){$('sp-new').textContent=n[2];$('sp-amt').textContent=`毎週のスポンサー料：${yen(o[1])} → ${yen(n[1])}`;$('sp-from').textContent=`これまで：${o[2]}`;$('ov-spon').hidden=false;playSE('se_win');}
+function spCongrats(o,n){const im=$('sp-img');im.hidden=true;im.onload=()=>{im.hidden=false;};im.src='img/sponsor_'+SPONSOR.indexOf(n)+'.webp';$('sp-new').textContent=n[2];$('sp-amt').textContent=`毎週のスポンサー料：${yen(o[1])} → ${yen(n[1])}`;$('sp-from').textContent=`これまで：${o[2]}`;$('ov-spon').hidden=false;playSE('se_win');}
 function spOf(f){let r=SPONSOR[0];for(const x of SPONSOR)if(f>=x[0])r=x;return r;}
 function sponsor(){return spOf(S.fame);}
 const TITLES=[[0,'無名'],[1000,'駆け出し'],[10000,'注目の新人'],[100000,'人気配信者'],[500000,'カリスマ'],[1000000,'伝説']];
