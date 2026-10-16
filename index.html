@@ -42,7 +42,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 @media (min-width:560px){.status{grid-template-columns:repeat(3,minmax(0,1fr))}}
 .status .date{grid-column:1/-1;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;font-family:var(--display);font-size:1rem;line-height:1.3}
 .stat{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:0 6px;font-size:.8rem;line-height:1.35;color:var(--muted)}
-.stat b{color:var(--fg);font-size:.9rem;white-space:nowrap}
+.stat b{color:var(--fg);font-size:.9rem;flex:1 1 0;min-width:0;text-align:right}
 .stat .bar{flex-basis:100%;height:12px;margin-top:2px}
 .bar{height:12px;background:var(--line);border-radius:6px;overflow:hidden;box-shadow:inset 0 1px 2px rgba(0,0,0,.25)}
 .bar i{display:block;height:100%;background:var(--forest);transition:width .35s}
@@ -187,11 +187,11 @@ h3{margin-top:2px}
 <div class="app" id="app">
   <div class="status">
     <div class="date"><span id="d-date">1年目 4月第1週</span><span id="d-season"></span></div>
-    <div class="stat"><span class="lb"><img class="si" src="img/icon_fame.webp" width="16" height="16" alt="">フォロワー</span><b id="d-fame">0</b></div>
+    <div class="stat" style="grid-column:1/-1"><span class="lb"><img class="si" src="img/icon_fame.webp" width="16" height="16" alt="">フォロワー</span><b id="d-fame">0</b></div>
     <div class="stat"><span class="lb"><img class="si" src="img/icon_money.webp" width="16" height="16" alt="">所持金</span><b id="d-money">¥30,000</b></div>
+    <div class="stat"><span class="lb"><img class="si" src="img/icon_loc.webp" width="16" height="16" alt="">現在地</span><b id="d-loc">東京</b></div>
     <div class="stat"><span class="lb"><img class="si" src="img/icon_hp.webp" width="16" height="16" alt="">体力</span><b id="d-hp">100</b><div class="bar"><i id="b-hp" style="width:100%"></i></div></div>
     <div class="stat"><span class="lb"><img class="si" src="img/icon_mp.webp" width="16" height="16" alt="">気力</span><b id="d-mp">100</b><div class="bar mp"><i id="b-mp" style="width:100%"></i></div></div>
-    <div class="stat"><span class="lb"><img class="si" src="img/icon_loc.webp" width="16" height="16" alt="">現在地</span><b id="d-loc">東京</b></div>
     <div class="stat"><span class="lb"><img class="si" src="img/icon_inn.webp" width="16" height="16" alt="">都道府県制覇数</span><b id="d-fam">0 / 47</b></div>
   </div>
   <div class="tabs" role="tablist">
