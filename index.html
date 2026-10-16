@@ -56,7 +56,9 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .subtabs{display:flex;gap:5px;flex-wrap:wrap}
 .subtabs button{flex:1 1 0;min-width:22%;min-height:50px;padding:4px 2px;font-size:var(--fs-s);white-space:nowrap;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px}
 .subtabs button .wi{width:1.6em;height:1.6em;margin:0}
-#shop-tabs button{min-height:44px}
+#shop-tabs button,#camp-tabs button{min-height:44px}
+.campsec{display:flex;flex-direction:column;gap:8px}
+.campsec[hidden]{display:none}
 #log-tabs button,#tl-tabs button{min-height:34px;padding:5px 8px;font-size:var(--fs-m)}
 .subtabs{margin:0}
 .subtabs button[aria-selected="true"],.tabs button[aria-selected="true"]{background:linear-gradient(#f0c75a,#d9a734);color:#3a2a10;border-color:#a87a1c;font-weight:700;box-shadow:inset 0 1px 0 rgba(255,255,255,.45),0 1px 3px rgba(0,0,0,.35)}
@@ -289,10 +291,10 @@ h3{margin-top:2px}
   </section>
 
   <section class="panel" id="p-camp" hidden>
-    <p class="hint">持っているキャンプギア。写真の出来栄えと、翌週に持ち越す疲労が変わります。</p>
-    <h2>焚き火台（気力回復）</h2><div class="shop" id="eq-fire"></div>
-    <h2>寝床（体力・気力回復）</h2><div class="shop" id="eq-shelter"></div>
-    <h2>タープ（雨から守る）</h2><div class="shop" id="eq-tarp"></div>
+    <div class="subtabs" id="camp-tabs"><button data-sub="shelter" aria-selected="true"><img class="wi" src="img/icon_shelter.webp" width="128" height="128" alt="">テント</button><button data-sub="tarp" aria-selected="false"><img class="wi" src="img/icon_tarp.webp" width="128" height="128" alt="">タープ</button><button data-sub="fire" aria-selected="false"><img class="wi" src="img/icon_fire.webp" width="128" height="128" alt="">焚き火台</button></div>
+    <div class="campsec" data-sub="shelter"><p class="hint">寝床（テント・ハンモック）。体力・気力が回復します。</p><div class="shop" id="eq-shelter"></div></div>
+    <div class="campsec" data-sub="tarp" hidden><p class="hint">雨から守ります。</p><div class="shop" id="eq-tarp"></div></div>
+    <div class="campsec" data-sub="fire" hidden><p class="hint">気力が回復します。</p><div class="shop" id="eq-fire"></div></div>
   </section>
 
   <section class="panel" id="p-shop" hidden>
@@ -918,6 +920,7 @@ function shopClick(e){const b=e.target.closest('button[data-act]');if(!b)return;
   function equipIt(){if(b.dataset.act==='buy'||b.dataset.act==='equip'){if(kind==='bike')S.bike=id;else if(kind==='cloth')S.cloth=id;else if(kind==='gear'){if(item.req&&S.gear.shelter!==item.req)log(`${item.name}は${(GEAR_ITEMS.find(x=>x.id===item.req)||{}).name}を装備していないと使えない`);else S.gear[item.slot]=id;}else if(S.parts.length<3)S.parts.push(id);}
   if(b.dataset.act==='unequip'){if(kind==='gear')S.gear[item.slot]=null;else S.parts=S.parts.filter(x=>x!==id);}
   render();}}
+$('camp-tabs').addEventListener('click',e=>{const b=e.target.closest('button[data-sub]');if(!b)return;document.querySelectorAll('#camp-tabs button').forEach(x=>x.setAttribute('aria-selected',x===b));document.querySelectorAll('.campsec').forEach(c=>c.hidden=c.dataset.sub!==b.dataset.sub);});
 for(const id of ['p-gear','p-camp','p-shop'])$(id).addEventListener('click',shopClick);
 
 const CAL_S=t=>{const c=calendar(t);return `${c.year}年${c.month}月${c.week}週`;};
