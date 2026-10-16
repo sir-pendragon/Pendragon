@@ -142,9 +142,16 @@ h3{margin-top:2px}
 .bt-bar .bar{flex:1;min-width:0}
 .bt-bar b{min-width:2.2em;text-align:right;font-weight:400}
 .cmds{display:grid;grid-template-columns:1fr 1fr;gap:6px}
-.cmds button{text-align:left;line-height:1.25}
-.cmds button.primary{grid-column:1/-1;text-align:center;padding:12px}
-.cmds button small{display:block;color:var(--muted);font-size:.75rem}
+.cmds button{--c1:#7a6a55;--c2:#5a4c3b;text-align:left;line-height:1.25;min-height:58px;padding:8px 10px 10px;font-weight:700;color:#fff7e6;text-shadow:0 1px 1px rgba(0,0,0,.55);background:linear-gradient(var(--c1),var(--c2));border:1px solid rgba(0,0,0,.45);border-bottom:4px solid rgba(0,0,0,.45);border-radius:10px;box-shadow:inset 0 1px 0 rgba(255,255,255,.28),0 2px 5px rgba(0,0,0,.35);transition:transform .06s}
+.cmds button:active:not(:disabled){transform:translateY(2px);border-bottom-width:2px;box-shadow:inset 0 1px 0 rgba(255,255,255,.2)}
+.cmds button:disabled{opacity:.4;filter:grayscale(.6)}
+.cmds button.primary{grid-column:1/-1;text-align:center;padding:14px;font-size:1.05rem}
+.cmds button small{display:block;color:rgba(255,247,230,.82);font-size:.72rem;font-weight:400}
+.cmds .c-atk{--c1:#e9803f;--c2:#b84a1a}
+.cmds .c-gold{--c1:#d9a93a;--c2:#9a6f12}
+.cmds .c-heal{--c1:#5f9a62;--c2:#3b6b40}
+.cmds .c-def{--c1:#5b8db5;--c2:#365f84}
+.cmds .c-sub{--c1:#8a7f72;--c2:#5f564b}
 .blog{font-family:var(--display);font-size:.95rem;background:var(--bg);border-radius:6px;padding:8px;min-height:4.2em;max-height:9em;overflow:auto;white-space:pre-wrap}
 .photo{border:6px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.25);background:linear-gradient(160deg,var(--sky),var(--forest));color:#fff;padding:18px 14px;font-family:var(--display);text-shadow:0 1px 2px rgba(0,0,0,.5);transform:rotate(-1.5deg)}
 .photo .q{font-size:2rem}
@@ -933,8 +940,9 @@ function renderBattle(){const pr=Math.min(100,Math.max(0,(1-B.hp/B.max)*100));$(
     ['rinko',`輪行 ${yen(ti.rinko)}`,'この区間を電車で飛ばす']];
   // 新しい敵の作戦は、近い意味の既存アイコンを使う（専用アイコンが届いたら tac_敵名.webp を置けば差し替えられる）
   const TACI={pass:'tac_hill',deer:'tac_animal',bear:'tac_animal',brownbear:'tac_animal',car:'tac_wind',bike:'tac_wind'};
+  const RC={push:'atk',post:'atk',kiai:'gold',rest:'heal',food:'heal',guard:'def',tactic:'def',rinko:'sub',escape:'sub'};
   const ic={tactic:TACI[B.kind]||'tac_'+B.kind,guard:'cmd_guard',food:'icon_food'};
-  $('bt-cmds').innerHTML=cmds.map(([k,l,s])=>`<button data-cmd="${k}" ${ic[k]?'class="ic"':''} ${k==='kiai'&&S.mp<20||k==='rinko'&&S.money<ti.rinko||k==='push'&&S.hp<=15||k==='food'&&S.food<=0||k==='tactic'&&!tacOK()?'disabled':''}>${ic[k]?`<img src="img/${ic[k]}.webp" width="30" height="30" alt=""><span>${l}<small>${s}</small></span>`:`${l}<small>${s}</small>`}</button>`).join('');}
+  $('bt-cmds').innerHTML=cmds.map(([k,l,s])=>`<button data-cmd="${k}" class="${ic[k]?'ic ':''}c-${RC[k]||'nrm'}" ${k==='kiai'&&S.mp<20||k==='rinko'&&S.money<ti.rinko||k==='push'&&S.hp<=15||k==='food'&&S.food<=0||k==='tactic'&&!tacOK()?'disabled':''}>${ic[k]?`<img src="img/${ic[k]}.webp" width="30" height="30" alt=""><span>${l}<small>${s}</small></span>`:`${l}<small>${s}</small>`}</button>`).join('');}
 $('bt-cmds').addEventListener('click',e=>{const b=e.target.closest('button[data-cmd]');if(b)cmd(b.dataset.cmd);});
 function cmd(k){let t='';let dmg=0;const mult=B.charge||1;B.cut=1;
   if(k==='push'||k==='post'){dmg=Math.round((playerPower()+rnd(0,8))*mult);if(k==='push')S.hp-=15;B.charge=false;t=`${k==='push'?'全力で踏んだ！':'渾身の映え投稿！'} ${fmtD(dmg)}${k==='push'?'進んだ':'詰めた'}`;}
@@ -959,7 +967,7 @@ function cmd(k){let t='';let dmg=0;const mult=B.charge||1;B.cut=1;
   else if(k==='rinko'){if(!$('ov-pay').dataset.ok){askPay('輪行で区間を飛ばしますか？',trip.rk,()=>{$('ov-pay').dataset.ok='1';cmd('rinko');});return;}delete $('ov-pay').dataset.ok;S.money-=trip.rk;t='輪行で区間を飛ばした！';log(`${B.e.name}の区間を輪行（${yen(trip.rk)}）`);S.stats.wins++;trip.i++;$('ov-battle').hidden=true;battleOver();nextEncounter();return;}
   else if(k==='escape'){trip.late=true;$('ov-battle').hidden=true;battleOver();log('ライバルに撮影スポットを譲った…');S.stats.losses++;nextEncounter();return;}
   B.hp-=dmg;if(dmg>0&&B.hp>0)playSE('se_hit');
-  if(B.hp<=0){blog(t+(isRival()?'\n先に撮影スポットに着いた！':'\nこの区間を走り切った！'));S.stats.wins++;playSE('se_win');renderBattle();$('bt-cmds').innerHTML=`<button class="primary" data-cmd="next">キャンプ場へ向かう</button>`;
+  if(B.hp<=0){blog(t+(isRival()?'\n先に撮影スポットに着いた！':'\nこの区間を走り切った！'));S.stats.wins++;playSE('se_win');renderBattle();$('bt-cmds').innerHTML=`<button class="primary c-atk" data-cmd="next">キャンプ場へ向かう</button>`;
     $('bt-cmds').querySelector('button').onclick=()=>{trip.i++;$('ov-battle').hidden=true;battleOver();nextEncounter();};return;}
   // enemy acts
   // 予告した勢い（NEXT）と、作戦・身構えによる軽減（B.cut）を掛ける
@@ -974,7 +982,7 @@ function cmd(k){let t='';let dmg=0;const mult=B.charge||1;B.cut=1;
   if(B.turn>B.limit){blog(t+'\n'+et+'\n日が暮れた…キャンプ場に遅刻した');fail('日没');return;}
   blog(t+'\n'+et);renderBattle();}
 function fail(why){S.stats.losses++;trip.late=true;log(`${B.e.name}の区間で遅れた（${why}）`);renderBattle();
-  $('bt-cmds').innerHTML=`<button class="primary">とぼとぼ向かう</button>`;$('bt-cmds').querySelector('button').onclick=()=>{$('ov-battle').hidden=true;battleOver();endTrip();};}
+  $('bt-cmds').innerHTML=`<button class="primary c-atk">とぼとぼ向かう</button>`;$('bt-cmds').querySelector('button').onclick=()=>{$('ov-battle').hidden=true;battleOver();endTrip();};}
 
 // ---------- camp result ----------
 // 到着後、夜のキャンプ場での過ごし方を1つ選ぶ（遅刻したときは選べない）
