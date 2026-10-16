@@ -704,7 +704,11 @@ function load(){try{const s=localStorage.getItem('charicamp');if(!s)return null;
   if(Object.keys(f).length===47&&Object.values(f).every(x=>x&&Number.isFinite(+x.temp)&&WXL.includes(x.wx)))o.forecast=f;
   o.v=SAVE_V;LASTSAVE='';return o;}catch(e){return null;}}
 // 旅の一覧：[週の通し番号, 県番号, 写真点数(-1は遅刻), 遭遇した敵(カンマ区切り)]
-function tlog(q){const k=(trip.late?trip.enc.slice(0,trip.i+1):trip.enc).concat(trip.tc?['tsuchi']:[]);S.tl.unshift([S.turn,trip.p.id,q,k.join(',')]);if(S.tl.length>TL_MAX)S.tl.length=TL_MAX;}
+// 旅履歴の遭遇は、1文字コード（先頭に~）で保存して容量を節約する。順番は固定（追加は末尾へ）。コード化前の保存（敵名をカンマ区切り）も読める
+const TLK=['hill','animal','rough','lost','pass','deer','bear','habu','brownbear','car','bike','wind','rain','heat','snow','typhoon','rival','tsuchi'],TLC='abcdefghijklmnopqr';
+const tlEnc=a=>a.length?'~'+a.map(k=>TLC[TLK.indexOf(k)]||'').join(''):'';
+const tlDec=z=>z?z[0]==='~'?[...z.slice(1)].map(c=>TLK[TLC.indexOf(c)]).filter(Boolean):z.split(','):[];
+function tlog(q){const k=(trip.late?trip.enc.slice(0,trip.i+1):trip.enc).concat(trip.tc?['tsuchi']:[]);S.tl.unshift([S.turn,trip.p.id,q,tlEnc(k)]);if(S.tl.length>TL_MAX)S.tl.length=TL_MAX;}
 function log(t){S.log.unshift(`${S.turn}|${t}`);if(S.log.length>LOG_MAX)S.log.length=LOG_MAX;}
 // ログ1行を表示用に戻す（v3以前の保存には日付入りの文字列がそのまま入っている）
 const logLine=l=>{const m=/^(\d+)\|(.*)$/s.exec(l);return m?`${calLabel(+m[1])} ${m[2]}`:l;};
@@ -954,7 +958,7 @@ for(const id of ['p-gear','p-camp','p-shop'])$(id).addEventListener('click',shop
 const CAL_S=t=>{const c=calendar(t);return `${c.year}年${c.month}月${c.week}週`;};
 $('tl-tabs').addEventListener('click',e=>{const b=e.target.closest('button[data-v]');if(!b)return;document.querySelectorAll('#tl-tabs button').forEach(x=>x.setAttribute('aria-selected',x===b));$('tl').hidden=b.dataset.v!=='tl';$('log').hidden=b.dataset.v!=='log';});
 function renderLog(){$('log').innerHTML=S.log.map(l=>`<li>${logLine(l)}</li>`).join('');
-  $('tl').innerHTML=S.tl.length?`<div class="th">日付</div><div class="th">行き先</div><div class="th">写真</div><div class="th">遭遇</div>`+S.tl.map(([t,pid,q,k])=>`<div>${CAL_S(t)}</div><div>${PREF[pid].name}</div><div>${q<0?'<span class="bad">遅刻</span>':q+'点'}</div><div>${k?k.split(',').map(x=>(ENEMY[x]||{name:x==='tsuchi'?'ツチノコ':x}).name).join('・'):'なし'}</div>`).join(''):'<div class="hint" style="grid-column:1/-1">まだ旅に出ていません</div>';
+  $('tl').innerHTML=S.tl.length?`<div class="th">日付</div><div class="th">行き先</div><div class="th">写真</div><div class="th">遭遇</div>`+S.tl.map(([t,pid,q,k])=>`<div>${CAL_S(t)}</div><div>${PREF[pid].name}</div><div>${q<0?'<span class="bad">遅刻</span>':q+'点'}</div><div>${tlDec(k).length?tlDec(k).map(x=>(ENEMY[x]||{name:x==='tsuchi'?'ツチノコ':x}).name).join('・'):'なし'}</div>`).join(''):'<div class="hint" style="grid-column:1/-1">まだ旅に出ていません</div>';
   const sp=sponsor();$('summary').innerHTML=`<span>称号</span><span>${title(S.fame)}</span><span>スポンサー</span><span>${sp[2]}<br><small>${yen(sp[1])}/週</small></span><span>投稿数</span><span>${S.stats.posts}</span><span>最高写真</span><span>${S.stats.bestQ}点</span><span>試練制覇</span><span>${S.stats.wins}回</span>`;}
 
 $('shop-tabs').addEventListener('click',e=>{const b=e.target.closest('button[data-sub]');if(!b)return;document.querySelectorAll('#shop-tabs button').forEach(x=>x.setAttribute('aria-selected',x===b));document.querySelectorAll('.shopsec').forEach(s=>s.hidden=s.dataset.sub!==b.dataset.sub);});
