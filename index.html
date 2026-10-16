@@ -1078,7 +1078,7 @@ function renderTrials(){let w=0,f=0;for(const k of TRIAL_KEYS){const v=S.stats.e
   $('ach-sum').textContent=`突破 ${w}回 ／ 失敗 ${f}回`;
   const row=k=>{const v=S.stats.en[k]||[0,0,0],z=v[0]?'':' z',cols=`<div class="num${z}">${v[0]}</div><div class="num${z}">${v[1]}</div><div class="num${z}${v[2]?' bad':''}">${v[2]}</div>`;
     if(k==='tsuchi'){const got=v[1]>0;return `<div class="n${got?'':' leg'}"><img loading="lazy" decoding="async" src="img/${got?'tsuchinoko':'tsuchinoko_unknown'}.webp" alt="">${got?'ツチノコ':'伝説の生き物'}</div>${cols}`;}
-    const e=ENEMY[k];return `<div class="n"><img loading="lazy" decoding="async" src="${e.img}" alt="" onerror="this.style.display='none'">${e.name.replace('インフルエンサー','')}</div>${cols}`;};
+    const e=ENEMY[k];return `<div class="n"><img loading="lazy" decoding="async" src="${e.img}" alt="" onerror="this.style.display='none'">${e.name.replace('インフルエンサー','').replace('迷惑キャンパー','迷惑')}</div>${cols}`;};
   $('achlist').innerHTML='<div class="th">試練</div><div class="th">遭遇</div><div class="th">突破</div><div class="th">失敗</div>'+TRIAL_KEYS.map(row).join('');}
 function showLogSub(){$('p-trip').hidden=LOGSUB!=='trip';$('p-sight').hidden=LOGSUB!=='sight';$('p-ach').hidden=LOGSUB!=='ach';if(LOGSUB==='ach')renderTrials();document.querySelectorAll('#log-tabs button').forEach(x=>x.setAttribute('aria-selected',x.dataset.sub===LOGSUB));if(LOGSUB==='sight')renderSights();}
 $('log-tabs').onclick=e=>{const b=e.target.closest('button[data-sub]');if(!b)return;LOGSUB=b.dataset.sub;showLogSub();};
