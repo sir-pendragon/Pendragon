@@ -995,11 +995,13 @@ $('go-eq').onclick=()=>{$('ov-go').hidden=true;$('tab-gear').click();};
 function startTrip(p,rinko){snap();{const i=new Image();i.src='img/late.webp';}{const i=new Image();i.src='img/sights/'+sightOf(p.id,S.visits[p.id]+1)[0]+'.webp';}const ti=travelInfo(p);const stay=p.id===S.loc;
   if(rinko){S.money-=ti.rinko;log(`${p.name}へ輪行（${yen(ti.rinko)}）`);}
   const f=S.forecast[p.id];const enc=[];
-  if(!rinko&&!stay){const pool=[];if(p.terrain==='hill')pool.push('hill','hill','pass');if(p.terrain==='hill'&&p.diff>=3)pool.push('pass','pass');if(p.terrain==='rough'){pool.push('rough','rough');pool.push('lost');if(p.diff>=4)pool.push('lost');}if(p.name!=='北海道'){if(p.terrain==='rough')pool.push('animal');if(WILD.has(p.region))pool.push('animal');}
-    if(HABU.has(p.name)&&PREF[S.home].name!=='沖縄')pool.push('habu');if(DEER.has(p.name))pool.push('deer');if(calendar(S.turn).year>=2&&bearSeason(calendar(S.turn).month)){if(BROWNBEAR.has(p.name)&&PREF[S.home].name!=='北海道')pool.push('brownbear');if(BLACKBEAR.has(p.name)&&(!RAREBEAR.has(p.name)||Math.random()<.5))pool.push('bear');}if(calendar(S.turn).year>=2&&URBAN.has(p.name))pool.push(urbanEnemy());
+  if(!stay){const pool=[];// 輪行でも、坂・悪路・天候・ツチノコは出る。生き物は出にくい（3割）。ヒグマ・ハブは下の「現地で3割」で別に判定する
+    if(p.terrain==='hill')pool.push('hill','hill','pass');if(p.terrain==='hill'&&p.diff>=3)pool.push('pass','pass');if(p.terrain==='rough'){pool.push('rough','rough');pool.push('lost');if(p.diff>=4)pool.push('lost');}if(p.name!=='北海道'){if(p.terrain==='rough')pool.push('animal');if(WILD.has(p.region))pool.push('animal');}
+    if(!rinko&&HABU.has(p.name)&&PREF[S.home].name!=='沖縄')pool.push('habu');if(DEER.has(p.name))pool.push('deer');if(calendar(S.turn).year>=2&&bearSeason(calendar(S.turn).month)){if(!rinko&&BROWNBEAR.has(p.name)&&PREF[S.home].name!=='北海道')pool.push('brownbear');if(BLACKBEAR.has(p.name)&&(!RAREBEAR.has(p.name)||Math.random()<.5))pool.push('bear');}if(calendar(S.turn).year>=2&&URBAN.has(p.name))pool.push(urbanEnemy());
     {const wk={rain:'rain',wind:'wind',typhoon:'typhoon',snow:'snow',heat:'heat'}[f.wx];if(wk)for(let i=0;i<(wk==='typhoon'?5:4);i++)pool.push(wk);}// 天候の試練は出やすく（予報の天気を重く）if(pool.length===0)pool.push('hill','animal');
     const fam=familiar(p).f;
-    for(let i=0;i<ti.enc;i++){const k=pool[rnd(0,pool.length-1)];if(WILDK.has(k)&&Math.random()>fam*WILD_BASE)continue;enc.push(k);}// 地元・馴染み宿・同じ地方では、動物の枠が減る
+    const slots=ti.enc>=99?3:ti.enc,wb=rinko?.3:WILD_BASE;
+    for(let i=0;i<slots;i++){const k=pool[rnd(0,pool.length-1)];if(WILDK.has(k)&&Math.random()>fam*wb)continue;enc.push(k);}// 地元・馴染み宿・同じ地方では、動物の枠が減る
     if(!enc.length&&ti.enc>0){const nw=pool.filter(k=>!WILDK.has(k));enc.push(nw.length?nw[rnd(0,nw.length-1)]:'hill');}// 生き物が出なかった旅でも、最低1回は試練がある
     if(f.wx==='typhoon'&&enc.length&&!enc.includes('typhoon'))enc[enc.length-1]='typhoon';
     else if(['rain','wind','snow','heat'].includes(f.wx)&&enc.length&&!enc.includes(f.wx)&&Math.random()<.75)enc[enc.length-1]=f.wx;}// 荒れた天気の日は、ほぼ必ず天候の試練がある
@@ -1008,7 +1010,7 @@ function startTrip(p,rinko){snap();{const i=new Image();i.src='img/late.webp';}{
     const fm=familiar(p).f;for(const k of bs)if(Math.random()<.3*fm)enc.push(k);}
   const ev=eventAt(S.turn,p.id);
   if((p.scen>=5||ev)&&Math.random()<(ev?(stay?.3:.6):stay?.15:.4))enc.push('rival');
-  INTRIP=true;const nEnc=Math.max(1,enc.filter(k=>k!=='rival').length);trip={p,rinko,stay,enc,ev,i:0,late:false,sec:rinko?5:Math.max(3,Math.round(ti.d/nEnc)),rk:Math.max(1000,Math.round(ti.rinko/nEnc/100)*100)};S.loc=p.id;if(stay){S.mp-=Math.max(0,15-bikeStats().comfy);}
+  INTRIP=true;const nEnc=Math.max(1,enc.filter(k=>k!=='rival').length);trip={p,rinko,stay,enc,ev,i:0,late:false,sec:Math.max(3,Math.min(rinko?12:99,Math.round(ti.d/nEnc))),rk:Math.max(1000,Math.round(ti.rinko/nEnc/100)*100)};S.loc=p.id;if(stay){S.mp-=Math.max(0,15-bikeStats().comfy);}
   S.sel=S.loc;render();nextEncounter();}
 // ツチノコ：試練の1回ごとに3%で気配が出る（1回の旅で1回まで）。試練ではなく撮影チャンス。成功は初回+20万人、2回目以降+5万人
 const TC_P=.03;
@@ -1029,7 +1031,7 @@ function tsuchinoko(then){trip.tc=1;tstat('tsuchi')[0]++;const has=S.parts.inclu
   $('ov-tc').hidden=false;playSE('se_encounter');}
 function nextEncounter(){if(trip.i>=trip.enc.length||trip.late){endTrip();return;}
   const run=()=>startBattle(trip.enc[trip.i]);
-  if(!trip.tc&&!trip.stay&&!trip.rinko&&trip.enc[trip.i]!=='rival'&&Math.random()<TC_P){tsuchinoko(run);return;}
+  if(!trip.tc&&!trip.stay&&trip.enc[trip.i]!=='rival'&&Math.random()<TC_P){tsuchinoko(run);return;}
   run();}
 
 // ---------- 音（audio/ に mp3 を置くと自動で鳴る。無ければ無音） ----------
