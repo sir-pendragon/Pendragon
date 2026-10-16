@@ -18,9 +18,9 @@
 }
 /* 暗い色のアイコンも濃い茶のパネル上で見えるよう、明るい縁取りを付ける */
 .ci,.wi,.ti,.si,#bt-cmds button img,#ov-camp .row button img,#bt-bike{filter:drop-shadow(0 0 1px rgba(255,246,225,.95)) drop-shadow(0 0 2px rgba(255,246,225,.45))}
-#ov-battle .bt-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
-#ov-battle .bt-head h2{min-width:0}
-#bt-name{flex:none;font-size:.78rem;color:var(--muted);white-space:nowrap}
+#battle-box .enemy{position:relative}
+#bt-title{position:absolute;left:0;top:0;z-index:1;font-size:2.4rem;line-height:1.1;text-shadow:0 2px 6px rgba(0,0,0,.8)}
+#bt-name{position:absolute;right:0;bottom:0;z-index:1;font-family:var(--display);font-size:1.7rem;line-height:1.1;color:var(--fg);white-space:nowrap;text-shadow:0 2px 6px rgba(0,0,0,.8)}
 html,body{height:100%}
 body{background:var(--page);color:var(--fg);font-family:var(--body);font-size:15px;line-height:1.5;
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:10px;padding-bottom:64px;margin:0;-webkit-text-size-adjust:100%;text-size-adjust:100%}
@@ -145,7 +145,6 @@ h3{margin-top:2px}
 .route img.flag{position:absolute;left:auto;right:-40px;bottom:0;width:34px;height:34px;transform:none;transition:none}
 .bt-kms{display:flex;justify-content:space-between;gap:12px;margin-top:-6px}
 #battle-box{gap:4px;padding:12px 14px}
-#battle-box .bt-head h2{font-size:1.15rem}
 #battle-box .blog{margin-top:2px}
 #battle-box .enemy{margin-top:-4px}
 #bt-info{margin:0 0 2px!important}
@@ -299,11 +298,10 @@ h3{margin-top:2px}
 
 <div class="overlay" id="ov-battle" hidden>
   <div class="modal" id="battle-box">
-    <div class="bt-head"><h2 id="bt-title">バトル</h2><div id="bt-name">坂</div></div>
     <div class="bt-kms" id="bt-km"></div>
     <div class="route"><i id="bt-hp"></i><img id="bt-bike" src="img/icon_bike_mama.webp" width="128" height="128" alt=""><img class="flag" id="bt-goal" src="img/icon_g_sh2.webp" width="128" height="128" alt="キャンプ場"></div>
     <div class="hint" id="bt-info"></div>
-    <div class="enemy"><div class="face" id="bt-face">⛰️</div></div>
+    <div class="enemy"><h2 id="bt-title">バトル</h2><div class="face" id="bt-face">⛰️</div><div id="bt-name">坂</div></div>
     <div class="blog" id="bt-log"></div>
     <div class="cmds" id="bt-cmds"></div>
   </div>
@@ -936,8 +934,8 @@ let B=null;
 function startBattle(kind){const e=ENEMY[kind],p=trip.p,c=calendar(S.turn);const scale=1+.4*(p.diff-1)+.2*(c.year-1);
   const hp=kind==='rival'?Math.round(40+FL()/3):Math.round(e.hp*scale);
   B={kind,e,hp,max:hp,limit:e.limit,turn:1,charge:0,cut:1,next:rollNext(),atk:Math.round(e.atk*scale*(S.parts.includes('spray')&&(kind==='bear'||kind==='brownbear')||S.parts.includes('oil')&&(kind==='car'||kind==='bike')?.5:1))};
-  $('ov-battle').hidden=false;playSE('se_encounter');playBGM('bgm_battle');$('bt-face').innerHTML=e.img?`<img src="${e.img}" alt="${e.name}" width="190" height="190" onerror="this.replaceWith(document.createTextNode('${e.face}'))">`:e.face;$('bt-name').textContent=`区間 ${trip.i+1}/${trip.enc.length}：${e.name}`;
-  $('bt-title').textContent=kind==='rival'?'SNSバトル！':`${e.name}が立ちはだかる！`;
+  $('ov-battle').hidden=false;playSE('se_encounter');playBGM('bgm_battle');$('bt-face').innerHTML=e.img?`<img src="${e.img}" alt="${e.name}" width="190" height="190" onerror="this.replaceWith(document.createTextNode('${e.face}'))">`:e.face;$('bt-name').textContent=`区間 ${trip.i+1}/${trip.enc.length}`;
+  $('bt-title').textContent=kind==='rival'?'SNSバトル':e.name;
   blog(kind==='rival'?`ライバルも同じ撮影スポットを狙っている！\n${e.hint}。日没まで あと${B.limit}時間。`:`${e.name}の区間に入った。\n${e.hint}。日没まで あと${B.limit}時間。`);renderBattle();}
 function blog(t){$('bt-log').textContent=t;}
 // 区間の距離（ライバル戦は撮影スポットまでのm）。内部の数値（hp）を距離に換算して表示する
