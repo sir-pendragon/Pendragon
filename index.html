@@ -130,7 +130,7 @@ h3{margin-top:2px}
 #btn-set{position:fixed;right:max(12px,env(safe-area-inset-right,0px));bottom:max(12px,env(safe-area-inset-bottom,0px));z-index:8;padding:6px 12px;font-size:.85rem;border-radius:999px;box-shadow:0 2px 10px rgba(0,0,0,.35);opacity:.92}
 .modal{margin:auto;background:var(--panel);border:2px solid var(--fg);border-radius:10px;padding:16px;max-width:520px;width:100%;display:flex;flex-direction:column;gap:12px;box-shadow:0 10px 40px rgba(0,0,0,.3)}
 .enemy{display:flex;gap:12px;align-items:center}
-.enemy .face{font-size:2.6rem;line-height:1}
+.enemy .face{font-size:3.6rem;line-height:1;flex:none;display:flex;align-items:center;justify-content:center}
 .enemy .hp{flex:1;min-width:0}
 .route{position:relative;height:46px;margin:4px 40px 6px 0}
 .route::before{content:"";position:absolute;left:0;right:0;bottom:0;height:16px;border-radius:8px;background:var(--line);box-shadow:inset 0 1px 3px rgba(0,0,0,.25)}
@@ -163,7 +163,7 @@ h3{margin-top:2px}
 .profile{display:flex;gap:12px;align-items:center}
 .profile img{flex:none;width:96px;height:96px;object-fit:cover;border-radius:8px;border:1px solid var(--line);background:var(--bg)}
 .profile .res{flex:1;min-width:0}
-.enemy .face img{display:block;width:104px;height:104px;object-fit:contain}
+.enemy .face img{display:block;width:150px;height:150px;object-fit:contain}
 .loghead{display:flex;justify-content:space-between;align-items:center;gap:8px}
 .res{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-variant-numeric:tabular-nums}
 .res span:nth-child(odd){color:var(--muted)}
@@ -901,7 +901,7 @@ let B=null;
 function startBattle(kind){const e=ENEMY[kind],p=trip.p,c=calendar(S.turn);const scale=1+.4*(p.diff-1)+.2*(c.year-1);
   const hp=kind==='rival'?Math.round(40+FL()/3):Math.round(e.hp*scale);
   B={kind,e,hp,max:hp,limit:e.limit,turn:1,charge:0,cut:1,next:rollNext(),atk:Math.round(e.atk*scale*(S.parts.includes('spray')&&(kind==='bear'||kind==='brownbear')||S.parts.includes('oil')&&(kind==='car'||kind==='bike')?.5:1))};
-  $('ov-battle').hidden=false;playSE('se_encounter');playBGM('bgm_battle');$('bt-face').innerHTML=e.img?`<img src="${e.img}" alt="${e.name}" width="104" height="104" onerror="this.replaceWith(document.createTextNode('${e.face}'))">`:e.face;$('bt-name').textContent=`区間 ${trip.i+1}/${trip.enc.length}：${e.name}`;
+  $('ov-battle').hidden=false;playSE('se_encounter');playBGM('bgm_battle');$('bt-face').innerHTML=e.img?`<img src="${e.img}" alt="${e.name}" width="150" height="150" onerror="this.replaceWith(document.createTextNode('${e.face}'))">`:e.face;$('bt-name').textContent=`区間 ${trip.i+1}/${trip.enc.length}：${e.name}`;
   $('bt-title').textContent=kind==='rival'?'SNSバトル！':`${e.name}が立ちはだかる！`;
   blog(kind==='rival'?`ライバルも同じ撮影スポットを狙っている！\n${e.hint}。日没まで あと${B.limit}時間。`:`${e.name}の区間に入った。\n${e.hint}。日没まで あと${B.limit}時間。`);renderBattle();}
 function blog(t){$('bt-log').textContent=t;}
