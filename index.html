@@ -103,6 +103,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 #tut-bub[hidden]{display:none}
 #tut-bub p{margin:0}#tut-bub b{font-size:1.05em}
 #tut-bub::after{content:"";position:absolute;left:var(--tx,50%);bottom:-11px;margin-left:-9px;border:9px solid transparent;border-top-color:var(--fg);border-bottom:0}
+.tci{width:26px;height:26px;vertical-align:-7px;margin-right:4px}
 #tut-bub .tb-img{align-self:center;max-height:84px;width:auto;margin:2px 0}
 .profile .res img.spi{display:block;height:52px;width:auto;max-width:none;aspect-ratio:auto;object-fit:contain;border:0;border-radius:0;background:none;margin:0 0 3px}
 #tut-bub .tb-row{display:grid;grid-template-columns:1fr 1.4fr;gap:6px;margin-top:4px}
@@ -1288,7 +1289,7 @@ $('tut-next').onclick=()=>{$('ov-tut').hidden=true;try{localStorage.setItem('cc_
 $('tut-skip').onclick=()=>{tutDone();try{localStorage.setItem('cc_tutb','1');}catch(e){}TUTI=-1;$('ov-tut').hidden=true;$('tut-bub').hidden=true;};
 function tutBattle(){let seen=true;try{seen=localStorage.getItem('cc_tutb')==='1';}catch(e){}if(seen)return;TUTP=TUTI;TUTI=10;
   $('tut-n').textContent='バトルの遊び方';$('tut-h').textContent='試練の進め方';
-  $('tut-p').innerHTML='敵の体力を減らしきると、その区間を走り切れます。制限ターンを超えるか、自分の体力が0になると遅刻です。<br><br><b>気合い</b>：気力を20使い、次の行動が3倍進みます。強い敵を一気に抜けたいときに。<br><b>身構える</b>：敵の攻撃を受ける被害を7割減らします。敵の「次の強さ」が強いときに使いましょう。<br><b>休む</b>：体力を回復します。体力が減ってきたら使いましょう。';
+  $('tut-p').innerHTML='敵の体力を減らしきると、その区間を走り切れます。制限ターンを超えるか、自分の体力が0になると遅刻です。<br><br><img class="tci" src="img/cmd_kiai.webp" alt="" onerror="this.remove()"><b>気合い</b>：気力を20使い、次の行動が3倍進みます。強い敵を一気に抜けたいときに。<br><img class="tci" src="img/cmd_guard.webp" alt=""><b>身構える</b>：敵の攻撃を受ける被害を7割減らします。敵の「次の強さ」が強いときに使いましょう。<br><b>休む</b>：体力を回復します。体力が減ってきたら使いましょう。';
   $('ov-tut').hidden=false;}
 $('set-tut').onclick=()=>{$('ov-set').hidden=true;try{localStorage.removeItem('cc_tut');localStorage.removeItem('cc_tutb');}catch(e){}$('tab-map').click();tutShow(0);};
 function tutSeen(){try{return localStorage.getItem('cc_tut')==='1';}catch(e){return true;}}
