@@ -41,9 +41,9 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .status{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:3px 16px;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:5px 12px;font-variant-numeric:tabular-nums}
 @media (min-width:560px){.status{grid-template-columns:repeat(3,minmax(0,1fr))}}
 .status .date{grid-column:1/-1;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;font-family:var(--display);font-size:1rem;line-height:1.3}
-.stat{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:0 6px;font-size:.8rem;line-height:1.35;color:var(--muted)}
-.stat b{color:var(--fg);font-size:.9rem;flex:1 1 0;min-width:0;text-align:right}
-.stat .bar{flex-basis:100%;height:12px;margin-top:2px}
+.stat{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:baseline;gap:0 6px;font-size:.8rem;line-height:1.35;color:var(--muted)}
+.stat b{color:var(--fg);font-size:.9rem;white-space:nowrap;text-align:right}
+.stat .bar{grid-column:1/-1;height:12px;margin-top:2px}
 .bar{height:12px;background:var(--line);border-radius:6px;overflow:hidden;box-shadow:inset 0 1px 2px rgba(0,0,0,.25)}
 .bar i{display:block;height:100%;background:var(--forest);transition:width .35s}
 .bar.mp i{background:var(--sky)}
@@ -51,6 +51,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .tabs button{flex:1 1 60px;padding:4px 2px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;font-size:.78rem;line-height:1.2}
 .ti{width:22px;height:22px;object-fit:contain}
 .stat .lb{display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
+#d-fame{white-space:normal}
 @media (max-width:380px){.stat{font-size:.74rem}.stat .lb{gap:2px}.stat .si{width:14px;height:14px}}
 .wi{width:1.25em;height:1.25em;object-fit:contain;vertical-align:-.3em;margin-right:3px}
 .si{width:16px;height:16px;object-fit:contain}
@@ -192,7 +193,7 @@ h3{margin-top:2px}
     <div class="stat"><span class="lb"><img class="si" src="img/icon_loc.webp" width="16" height="16" alt="">現在地</span><b id="d-loc">東京</b></div>
     <div class="stat"><span class="lb"><img class="si" src="img/icon_hp.webp" width="16" height="16" alt="">体力</span><b id="d-hp">100</b><div class="bar"><i id="b-hp" style="width:100%"></i></div></div>
     <div class="stat"><span class="lb"><img class="si" src="img/icon_mp.webp" width="16" height="16" alt="">気力</span><b id="d-mp">100</b><div class="bar mp"><i id="b-mp" style="width:100%"></i></div></div>
-    <div class="stat"><span class="lb"><img class="si" src="img/icon_inn.webp" width="16" height="16" alt="">都道府県制覇数</span><b id="d-fam">0 / 47</b></div>
+    <div class="stat" style="grid-column:1/-1"><span class="lb"><img class="si" src="img/icon_inn.webp" width="16" height="16" alt="">都道府県制覇数</span><b id="d-fam">0 / 47</b></div>
   </div>
   <div class="tabs" role="tablist">
     <button role="tab" aria-selected="true" data-tab="map" id="tab-map"><img class="ti" src="img/icon_map.webp" width="22" height="22" alt="">地図</button>
