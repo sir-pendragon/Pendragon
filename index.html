@@ -473,7 +473,7 @@ function title(f){let t=TITLES[0][1];for(const [n,s] of TITLES) if(f>=n) t=s;ret
 
 // ---------- state ----------
 let S=null;
-function newGame(HOME){INTRIP=false;S={turn:1,fame:0,money:30000,hp:100,mp:100,home:HOME,loc:HOME,bike:'mama',cloth:'plain',parts:[],gear:{fire:null,shelter:null,tarp:null},owned:{bikes:['mama'],cloth:['plain'],parts:[],gear:[]},
+function newGame(HOME){INTRIP=false;TS=null;trip=null;B=null;$('pop').hidden=true;S={turn:1,fame:0,money:30000,hp:100,mp:100,home:HOME,loc:HOME,bike:'mama',cloth:'plain',parts:[],gear:{fire:null,shelter:null,tarp:null},owned:{bikes:['mama'],cloth:['plain'],parts:[],gear:[]},
   visits:Array(47).fill(0),fam:Array(47).fill(false),log:[],forecast:null,sel:HOME,stats:{wins:0,losses:0,posts:0,bestQ:0}};
   rollForecast();log(`春の週末。${PREF[HOME].name}の自宅から旅が始まる。`);save();}
 // ---------- セーブ ----------
@@ -481,7 +481,7 @@ function newGame(HOME){INTRIP=false;S={turn:1,fame:0,money:30000,hp:100,mp:100,h
 let TS=null;// 旅の前の数値（週の変化をポップアップに出すため）
 function snap(){TS={money:S.money,fame:S.fame,hp:S.hp,mp:S.mp,fam:S.fam.filter(Boolean).length,inc:0,fee:0,became:null};}
 let INTRIP=false;const SAVE_V=3;
-function save(){if(INTRIP)return;try{const {sel,...o}=S;o.v=SAVE_V;localStorage.setItem('charicamp',JSON.stringify(o));}catch(e){}}
+function save(){if(INTRIP||!S)return;try{const {sel,...o}=S;o.v=SAVE_V;localStorage.setItem('charicamp',JSON.stringify(o));}catch(e){}}
 function load(){try{const s=localStorage.getItem('charicamp');if(!s)return null;const o=JSON.parse(s);if(!o||typeof o!=='object')return null;
   const num=(v,d,lo,hi)=>Number.isFinite(+v)?Math.min(hi,Math.max(lo,Math.round(+v))):d;
   const has=(l,id)=>l.some(x=>x.id===id);
@@ -494,12 +494,13 @@ function load(){try{const s=localStorage.getItem('charicamp');if(!s)return null;
   o.owned.parts=(Array.isArray(o.owned.parts)?o.owned.parts:[]).filter(x=>has(PARTS,x));
   o.owned.gear=(Array.isArray(o.owned.gear)?o.owned.gear:[]).filter(x=>has(GEAR_ITEMS,x));
   if(!o.owned.bikes.includes(o.bike))o.bike=o.owned.bikes[0];if(!o.owned.cloth.includes(o.cloth))o.cloth=o.owned.cloth[0];
-  o.parts=(Array.isArray(o.parts)?o.parts:[]).filter(x=>o.owned.parts.includes(x)).slice(0,3);
+  for(const k of ['bikes','cloth','parts','gear'])o.owned[k]=[...new Set(o.owned[k])];
+  o.parts=[...new Set((Array.isArray(o.parts)?o.parts:[]).filter(x=>o.owned.parts.includes(x)))].slice(0,3);
   const g=o.gear&&typeof o.gear==='object'?o.gear:{};o.gear={};for(const k of ['fire','shelter','tarp'])o.gear[k]=GEAR_ITEMS.some(x=>x.slot===k&&x.id===g[k]&&o.owned.gear.includes(x.id))?g[k]:null;
   o.log=(Array.isArray(o.log)?o.log:[]).filter(x=>typeof x==='string').slice(0,120);
   const st=o.stats&&typeof o.stats==='object'?o.stats:{};o.stats={wins:num(st.wins,0,0,1e9),losses:num(st.losses,0,0,1e9),posts:num(st.posts,0,0,1e9),bestQ:num(st.bestQ,0,0,100)};
   const f=o.forecast&&typeof o.forecast==='object'?o.forecast:{};o.forecast=null;
-  if(Object.keys(f).length===47&&Object.values(f).every(x=>x&&Number.isFinite(+x.temp)&&['sun','cloud','rain','wind','typhoon'].includes(x.wx)))o.forecast=f;
+  if(Object.keys(f).length===47&&PREF.every(p=>{const x=f[p.id];return x&&Number.isFinite(x.temp)&&['sun','cloud','rain','wind','typhoon'].includes(x.wx);}))o.forecast=f;
   o.v=SAVE_V;return o;}catch(e){return null;}}
 function log(t){S.log.unshift(`${calLabel(S.turn)} ${t}`);if(S.log.length>120)S.log.length=120;}
 function calLabel(t){const c=calendar(t);return `${c.year}年目${c.month}月第${c.week}週`;}
@@ -531,7 +532,7 @@ const sightOf=(id,v)=>SIGHTS[id][(Math.max(1,v)-1)%3];
 const WX_J={sun:'<img class="wi" src="img/wx_sun.webp" width="96" height="96" alt="">晴れ',cloud:'<img class="wi" src="img/wx_cloud.webp" width="96" height="96" alt="">曇り',rain:'<img class="wi" src="img/wx_rain.webp" width="96" height="96" alt="">雨',wind:'<img class="wi" src="img/wx_wind.webp" width="96" height="96" alt="">強風',typhoon:'<img class="wi" src="img/wx_typhoon.webp" width="96" height="96" alt="">台風'};
 
 // ---------- rendering ----------
-function render(){if(!$('p-sight').hidden&&!$('p-log').hidden)renderSights();const c=calendar(S.turn);$('d-date').textContent=`${c.year}年目 ${c.month}月第${c.week}週（${S.turn}/52）`;$('d-season').innerHTML=SEASON_J[season(c.mi)];
+function render(){if(!$('p-sight').hidden&&!$('p-log').hidden)renderSights();const c=calendar(S.turn);$('d-date').textContent=`${c.year}年目 ${c.month}月第${c.week}週（${(S.turn-1)%52+1}/52）`;$('d-season').innerHTML=SEASON_J[season(c.mi)];
   $('d-fame').textContent=`${fol(S.fame)}（${title(S.fame)}）`;$('d-money').textContent=yen(S.money);
   $('d-hp').textContent=S.hp;$('b-hp').style.width=Math.max(0,S.hp)+'%';$('d-mp').textContent=S.mp;$('b-mp').style.width=Math.max(0,S.mp)+'%';
   $('d-loc').textContent=PREF[S.loc].name;$('d-fam').textContent=`${famCount()} / 47`;
@@ -595,7 +596,7 @@ function travelInfo(p){const d=dist(PREF[S.loc],p);const st=bikeStats();
   const enc=d===0?0:d<=120?1:d<=250?2:d<=400?3:99;return {d,rinko:okinawa?rinko+6000:rinko,enc,ride:enc<99&&!okinawa};}
 
 function renderDetail(){const p=PREF[S.sel],f=S.forecast[p.id],ti=travelInfo(p),cl=CLOTHES.find(c=>c.id===S.cloth);
-  const stay=S.sel===S.loc;const badge=S.fam[p.id]?'<span class="pill fam">馴染み宿</span>':`<span class="pill">訪問 ${S.visits[p.id]}/3</span>`;
+  const stay=S.sel===S.loc;const badge=S.fam[p.id]?'<span class="pill fam">馴染み宿</span>':`<span class="pill">訪問 ${Math.min(3,S.visits[p.id])}/3</span>`;
   const fit=f.temp<cl.lo?`❄️ 衣類が寒い（${cl.lo-f.temp}℃不足）`:f.temp>cl.hi?`🔥 衣類が暑い（${f.temp-cl.hi}℃超過）`:'👕 衣類OK';
   const enemies=[];if(p.terrain==='hill')enemies.push('激坂');if(p.terrain==='rough'||WILD.has(p.region))enemies.push('野生動物');
   if(f.wx==='rain')enemies.push('大雨');if(f.wx==='wind')enemies.push('強風');if(f.wx==='typhoon')enemies.push('台風');if(p.scen>=5)enemies.push('ライバル?');
@@ -611,7 +612,7 @@ function renderDetail(){const p=PREF[S.sel],f=S.forecast[p.id],ti=travelInfo(p),
   const b=id=>$(id);if(b('go-ride'))b('go-ride').onclick=()=>askGo(p,false);if(b('go-rinko'))b('go-rinko').onclick=()=>askGo(p,true);
   if(b('go-stay'))b('go-stay').onclick=()=>askGo(p,false);b('go-home').onclick=restHome;}
 
-function renderList(){$('sitelist').innerHTML=PREF.map(p=>`<button data-id="${p.id}" class="${p.id===S.loc?'cur':''}">${p.name} ${S.fam[p.id]?'🏅':S.visits[p.id]?'✔'.repeat(S.visits[p.id]):''}<small>${p.site}</small></button>`).join('');
+function renderList(){$('sitelist').innerHTML=PREF.map(p=>`<button data-id="${p.id}" class="${p.id===S.loc?'cur':''}">${p.name} ${S.fam[p.id]?'🏅':S.visits[p.id]?'✔'.repeat(Math.min(3,S.visits[p.id])):''}<small>${p.site}</small></button>`).join('');
   $('sitelist').querySelectorAll('button').forEach(b=>b.onclick=()=>{S.sel=+b.dataset.id;render();$('map').scrollIntoView({block:'start'});});}
 
 function owns(kind,id){return S.owned[kind==='bike'?'bikes':kind==='cloth'?'cloth':kind==='gear'?'gear':'parts'].includes(id);}
@@ -687,7 +688,7 @@ function nextEncounter(){if(trip.i>=trip.enc.length||trip.late){endTrip();return
 
 // ---------- 音（audio/ に mp3 を置くと自動で鳴る。無ければ無音） ----------
 const AUD={cache:{},cur:null,mb:false,ms:false,vb:.5,vs:.8};
-try{const j=JSON.parse(localStorage.getItem('cc_snd')||'null');if(j)Object.assign(AUD,{mb:!!j.mb,ms:!!j.ms,vb:j.vb??.5,vs:j.vs??.8});}catch(e){}
+try{const j=JSON.parse(localStorage.getItem('cc_snd')||'null');const volume=(v,d)=>Number.isFinite(v)?Math.max(0,Math.min(1,v)):d;if(j)Object.assign(AUD,{mb:!!j.mb,ms:!!j.ms,vb:volume(j.vb,.5),vs:volume(j.vs,.8)});}catch(e){}
 function saveSnd(){try{localStorage.setItem('cc_snd',JSON.stringify({mb:AUD.mb,ms:AUD.ms,vb:AUD.vb,vs:AUD.vs}));}catch(e){}}
 function audEl(n){if(!AUD.cache[n]){const a=new Audio('audio/'+n+'.mp3');a.preload=n.startsWith('bgm')?'metadata':'auto';a.addEventListener('error',()=>{a._bad=true;});AUD.cache[n]=a;}return AUD.cache[n];}
 function playSE(n){if(AUD.ms||AUD.vs<=0)return;try{const a=audEl(n);if(a._bad)return;const c=a.cloneNode();c.volume=AUD.vs;c.play().catch(()=>{});}catch(e){}}
@@ -738,9 +739,12 @@ function renderBattle(){const pr=Math.min(100,Math.max(0,(1-B.hp/B.max)*100));$(
     ['kiai','気合い（気力-20）','次の漕ぎが2倍進む'],
     ['rest','休む','体力+20、気力+5。1時間たつ'],
     ['rinko',`輪行 ${yen(ti.rinko)}`,'この区間を電車で飛ばす']];
-  $('bt-cmds').innerHTML=cmds.map(([k,l,s])=>`<button data-cmd="${k}" ${k==='kiai'&&S.mp<20||k==='rinko'&&S.money<ti.rinko||k==='push'&&S.hp<=15?'disabled':''}>${l}<small>${s}</small></button>`).join('');}
+  $('bt-cmds').innerHTML=cmds.map(([k,l,s])=>`<button data-cmd="${k}" ${k==='kiai'&&S.mp<20||k==='rinko'&&S.money<ti.rinko||k==='push'&&S.hp<=15||k==='walk'&&S.hp<=8?'disabled':''}>${l}<small>${s}</small></button>`).join('');}
 $('bt-cmds').addEventListener('click',e=>{const b=e.target.closest('button[data-cmd]');if(b)cmd(b.dataset.cmd);});
-function cmd(k){let t='';let dmg=0;const mult=B.charge?2:1;
+function cmd(k){if(!B||$('ov-battle').hidden||B.hp<=0)return;
+  const allowed=isRival()?['post','kiai','rest','escape']:['push','walk','kiai','rest','rinko'];
+  if(!allowed.includes(k)||k==='push'&&S.hp<=15||k==='walk'&&S.hp<=8||k==='kiai'&&S.mp<20||k==='rinko'&&S.money<trip.rk)return;
+  let t='';let dmg=0;const mult=B.charge?2:1;
   if(k==='push'||k==='post'){dmg=Math.round((playerPower()+rnd(0,8))*mult);if(k==='push')S.hp-=15;B.charge=false;t=`${k==='push'?'全力で踏んだ！':'渾身の映え投稿！'} ${fmtD(dmg)}${k==='push'?'進んだ':'詰めた'}`;}
   else if(k==='walk'){dmg=10*mult;S.hp-=8;B.charge=false;t=`押して歩いた。${fmtD(dmg)}進んだ`;}
   else if(k==='kiai'){S.mp-=20;B.charge=true;t='気合いを入れた！次の行動が2倍進む';}
@@ -748,7 +752,7 @@ function cmd(k){let t='';let dmg=0;const mult=B.charge?2:1;
   else if(k==='rinko'){if(!$('ov-pay').dataset.ok){askPay('輪行で区間を飛ばしますか？',trip.rk,()=>{$('ov-pay').dataset.ok='1';cmd('rinko');});return;}delete $('ov-pay').dataset.ok;S.money-=trip.rk;t='輪行で区間を飛ばした！';log(`${B.e.name}の区間を輪行（${yen(trip.rk)}）`);S.stats.wins++;trip.i++;$('ov-battle').hidden=true;battleOver();nextEncounter();return;}
   else if(k==='escape'){trip.late=true;$('ov-battle').hidden=true;battleOver();log('ライバルに撮影スポットを譲った…');S.stats.losses++;nextEncounter();return;}
   B.hp-=dmg;if(dmg>0&&B.hp>0)playSE('se_hit');
-  if(B.hp<=0){blog(t+(isRival()?'\n先に撮影スポットに着いた！':'\nこの区間を走り切った！'));S.stats.wins++;playSE('se_win');renderBattle();$('bt-cmds').innerHTML=`<button class="primary" data-cmd="next">キャンプ場へ向かう</button>`;
+  if(B.hp<=0){blog(t+(isRival()?'\n先に撮影スポットに着いた！':'\nこの区間を走り切った！'));S.stats.wins++;playSE('se_win');renderBattle();$('bt-cmds').innerHTML=`<button class="primary">キャンプ場へ向かう</button>`;
     $('bt-cmds').querySelector('button').onclick=()=>{trip.i++;$('ov-battle').hidden=true;battleOver();nextEncounter();};return;}
   // enemy acts
   let et='';if(B.kind==='rival'){const l=floss(20,.03);S.fame=Math.max(0,S.fame-l);et=`ライバルの投稿がバズった。フォロワー-${fol(l)}`;}
@@ -800,17 +804,17 @@ function turnPopup(){const t=TS;TS=null;if(!t)return;const e=$('pop'),sg=n=>(n>0
   e.innerHTML=`<h3>${calLabel(S.turn)}</h3><div class="res">${R.map(r=>`<span>${r[0]}</span><span>${r[1]}</span>`).join('')}<span class="tot">残高</span><span class="tot"><b>${yen(S.money)}</b></span></div><button class="primary" id="pop-x">閉じる</button>`;
   const tb=document.querySelector('.tabs').getBoundingClientRect();e.style.top=Math.max(8,Math.min(tb.top,innerHeight-260))+'px';e.hidden=false;playSE('se_turn');$('pop-x').focus({preventScroll:true});}
 $('pop').onclick=e=>{if(e.target.id==='pop-x')$('pop').hidden=true;};
-function advance(){INTRIP=false;S.turn++;
-  if(famCount()===47){showResult(`<h2>🎉 全国制覇！</h2><p>47か所すべてを馴染み宿にした。伝説の自転車インフルエンサー誕生。</p><div class="res"><span>達成</span><span>${calLabel(S.turn)}</span><span>フォロワー</span><span>${fol(S.fame)}</span><span>所持金</span><span>${yen(S.money)}</span></div>`,()=>{render();turnPopup();});render();return;}
-  if((S.turn-1)%52===0){const y=calendar(S.turn-1).year;rollForecast();S.sel=S.loc;showResult(`<h2>${y}年目 決算</h2><div class="res"><span>都道府県制覇数</span><span>${famCount()} / 47</span><span>フォロワー</span><span>${fol(S.fame)}（${title(S.fame)}）</span><span>所持金</span><span>${yen(S.money)}</span><span>勝敗</span><span>${S.stats.wins}勝 ${S.stats.losses}敗</span></div><p class="hint">${y+1}年目は敵が少し強くなる。</p>`,()=>{render();turnPopup();});render();return;}
-  rollForecast();S.sel=S.loc;render();turnPopup();}
+function advance(){INTRIP=false;S.turn++;rollForecast();S.sel=S.loc;
+  if(famCount()===47&&TS&&TS.fam<47){showResult(`<h2>🎉 全国制覇！</h2><p>47か所すべてを馴染み宿にした。伝説の自転車インフルエンサー誕生。</p><div class="res"><span>達成</span><span>${calLabel(S.turn)}</span><span>フォロワー</span><span>${fol(S.fame)}</span><span>所持金</span><span>${yen(S.money)}</span></div>`,()=>{render();turnPopup();});render();return;}
+  if((S.turn-1)%52===0){const y=calendar(S.turn-1).year;showResult(`<h2>${y}年目 決算</h2><div class="res"><span>都道府県制覇数</span><span>${famCount()} / 47</span><span>フォロワー</span><span>${fol(S.fame)}（${title(S.fame)}）</span><span>所持金</span><span>${yen(S.money)}</span><span>勝敗</span><span>${S.stats.wins}勝 ${S.stats.losses}敗</span></div><p class="hint">${y+1}年目は敵が少し強くなる。</p>`,()=>{render();turnPopup();});render();return;}
+  render();turnPopup();}
 
 addEventListener('pagehide',save);
 // ---------- boot ----------
 $('start-pref').innerHTML=PREF.map(p=>`<option value="${p.id}">${p.name}（${p.site}）</option>`).join('');$('start-pref').value='12';
 $('btn-new').onclick=()=>{newGame(+$('start-pref').value);$('ov-title').hidden=true;render();};
 $('btn-cont').onclick=()=>{$('ov-title').hidden=true;render();};
-$('btn-reset').onclick=()=>{if($('btn-reset').textContent==='本当に消す？'){$('ov-title').hidden=false;$('btn-reset').textContent='リセット';$('tab-map').click();}else{$('btn-reset').textContent='本当に消す？';setTimeout(()=>$('btn-reset').textContent='リセット',3000);}};
+$('btn-reset').onclick=()=>{if($('btn-reset').textContent==='本当に消す？'){try{localStorage.removeItem('charicamp');}catch(e){}S=null;TS=null;trip=null;B=null;INTRIP=false;$('pop').hidden=true;$('btn-cont').hidden=true;$('ov-title').hidden=false;$('btn-reset').textContent='リセット';$('tab-map').click();}else{$('btn-reset').textContent='本当に消す？';setTimeout(()=>$('btn-reset').textContent='リセット',3000);}};
 const saved=load();if(saved){S=saved;if(!S.forecast)rollForecast();$('btn-cont').hidden=false;render();}
 })();
 </script>
