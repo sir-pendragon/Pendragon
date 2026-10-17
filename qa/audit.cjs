@@ -154,6 +154,7 @@ test('components: three tiers, stats add up, not customizable, only one survives
  q.newGame(q.PREF[0].id);q.S.bike='mama';const base=q.bikeStats();q.S.owned.parts=['compm','comph','compi'];q.S.parts=['compi'];const st=q.bikeStats();assert.equal(st.climb,base.climb+d.climb);assert.equal(st.cruise,base.cruise+d.cruise);
  q.S.plus={compi:3};assert.equal(q.bikeStats().climb,st.climb,'no customization');q.S.plus={};
  q.S.parts=['compm','comph','compi'];q.save();const o=q.load();assert.equal(o.parts.filter(x=>x.startsWith('comp')).length,1);
+ for(const id of ['compm','comph','compi'])assert.ok(fs.existsSync(path.join(__dirname,'..','img/part_'+id+'.webp')),id);
  q.S.money=1e7;q.renderShop();q.renderForge();});
 const summary={file:filename,passed:results.filter(x=>x.ok).length,failed:results.filter(x=>!x.ok).length,results};
 if(process.argv[3])fs.writeFileSync(process.argv[3],JSON.stringify(summary,null,2));
