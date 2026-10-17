@@ -2,7 +2,7 @@ const fs=require('node:fs'),path=require('node:path'),assert=require('node:asser
 const {JSDOM,VirtualConsole}=require('jsdom');
 const filename=path.resolve(process.argv[2]||path.join(__dirname,'..','index.html'));
 const html=fs.readFileSync(filename,'utf8');
-const expose=`window.qa={get sgPage(){return SGPG},set sgPage(v){SGPG=v},needV,isCourse,askGo,ENEMY,SPEC,SIGHTS,TACT,tlEnc,tlDec,newGame,render,renderMap,renderBattle,renderShop,renderForge,renderDetail,renderList,renderTrials,renderSights,load,save,pack,snap,advance,calendar,rollForecast,startTrip,stayWx,startBattle,cmd,endTrip,endTrip2,nextEncounter,tsuchinoko,tcRate,bikeStats,gearFx,travelInfo,restHome,yearEval,eventAt,stoveOn,plv,rkLv,PREF,ENEMY,GEAR_ITEMS,PARTS,BIKES,CLOTHES,WXL,TRIAL_KEYS,AUD,tcRate,playBGM,bgmApply,
+const expose=`window.qa={foodMax,get sgPage(){return SGPG},set sgPage(v){SGPG=v},needV,isCourse,askGo,ENEMY,SPEC,SIGHTS,TACT,tlEnc,tlDec,newGame,render,renderMap,renderBattle,renderShop,renderForge,renderDetail,renderList,renderTrials,renderSights,load,save,pack,snap,advance,calendar,rollForecast,startTrip,stayWx,startBattle,cmd,endTrip,endTrip2,nextEncounter,tsuchinoko,tcRate,bikeStats,gearFx,travelInfo,restHome,yearEval,eventAt,stoveOn,plv,rkLv,PREF,ENEMY,GEAR_ITEMS,PARTS,BIKES,CLOTHES,WXL,TRIAL_KEYS,AUD,tcRate,playBGM,bgmApply,
 get S(){return S},set S(v){S=v},get B(){return B},get trip(){return trip},set trip(v){trip=v},get TS(){return TS},get inTrip(){return INTRIP},get lastSave(){return LASTSAVE},
 quiet(){render=()=>save();renderBattle=()=>{};playSE=()=>{};playBGM=()=>{};}};`;
 const js=[...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(m=>m[1]).sort((x,y)=>y.length-x.length)[0];// 先頭の短い移動スクリプトではなく、本体（最長）を読む
@@ -158,11 +158,19 @@ test('components: three tiers, stats add up, not customizable, only one survives
  q.S.money=1e7;q.renderShop();q.renderForge();});
 test('parts shop and equip lists are split into bike parts and other items',c=>{const {q,w}=c;q.newGame(q.PREF[0].id);q.S.owned.parts=q.PARTS.map(x=>x.id);q.renderShop();
  const ids=sel=>[...w.document.querySelectorAll(sel+' .card')].map(e=>e.dataset.id);
- const bikeSet=['wheel','tire','aero','fender','compm','comph','compi'],other=['spray','oil','tripod','cam','drone','comfy'];
+ const bikeSet=['wheel','tire','aero','fender','compm','comph','compi','rack1','rack2','rack3','rack4'],other=['spray','oil','tripod','cam','drone','comfy'];
  assert.deepEqual(ids('#shop-part'),bikeSet);assert.deepEqual(ids('#eq-part'),bikeSet);
  w.document.querySelector('#shop-part button[data-pgrp="other"]').click();assert.deepEqual(ids('#shop-part'),other);assert.deepEqual(ids('#eq-part'),other);
  assert.equal(w.document.querySelectorAll('#shop-part button[data-pgrp][aria-selected="true"]').length,1);
  assert.equal([...bikeSet,...other].length,q.PARTS.length);w.document.querySelector('#eq-part button[data-pgrp="bike"]').click();assert.deepEqual(ids('#shop-part'),bikeSet);});
+test('rear racks: four tiers, raise the food cap, one rack only, bike-part tab, not customizable',c=>{const {q,w}=c;const R=['rack1','rack2','rack3','rack4'].map(id=>q.PARTS.find(x=>x.id===id));assert.ok(R.every(Boolean));
+ for(let i=1;i<4;i++){assert.ok(R[i].price>R[i-1].price);assert.ok(R[i].food>R[i-1].food);}
+ q.newGame(q.PREF[0].id);q.S.owned.parts=q.PARTS.map(x=>x.id);q.S.parts=[];q.renderShop();
+ const ids=sel=>[...w.document.querySelectorAll(sel+' .card')].map(e=>e.dataset.id);for(const r of R)assert.ok(ids('#shop-part').includes(r.id),r.id+' in bike tab');
+ q.S.parts=['rack4'];assert.equal(q.foodMax(),5+4);q.S.parts=['rack1'];assert.equal(q.foodMax(),6);q.S.parts=[];assert.equal(q.foodMax(),5);
+ q.S.plus={rack4:3};q.S.parts=['rack4'];assert.equal(q.foodMax(),9,'no customization');q.S.plus={};
+ q.S.parts=['rack1','rack4','compi','compm'];q.S.food=7;q.save();const o=q.load();assert.equal(o.parts.filter(x=>x.startsWith('rack')).length,1);assert.equal(o.parts.filter(x=>x.startsWith('comp')).length,1);assert.equal(o.food,7);
+ });// 絵が届いたら img/part_rack1〜4.webp の存在確認を足す
 const summary={file:filename,passed:results.filter(x=>x.ok).length,failed:results.filter(x=>!x.ok).length,results};
 if(process.argv[3])fs.writeFileSync(process.argv[3],JSON.stringify(summary,null,2));
 console.log(JSON.stringify({passed:summary.passed,failed:summary.failed}));process.exitCode=summary.failed?1:0;

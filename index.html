@@ -678,6 +678,7 @@ const TACT={hill:['ギア落とし','体力-5 被害半減'],rough:['空気圧�
 const NEXT={heavy:['激しい！',1.7],normal:['ふつう',1],light:['弱まっている',.5]};
 function rollNext(){const r=Math.random();return r<.25?'heavy':r<.75?'normal':'light';}
 const FOOD_PRICE=800,FOOD_MAX=5;
+const foodMax=()=>FOOD_MAX+(S&&S.parts?S.parts.reduce((a,x)=>a+((PARTS.find(p=>p.id===x)||{}).food||0),0):0);// リアラックで増える
 // 長野県の補給食（赤マムシドリンク風）：高価だが回復量が大きい
 const NAGANO={price:2000,max:3,hp:60,mp:30};
 const BIKES=[
@@ -714,7 +715,14 @@ const PARTS=[
  {id:'compm',name:'日本製ミドルコンポ',price:50000,climb:1,cruise:2,comp:1},
  {id:'comph',name:'日本製高級コンポ',price:120000,climb:2,cruise:3,comp:1},
  {id:'compi',name:'イタリア製最高級コンポ',price:300000,climb:3,cruise:4,comp:1},
+ // リアラック：補給食を持てる数が増える。1つだけ装備、カスタム不可
+ {id:'rack1',name:'中古リアラック',price:6000,food:1,rack:1},
+ {id:'rack2',name:'アルミ製リアラック',price:15000,food:2,rack:1},
+ {id:'rack3',name:'カーボン製リアラック',price:45000,food:3,rack:1},
+ {id:'rack4',name:'チタン製リアラック',price:90000,food:4,rack:1},
 ];
+const xg=i=>i&&(i.comp?'comp':i.rack?'rack':'');// 同じ種類は1つだけ装備できる
+const RACK_TOP=4;
 const GEAR={
  fire:{label:'焚き火台（気力回復）',items:[
   {id:'fire1',name:'簡易焚き火台',price:6000,mp:6,photo:4},
@@ -843,14 +851,14 @@ function load(){try{const s=localStorage.getItem('charicamp');if(!s)return null;
   const pl=o.plus&&typeof o.plus==='object'?o.plus:{};o.plus={};for(const id of [...o.owned.bikes,...o.owned.parts]){const v=num(pl[id],0,0,3);if(v)o.plus[id]=v;}
   if(!o.owned.bikes.includes(o.bike))o.bike=o.owned.bikes[0];if(!o.owned.cloth.includes(o.cloth))o.cloth=o.owned.cloth[0];
   for(const k of ['bikes','cloth','parts','gear'])o.owned[k]=[...new Set(o.owned[k])];
-  o.parts=[...new Set((Array.isArray(o.parts)?o.parts:[]).filter(x=>o.owned.parts.includes(x)))];{let c=0;o.parts=o.parts.filter(x=>!(PARTS.find(p=>p.id===x)||{}).comp||!c++);}o.parts=o.parts.slice(0,3);
+  o.parts=[...new Set((Array.isArray(o.parts)?o.parts:[]).filter(x=>o.owned.parts.includes(x)))];{const seen=new Set();o.parts=o.parts.filter(x=>{const g=xg(PARTS.find(p=>p.id===x));if(!g)return true;if(seen.has(g))return false;seen.add(g);return true;});}o.parts=o.parts.slice(0,3);
   const g=o.gear&&typeof o.gear==='object'?o.gear:{};o.gear={};for(const k of ['fire','shelter','tarp'])o.gear[k]=GEAR_ITEMS.some(x=>x.slot===k&&x.id===g[k]&&o.owned.gear.includes(x.id))?g[k]:null;
   if(o.gear.fire==='fire4'&&o.gear.shelter!=='sh5')o.gear.fire=null;
   o.log=(Array.isArray(o.log)?o.log:[]).filter(x=>typeof x==='string').slice(0,LOG_MAX);
   o.tl=(Array.isArray(o.tl)?o.tl:[]).filter(x=>Array.isArray(x)&&x.length===4&&Number.isFinite(+x[0])&&Number.isInteger(+x[1])&&+x[1]>=0&&+x[1]<PREF.length&&Number.isFinite(+x[2])&&typeof x[3]==='string').slice(0,TL_MAX).map(x=>[num(x[0],1,1,99999),+x[1],num(x[2],-1,-1,100),x[3]]);
   const st=o.stats&&typeof o.stats==='object'?o.stats:{};o.stats={wins:num(st.wins,0,0,1e9),posts:num(st.posts,0,0,1e9),bestQ:num(st.bestQ,0,0,100),tph:num(st.tph,0,0,1e9),ev:num(st.ev,0,0,1e9),tc:num(st.tc,0,0,1e9),en:{}}
   for(const k of TRIAL_KEYS){const v=st.en&&st.en[k];if(Array.isArray(v)&&v.length===3)o.stats.en[k]=v.map(x=>num(x,0,0,1e9));};
-  o.food=num(o.food,0,0,FOOD_MAX);o.food2=num(o.food2,0,0,NAGANO.max);
+  o.food=num(o.food,0,0,FOOD_MAX+RACK_TOP);o.food2=num(o.food2,0,0,NAGANO.max);
   delete o.ach;
   let f=o.forecast&&typeof o.forecast==='object'?o.forecast:{};o.forecast=null;
   if(Array.isArray(o.fc)&&o.fc.length===47&&o.fc.every(n=>Number.isInteger(n)&&n>=0&&n<7*100)){const M=(o.v||0)>=6?7:(o.v||0)>=5?6:5;f={};o.fc.forEach((n,i)=>f[i]={temp:Math.floor(n/M)-30,wx:WXL[n%M]});}
@@ -876,7 +884,7 @@ const STATJ={climb:'登坂',rough:'悪路',cruise:'巡航',wx:'耐候',photo:'�
 // 折りたたみ（チタン折りたたみ・分割式チタン製グラベルロード）専用の「輪行カスタム」：輪行費の割合が段階的に下がる（素は半額）
 const RK_RATE=[.5,.4,.3,.15],RK_COST=[8000,15000,30000],RK_TIER=['軽量輪行袋','専用ハードケース','超軽量カーボンケース'];
 const rkLv=id=>Math.min(3,(S.plus&&S.plus[id||S.bike])||0);
-const NOCUSTOM=new Set(['fold','tigrav','compm','comph','compi']);// チタン製の自転車は、フレーム素材が完成形なのでカスタム（クロモリ→アルミ→カーボン）できない
+const NOCUSTOM=new Set(['fold','tigrav','compm','comph','compi','rack1','rack2','rack3','rack4']);// チタン製の自転車は、フレーム素材が完成形なのでカスタム（クロモリ→アルミ→カーボン）できない
 const plv=id=>NOCUSTOM.has(id)?0:(S.plus&&S.plus[id])||0;
 // カスタムの段階名。自転車はフレーム素材、パーツは仕様（効果は1段ごとに+1のまま）
 const TIER={bike:['クロモリ製','アルミ製','カーボン製'],part:['改良型','高性能','特注品']};
@@ -1070,34 +1078,34 @@ function renderList(){$('sitelist').innerHTML=PREF.map(p=>`<button data-id="${p.
 function owns(kind,id){return S.owned[kind==='bike'?'bikes':kind==='cloth'?'cloth':kind==='gear'?'gear':'parts'].includes(id);}
 function isEq(kind,item){return kind==='bike'?S.bike===item.id:kind==='cloth'?S.cloth===item.id:kind==='gear'?S.gear[item.slot]===item.id:S.parts.includes(item.id);}
 // 新しいギアの絵が届くまでは、近い既存のアイコンを代わりに表示する（読み込みに失敗したときだけ切り替わる）
-const ICON_FB={};
+const ICON_FB={rack1:'part_fender',rack2:'part_fender',rack3:'part_fender',rack4:'part_fender'};
 addEventListener('error',e=>{const i=e.target;if(i&&i.tagName==='IMG'&&i.dataset&&i.dataset.fb){const f='img/'+i.dataset.fb+'.webp';i.dataset.fb='';i.src=f;}},true);
 function card(item,kind,mode){const eq=isEq(kind,item),own=owns(kind,item.id);
   const spec=kind==='bike'?`登坂${bv(item,'climb')} 悪路${bv(item,'rough')} 巡航${bv(item,'cruise')} 耐候${bv(item,'wx')}${item.fold?` 輪行費×${RK_RATE[rkLv(item.id)]}`:''}`:
    kind==='cloth'?`快適 ${item.lo}℃〜${item.hi}℃`:
    kind==='gear'?[item.mp?`気力+${item.mp}`:'',item.hp?`体力+${item.hp}`:'',item.photo?`写真+${item.photo}`:'',item.guard?`雨ガード${Math.round(item.guard*100)}%`:'',item.climb?`登坂+${item.climb}`:'',item.cruise?`巡航+${item.cruise}`:'',item.winter?'冬のみ有効':'',item.req?`要：${(GEAR_ITEMS.find(x=>x.id===item.req)||{}).name}`:''].filter(Boolean).join(' '):
-   (item.comp?'コンポ（1つだけ装備） ':'')+(item.anti?(item.anti==='bear'?'クマから受ける被害が半分':'暴走車・暴走バイクから受ける被害が半分'):Object.entries(item).filter(([k])=>['climb','rough','cruise','wx','photo','comfy'].includes(k)).map(([k,v])=>({climb:'登坂',rough:'悪路',cruise:'巡航',wx:'耐候',photo:'写真',comfy:'気力消費'}[k]+(k==='comfy'?'-':'+')+v)).join(' '));
+   (item.comp?'コンポ（1つだけ装備） ':'')+(item.rack?`ラック（1つだけ装備） 補給食の上限+${item.food}`:'')+(item.anti?(item.anti==='bear'?'クマから受ける被害が半分':'暴走車・暴走バイクから受ける被害が半分'):Object.entries(item).filter(([k])=>['climb','rough','cruise','wx','photo','comfy'].includes(k)).map(([k,v])=>({climb:'登坂',rough:'悪路',cruise:'巡航',wx:'耐候',photo:'写真',comfy:'気力消費'}[k]+(k==='comfy'?'-':'+')+v)).join(' '));
   let act='';
   if(mode==='shop'){act=own?`<span class="pill">所持</span>`:`<button data-act="buy" ${S.money>=item.price?'':'disabled'}>購入 ${yen(item.price)}</button>`;}
   else if(eq)act=(kind==='part'||kind==='gear')?`<button data-act="unequip">外す</button>`:`<span class="pill">装備中</span>`;
-  else act=`<button data-act="equip" ${kind==='part'&&S.parts.length>=3&&!(item.comp&&S.parts.some(x=>(PARTS.find(p=>p.id===x)||{}).comp))||kind==='gear'&&item.req&&S.gear.shelter!==item.req?'disabled':''}>装備</button>`;
+  else act=`<button data-act="equip" ${kind==='part'&&S.parts.length>=3&&!(xg(item)&&S.parts.some(x=>xg(PARTS.find(p=>p.id===x))===xg(item)))||kind==='gear'&&item.req&&S.gear.shelter!==item.req?'disabled':''}>装備</button>`;
   return `<div class="card ${eq?'eq':''}" data-kind="${kind}" data-id="${item.id}"><div class="name"><span class="nm"><img loading="lazy" class="ci" ${(kind==='gear'||kind==='part')&&ICON_FB[item.id]?`data-fb="${ICON_FB[item.id]}" `:''}src="img/${kind==='gear'?'icon_g_'+item.id:(kind==='part'?'part_'+item.id:kind==='cloth'?'cloth_'+item.id:'icon_bike_'+item.id)}.webp" width="28" height="28" alt="">${item.name}${(kind==='bike'||kind==='part')&&plv(item.id)?` <b>${tierOf(kind,plv(item.id)).replace('製','')}</b>`:''}</span>${act}</div><div class="spec">${spec}</div></div>`;}
 let PGRP='bike';// パーツ欄のタブ：bike=自転車パーツ／other=他アイテム
-const isBikePart=i=>!!(i.climb||i.rough||i.cruise||i.wx);// 能力が上がる＝自転車パーツ。ほかは他アイテム
+const isBikePart=i=>!!(i.climb||i.rough||i.cruise||i.wx||i.rack);// 能力が上がる＝自転車パーツ。ほかは他アイテム
 const pgTabs=()=>`<div class="subtabs pg">${[['bike','自転車パーツ'],['other','他アイテム']].map(([g,t])=>`<button data-pgrp="${g}" aria-selected="${PGRP===g}">${t}</button>`).join('')}</div>`;
 function renderShop(){const lists={bike:BIKES,cloth:CLOTHES,part:PARTS};
   for(const [k,l0] of Object.entries(lists)){const l=k==='part'?l0.filter(i=>isBikePart(i)===(PGRP==='bike')):l0,tabs=k==='part'?pgTabs():'';$('shop-'+k).innerHTML=tabs+l.map(i=>card(i,k,'shop')).join('');
     const own=l.filter(i=>owns(k,i.id));$('eq-'+k).innerHTML=tabs+(own.length?own.map(i=>card(i,k,'equip')).join(''):'<div class="hint">なし</div>');}
   for(const slot of Object.keys(GEAR)){const l=GEAR_ITEMS.filter(i=>i.slot===slot);$('shop-'+slot).innerHTML=l.map(i=>card(i,'gear','shop')).join('');
     const own=l.filter(i=>owns('gear',i.id));$('eq-'+slot).innerHTML=noneCard(slot)+own.map(i=>card(i,'gear','equip')).join('');}
-  $('shop-food').innerHTML=`<div class="card"><div class="name"><span class="nm"><img loading="lazy" class="ci" src="img/icon_food.webp" width="28" height="28" alt="">補給食</span><span class="cnt${S.food?' has':''}"><b>${S.food}</b>/${FOOD_MAX}</span><button data-food="1" ${S.money>=FOOD_PRICE&&S.food<FOOD_MAX?'':'disabled'}>購入 ${yen(FOOD_PRICE)}</button></div><div class="spec">試練の最中に食べると体力+25 気力+10。</div></div><div class="card"><div class="name"><span class="nm"><img loading="lazy" class="ci" src="img/icon_food_nagano.webp" width="28" height="28" alt="" onerror="this.onerror=null;this.src='img/icon_food.webp'">長野県の補給食</span><span class="cnt${S.food2?' has':''}"><b>${S.food2}</b>/${NAGANO.max}</span><button data-food2="1" ${S.money>=NAGANO.price&&S.food2<NAGANO.max?'':'disabled'}>購入 ${yen(NAGANO.price)}</button></div><div class="spec">赤マムシドリンク風の元気ドリンク。体力+${NAGANO.hp} 気力+${NAGANO.mp}。</div></div>`;renderForge();}
+  $('shop-food').innerHTML=`<div class="card"><div class="name"><span class="nm"><img loading="lazy" class="ci" src="img/icon_food.webp" width="28" height="28" alt="">補給食</span><span class="cnt${S.food?' has':''}"><b>${S.food}</b>/${foodMax()}</span><button data-food="1" ${S.money>=FOOD_PRICE&&S.food<foodMax()?'':'disabled'}>購入 ${yen(FOOD_PRICE)}</button></div><div class="spec">試練の最中に食べると体力+25 気力+10。</div></div><div class="card"><div class="name"><span class="nm"><img loading="lazy" class="ci" src="img/icon_food_nagano.webp" width="28" height="28" alt="" onerror="this.onerror=null;this.src='img/icon_food.webp'">長野県の補給食</span><span class="cnt${S.food2?' has':''}"><b>${S.food2}</b>/${NAGANO.max}</span><button data-food2="1" ${S.money>=NAGANO.price&&S.food2<NAGANO.max?'':'disabled'}>購入 ${yen(NAGANO.price)}</button></div><div class="spec">赤マムシドリンク風の元気ドリンク。体力+${NAGANO.hp} 気力+${NAGANO.mp}。</div></div>`;renderForge();}
 function renderForge(){
   const row=(kind,item)=>{const lv=plv(item.id),nx=lv+1,keys=kind==='bike'?bikeBoost(item):['climb','rough','cruise','wx','photo','comfy'].filter(k=>item[k]);
     const fx=keys.map(k=>STATJ[k]+(k==='comfy'?'-1':'+1')).join(' ');
     const act=lv>=3?'<span class="pill">最大</span>':`<button data-forge="${kind}:${item.id}" ${S.money>=upCost(kind,item,nx)?'':'disabled'}><img loading="lazy" class="wi" src="img/icon_upgrade.webp" width="128" height="128" alt=""><span>${tierOf(kind,nx)}<small>${yen(upCost(kind,item,nx))}</small></span></button>`;
     return `<div class="card"><div class="name"><span class="nm"><img loading="lazy" class="ci" src="img/${kind==='bike'?'icon_bike_':'part_'}${item.id}.webp" width="28" height="28" alt="">${item.name}${lv?` <b>${tierOf(kind,lv).replace('製','')}</b>`:''}</span>${act}</div><div class="spec">1段階ごとに ${fx}${lv?`（現在 ${tierOf(kind,lv)}）`:''}</div></div>`;};
   $('shop-forge').innerHTML=BIKES.filter(i=>owns('bike',i.id)&&!NOCUSTOM.has(i.id)).map(i=>row('bike',i)).join('')+BIKES.filter(b=>b.fold&&owns('bike',b.id)).map(b=>{const lv=rkLv(b.id),nx=lv+1,act=lv>=3?'<span class="pill">最大</span>':`<button data-rk="${b.id}" ${S.money>=RK_COST[lv]?'':'disabled'}><img loading="lazy" class="wi" src="img/icon_upgrade.webp" width="128" height="128" alt=""><span>${RK_TIER[lv]}<small>${yen(RK_COST[lv])}</small></span></button>`;
-    return `<div class="card"><div class="name"><span class="nm"><img loading="lazy" class="ci" src="img/icon_bike_${b.id}.webp" width="28" height="28" alt="">${b.name}</span>${act}</div><div class="spec">${lv?`装備中：${RK_TIER[lv-1]}　`:''}輪行費 ×${RK_RATE[lv]}${lv<3?` → ×${RK_RATE[nx]}`:''}</div></div>`;}).join('')+(BIKES.some(i=>NOCUSTOM.has(i.id)&&owns('bike',i.id))?'<div class="hint">チタン製の自転車は、完成された一台なので、フレームのカスタムはできません（折りたたみ式・分割式は、輪行用の装備だけ強化できます）。</div>':'')+PARTS.filter(i=>!i.anti&&!i.comp&&owns('part',i.id)).map(i=>row('part',i)).join('');}
+    return `<div class="card"><div class="name"><span class="nm"><img loading="lazy" class="ci" src="img/icon_bike_${b.id}.webp" width="28" height="28" alt="">${b.name}</span>${act}</div><div class="spec">${lv?`装備中：${RK_TIER[lv-1]}　`:''}輪行費 ×${RK_RATE[lv]}${lv<3?` → ×${RK_RATE[nx]}`:''}</div></div>`;}).join('')+(BIKES.some(i=>NOCUSTOM.has(i.id)&&owns('bike',i.id))?'<div class="hint">チタン製の自転車は、完成された一台なので、フレームのカスタムはできません（折りたたみ式・分割式は、輪行用の装備だけ強化できます）。</div>':'')+PARTS.filter(i=>!i.anti&&!xg(i)&&owns('part',i.id)).map(i=>row('part',i)).join('');}
 $('shop-forge').addEventListener('click',e=>{const rb=e.target.closest('button[data-rk]');if(rb){const bid=rb.dataset.rk,bk=BIKES.find(x=>x.id===bid);if(!bk||!bk.fold||!owns('bike',bid))return;const lv=rkLv(bid);if(lv>=3||S.money<RK_COST[lv])return;const c=RK_COST[lv];
     askPay(`${bk.name}に「${RK_TIER[lv]}」を付けますか？（輪行費が×${RK_RATE[lv+1]}に）`,c,()=>{S.money-=c;S.plus[bid]=lv+1;log(`${bk.name}に${RK_TIER[lv]}を付けた（${yen(c)}）`);render();});return;}
   const b=e.target.closest('button[data-forge]');if(!b)return;
@@ -1105,7 +1113,7 @@ $('shop-forge').addEventListener('click',e=>{const rb=e.target.closest('button[d
   const c=upCost(kind,item,nx);if(S.money<c)return;
   askPay(`「${item.name}」を${tierOf(kind,nx)}にカスタムしますか？`,c,()=>{S.money-=c;S.plus[id]=nx;log(`${item.name}を${tierOf(kind,nx)}にカスタム（${yen(c)}）`);render();});});
 $('shop-food').addEventListener('click',e=>{if(e.target.closest('button[data-food2]')){if(S.money<NAGANO.price||S.food2>=NAGANO.max)return;askPay('長野県の補給食を買いますか？',NAGANO.price,()=>{S.money-=NAGANO.price;S.food2++;log(`長野県の補給食を購入（${yen(NAGANO.price)}）`);render();});return;}
-  if(!e.target.closest('button[data-food]')||S.money<FOOD_PRICE||S.food>=FOOD_MAX)return;
+  if(!e.target.closest('button[data-food]')||S.money<FOOD_PRICE||S.food>=foodMax())return;
   askPay('補給食を買いますか？',FOOD_PRICE,()=>{S.money-=FOOD_PRICE;S.food++;log(`補給食を購入（${yen(FOOD_PRICE)}）`);render();});});
 const NONE_TXT={fire:['焚き火なし','気力回復の上乗せなし'],shelter:['寝床なし（地面に直接寝る）','体力・気力の上乗せなし'],tarp:['タープなし','雨ガード0%']};
 function noneCard(slot){const on=!S.gear[slot],[n,s]=NONE_TXT[slot];
@@ -1116,7 +1124,7 @@ function shopClick(e){const pg=e.target.closest('button[data-pgrp]');if(pg){PGRP
   const list=kind==='bike'?BIKES:kind==='cloth'?CLOTHES:kind==='gear'?GEAR_ITEMS:PARTS,item=list.find(x=>x.id===id),key=kind==='bike'?'bikes':kind==='cloth'?'cloth':kind==='gear'?'gear':'parts';
   if(b.dataset.act==='buy'){if(S.money<item.price)return;askPay(`「${item.name}」を購入しますか？`,item.price,()=>{S.money-=item.price;S.owned[key].push(id);log(`${item.name}を購入（${yen(item.price)}）`);equipIt();});return;}
   equipIt();
-  function equipIt(){if(b.dataset.act==='buy'||b.dataset.act==='equip'){if(kind==='bike')S.bike=id;else if(kind==='cloth')S.cloth=id;else if(kind==='gear'){if(item.req&&S.gear.shelter!==item.req)log(`${item.name}は${(GEAR_ITEMS.find(x=>x.id===item.req)||{}).name}を装備していないと使えない`);else S.gear[item.slot]=id;}else{if(item.comp)S.parts=S.parts.filter(x=>!(PARTS.find(p=>p.id===x)||{}).comp);if(S.parts.length<3)S.parts.push(id);}}
+  function equipIt(){if(b.dataset.act==='buy'||b.dataset.act==='equip'){if(kind==='bike')S.bike=id;else if(kind==='cloth')S.cloth=id;else if(kind==='gear'){if(item.req&&S.gear.shelter!==item.req)log(`${item.name}は${(GEAR_ITEMS.find(x=>x.id===item.req)||{}).name}を装備していないと使えない`);else S.gear[item.slot]=id;}else{if(xg(item))S.parts=S.parts.filter(x=>xg(PARTS.find(p=>p.id===x))!==xg(item));if(S.parts.length<3)S.parts.push(id);}}
   if(b.dataset.act==='unequip'){if(kind==='gear')S.gear[item.slot]=null;else S.parts=S.parts.filter(x=>x!==id);}
   render();}}
 for(const tid of ['camp-tabs','gear-tabs'])$(tid).addEventListener('click',e=>{const b=e.target.closest('button[data-sub]');if(!b)return;const pn=$(tid).parentElement;$(tid).querySelectorAll('button').forEach(x=>x.setAttribute('aria-selected',x===b));pn.querySelectorAll('.campsec').forEach(c=>c.hidden=c.dataset.sub!==b.dataset.sub);});
