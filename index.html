@@ -1008,7 +1008,7 @@ function drawHero(){if(!$('hero'))return;const k=heroImg(),d=HDIM[k[0]],w=d[0]*H
   $('hf').style.display=tentSleep?'none':'';if(tentSleep)sh.style.display='none';
   const zz=$('zzz');if(zz)zz.style.display=tentSleep?'':'none';
   z1.style.display=z2.style.display=sl&&!tentSleep?'':'none';
-  if(sl&&!tentSleep){z1.setAttribute('x',HERO.x-6);z1.setAttribute('y',ty-1-o*2);z1.style.opacity=1-o*.3;z2.setAttribute('x',HERO.x-1);z2.setAttribute('y',ty-6-o*2);z2.style.opacity=.7-o*.2;}tutPos();}
+  if(sl&&!tentSleep){z1.setAttribute('x',HERO.x-6);z1.setAttribute('y',ty-1-o*2);z1.style.opacity=1-o*.3;z2.setAttribute('x',HERO.x-1);z2.setAttribute('y',ty-6-o*2);z2.style.opacity=.7-o*.2;}}
 function heroTick(){if($('p-map').hidden||document.hidden)return;
   HERO.f++;
   if(HERO.mode==='walk'){const gx=HERO.goal?HERO.goal.x:HERO.x;const dx=gx-HERO.x;
@@ -1423,7 +1423,7 @@ addEventListener('pagehide',save);
 
 // ---------- チュートリアル ----------
 const TUT=[
- ['目標','47都道府県のキャンプ場を、それぞれ「馴染み宿」にすれば全国クリアで、旅は終わりです。\n同じ場所に3回、無事に着いて撮影できると馴染み宿になります（群馬・福島・東京・岐阜・秋田は特別コースがあり4回）。1年は52週、毎週末が1ターンです。'],
+ ['目標','47都道府県のキャンプ場を、それぞれ「馴染み宿」にすれば全国クリアで、旅は終わりです。\n同じ場所に3回、無事に着いて撮影できると馴染み宿になります（群馬・福島・東京・岐阜・秋田・徳島・青森・兵庫は特別コースがあり4回）。1年は52週、毎週末が1ターンです。'],
  ['スポンサー','毎週、スポンサーの「地元の自転車店」から ¥2,000 が入ります。\nフォロワーが増えると、スポンサーが変わり、もらえる金額も増えます。'],
  ['まずは買い物',`所持金は ${yen(30000)}。画面下の「店」タブで装備を買えます。\nハンモック（${yen(8000)}）を買うと、島でキャラが寝ます。タープ（${yen(5000)}）と焚き火台（${yen(6000)}）も、買ってから旅に出ましょう。\n全部買っても ${yen(30000-8000-5000-6000)} 残ります。旅の利用料も残しておくと安心です。`],
  ['出発','最初は地元のキャンプ場から。「地図」タブで自宅の県を選んで、「自転車旅に行く」を押します。\n道中で坂や動物などの試練が出ます。コマンドを選んで乗り越えましょう。'],
@@ -1434,11 +1434,12 @@ function tutDone(){try{localStorage.setItem('cc_tut','1');}catch(e){}}
 function tutPos(){const bub=$('tut-bub');if(!bub||bub.hidden)return;const box=bub.parentElement,sv=$('map');if(!sv)return;
   const br=box.getBoundingClientRect(),sr=sv.getBoundingClientRect();if(!br.width)return;
   const sc=Math.min(sr.width/400,sr.height/472),ox=sr.left-br.left+(sr.width-400*sc)/2,oy=sr.top-br.top+(sr.height-472*sc)/2;
-  const px=ox+HERO.x*sc,py=oy+(HERO.y-HERO.ph)*sc,bw=bub.offsetWidth,bh=bub.offsetHeight;
+  const px=ox+HERO.x*sc,py=oy+HERO.y*sc,bw=bub.offsetWidth,bh=bub.offsetHeight;
   let left=Math.min(Math.max(4,px-bw/2),br.width-bw-4),top=Math.max(4,py-bh-14);
   bub.style.left=left+'px';bub.style.top=top+'px';bub.style.setProperty('--tx',Math.min(Math.max(18,px-left),bw-18)+'px');}
 function tutResult(x){const f=x.df,m=x.dm,sg=(n,t)=>n>0?`+${t}`:n<0?`-${t}`:'±0';
   return `<span style="white-space:nowrap">フォロワー <b>${sg(f,fol(Math.abs(f)))}</b></span>、<span style="white-space:nowrap">お金 <b>${sg(m,yen(Math.abs(m)))}</b></span>。`+(x.late?'遅刻で、投稿できませんでした。':'投稿できたので増えました。');}
+addEventListener('resize',tutPos);// 吹き出しは出したときの位置に固定する（キャラの上下の動きには付いていかない）
 function tutShow(i,x){TUTI=i;$('tb-n').textContent=`チュートリアル ${i+1} / ${TUT.length}`;$('tb-h').textContent=TUT[i][0];$('tb-p').innerHTML=(i===4&&x?tutResult(x)+'<br>':'')+TUT[i][1].split('\n').join('<br>');
   {const im=$('tb-img');im.hidden=true;if(i===1){im.onload=()=>{im.hidden=false;tutPos();};im.src='img/sponsor_0.webp';}}$('tb-next').textContent=(i===3||i===4)?'閉じる':'次へ';$('tb-skip').hidden=(i===4);$('tut-bub').hidden=false;tutPos();}
 $('tb-next').onclick=()=>{if(TUTI<=2)tutShow(TUTI+1);else{$('tut-bub').hidden=true;if(TUTI===4)tutDone();}};
