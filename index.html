@@ -72,6 +72,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .ci{width:28px;height:28px;flex:none;object-fit:contain}
 .subtabs{display:flex;gap:5px;flex-wrap:wrap;margin:0}
 .subtabs button{flex:1 1 0;min-width:22%;min-height:50px;padding:4px 2px;font-size:var(--fs-s);white-space:nowrap;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px}
+.subtabs.pg button{min-height:38px;flex-direction:row;font-size:var(--fs-m)}
 .subtabs button .wi{width:1.6em;height:1.6em;margin:0}
 #shop-tabs button,#camp-tabs button,#gear-tabs button{min-height:44px}
 .campsec{display:flex;flex-direction:column;gap:8px}
@@ -1081,9 +1082,12 @@ function card(item,kind,mode){const eq=isEq(kind,item),own=owns(kind,item.id);
   else if(eq)act=(kind==='part'||kind==='gear')?`<button data-act="unequip">外す</button>`:`<span class="pill">装備中</span>`;
   else act=`<button data-act="equip" ${kind==='part'&&S.parts.length>=3&&!(item.comp&&S.parts.some(x=>(PARTS.find(p=>p.id===x)||{}).comp))||kind==='gear'&&item.req&&S.gear.shelter!==item.req?'disabled':''}>装備</button>`;
   return `<div class="card ${eq?'eq':''}" data-kind="${kind}" data-id="${item.id}"><div class="name"><span class="nm"><img loading="lazy" class="ci" ${(kind==='gear'||kind==='part')&&ICON_FB[item.id]?`data-fb="${ICON_FB[item.id]}" `:''}src="img/${kind==='gear'?'icon_g_'+item.id:(kind==='part'?'part_'+item.id:kind==='cloth'?'cloth_'+item.id:'icon_bike_'+item.id)}.webp" width="28" height="28" alt="">${item.name}${(kind==='bike'||kind==='part')&&plv(item.id)?` <b>${tierOf(kind,plv(item.id)).replace('製','')}</b>`:''}</span>${act}</div><div class="spec">${spec}</div></div>`;}
+let PGRP='bike';// パーツ欄のタブ：bike=自転車パーツ／other=他アイテム
+const isBikePart=i=>!!(i.climb||i.rough||i.cruise||i.wx);// 能力が上がる＝自転車パーツ。ほかは他アイテム
+const pgTabs=()=>`<div class="subtabs pg">${[['bike','自転車パーツ'],['other','他アイテム']].map(([g,t])=>`<button data-pgrp="${g}" aria-selected="${PGRP===g}">${t}</button>`).join('')}</div>`;
 function renderShop(){const lists={bike:BIKES,cloth:CLOTHES,part:PARTS};
-  for(const [k,l] of Object.entries(lists)){$('shop-'+k).innerHTML=l.map(i=>card(i,k,'shop')).join('');
-    const own=l.filter(i=>owns(k,i.id));$('eq-'+k).innerHTML=own.length?own.map(i=>card(i,k,'equip')).join(''):'<div class="hint">なし</div>';}
+  for(const [k,l0] of Object.entries(lists)){const l=k==='part'?l0.filter(i=>isBikePart(i)===(PGRP==='bike')):l0,tabs=k==='part'?pgTabs():'';$('shop-'+k).innerHTML=tabs+l.map(i=>card(i,k,'shop')).join('');
+    const own=l.filter(i=>owns(k,i.id));$('eq-'+k).innerHTML=tabs+(own.length?own.map(i=>card(i,k,'equip')).join(''):'<div class="hint">なし</div>');}
   for(const slot of Object.keys(GEAR)){const l=GEAR_ITEMS.filter(i=>i.slot===slot);$('shop-'+slot).innerHTML=l.map(i=>card(i,'gear','shop')).join('');
     const own=l.filter(i=>owns('gear',i.id));$('eq-'+slot).innerHTML=noneCard(slot)+own.map(i=>card(i,'gear','equip')).join('');}
   $('shop-food').innerHTML=`<div class="card"><div class="name"><span class="nm"><img loading="lazy" class="ci" src="img/icon_food.webp" width="28" height="28" alt="">補給食</span><span class="cnt${S.food?' has':''}"><b>${S.food}</b>/${FOOD_MAX}</span><button data-food="1" ${S.money>=FOOD_PRICE&&S.food<FOOD_MAX?'':'disabled'}>購入 ${yen(FOOD_PRICE)}</button></div><div class="spec">試練の最中に食べると体力+25 気力+10。</div></div><div class="card"><div class="name"><span class="nm"><img loading="lazy" class="ci" src="img/icon_food_nagano.webp" width="28" height="28" alt="" onerror="this.onerror=null;this.src='img/icon_food.webp'">長野県の補給食</span><span class="cnt${S.food2?' has':''}"><b>${S.food2}</b>/${NAGANO.max}</span><button data-food2="1" ${S.money>=NAGANO.price&&S.food2<NAGANO.max?'':'disabled'}>購入 ${yen(NAGANO.price)}</button></div><div class="spec">赤マムシドリンク風の元気ドリンク。体力+${NAGANO.hp} 気力+${NAGANO.mp}。</div></div>`;renderForge();}
@@ -1106,7 +1110,8 @@ $('shop-food').addEventListener('click',e=>{if(e.target.closest('button[data-foo
 const NONE_TXT={fire:['焚き火なし','気力回復の上乗せなし'],shelter:['寝床なし（地面に直接寝る）','体力・気力の上乗せなし'],tarp:['タープなし','雨ガード0%']};
 function noneCard(slot){const on=!S.gear[slot],[n,s]=NONE_TXT[slot];
   return `<div class="card ${on?'eq':''}" data-kind="gear" data-slot="${slot}" data-none="1"><div class="name"><span class="nm"><img loading="lazy" class="ci" src="img/icon_${slot}.webp" width="28" height="28" alt="" style="opacity:.4">${n}</span>${on?'<span class="pill">装備なし</span>':'<button data-act="unequip">外す</button>'}</div><div class="spec">${s}</div></div>`;}
-function shopClick(e){const b=e.target.closest('button[data-act]');if(!b)return;const c=b.closest('.card'),kind=c.dataset.kind,id=c.dataset.id;
+function shopClick(e){const pg=e.target.closest('button[data-pgrp]');if(pg){PGRP=pg.dataset.pgrp;renderShop();return;}
+  const b=e.target.closest('button[data-act]');if(!b)return;const c=b.closest('.card'),kind=c.dataset.kind,id=c.dataset.id;
   if(c.dataset.none){S.gear[c.dataset.slot]=null;render();return;}
   const list=kind==='bike'?BIKES:kind==='cloth'?CLOTHES:kind==='gear'?GEAR_ITEMS:PARTS,item=list.find(x=>x.id===id),key=kind==='bike'?'bikes':kind==='cloth'?'cloth':kind==='gear'?'gear':'parts';
   if(b.dataset.act==='buy'){if(S.money<item.price)return;askPay(`「${item.name}」を購入しますか？`,item.price,()=>{S.money-=item.price;S.owned[key].push(id);log(`${item.name}を購入（${yen(item.price)}）`);equipIt();});return;}

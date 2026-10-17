@@ -156,6 +156,13 @@ test('components: three tiers, stats add up, not customizable, only one survives
  q.S.parts=['compm','comph','compi'];q.save();const o=q.load();assert.equal(o.parts.filter(x=>x.startsWith('comp')).length,1);
  for(const id of ['compm','comph','compi'])assert.ok(fs.existsSync(path.join(__dirname,'..','img/part_'+id+'.webp')),id);
  q.S.money=1e7;q.renderShop();q.renderForge();});
+test('parts shop and equip lists are split into bike parts and other items',c=>{const {q,w}=c;q.newGame(q.PREF[0].id);q.S.owned.parts=q.PARTS.map(x=>x.id);q.renderShop();
+ const ids=sel=>[...w.document.querySelectorAll(sel+' .card')].map(e=>e.dataset.id);
+ const bikeSet=['wheel','tire','aero','fender','compm','comph','compi'],other=['spray','oil','tripod','cam','drone','comfy'];
+ assert.deepEqual(ids('#shop-part'),bikeSet);assert.deepEqual(ids('#eq-part'),bikeSet);
+ w.document.querySelector('#shop-part button[data-pgrp="other"]').click();assert.deepEqual(ids('#shop-part'),other);assert.deepEqual(ids('#eq-part'),other);
+ assert.equal(w.document.querySelectorAll('#shop-part button[data-pgrp][aria-selected="true"]').length,1);
+ assert.equal([...bikeSet,...other].length,q.PARTS.length);w.document.querySelector('#eq-part button[data-pgrp="bike"]').click();assert.deepEqual(ids('#shop-part'),bikeSet);});
 const summary={file:filename,passed:results.filter(x=>x.ok).length,failed:results.filter(x=>!x.ok).length,results};
 if(process.argv[3])fs.writeFileSync(process.argv[3],JSON.stringify(summary,null,2));
 console.log(JSON.stringify({passed:summary.passed,failed:summary.failed}));process.exitCode=summary.failed?1:0;
