@@ -316,13 +316,14 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .copy{text-align:center;margin:1em 0 0;font-size:11px}
 #ov-title label[for=start-pref]{display:block;text-align:left;margin:2px 0 0;line-height:1.2}
 #start-pref{margin:2px 0 6px}
-.sg-reg{margin:14px 0 4px;font-size:var(--fs-l);border-bottom:1px solid var(--line)}
-.sg-pref{margin:6px 0}.sg-h{display:flex;justify-content:space-between;font-size:var(--fs-s);margin-bottom:2px}.sg-h span{color:var(--muted)}
-.sg-row{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.sg-nav{display:flex;align-items:center;gap:8px;margin:0 0 4px}.sg-nav b{flex:1;text-align:center;font-size:var(--fs-l)}.sg-nav b small{color:var(--muted);font-weight:normal;font-size:var(--fs-xs);margin-left:6px}.sg-nav button{min-width:44px;min-height:36px;padding:0 10px}.sg-nav button:disabled{opacity:.3}
+.sg-dots{display:flex;justify-content:center;gap:6px;margin:0 0 4px}.sg-dots i{width:7px;height:7px;border-radius:50%;background:var(--line)}.sg-dots i.on{background:var(--accent,#e8a33d)}
+.sg-pref{margin:4px 0}.sg-h{display:flex;justify-content:space-between;font-size:var(--fs-s);margin-bottom:2px}.sg-h span{color:var(--muted)}
+.sg-row{display:grid;grid-template-columns:repeat(4,1fr);gap:4px}
 .sg-c{display:flex;flex-direction:column;gap:2px;padding:0;border:1px solid var(--line);border-radius:6px;overflow:hidden;background:var(--panel);min-width:0}
 .sg-c img{width:100%;height:auto;aspect-ratio:3/2;object-fit:cover;display:block}
 .sg-c small{font-size:var(--fs-xs);line-height:1.2;padding:0 3px 3px;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.sg-c.lock{opacity:.55}.sg-c.lock span{aspect-ratio:3/2;display:flex;align-items:center;justify-content:center;font-size:1.6rem;background:rgba(128,128,128,.18)}
+.sg-c.lock{opacity:.55}.sg-c.lock span{aspect-ratio:3/2;display:flex;align-items:center;justify-content:center;font-size:1.2rem;background:rgba(128,128,128,.18)}
 #ov-sight .modal img{width:100%;height:auto;border-radius:6px}
 #ov-video .vid{position:relative;width:100%;aspect-ratio:16/9;background:#000;border-radius:6px;overflow:hidden}#ov-video .vid iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
 </style>
@@ -386,7 +387,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
     </div>
     <div id="p-sight" hidden>
     <h2 style="margin:0">全国の名所</h2><div class="hint" id="sg-sum" style="margin-top:2px"></div>
-    <p class="hint">キャンプ場で投稿に成功すると、その県の名所が1枚ずつ集まります（1県3枚）。タップで大きく見られます。</p>
+    <p class="hint" style="margin:0">投稿に成功すると名所が集まります。タップで大きく表示、左右にスワイプでもめくれます。</p>
     <div id="sightbook"></div>
     </div>
     <div id="p-trip">
@@ -897,12 +898,18 @@ function rollForecast(){const c=calendar(S.turn),mi=c.mi,f={};const swing=rnd(-3
   S.forecast=f;}
 // 各県の景勝地3か所（フミヤスの大冒険ジュニアから流用）。投稿写真に訪問ごとに順番で使う
 const SIGHTS=[[["hokkaido-1","札幌市・時計台"],["hokkaido-2","大雪山"],["hokkaido-3","知床半島"]],[["aomori-1","青森市・アスパム"],["aomori-2","弘前城"],["aomori-3","白神山地"],["aomori-4","白神ライン","青森県の西目屋村から白神山地の山あいを抜ける、未舗装の砂利道。アップダウンが多く、冬は閉鎖される。"]],[["iwate-1","盛岡市・岩手銀行赤レンガ館"],["iwate-2","龍泉洞"],["iwate-3","平泉"]],[["miyagi-1","仙台市・定禅寺通"],["miyagi-2","松島"],["miyagi-3","蔵王連峰"],["miyagi-4","蔵王エコーライン","宮城県蔵王町の澄川ゲートから山形県境まで続く山岳道路。冬季閉鎖の区間は8.9kmで、2022年の開通時には最大8m程度の雪の壁が現れた。"]],[["akita-1","秋田市・赤れんが郷土館"],["akita-2","男鹿半島"],["akita-3","角館"],["akita-4","鳥海ブルーライン","日本海に面した海沿いから鳥海山の山腹へ登る山岳道路。秋は夜間通行止めとなり、冬は閉鎖される。"]],[["yamagata-1","山形市・文翔館"],["yamagata-2","山寺（立石寺）"],["yamagata-3","最上川"]],[["fukushima-1","福島市・旧堀切邸"],["fukushima-2","猪苗代湖"],["fukushima-3","鶴ヶ城"],["fukushima-4","磐梯吾妻スカイライン","福島市の高湯温泉から土湯峠へ続く、全長28.7kmの山岳道路。最高地点は標高1,622mで、冬は通行止めになる。"]],[["ibaraki-1","水戸市・弘道館"],["ibaraki-2","霞ヶ浦"],["ibaraki-3","偕楽園"]],[["tochigi-1","宇都宮市・松が峰教会"],["tochigi-2","中禅寺湖"],["tochigi-3","日光東照宮"],["tochigi-4","いろは坂","日光市と奥日光を結ぶ坂道。下りの第一いろは坂と上りの第二いろは坂に分かれ、麓の馬返と中禅寺湖の標高差は約440m。カーブごとに、いろは歌の文字を書いた標識が立つ。"]],[["gunma-1","前橋市・臨江閣"],["gunma-2","赤城山"],["gunma-3","榛名山"],["gunma-4","スーパー御荷鉾林道","群馬県の藤岡市から南牧村へ続く、全長約67kmの林道。舗装とダートが混じり、岩ガレや崩落の跡も残る。"]],[["saitama-1","さいたま市・武蔵一宮氷川神社"],["saitama-2","川越"],["saitama-3","長瀞"]],[["chiba-1","千葉市・千葉ポートタワー"],["chiba-2","九十九里浜"],["chiba-3","鋸山"]],[["tokyo-1","東京・都庁"],["tokyo-2","浅草・雷門"],["tokyo-3","高尾山"],["tokyo-4","奥多摩周遊道路","奥多摩の山を走る、全長19.7kmの都道。カーブが続き、ヒルクライムの人気コースとされる。"]],[["kanagawa-1","横浜市・赤レンガ倉庫"],["kanagawa-2","芦ノ湖"],["kanagawa-3","鎌倉大仏"]],[["niigata-1","新潟市・萬代橋"],["niigata-2","佐渡金山跡"],["niigata-3","信濃川"]],[["toyama-1","富山市・富山城"],["toyama-2","五箇山"],["toyama-3","立山連峰"]],[["ishikawa-1","金沢市・鼓門"],["ishikawa-2","兼六園"],["ishikawa-3","能登半島"]],[["fukui-1","福井市・養浩館庭園"],["fukui-2","東尋坊"],["fukui-3","若狭湾"]],[["yamanashi-1","甲府市・山梨県庁別館"],["yamanashi-2","富士山"],["yamanashi-3","甲府盆地"]],[["nagano-1","長野市・善光寺"],["nagano-2","松本城"],["nagano-3","上高地"]],[["gifu-1","岐阜市・川原町"],["gifu-2","白川郷"],["gifu-3","長良川"],["gifu-4","乗鞍スカイライン","高山市の平湯峠から畳平へ登る、延長14.4kmの山岳道路。終点の畳平は標高2,702m。一般車は入れず、バスと自転車が通る。"]],[["shizuoka-1","静岡市・駿府城東御門"],["shizuoka-2","伊豆半島"],["shizuoka-3","浜名湖"]],[["aichi-1","名古屋市・MIRAI TOWER"],["aichi-2","名古屋城"],["aichi-3","濃尾平野"]],[["mie-1","津市・津城跡"],["mie-2","伊勢神宮"],["mie-3","志摩半島"]],[["shiga-1","大津市・浮御堂"],["shiga-2","琵琶湖"],["shiga-3","彦根城"]],[["kyoto-1","京都市・京都市役所本庁舎"],["kyoto-2","清水寺"],["kyoto-3","天橋立"]],[["osaka-1","大阪市・大阪市中央公会堂"],["osaka-2","大阪城公園"],["osaka-3","仁徳天皇陵古墳"],["osaka-4","暗峠","大阪と奈良を結ぶ、奈良街道の峠。江戸時代には伊勢参りの人でにぎわい、今も昔の石畳が残る。日本の道百選。"]],[["hyogo-1","神戸市・神戸ポートタワー"],["hyogo-2","姫路城"],["hyogo-3","淡路島"],["hyogo-4","瀞川・氷ノ山林道","兵庫県の但馬地域を走る林道。落石・倒木の危険が多く、降雪や凍結時は除雪されない。"]],[["nara-1","奈良市・興福寺中金堂"],["nara-2","法隆寺"],["nara-3","吉野山"]],[["wakayama-1","和歌山市・和歌山城"],["wakayama-2","高野山"],["wakayama-3","熊野古道"]],[["tottori-1","鳥取市・仁風閣"],["tottori-2","鳥取砂丘"],["tottori-3","大山"]],[["shimane-1","松江市・松江城"],["shimane-2","出雲大社"],["shimane-3","石見銀山"]],[["okayama-1","岡山市・岡山城"],["okayama-2","後楽園"],["okayama-3","瀬戸大橋"]],[["hiroshima-1","広島市・広島城"],["hiroshima-2","厳島神社"],["hiroshima-3","平和記念公園"]],[["yamaguchi-1","山口市・山口県旧県庁舎"],["yamaguchi-2","秋芳洞"],["yamaguchi-3","錦帯橋"]],[["tokushima-1","徳島市・鷲の門"],["tokushima-2","鳴門の渦潮"],["tokushima-3","大歩危・小歩危"],["tokushima-4","剣山スーパー林道","徳島県の上勝町から那賀町へ続く、全長87.7kmの林道。大部分が砂利道で、冬は通行止めになる。"]],[["kagawa-1","高松市・艮櫓"],["kagawa-2","栗林公園"],["kagawa-3","小豆島"]],[["ehime-1","松山市・道後温泉本館"],["ehime-2","松山城"],["ehime-3","しまなみ海道"]],[["kochi-1","高知市・高知城"],["kochi-2","四万十川"],["kochi-3","足摺岬"]],[["fukuoka-1","福岡市・浮見堂"],["fukuoka-2","筑後川"],["fukuoka-3","太宰府天満宮"]],[["saga-1","佐賀市・佐賀城本丸歴史館"],["saga-2","吉野ヶ里遺跡"],["saga-3","有明海"]],[["nagasaki-1","長崎市・眼鏡橋"],["nagasaki-2","雲仙岳"],["nagasaki-3","軍艦島"]],[["kumamoto-1","熊本市・水前寺成趣園"],["kumamoto-2","阿蘇"],["kumamoto-3","熊本城"]],[["oita-1","大分市・府内城大手門"],["oita-2","別府"],["oita-3","国東半島"]],[["miyazaki-1","宮崎市・宮崎県庁本館"],["miyazaki-2","高千穂峡"],["miyazaki-3","青島"]],[["kagoshima-1","鹿児島市・県政記念館"],["kagoshima-2","桜島"],["kagoshima-3","屋久島"]],[["okinawa-1","那覇市・守礼門"],["okinawa-2","首里城"],["okinawa-3","西表島"]]];
-function renderSights(){let got=0,full=0,html='',reg='';
+const SGPAGES=[['北海道・東北',['北海道','東北']],['関東',['関東']],['中部',['中部']],['近畿',['近畿']],['中国・四国',['中国','四国']],['九州・沖縄',['九州','沖縄']]];
+let SGPG=-1;
+function renderSights(){let got=0,full=0,html='';
+  if(SGPG<0){const r=PREF[S.loc]?PREF[S.loc].region:'';SGPG=Math.max(0,SGPAGES.findIndex(x=>x[1].includes(r)));}
+  SGPG=Math.min(SGPAGES.length-1,Math.max(0,SGPG));
+  const pg=SGPAGES[SGPG];let pg_got=0,pg_all=0;
   PREF.forEach(p=>{const L=SIGHTS[p.id].length,n=Math.min(L,S.visits[p.id]||0);got+=n;if(n>=L)full++;
-    if(p.region!==reg){reg=p.region;if(reg!==p.name)html+=`<h3 class="sg-reg">${reg}</h3>`;}
+    if(!pg[1].includes(p.region))return;pg_got+=n;pg_all+=L;
     html+=`<div class="sg-pref"><div class="sg-h"><b>${p.name}</b><span>${n}/${L}</span></div><div class="sg-row">`+
       SIGHTS[p.id].map((s,i)=>i<n?`<button class="sg-c" data-sg="${s[0]}" data-n="${s[1]}" data-d="${s[2]||''}"><img loading="lazy" src="img/sights/${s[0]}.webp" width="480" height="320" alt="${s[1]}"><small>${s[1]}</small></button>`:`<div class="sg-c lock"><span>？</span><small>未訪問</small></div>`).join('')+`</div></div>`;});
-  $('sg-sum').textContent=`${got} / ${SIGHTS.reduce((a,x)=>a+x.length,0)}（コンプリート ${full}/47県）`;$('sightbook').innerHTML=html;}
+  const nav=`<div class="sg-nav"><button data-pg="-1" aria-label="前の地方"${SGPG===0?' disabled':''}>◀</button><b>${pg[0]}<small>${pg_got}/${pg_all}</small></b><button data-pg="1" aria-label="次の地方"${SGPG===SGPAGES.length-1?' disabled':''}>▶</button></div><div class="sg-dots">${SGPAGES.map((_,k)=>`<i${k===SGPG?' class="on"':''}></i>`).join('')}</div>`;
+  $('sg-sum').textContent=`${got} / ${SIGHTS.reduce((a,x)=>a+x.length,0)}（コンプリート ${full}/47県）`;$('sightbook').innerHTML=nav+html;}
 const sightOf=(id,v)=>SIGHTS[id][(Math.max(1,v)-1)%SIGHTS[id].length];
 const WX_J={sun:'<img class="wi" src="img/wx_sun.webp" width="96" height="96" alt="">晴れ',cloud:'<img class="wi" src="img/wx_cloud.webp" width="96" height="96" alt="">曇り',heat:'<img class="wi" src="img/wx_heat.webp" width="96" height="96" alt="">炎天下',snow:'<img class="wi" src="img/wx_snow.webp" width="96" height="96" alt="">大雪',rain:'<img class="wi" src="img/wx_rain.webp" width="96" height="96" alt="">雨',wind:'<img class="wi" src="img/wx_wind.webp" width="96" height="96" alt="">強風',typhoon:'<img class="wi" src="img/wx_typhoon.webp" width="96" height="96" alt="">台風'};
 
@@ -1165,9 +1172,10 @@ function renderTrials(){let w=0,f=0;for(const k of TRIAL_KEYS){const v=S.stats.e
     if(k==='tsuchi'){const got=v[1]>0;return `<div class="n${got?'':' leg'}"><img loading="lazy" decoding="async" src="img/${got?'tsuchinoko':'tsuchinoko_unknown'}.webp" alt="">${got?'ツチノコ':'伝説の生き物'}</div>${cols}`;}
     if(NEWK.has(k)&&!v[0])return '';const e=ENEMY[k];return `<div class="n"><img loading="lazy" decoding="async" src="${e.img}" alt="" onerror="this.style.display='none'">${e.name.replace('インフルエンサー','').replace('迷惑キャンパー','迷惑')}</div>${cols}`;};
   $('achlist').innerHTML='<div class="th">試練</div><div class="th">遭遇</div><div class="th">突破</div><div class="th">失敗</div>'+TRIAL_KEYS.map(row).join('');}
+{let tx=0,ty=0;$('sightbook').addEventListener('touchstart',e=>{const t=e.changedTouches[0];tx=t.clientX;ty=t.clientY;},{passive:true});$('sightbook').addEventListener('touchend',e=>{const t=e.changedTouches[0],dx=t.clientX-tx,dy=t.clientY-ty;if(Math.abs(dx)>60&&Math.abs(dx)>Math.abs(dy)*1.5){const n=SGPG+(dx<0?1:-1);if(n>=0&&n<SGPAGES.length){SGPG=n;renderSights();}}},{passive:true});}
 function showLogSub(){$('p-trip').hidden=LOGSUB!=='trip';$('p-sight').hidden=LOGSUB!=='sight';$('p-ach').hidden=LOGSUB!=='ach';if(LOGSUB==='ach')renderTrials();document.querySelectorAll('#log-tabs button').forEach(x=>x.setAttribute('aria-selected',x.dataset.sub===LOGSUB));if(LOGSUB==='sight')renderSights();}
 $('log-tabs').onclick=e=>{const b=e.target.closest('button[data-sub]');if(!b)return;LOGSUB=b.dataset.sub;showLogSub();};
-$('sightbook').onclick=e=>{const b=e.target.closest('.sg-c[data-sg]');if(!b)return;$('sg-img').src='img/sights/'+b.dataset.sg+'.webp';$('sg-img').alt=b.dataset.n;$('sg-name').textContent=b.dataset.n;$('sg-desc').textContent=b.dataset.d||'';$('sg-desc').hidden=!b.dataset.d;$('ov-sight').hidden=false;};
+$('sightbook').onclick=e=>{const nb=e.target.closest('[data-pg]');if(nb){SGPG+=+nb.dataset.pg;renderSights();return;}const b=e.target.closest('.sg-c[data-sg]');if(!b)return;$('sg-img').src='img/sights/'+b.dataset.sg+'.webp';$('sg-img').alt=b.dataset.n;$('sg-name').textContent=b.dataset.n;$('sg-desc').textContent=b.dataset.d||'';$('sg-desc').hidden=!b.dataset.d;$('ov-sight').hidden=false;};
 $('sg-x').onclick=()=>{$('ov-sight').hidden=true;};
 // タイトル画面の動画：押したときだけ YouTube を読み込む（プライバシー強化モード）。閉じると iframe ごと消して再生を止める
 const VIDEO_ID='32V6wl-Hv6k';

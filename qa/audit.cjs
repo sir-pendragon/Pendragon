@@ -2,7 +2,7 @@ const fs=require('node:fs'),path=require('node:path'),assert=require('node:asser
 const {JSDOM,VirtualConsole}=require('jsdom');
 const filename=path.resolve(process.argv[2]||path.join(__dirname,'..','index.html'));
 const html=fs.readFileSync(filename,'utf8');
-const expose=`window.qa={needV,isCourse,askGo,ENEMY,SPEC,SIGHTS,TACT,tlEnc,tlDec,newGame,render,renderMap,renderBattle,renderShop,renderForge,renderDetail,renderList,renderTrials,renderSights,load,save,pack,snap,advance,calendar,rollForecast,startTrip,stayWx,startBattle,cmd,endTrip,endTrip2,nextEncounter,tsuchinoko,tcRate,bikeStats,gearFx,travelInfo,restHome,yearEval,eventAt,stoveOn,plv,rkLv,PREF,ENEMY,GEAR_ITEMS,PARTS,BIKES,CLOTHES,WXL,TRIAL_KEYS,AUD,tcRate,playBGM,bgmApply,
+const expose=`window.qa={get sgPage(){return SGPG},set sgPage(v){SGPG=v},needV,isCourse,askGo,ENEMY,SPEC,SIGHTS,TACT,tlEnc,tlDec,newGame,render,renderMap,renderBattle,renderShop,renderForge,renderDetail,renderList,renderTrials,renderSights,load,save,pack,snap,advance,calendar,rollForecast,startTrip,stayWx,startBattle,cmd,endTrip,endTrip2,nextEncounter,tsuchinoko,tcRate,bikeStats,gearFx,travelInfo,restHome,yearEval,eventAt,stoveOn,plv,rkLv,PREF,ENEMY,GEAR_ITEMS,PARTS,BIKES,CLOTHES,WXL,TRIAL_KEYS,AUD,tcRate,playBGM,bgmApply,
 get S(){return S},set S(v){S=v},get B(){return B},get trip(){return trip},set trip(v){trip=v},get TS(){return TS},get inTrip(){return INTRIP},get lastSave(){return LASTSAVE},
 quiet(){render=()=>save();renderBattle=()=>{};playSE=()=>{};playBGM=()=>{};}};`;
 const js=[...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(m=>m[1]).sort((x,y)=>y.length-x.length)[0];// 先頭の短い移動スクリプトではなく、本体（最長）を読む
@@ -55,7 +55,7 @@ test('consecutive stays raise the weather chance (75% / 90% / 100%) and the coun
  setup(2,0.5);q.startTrip(q.PREF[13],false);assert.equal(q.S.stay,0,'moving elsewhere resets');
  setup(2,0.5);q.restHome();assert.equal(q.S.stay,0,'resting at home resets');
  setup(2,0.5);q.save();const r=q.load();assert.equal(r.stay,2,'saved and loaded');});
-test('three camps unlock familiarity and three sights',c=>{const {q}=c;const nid=q.PREF.findIndex(x=>!['群馬','福島','東京','岐阜','秋田'].includes(x.name));q.newGame(nid);for(let i=0;i<3;i++){q.startTrip(q.PREF[nid],false);c.$('camp-btns').querySelector('[data-i="3"]').click();c.$('res-ok').click();}assert.equal(q.S.fam[nid],true);q.renderSights();assert.equal(c.$('sightbook').querySelectorAll('button').length,3);});
+test('three camps unlock familiarity and three sights',c=>{const {q}=c;const nid=q.PREF.findIndex(x=>!['群馬','福島','東京','岐阜','秋田'].includes(x.name));q.newGame(nid);for(let i=0;i<3;i++){q.startTrip(q.PREF[nid],false);c.$('camp-btns').querySelector('[data-i="3"]').click();c.$('res-ok').click();}assert.equal(q.S.fam[nid],true);q.renderSights();assert.equal(c.$('sightbook').querySelectorAll('.sg-c[data-sg]').length,3);});
 test('weekly sponsor paid once and calendar advances once',c=>{const {q}=c;q.S.fame=2000;const m=q.S.money;q.snap();q.advance();assert.equal(q.S.money,m+3000);assert.equal(q.S.turn,2);});
 test('completion refreshes forecast',c=>{c.q.S.fam.fill(true);c.q.snap();const f=c.q.S.forecast;c.q.advance();assert.notEqual(c.q.S.forecast,f);});
 test('completion is not shown again on following weeks',c=>{c.q.S.fam.fill(true);c.q.snap();c.q.advance();assert.equal(c.$('ov-result').hidden,true);});
@@ -99,7 +99,7 @@ test('special prefecture (Gunma): 3 visits are not clear, the 4th is the forest-
  clear(c);q.newGame(12);q.S.money=1e6;q.S.visits[g]=3;q.S.loc=g;q.trip={p:q.PREF[g],enc:[],i:0,late:false,stay:false,course:true};q.snap();const f0=q.S.fame;q.endTrip();c.$('camp-btns').querySelector('button').click();
  assert.equal(q.S.visits[g],4);assert.equal(q.S.fam[g],true);assert.ok(q.S.fame-f0>=50000,'bonus '+(q.S.fame-f0));
  // 名所図鑑：群馬だけ4枚
- q.renderSights();assert.ok(c.$('p-sight').textContent.includes('スーパー御荷鉾林道')||c.$('sightbook').textContent.includes('スーパー御荷鉾林道'));});
+ q.sgPage=1;q.renderSights();assert.ok(c.$('sightbook').textContent.includes('スーパー御荷鉾林道'));});
 test('trial collection hides undiscovered legend and names it after success',c=>{c.q.renderTrials();assert.equal(c.q.TRIAL_KEYS.length,40);assert.ok(c.$('p-ach').textContent.includes('伝説の生き物'));c.q.S.stats.en.tsuchi=[1,1,0];c.q.renderTrials();assert.ok(c.$('p-ach').textContent.includes('ツチノコ'));});
 test('all tent and tarp combinations render finite SVG positions',c=>{const {q}=c;for(const t of [1,36])for(const sh of [null,'sh1','sh2','sh3','sh4','sh5','sh6','sh7'])for(const tp of [null,'tp1','tp2','tp3','tp4']){q.S.turn=t;q.S.gear={fire:sh==='sh5'?'fire4':'fire1',shelter:sh,tarp:tp};q.renderMap();assert.equal(/NaN|Infinity/.test(c.$('map').innerHTML),false,sh+' / '+tp);}});
 test('event camp registers festival and uses event image',c=>{const {q}=c;q.S.turn=2;q.S.loc=1;q.S.sel=1;const p=q.PREF[1];q.trip={p,enc:[],ev:q.eventAt(2,1),i:0,late:false,stay:true};assert.ok(q.trip.ev);q.snap();q.endTrip2({});assert.equal(q.S.stats.ev,1);assert.ok(c.$('result-box').querySelector('img').src.includes('ev_aomori_sakura'));});
@@ -131,3 +131,9 @@ test('rescue: a special prefecture cleared without ever meeting its boss goes ba
 const summary={file:filename,passed:results.filter(x=>x.ok).length,failed:results.filter(x=>!x.ok).length,results};
 if(process.argv[3])fs.writeFileSync(process.argv[3],JSON.stringify(summary,null,2));
 console.log(JSON.stringify({passed:summary.passed,failed:summary.failed}));process.exitCode=summary.failed?1:0;
+
+test('sight book pages by region: prev/next buttons, ends disabled, every prefecture shown once, tap still opens',c=>{const {q}=c;clear(c);q.newGame(q.PREF.find(x=>x.name==='大阪').id);q.sgPage=-1;q.renderSights();
+ assert.ok(c.$('sightbook').textContent.includes('近畿'),'opens on the current region');
+ const seen=new Set();q.sgPage=0;q.renderSights();
+ for(let i=0;i<6;i++){for(const b of c.$('sightbook').querySelectorAll('.sg-h b'))seen.add(b.textContent);const nx=c.$('sightbook').querySelector('[data-pg="1"]');assert.equal(nx.disabled,i===5);if(i<5)nx.click();}
+ assert.equal(seen.size,47);const pv=c.$('sightbook').querySelector('[data-pg="-1"]');assert.equal(pv.disabled,false);q.sgPage=0;q.renderSights();assert.equal(c.$('sightbook').querySelector('[data-pg="-1"]').disabled,true);});
