@@ -2,7 +2,7 @@ const fs=require('node:fs'),path=require('node:path'),assert=require('node:asser
 const {JSDOM,VirtualConsole}=require('jsdom');
 const filename=path.resolve(process.argv[2]||path.join(__dirname,'..','index.html'));
 const html=fs.readFileSync(filename,'utf8');
-const expose=`window.qa={needV,isCourse,askGo,newGame,render,renderMap,renderBattle,renderShop,renderForge,renderDetail,renderList,renderTrials,renderSights,load,save,pack,snap,advance,calendar,rollForecast,startTrip,stayWx,startBattle,cmd,endTrip,endTrip2,nextEncounter,tsuchinoko,tcRate,bikeStats,gearFx,travelInfo,restHome,yearEval,eventAt,stoveOn,plv,rkLv,PREF,ENEMY,GEAR_ITEMS,PARTS,BIKES,CLOTHES,WXL,TRIAL_KEYS,AUD,tcRate,playBGM,bgmApply,
+const expose=`window.qa={needV,isCourse,askGo,ENEMY,SPEC,SIGHTS,TACT,tlEnc,tlDec,newGame,render,renderMap,renderBattle,renderShop,renderForge,renderDetail,renderList,renderTrials,renderSights,load,save,pack,snap,advance,calendar,rollForecast,startTrip,stayWx,startBattle,cmd,endTrip,endTrip2,nextEncounter,tsuchinoko,tcRate,bikeStats,gearFx,travelInfo,restHome,yearEval,eventAt,stoveOn,plv,rkLv,PREF,ENEMY,GEAR_ITEMS,PARTS,BIKES,CLOTHES,WXL,TRIAL_KEYS,AUD,tcRate,playBGM,bgmApply,
 get S(){return S},set S(v){S=v},get B(){return B},get trip(){return trip},set trip(v){trip=v},get TS(){return TS},get inTrip(){return INTRIP},get lastSave(){return LASTSAVE},
 quiet(){render=()=>save();renderBattle=()=>{};playSE=()=>{};playBGM=()=>{};}};`;
 const js=html.match(/<script>([\s\S]*?)<\/script>/)[1];
@@ -55,7 +55,7 @@ test('consecutive stays raise the weather chance (75% / 90% / 100%) and the coun
  setup(2,0.5);q.startTrip(q.PREF[13],false);assert.equal(q.S.stay,0,'moving elsewhere resets');
  setup(2,0.5);q.restHome();assert.equal(q.S.stay,0,'resting at home resets');
  setup(2,0.5);q.save();const r=q.load();assert.equal(r.stay,2,'saved and loaded');});
-test('three camps unlock familiarity and three sights',c=>{const {q}=c;for(let i=0;i<3;i++){q.startTrip(q.PREF[12],false);c.$('camp-btns').querySelector('[data-i="3"]').click();c.$('res-ok').click();}assert.equal(q.S.fam[12],true);q.renderSights();assert.equal(c.$('sightbook').querySelectorAll('button').length,3);});
+test('three camps unlock familiarity and three sights',c=>{const {q}=c;const nid=q.PREF.findIndex(x=>!['群馬','福島','東京','岐阜','秋田'].includes(x.name));q.newGame(nid);for(let i=0;i<3;i++){q.startTrip(q.PREF[nid],false);c.$('camp-btns').querySelector('[data-i="3"]').click();c.$('res-ok').click();}assert.equal(q.S.fam[nid],true);q.renderSights();assert.equal(c.$('sightbook').querySelectorAll('button').length,3);});
 test('weekly sponsor paid once and calendar advances once',c=>{const {q}=c;q.S.fame=2000;const m=q.S.money;q.snap();q.advance();assert.equal(q.S.money,m+3000);assert.equal(q.S.turn,2);});
 test('completion refreshes forecast',c=>{c.q.S.fam.fill(true);c.q.snap();const f=c.q.S.forecast;c.q.advance();assert.notEqual(c.q.S.forecast,f);});
 test('completion is not shown again on following weeks',c=>{c.q.S.fam.fill(true);c.q.snap();c.q.advance();assert.equal(c.$('ov-result').hidden,true);});
@@ -100,11 +100,21 @@ test('special prefecture (Gunma): 3 visits are not clear, the 4th is the forest-
  assert.equal(q.S.visits[g],4);assert.equal(q.S.fam[g],true);assert.ok(q.S.fame-f0>=50000,'bonus '+(q.S.fame-f0));
  // 名所図鑑：群馬だけ4枚
  q.renderSights();assert.ok(c.$('p-sight').textContent.includes('スーパー御荷鉾林道')||c.$('sightbook').textContent.includes('スーパー御荷鉾林道'));});
-test('trial collection hides undiscovered legend and names it after success',c=>{c.q.renderTrials();assert.equal(c.q.TRIAL_KEYS.length,26);assert.ok(c.$('p-ach').textContent.includes('伝説の生き物'));c.q.S.stats.en.tsuchi=[1,1,0];c.q.renderTrials();assert.ok(c.$('p-ach').textContent.includes('ツチノコ'));});
+test('trial collection hides undiscovered legend and names it after success',c=>{c.q.renderTrials();assert.equal(c.q.TRIAL_KEYS.length,34);assert.ok(c.$('p-ach').textContent.includes('伝説の生き物'));c.q.S.stats.en.tsuchi=[1,1,0];c.q.renderTrials();assert.ok(c.$('p-ach').textContent.includes('ツチノコ'));});
 test('all tent and tarp combinations render finite SVG positions',c=>{const {q}=c;for(const t of [1,36])for(const sh of [null,'sh1','sh2','sh3','sh4','sh5','sh6','sh7'])for(const tp of [null,'tp1','tp2','tp3','tp4']){q.S.turn=t;q.S.gear={fire:sh==='sh5'?'fire4':'fire1',shelter:sh,tarp:tp};q.renderMap();assert.equal(/NaN|Infinity/.test(c.$('map').innerHTML),false,sh+' / '+tp);}});
 test('event camp registers festival and uses event image',c=>{const {q}=c;q.S.turn=2;q.S.loc=1;q.S.sel=1;const p=q.PREF[1];q.trip={p,enc:[],ev:q.eventAt(2,1),i:0,late:false,stay:true};assert.ok(q.trip.ev);q.snap();q.endTrip2({});assert.equal(q.S.stats.ev,1);assert.ok(c.$('result-box').querySelector('img').src.includes('ev_aomori_sakura'));});
 test('all enemies expose the expected command set',c=>{for(const kind of Object.keys(c.q.ENEMY)){batt(c,kind);const commands=Array.from(c.$('bt-cmds').querySelectorAll('[data-cmd]'),b=>b.dataset.cmd);assert.ok(commands.includes('tactic'));assert.ok(commands.includes(kind==='rival'?'post':'push'));assert.equal(commands.includes('rinko'),kind!=='rival');assert.equal(commands.includes('escape'),kind==='rival');}});
 test('quota fallback caches exactly the reduced saved content',c=>{const {q,w}=c;q.S.log=Array.from({length:80},(_,i)=>'1|entry '+i);const original=w.Storage.prototype.setItem;let calls=0;w.Storage.prototype.setItem=function(k,v){calls++;if(calls===1)throw new w.DOMException('quota','QuotaExceededError');return original.call(this,k,v);};q.save();assert.equal(q.S.log.length,20);assert.equal(q.lastSave,w.localStorage.getItem('charicamp'));q.save();assert.equal(calls,2);});
+test('special prefectures (Fukushima, Tokyo, Gifu, Akita): course, boss, art, sights and tactics are wired',c=>{const {q}=c;
+ const names={'福島':['gas','volcstorm','hill','boss_fukushima'],'東京':['curves','gate','hill','boss_tokyo'],'岐阜':['hill','slide','snow','boss_gifu'],'秋田':['hill','gate','snow','boss_akita']};
+ for(const [nm,spec] of Object.entries(names)){const p=q.PREF.find(x=>x.name===nm);assert.equal(q.needV(p),4,nm);
+  for(let i=0;i<20;i++){clear(c);q.newGame(q.PREF.find(x=>!names[x.name]&&x.name!=='群馬').id);q.S.money=1e8;q.S.visits[p.id]=3;q.S.forecast=Object.fromEntries(q.PREF.map(x=>[x.id,{temp:15,wx:'sun'}]));q.startTrip(p,false);assert.equal(q.trip.course,true,nm);assert.equal(q.trip.enc.length,4);assert.equal(q.trip.enc[3],spec[3]);assert.ok(q.trip.enc.slice(0,3).every(k=>spec.slice(0,3).includes(k)),nm+q.trip.enc.join());}
+  for(const k of spec){const e=q.ENEMY[k];assert.ok(e,k);assert.ok(fs.existsSync(path.join(__dirname,'..',e.img)),e.img);}
+  assert.ok(fs.existsSync(path.join(__dirname,'..','img','sights',q.SPEC[nm].img+'.webp')),nm);
+  const sg=q.SIGHTS[p.id];assert.equal(sg.length,4,nm);assert.equal(sg[3][0],q.SPEC[nm].img);assert.ok(sg[3][1]&&sg[3][2],nm);}
+ // 作戦アイコンは既存の絵を共用する（新しい敵にも必ず画像がある）
+ for(const k of ['gas','volcstorm','curves','gate','boss_fukushima','boss_tokyo','boss_gifu','boss_akita'])assert.ok(q.TACT[k],k);
+ const enc=q.tlDec(q.tlEnc(['gas','boss_akita','boss_gifu','tree']));assert.equal(enc.join(),'gas,boss_akita,boss_gifu,tree');});
 const summary={file:filename,passed:results.filter(x=>x.ok).length,failed:results.filter(x=>!x.ok).length,results};
 if(process.argv[3])fs.writeFileSync(process.argv[3],JSON.stringify(summary,null,2));
 console.log(JSON.stringify({passed:summary.passed,failed:summary.failed}));process.exitCode=summary.failed?1:0;

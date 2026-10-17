@@ -424,7 +424,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 <div id="pop" role="status" hidden></div>
 <div class="overlay" id="ov-sp" hidden>
   <div class="modal">
-    <div class="sp-pic"><img src="img/sights/gunma-4.webp" width="480" height="320" alt=""><div class="sp-mist"></div><div class="sp-t"><small id="sp-pref"></small><b id="sp-name"></b></div></div>
+    <div class="sp-pic"><img id="sp-img" src="img/sights/gunma-4.webp" width="480" height="320" alt=""><div class="sp-mist"></div><div class="sp-t"><small id="sp-pref"></small><b id="sp-name"></b></div></div>
     <p class="hint" id="sp-desc"></p>
     <div class="sp-prog" id="sp-prog"></div>
     <div class="res" id="sp-tr"></div>
@@ -618,7 +618,12 @@ const bearSeason=m=>m>=4&&m<=11;
 const HABU=new Set(['沖縄']);// ハブ：沖縄限定。沖縄出身の主人公は遭遇しない（ヒグマも同様に北海道出身は遭遇しない）
 const WILD_BASE=.55;// 生き物（いのしし・鹿・クマ・ハブ）は出にくく：スロットごとに出る確率の基本値（地元補正と掛け算）
 // 特別な都道府県：3回訪問では馴染み宿（クリア）にならず、4回目に専用コースがある
-const SPEC={'群馬':{course:'スーパー御荷鉾林道',pool:['rockfall','slide','ford','tree','rough','lost','pass'],boss:'collapse',bonus:50000}};
+const SPEC={
+ '群馬':{course:'スーパー御荷鉾林道',icon:'🌲',img:'gunma-4',pool:['rockfall','slide','ford','tree','rough','lost','pass'],boss:'collapse',bonus:50000,list:'落石・土砂崩れ・渡渉・倒木・崩落区間',kind:'林道コース',desc:'舗装は途切れ、岩ガレと崩落跡が続く林道。携帯は圏外、補給も撤退も利かない。生半可な装備では、最後の崩落区間までたどり着けない。'},
+ '福島':{course:'磐梯吾妻スカイライン',icon:'🌋',img:'fukushima-4',pool:['gas','volcstorm','hill'],boss:'boss_fukushima',bonus:50000,list:'火山ガス・天候急変・激坂・噴気の主',kind:'山岳コース',desc:'火山の噴気が道を覆い、高所では天候が急に崩れる。足を止めれば、ガスに巻かれる。'},
+ '東京':{course:'奥多摩周遊道路',icon:'🌇',img:'tokyo-4',pool:['curves','gate','hill'],boss:'boss_tokyo',bonus:50000,list:'連続カーブ・時間制限ゲート・激坂・夕闇の番人',kind:'山岳コース',desc:'終わりなく続くカーブと、日没で閉ざされるゲート。時間と体力の両方が試される。'},
+ '岐阜':{course:'乗鞍スカイライン',icon:'🏔️',img:'gifu-4',pool:['hill','slide','snow'],boss:'boss_gifu',bonus:50000,list:'激坂・土砂崩れの跡・大雪・畳平の氷竜',kind:'山岳コース',desc:'標高2,702mへ続く、森林限界を超えた登り。空気は薄く、冷え込みは容赦ない。'},
+ '秋田':{course:'鳥海ブルーライン',icon:'🌊',img:'akita-4',pool:['hill','gate','snow'],boss:'boss_akita',bonus:50000,list:'激坂・時間制限ゲート・大雪・鳥海の氷結鳥',kind:'山岳コース',desc:'海から山腹へ一気に駆け上がる登り。日が傾く前に走り切らなければ、道は閉ざされる。'}};
 const needV=p=>SPEC[p.name]?4:3;
 const isCourse=(p,stay)=>!stay&&!!SPEC[p.name]&&(S.visits[p.id]||0)===3&&!S.fam[p.id];
 const WILDK=new Set(['animal','deer','bear','brownbear','habu']);
@@ -650,6 +655,8 @@ const TACT={hill:['ギア落とし','体力-5 被害半減'],rough:['空気圧�
  bear:['クマ鈴で距離を取る','気力-8 6割で逃げ切る'],brownbear:['クマ鈴で距離を取る','気力-8 4割で逃げ切る'],habu:['そっと離れる','気力-6 5割で逃げ切る'],car:['路肩に寄る','気力-3 被害大減'],bike:['脇道へ逃げる','気力-3 被害なし'],
  wind:['ドラフティング','気力-3 被害なし'],rain:['タープで雨宿り','気力-3 体力+12'],
  rockfall:['迂回路を探す','気力-3 被害半減'],slide:['押して越える','気力-3 体力-5'],ford:['浅い所を探す','気力-3 被害大減'],tree:['担いで越える','気力-3 体力-5'],collapse:['ルート見極め','気力-4 次の漕ぎ1.5倍'],
+ gas:['口元を覆う','気力-3 被害半減'],volcstorm:['岩陰で待つ','気力-3 体力+8'],curves:['ブレーキ操作','気力-3 被害半減'],gate:['加速する','気力-3 次の漕ぎ1.5倍'],
+ boss_fukushima:['噴気をよける','気力-4 被害半減'],boss_tokyo:['ペース配分','気力-4 次の漕ぎ1.5倍'],boss_gifu:['防寒する','気力-4 体力+10'],boss_akita:['雲を待つ','気力-4 次の漕ぎ1.5倍'],
  camper1:['やんわり注意','気力-5 6割で静まる'],camper2:['管理人に伝える','気力-3 被害大減'],camper3:['耳栓をして寝る','気力-3 体力+10'],
  typhoon:['ビバーク','気力-4 体力+15'],snow:['雪を凌ぐ','気力-3 体力+10'],heat:['水分補給','気力-3 体力+10'],rival:['タグ戦略','気力-8 投稿1.5倍']};
 // 次の敵の出方（バトル中に予告する）
@@ -729,12 +736,21 @@ const ENEMY={
  ford:{name:'沢の渡渉',face:'🌊',img:'img/enemy_ford.webp',hp:40,atk:9,limit:5,stat:'wx',mp:4,hint:'路面を水が流れる。耐候力が効く。気力も削られる'},
  tree:{name:'倒木',face:'🪵',img:'img/enemy_tree.webp',hp:38,atk:8,limit:5,stat:'rough',hint:'道をふさぐ倒木。悪路走破力が効く'},
  collapse:{name:'最後の崩落区間',face:'🏔️',img:'img/enemy_collapse.webp',hp:80,atk:16,limit:7,stat:'rough',mp:8,hint:'林道最大の難所。悪路走破力が効く。気力も大きく削られる'},
+ gas:{name:'火山ガス',face:'☁️',img:'img/enemy_gas.webp',hp:44,atk:9,limit:5,stat:'wx',mp:5,hint:'耐候力が効く。吸い込むと気力を削られる'},
+ volcstorm:{name:'火山の天候急変',face:'⛈️',img:'img/enemy_volcstorm.webp',hp:46,atk:10,limit:5,stat:'wx',mp:5,hint:'耐候力が効く。急な荒天に気力を削られる'},
+ curves:{name:'連続カーブ',face:'🐍',img:'img/enemy_curves.webp',hp:42,atk:9,limit:5,stat:'cruise',hint:'巡航力が効く。急なコーナーが続く'},
+ gate:{name:'時間制限ゲート',face:'🚧',img:'img/enemy_gate.webp',hp:40,atk:9,limit:4,stat:'cruise',mp:3,hint:'巡航力が効く。時間内に抜けたい'},
+ boss_fukushima:{name:'噴気の主',face:'🌋',img:'img/enemy_boss_fukushima.webp',hp:80,atk:16,limit:7,stat:'wx',mp:8,hint:'山岳コース最大の難所。耐候力が効く。気力も大きく削られる'},
+ boss_tokyo:{name:'夕闇の番人',face:'🌇',img:'img/enemy_boss_tokyo.webp',hp:80,atk:16,limit:7,stat:'cruise',mp:8,hint:'山岳コース最大の難所。巡航力が効く。気力も大きく削られる'},
+ boss_gifu:{name:'畳平の氷竜',face:'🐉',img:'img/enemy_boss_gifu.webp',hp:80,atk:16,limit:7,stat:'climb',mp:8,hint:'山岳コース最大の難所。登坂力が効く。気力も大きく削られる'},
+ boss_akita:{name:'鳥海の氷結鳥',face:'🦅',img:'img/enemy_boss_akita.webp',hp:80,atk:16,limit:7,stat:'wx',mp:8,hint:'山岳コース最大の難所。耐候力が効く。気力も大きく削られる'},
  camper1:{name:'迷惑キャンパー（酔っ払い）',face:'🍺',img:'img/enemy_camper1.webp',hp:70,atk:15,limit:6,stat:'wx',mp:6,camper:1,hint:'耐候力が効く。大声に気力を削られる'},
  camper2:{name:'迷惑キャンパー（馬鹿騒ぎカップル）',face:'🎉',img:'img/enemy_camper2.webp',hp:70,atk:15,limit:6,stat:'wx',mp:6,camper:1,hint:'耐候力が効く。夜通しの騒ぎに気力を削られる'},
  camper3:{name:'迷惑キャンパー（うるさい犬連れ）',face:'🐕',img:'img/enemy_camper3.webp',hp:70,atk:15,limit:6,stat:'wx',mp:6,camper:1,hint:'耐候力が効く。吠え声に気力を削られる'},
  rival:{name:'ライバルインフルエンサー',face:'🤳',img:'img/enemy_rival.webp',hp:40,atk:0,limit:5,stat:'fame',fame:4,hint:'フォロワーと撮影機材で押し切る'},
 };
 // 試練ごとの成績 [遭遇, 突破, 失敗]。ツチノコ（tsuchi）は撮影チャンス
+const NEWK=new Set(['gas','volcstorm','curves','gate','boss_fukushima','boss_tokyo','boss_gifu','boss_akita']);
 const TRIAL_KEYS=[...Object.keys(ENEMY),'tsuchi'];
 const tstat=k=>S.stats.en[k]||(S.stats.en[k]=[0,0,0]);
 const trialKindsCleared=()=>TRIAL_KEYS.filter(k=>(S.stats.en[k]||[0,0,0])[1]>0).length;
@@ -811,7 +827,7 @@ function load(){try{const s=localStorage.getItem('charicamp');if(!s)return null;
   o.v=SAVE_V;LASTSAVE='';return o;}catch(e){return null;}}
 // 旅の一覧：[週の通し番号, 県番号, 写真点数(-1は遅刻), 遭遇した敵(カンマ区切り)]
 // 旅履歴の遭遇は、1文字コード（先頭に~）で保存して容量を節約する。順番は固定（追加は末尾へ）。コード化前の保存（敵名をカンマ区切り）も読める
-const TLK=['hill','animal','rough','lost','pass','deer','bear','habu','brownbear','car','bike','wind','rain','heat','snow','typhoon','rival','tsuchi','camper1','camper2','camper3','rockfall','slide','ford','tree','collapse'],TLC='abcdefghijklmnopqrstuvwxyz';
+const TLK=['hill','animal','rough','lost','pass','deer','bear','habu','brownbear','car','bike','wind','rain','heat','snow','typhoon','rival','tsuchi','camper1','camper2','camper3','rockfall','slide','ford','tree','collapse','gas','volcstorm','curves','gate','boss_fukushima','boss_tokyo','boss_gifu','boss_akita'],TLC='abcdefghijklmnopqrstuvwxyzABCDEFGH';
 const tlEnc=a=>a.length?'~'+a.map(k=>TLC[TLK.indexOf(k)]||'').join(''):'';
 const tlDec=z=>z?z[0]==='~'?[...z.slice(1)].map(c=>TLK[TLC.indexOf(c)]).filter(Boolean):z.split(','):[];
 function tlog(q){const k=(trip.late?trip.enc.slice(0,trip.i+1):trip.enc).concat(trip.tc?['tsuchi']:[]);S.tl.unshift([S.turn,trip.p.id,q,tlEnc(k)]);if(S.tl.length>TL_MAX)S.tl.length=TL_MAX;}
@@ -857,7 +873,7 @@ function rollForecast(){const c=calendar(S.turn),mi=c.mi,f={};const swing=rnd(-3
     f[p.id]={temp,wx};}
   S.forecast=f;}
 // 各県の景勝地3か所（フミヤスの大冒険ジュニアから流用）。投稿写真に訪問ごとに順番で使う
-const SIGHTS=[[["hokkaido-1","札幌市・時計台"],["hokkaido-2","大雪山"],["hokkaido-3","知床半島"]],[["aomori-1","青森市・アスパム"],["aomori-2","弘前城"],["aomori-3","白神山地"]],[["iwate-1","盛岡市・岩手銀行赤レンガ館"],["iwate-2","龍泉洞"],["iwate-3","平泉"]],[["miyagi-1","仙台市・定禅寺通"],["miyagi-2","松島"],["miyagi-3","蔵王連峰"]],[["akita-1","秋田市・赤れんが郷土館"],["akita-2","男鹿半島"],["akita-3","角館"]],[["yamagata-1","山形市・文翔館"],["yamagata-2","山寺（立石寺）"],["yamagata-3","最上川"]],[["fukushima-1","福島市・旧堀切邸"],["fukushima-2","猪苗代湖"],["fukushima-3","鶴ヶ城"]],[["ibaraki-1","水戸市・弘道館"],["ibaraki-2","霞ヶ浦"],["ibaraki-3","偕楽園"]],[["tochigi-1","宇都宮市・松が峰教会"],["tochigi-2","中禅寺湖"],["tochigi-3","日光東照宮"]],[["gunma-1","前橋市・臨江閣"],["gunma-2","赤城山"],["gunma-3","榛名山"],["gunma-4","スーパー御荷鉾林道","群馬県の藤岡市から南牧村へ続く、全長約67kmの林道。舗装とダートが混じり、岩ガレや崩落の跡も残る。"]],[["saitama-1","さいたま市・武蔵一宮氷川神社"],["saitama-2","川越"],["saitama-3","長瀞"]],[["chiba-1","千葉市・千葉ポートタワー"],["chiba-2","九十九里浜"],["chiba-3","鋸山"]],[["tokyo-1","東京・都庁"],["tokyo-2","浅草・雷門"],["tokyo-3","高尾山"]],[["kanagawa-1","横浜市・赤レンガ倉庫"],["kanagawa-2","芦ノ湖"],["kanagawa-3","鎌倉大仏"]],[["niigata-1","新潟市・萬代橋"],["niigata-2","佐渡金山跡"],["niigata-3","信濃川"]],[["toyama-1","富山市・富山城"],["toyama-2","五箇山"],["toyama-3","立山連峰"]],[["ishikawa-1","金沢市・鼓門"],["ishikawa-2","兼六園"],["ishikawa-3","能登半島"]],[["fukui-1","福井市・養浩館庭園"],["fukui-2","東尋坊"],["fukui-3","若狭湾"]],[["yamanashi-1","甲府市・山梨県庁別館"],["yamanashi-2","富士山"],["yamanashi-3","甲府盆地"]],[["nagano-1","長野市・善光寺"],["nagano-2","松本城"],["nagano-3","上高地"]],[["gifu-1","岐阜市・川原町"],["gifu-2","白川郷"],["gifu-3","長良川"]],[["shizuoka-1","静岡市・駿府城東御門"],["shizuoka-2","伊豆半島"],["shizuoka-3","浜名湖"]],[["aichi-1","名古屋市・MIRAI TOWER"],["aichi-2","名古屋城"],["aichi-3","濃尾平野"]],[["mie-1","津市・津城跡"],["mie-2","伊勢神宮"],["mie-3","志摩半島"]],[["shiga-1","大津市・浮御堂"],["shiga-2","琵琶湖"],["shiga-3","彦根城"]],[["kyoto-1","京都市・京都市役所本庁舎"],["kyoto-2","清水寺"],["kyoto-3","天橋立"]],[["osaka-1","大阪市・大阪市中央公会堂"],["osaka-2","大阪城公園"],["osaka-3","仁徳天皇陵古墳"]],[["hyogo-1","神戸市・神戸ポートタワー"],["hyogo-2","姫路城"],["hyogo-3","淡路島"]],[["nara-1","奈良市・興福寺中金堂"],["nara-2","法隆寺"],["nara-3","吉野山"]],[["wakayama-1","和歌山市・和歌山城"],["wakayama-2","高野山"],["wakayama-3","熊野古道"]],[["tottori-1","鳥取市・仁風閣"],["tottori-2","鳥取砂丘"],["tottori-3","大山"]],[["shimane-1","松江市・松江城"],["shimane-2","出雲大社"],["shimane-3","石見銀山"]],[["okayama-1","岡山市・岡山城"],["okayama-2","後楽園"],["okayama-3","瀬戸大橋"]],[["hiroshima-1","広島市・広島城"],["hiroshima-2","厳島神社"],["hiroshima-3","平和記念公園"]],[["yamaguchi-1","山口市・山口県旧県庁舎"],["yamaguchi-2","秋芳洞"],["yamaguchi-3","錦帯橋"]],[["tokushima-1","徳島市・鷲の門"],["tokushima-2","鳴門の渦潮"],["tokushima-3","大歩危・小歩危"]],[["kagawa-1","高松市・艮櫓"],["kagawa-2","栗林公園"],["kagawa-3","小豆島"]],[["ehime-1","松山市・道後温泉本館"],["ehime-2","松山城"],["ehime-3","しまなみ海道"]],[["kochi-1","高知市・高知城"],["kochi-2","四万十川"],["kochi-3","足摺岬"]],[["fukuoka-1","福岡市・浮見堂"],["fukuoka-2","筑後川"],["fukuoka-3","太宰府天満宮"]],[["saga-1","佐賀市・佐賀城本丸歴史館"],["saga-2","吉野ヶ里遺跡"],["saga-3","有明海"]],[["nagasaki-1","長崎市・眼鏡橋"],["nagasaki-2","雲仙岳"],["nagasaki-3","軍艦島"]],[["kumamoto-1","熊本市・水前寺成趣園"],["kumamoto-2","阿蘇"],["kumamoto-3","熊本城"]],[["oita-1","大分市・府内城大手門"],["oita-2","別府"],["oita-3","国東半島"]],[["miyazaki-1","宮崎市・宮崎県庁本館"],["miyazaki-2","高千穂峡"],["miyazaki-3","青島"]],[["kagoshima-1","鹿児島市・県政記念館"],["kagoshima-2","桜島"],["kagoshima-3","屋久島"]],[["okinawa-1","那覇市・守礼門"],["okinawa-2","首里城"],["okinawa-3","西表島"]]];
+const SIGHTS=[[["hokkaido-1","札幌市・時計台"],["hokkaido-2","大雪山"],["hokkaido-3","知床半島"]],[["aomori-1","青森市・アスパム"],["aomori-2","弘前城"],["aomori-3","白神山地"]],[["iwate-1","盛岡市・岩手銀行赤レンガ館"],["iwate-2","龍泉洞"],["iwate-3","平泉"]],[["miyagi-1","仙台市・定禅寺通"],["miyagi-2","松島"],["miyagi-3","蔵王連峰"]],[["akita-1","秋田市・赤れんが郷土館"],["akita-2","男鹿半島"],["akita-3","角館"],["akita-4","鳥海ブルーライン","日本海に面した海沿いから鳥海山の山腹へ登る山岳道路。秋は夜間通行止めとなり、冬は閉鎖される。"]],[["yamagata-1","山形市・文翔館"],["yamagata-2","山寺（立石寺）"],["yamagata-3","最上川"]],[["fukushima-1","福島市・旧堀切邸"],["fukushima-2","猪苗代湖"],["fukushima-3","鶴ヶ城"],["fukushima-4","磐梯吾妻スカイライン","福島市の高湯温泉から土湯峠へ続く、全長28.7kmの山岳道路。最高地点は標高1,622mで、冬は通行止めになる。"]],[["ibaraki-1","水戸市・弘道館"],["ibaraki-2","霞ヶ浦"],["ibaraki-3","偕楽園"]],[["tochigi-1","宇都宮市・松が峰教会"],["tochigi-2","中禅寺湖"],["tochigi-3","日光東照宮"]],[["gunma-1","前橋市・臨江閣"],["gunma-2","赤城山"],["gunma-3","榛名山"],["gunma-4","スーパー御荷鉾林道","群馬県の藤岡市から南牧村へ続く、全長約67kmの林道。舗装とダートが混じり、岩ガレや崩落の跡も残る。"]],[["saitama-1","さいたま市・武蔵一宮氷川神社"],["saitama-2","川越"],["saitama-3","長瀞"]],[["chiba-1","千葉市・千葉ポートタワー"],["chiba-2","九十九里浜"],["chiba-3","鋸山"]],[["tokyo-1","東京・都庁"],["tokyo-2","浅草・雷門"],["tokyo-3","高尾山"],["tokyo-4","奥多摩周遊道路","奥多摩の山を走る、全長19.7kmの都道。カーブが続き、ヒルクライムの人気コースとされる。"]],[["kanagawa-1","横浜市・赤レンガ倉庫"],["kanagawa-2","芦ノ湖"],["kanagawa-3","鎌倉大仏"]],[["niigata-1","新潟市・萬代橋"],["niigata-2","佐渡金山跡"],["niigata-3","信濃川"]],[["toyama-1","富山市・富山城"],["toyama-2","五箇山"],["toyama-3","立山連峰"]],[["ishikawa-1","金沢市・鼓門"],["ishikawa-2","兼六園"],["ishikawa-3","能登半島"]],[["fukui-1","福井市・養浩館庭園"],["fukui-2","東尋坊"],["fukui-3","若狭湾"]],[["yamanashi-1","甲府市・山梨県庁別館"],["yamanashi-2","富士山"],["yamanashi-3","甲府盆地"]],[["nagano-1","長野市・善光寺"],["nagano-2","松本城"],["nagano-3","上高地"]],[["gifu-1","岐阜市・川原町"],["gifu-2","白川郷"],["gifu-3","長良川"],["gifu-4","乗鞍スカイライン","高山市の平湯峠から畳平へ登る、延長14.4kmの山岳道路。終点の畳平は標高2,702m。一般車は入れず、バスと自転車が通る。"]],[["shizuoka-1","静岡市・駿府城東御門"],["shizuoka-2","伊豆半島"],["shizuoka-3","浜名湖"]],[["aichi-1","名古屋市・MIRAI TOWER"],["aichi-2","名古屋城"],["aichi-3","濃尾平野"]],[["mie-1","津市・津城跡"],["mie-2","伊勢神宮"],["mie-3","志摩半島"]],[["shiga-1","大津市・浮御堂"],["shiga-2","琵琶湖"],["shiga-3","彦根城"]],[["kyoto-1","京都市・京都市役所本庁舎"],["kyoto-2","清水寺"],["kyoto-3","天橋立"]],[["osaka-1","大阪市・大阪市中央公会堂"],["osaka-2","大阪城公園"],["osaka-3","仁徳天皇陵古墳"]],[["hyogo-1","神戸市・神戸ポートタワー"],["hyogo-2","姫路城"],["hyogo-3","淡路島"]],[["nara-1","奈良市・興福寺中金堂"],["nara-2","法隆寺"],["nara-3","吉野山"]],[["wakayama-1","和歌山市・和歌山城"],["wakayama-2","高野山"],["wakayama-3","熊野古道"]],[["tottori-1","鳥取市・仁風閣"],["tottori-2","鳥取砂丘"],["tottori-3","大山"]],[["shimane-1","松江市・松江城"],["shimane-2","出雲大社"],["shimane-3","石見銀山"]],[["okayama-1","岡山市・岡山城"],["okayama-2","後楽園"],["okayama-3","瀬戸大橋"]],[["hiroshima-1","広島市・広島城"],["hiroshima-2","厳島神社"],["hiroshima-3","平和記念公園"]],[["yamaguchi-1","山口市・山口県旧県庁舎"],["yamaguchi-2","秋芳洞"],["yamaguchi-3","錦帯橋"]],[["tokushima-1","徳島市・鷲の門"],["tokushima-2","鳴門の渦潮"],["tokushima-3","大歩危・小歩危"]],[["kagawa-1","高松市・艮櫓"],["kagawa-2","栗林公園"],["kagawa-3","小豆島"]],[["ehime-1","松山市・道後温泉本館"],["ehime-2","松山城"],["ehime-3","しまなみ海道"]],[["kochi-1","高知市・高知城"],["kochi-2","四万十川"],["kochi-3","足摺岬"]],[["fukuoka-1","福岡市・浮見堂"],["fukuoka-2","筑後川"],["fukuoka-3","太宰府天満宮"]],[["saga-1","佐賀市・佐賀城本丸歴史館"],["saga-2","吉野ヶ里遺跡"],["saga-3","有明海"]],[["nagasaki-1","長崎市・眼鏡橋"],["nagasaki-2","雲仙岳"],["nagasaki-3","軍艦島"]],[["kumamoto-1","熊本市・水前寺成趣園"],["kumamoto-2","阿蘇"],["kumamoto-3","熊本城"]],[["oita-1","大分市・府内城大手門"],["oita-2","別府"],["oita-3","国東半島"]],[["miyazaki-1","宮崎市・宮崎県庁本館"],["miyazaki-2","高千穂峡"],["miyazaki-3","青島"]],[["kagoshima-1","鹿児島市・県政記念館"],["kagoshima-2","桜島"],["kagoshima-3","屋久島"]],[["okinawa-1","那覇市・守礼門"],["okinawa-2","首里城"],["okinawa-3","西表島"]]];
 function renderSights(){let got=0,full=0,html='',reg='';
   PREF.forEach(p=>{const L=SIGHTS[p.id].length,n=Math.min(L,S.visits[p.id]||0);got+=n;if(n>=L)full++;
     if(p.region!==reg){reg=p.region;if(reg!==p.name)html+=`<h3 class="sg-reg">${reg}</h3>`;}
@@ -1000,8 +1016,8 @@ function renderDetail(){const p=PREF[S.sel],f=S.forecast[p.id],ti=travelInfo(p),
   if(f.wx==='rain')enemies.push('大雨');if(f.wx==='wind')enemies.push('強風');if(f.wx==='typhoon')enemies.push('台風');if(f.wx==='snow')enemies.push('大雪');if(f.wx==='heat')enemies.push('炎天下');if(p.scen>=5||ev)enemies.push('ライバル?');
   $('info').innerHTML=`<h3>${p.site}</h3><div class="hint">${p.name}・${p.region}</div>${badge}
   <div class="kv"><span>地形</span><span>${TERRAIN[p.terrain]}（${'★'.repeat(p.diff)}）</span><span>景観</span><span>${'📷'.repeat(p.scen)}</span>
-  <span>予報</span><span>${WX_J[f.wx]} ${f.temp}℃<br>${fit}</span><span>距離</span><span>${stay?'同じ場所（気力-15）'+(S.stay>=2?`<br>連泊${S.stay+1}日目：迷惑キャンパーが現れる`:S.stay>0?`<br>連泊${S.stay+1}日目：荒天になりやすい`:''):ti.d+'km<br>'+(ti.ride?(isCourse(p,stay)?'遭遇4回（林道コース）':'遭遇'+ti.enc+'回'):'自走不可')}</span>
-  <span>想定</span><span>${isCourse(p,stay)?`🌲 4回目：${SPEC[p.name].course}<br>落石・土砂崩れ・渡渉・倒木・崩落区間`:(stay?(S.stay>=2?['迷惑キャンパー']:[]).concat(enemies.filter(n=>[...(S.stay>=2?[]:['大雨','強風','台風','大雪','炎天下']),'ライバル?'].includes(n))):enemies).join('・')||'特になし'}${stay||isCourse(p,stay)?'':(()=>{const q=familiar(p);return q.f<1?`<br>${q.why}：動物に出会う確率×${q.f}`:''})()}</span>${ev?`<span>催事</span><span>${EVI}${ev.name}<br>写真+12・フォロワー×1.5</span>`:''}${S.fam[p.id]?'<span>特典</span><span>利用料半額・回復+4</span>':''}<span>利用料</span><span>${yen(fee)}</span></div>`;
+  <span>予報</span><span>${WX_J[f.wx]} ${f.temp}℃<br>${fit}</span><span>距離</span><span>${stay?'同じ場所（気力-15）'+(S.stay>=2?`<br>連泊${S.stay+1}日目：迷惑キャンパーが現れる`:S.stay>0?`<br>連泊${S.stay+1}日目：荒天になりやすい`:''):ti.d+'km<br>'+(ti.ride?(isCourse(p,stay)?'遭遇4回（'+SPEC[p.name].kind+'）':'遭遇'+ti.enc+'回'):'自走不可')}</span>
+  <span>想定</span><span>${isCourse(p,stay)?`${SPEC[p.name].icon} 4回目：${SPEC[p.name].course}<br>${SPEC[p.name].list}`:(stay?(S.stay>=2?['迷惑キャンパー']:[]).concat(enemies.filter(n=>[...(S.stay>=2?[]:['大雨','強風','台風','大雪','炎天下']),'ライバル?'].includes(n))):enemies).join('・')||'特になし'}${stay||isCourse(p,stay)?'':(()=>{const q=familiar(p);return q.f<1?`<br>${q.why}：動物に出会う確率×${q.f}`:''})()}</span>${ev?`<span>催事</span><span>${EVI}${ev.name}<br>写真+12・フォロワー×1.5</span>`:''}${S.fam[p.id]?'<span>特典</span><span>利用料半額・回復+4</span>':''}<span>利用料</span><span>${yen(fee)}</span></div>`;
   $('detail').innerHTML=`
   <div class="acts">${stay?`<button class="primary" id="go-stay">自転車旅に行く<small>${p.name}（現在地）</small></button><button disabled>輪行で旅に行く<small>${p.name}（現在地）</small></button>`:
    `<button class="primary" id="go-ride" ${ti.ride?'':'disabled'}>自転車旅に行く<small>${p.name}${ti.ride?'へ':'は遠すぎる'}</small></button>
@@ -1107,9 +1123,9 @@ function askPay(what,price,yes){
   $('ov-pay').hidden=false;$('pay-no').focus();}
 function askSpecial(p,rinko){const sp=SPEC[p.name],K=ENEMY;
   $('sp-pref').textContent=p.name;$('sp-name').textContent=sp.course;
-  $('sp-desc').textContent='舗装は途切れ、岩ガレと崩落跡が続く林道。携帯は圏外、補給も撤退も利かない。生半可な装備では、最後の崩落区間までたどり着けない。';
+  $('sp-desc').textContent=sp.desc;$('sp-img').src='img/sights/'+sp.img+'.webp';
   $('sp-prog').innerHTML=['<span class="b">ボス</span>','<span>区間3</span>','<span>区間2</span>','<span>区間1</span>'].join('<i>←</i>');
-  $('sp-tr').innerHTML='<b>登場予定の試練</b><br>'+sp.pool.map(k=>K[k].name.replace('土砂崩れの跡','土砂崩れ')).join('・')+'<br><b>ボス：</b>？？？';
+  $('sp-tr').innerHTML='<b>登場予定の試練</b><br>'+[...new Set(sp.pool)].map(k=>K[k].name.replace('土砂崩れの跡','土砂崩れ')).join('・')+'<br><b>ボス：</b>？？？';
   $('sp-no').onclick=()=>{$('ov-sp').hidden=true;};
   $('sp-yes').onclick=()=>{$('ov-sp').hidden=true;askGo(p,rinko,true);};$('ov-sp').hidden=false;$('sp-yes').focus();}
 function askGo(p,rinko,skipSp){if(!skipSp&&p.id!==S.loc&&isCourse(p,false))return askSpecial(p,rinko);const ti=travelInfo(p),f=S.forecast[p.id],nm=(l,id)=>(l.find(x=>x.id===id)||{}).name,cl=CLOTHES.find(c=>c.id===S.cloth);
@@ -1124,7 +1140,7 @@ function renderTrials(){let w=0,f=0;for(const k of TRIAL_KEYS){const v=S.stats.e
   $('ach-sum').textContent=`突破 ${w}回 ／ 失敗 ${f}回`;
   const row=k=>{const v=S.stats.en[k]||[0,0,0],z=v[0]?'':' z',cols=`<div class="num${z}">${v[0]}</div><div class="num${z}">${v[1]}</div><div class="num${z}${v[2]?' bad':''}">${v[2]}</div>`;
     if(k==='tsuchi'){const got=v[1]>0;return `<div class="n${got?'':' leg'}"><img loading="lazy" decoding="async" src="img/${got?'tsuchinoko':'tsuchinoko_unknown'}.webp" alt="">${got?'ツチノコ':'伝説の生き物'}</div>${cols}`;}
-    const e=ENEMY[k];return `<div class="n"><img loading="lazy" decoding="async" src="${e.img}" alt="" onerror="this.style.display='none'">${e.name.replace('インフルエンサー','').replace('迷惑キャンパー','迷惑')}</div>${cols}`;};
+    if(NEWK.has(k)&&!v[0])return '';const e=ENEMY[k];return `<div class="n"><img loading="lazy" decoding="async" src="${e.img}" alt="" onerror="this.style.display='none'">${e.name.replace('インフルエンサー','').replace('迷惑キャンパー','迷惑')}</div>${cols}`;};
   $('achlist').innerHTML='<div class="th">試練</div><div class="th">遭遇</div><div class="th">突破</div><div class="th">失敗</div>'+TRIAL_KEYS.map(row).join('');}
 function showLogSub(){$('p-trip').hidden=LOGSUB!=='trip';$('p-sight').hidden=LOGSUB!=='sight';$('p-ach').hidden=LOGSUB!=='ach';if(LOGSUB==='ach')renderTrials();document.querySelectorAll('#log-tabs button').forEach(x=>x.setAttribute('aria-selected',x.dataset.sub===LOGSUB));if(LOGSUB==='sight')renderSights();}
 $('log-tabs').onclick=e=>{const b=e.target.closest('button[data-sub]');if(!b)return;LOGSUB=b.dataset.sub;showLogSub();};
@@ -1221,8 +1237,8 @@ const isRival=()=>B.kind==='rival';
 function kmOf(v){const L=isRival()?400:trip.sec;return Math.max(0,v)/B.max*L;}
 function fmtD(v){const x=kmOf(v);return isRival()?Math.round(x)+'m':(x>=10?Math.round(x):x.toFixed(1))+'km';}
 const LEFT=()=>isRival()?'撮影スポットまで':'ゴールまで';
-const HIT={hill:'坂がきつい',animal:'いのししに追いつかれ、突進された',pass:'長い登りに脚を削られた',snow:'吹雪に視界を奪われた',heat:'炎天下で頭がくらくらする',rough:'荒れたダートにハンドルを取られた',lost:'藪に埋もれた道を見失いかけた',deer:'鹿が飛び出して急ブレーキ。逃げ遅れた',bear:'ツキノワグマに迫られた！全力で逃げる',brownbear:'ヒグマに迫られた！必死で逃げる',habu:'ハブに咬まれかけた！慌てて逃げる',car:'暴走車に幅寄せされた',bike:'暴走バイクが横をかすめた',wind:'向かい風に押し戻された',rain:'冷たい雨に体温を奪われた',typhoon:'暴風雨にあおられた',rockfall:'落ちてきた岩にかすめられた',slide:'ぬかるんだ土砂にタイヤを取られた',ford:'冷たい水に足を取られた',tree:'倒木の枝に引っかかった',collapse:'崩れた路肩に足を取られた',camper1:'酒臭い大声に絡まれた',camper2:'夜通しの馬鹿騒ぎで眠れない',camper3:'犬の吠え声が鳴りやまない'};
-function tacOK(){const k=B.kind;return k==='hill'?S.hp>5:k==='animal'?S.mp>=5:k==='pass'||k==='heat'||k==='rough'||k==='lost'||k==='deer'||k==='car'||k==='bike'?S.mp>=3:k==='bear'||k==='brownbear'?S.mp>=8:k==='habu'?S.mp>=6:k==='rival'?S.mp>=8:k==='rain'||k==='snow'?!!(S.gear.tarp||S.gear.shelter)&&S.mp>=3:k==='typhoon'?!!S.gear.shelter&&S.mp>=4:k==='wind'?S.mp>=3:k==='rockfall'||k==='ford'?S.mp>=3:k==='slide'||k==='tree'?S.mp>=3&&S.hp>5:k==='collapse'?S.mp>=4:k==='camper1'?S.mp>=5:k==='camper2'||k==='camper3'?S.mp>=3:true;}
+const HIT={hill:'坂がきつい',animal:'いのししに追いつかれ、突進された',pass:'長い登りに脚を削られた',snow:'吹雪に視界を奪われた',heat:'炎天下で頭がくらくらする',rough:'荒れたダートにハンドルを取られた',lost:'藪に埋もれた道を見失いかけた',deer:'鹿が飛び出して急ブレーキ。逃げ遅れた',bear:'ツキノワグマに迫られた！全力で逃げる',brownbear:'ヒグマに迫られた！必死で逃げる',habu:'ハブに咬まれかけた！慌てて逃げる',car:'暴走車に幅寄せされた',bike:'暴走バイクが横をかすめた',wind:'向かい風に押し戻された',rain:'冷たい雨に体温を奪われた',typhoon:'暴風雨にあおられた',rockfall:'落ちてきた岩にかすめられた',slide:'ぬかるんだ土砂にタイヤを取られた',ford:'冷たい水に足を取られた',tree:'倒木の枝に引っかかった',collapse:'崩れた路肩に足を取られた',gas:'喉が焼けるガスを吸い込んだ',volcstorm:'急な風雨と雷に打たれた',curves:'急なコーナーで体勢を崩した',gate:'閉まりかけたゲートに焦らされた',boss_fukushima:'噴き出したガスに視界を奪われた',boss_tokyo:'夕闇に紛れた遮断棒に行く手を阻まれた',boss_gifu:'氷の息吹に体温を奪われた',boss_akita:'凍てつく風に翼で押し戻された',camper1:'酒臭い大声に絡まれた',camper2:'夜通しの馬鹿騒ぎで眠れない',camper3:'犬の吠え声が鳴りやまない'};
+function tacOK(){const k=B.kind;return k==='hill'?S.hp>5:k==='animal'?S.mp>=5:k==='pass'||k==='heat'||k==='rough'||k==='lost'||k==='deer'||k==='car'||k==='bike'?S.mp>=3:k==='bear'||k==='brownbear'?S.mp>=8:k==='habu'?S.mp>=6:k==='rival'?S.mp>=8:k==='rain'||k==='snow'?!!(S.gear.tarp||S.gear.shelter)&&S.mp>=3:k==='typhoon'?!!S.gear.shelter&&S.mp>=4:k==='wind'?S.mp>=3:k==='rockfall'||k==='ford'||k==='gas'||k==='volcstorm'||k==='curves'||k==='gate'?S.mp>=3:k==='boss_fukushima'||k==='boss_tokyo'||k==='boss_gifu'||k==='boss_akita'?S.mp>=4:k==='slide'||k==='tree'?S.mp>=3&&S.hp>5:k==='collapse'?S.mp>=4:k==='camper1'?S.mp>=5:k==='camper2'||k==='camper3'?S.mp>=3:true;}
 function playerPower(){const st=bikeStats();if(B.kind==='rival')return 8+FL()/8+st.photo/2;return st[B.e.stat]*4;}
 function renderBattle(){const pr=Math.min(100,Math.max(0,(1-B.hp/B.max)*100));$('bt-hp').style.width=pr+'%';$('bt-bike').style.left=pr+'%';$('bt-bike').src=isRival()?'img/part_cam.webp':'img/icon_bike_'+S.bike+'.webp';$('bt-goal').src=isRival()?'img/part_tripod.webp':'img/icon_g_sh2.webp';
   $('bt-km').innerHTML=`<span class="bt-km">${B.hp<=0?(isRival()?'撮影スポットに到着！':'区間ゴール！'):LEFT()+' '+fmtD(B.hp)}</span><span class="bt-km">日没まで あと${B.limit-B.turn+1}時間</span>`;
@@ -1245,7 +1261,7 @@ function renderBattle(){const pr=Math.min(100,Math.max(0,(1-B.hp/B.max)*100));$(
     ['food','補給食','体力+25 気+10'],...(S.food2?[['food2','長野県の補給食',`体力+${NAGANO.hp} 気力+${NAGANO.mp}`]]:[]),
     ['rinko',`輪行 ${yen(ti.rinko)}`,trip.course?'林道は自走のみ':'電車で飛ばす']];
   // 作戦アイコンは tac_敵名.webp（ヒグマはツキノワグマと共用）
-  const TACI={brownbear:'tac_bear',habu:'tac_deer'};
+  const TACI={brownbear:'tac_bear',habu:'tac_deer',gas:'tac_heat',volcstorm:'tac_typhoon',curves:'tac_hill',gate:'tac_wind',boss_fukushima:'tac_collapse',boss_tokyo:'tac_collapse',boss_gifu:'tac_snow',boss_akita:'tac_collapse'};
   const RC={push:'atk',post:'atk',kiai:'gold',rest:'heal',food:'heal',food2:'heal',guard:'def',tactic:'def',rinko:'sub',escape:'sub'};
   const ic={tactic:TACI[B.kind]||'tac_'+B.kind,guard:'cmd_guard',food:'icon_food',food2:'icon_food_nagano'};
   $('bt-cmds').innerHTML=cmds.map(([k,l,s])=>`<button data-cmd="${k}" class="${ic[k]?'ic ':''}c-${RC[k]||'nrm'}${k==='food2'?' wide':''}" ${k==='kiai'&&S.mp<20||k==='rinko'&&(S.money<ti.rinko||trip.course)||k==='push'&&S.hp<=15||k==='walk'&&S.hp<=8||k==='food'&&S.food<=0||k==='tactic'&&!tacOK()?'disabled':''}>${ic[k]?`<img src="img/${ic[k]}.webp" width="30" height="30" alt="" onerror="this.onerror=null;this.src='img/icon_food.webp'"><span>${l}<small>${s}</small></span>`:`${l}<small>${s}</small>`}</button>`).join('');}
@@ -1281,6 +1297,11 @@ function cmd(k){if(!B||!trip||$('ov-battle').hidden||B.hp<=0||trip.late)return;
     else if(kd==='slide'){S.mp-=3;S.hp-=5;dmg=Math.round(playerPower()*.6*mult);B.charge=0;B.cut=.5;t=`自転車を押して、土砂を越えた。${fmtD(dmg)}進んだ`;}
     else if(kd==='ford'){S.mp-=3;B.cut=.2;dmg=Math.round(playerPower()*.4*mult);B.charge=0;t=`流れの浅い所を見つけて渡った。${fmtD(dmg)}進んだ`;}
     else if(kd==='tree'){S.mp-=3;S.hp-=5;dmg=Math.round(playerPower()*.6*mult);B.charge=0;B.cut=.5;t=`荷物を降ろして、自転車を担いで倒木を越えた。${fmtD(dmg)}進んだ`;}
+    else if(kd==='gas'||kd==='boss_fukushima'){S.mp-=kd==='gas'?3:4;dmg=Math.round(playerPower()*.4*mult);B.charge=0;B.cut=.5;t=`タオルで口と鼻を覆って、ガスの中を抜けた。${fmtD(dmg)}進んだ`;}
+    else if(kd==='volcstorm'){S.mp-=3;B.cut=.3;S.hp=Math.min(100,S.hp+8);t='岩陰に身を寄せて、荒天をやり過ごした。体力+8';}
+    else if(kd==='curves'){S.mp-=3;dmg=Math.round(playerPower()*.4*mult);B.charge=0;B.cut=.5;t=`前後のブレーキを使い分けて、コーナーを抜けた。${fmtD(dmg)}進んだ`;}
+    else if(kd==='gate'||kd==='boss_tokyo'||kd==='boss_akita'){S.mp-=kd==='gate'?3:4;B.cut=.3;B.charge=Math.max(B.charge||0,1.5);t=kd==='boss_akita'?'雲の切れ間を待って、一気に踏み出す構えを取った。次の漕ぎ1.5倍':'ペースを整えて、一気に踏み込む構えを取った。次の漕ぎ1.5倍';}
+    else if(kd==='boss_gifu'){S.mp-=4;B.cut=.5;S.hp=Math.min(100,S.hp+10);t='ウィンドブレーカーを着込んで、息を整えた。体力+10';}
     else if(kd==='collapse'){S.mp-=4;B.cut=.3;B.charge=Math.max(B.charge||0,1.5);t='崩れた路面をよく見て、通れるルートを見極めた。次の漕ぎ1.5倍';}
     else if(kd==='camper1'){S.mp-=5;if(Math.random()<.6){B.cut=0;dmg=6;t=`穏やかに声をかけると、酔っ払いはおとなしく寝床へ帰っていった。${fmtD(dmg)}進んだ`;}else t='注意したが、酔っ払いに絡まれてしまった…';}
     else if(kd==='camper2'){S.mp-=3;B.cut=.2;dmg=Math.round(playerPower()*.4*mult);B.charge=0;t=`管理人に連絡すると、騒ぎがだいぶ静まった。${fmtD(dmg)}進んだ`;}
