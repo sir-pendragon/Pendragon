@@ -149,6 +149,12 @@ test('randonneur sits between fold and tigrav: order, art exists, customizable, 
  assert.equal(ids.indexOf('rando'),ids.indexOf('tigrav')-1);assert.ok(f.price<u.price&&u.price<t.price);assert.ok(!u.fold);for(const k of ['climb','rough','cruise','wx'])assert.ok(u[k]<=t[k],k);
  for(const f2 of ['img/bike_rando.webp','img/icon_bike_rando.webp'])assert.ok(fs.existsSync(path.join(__dirname,'..',f2)),f2);
  q.S.bike='rando';assert.equal(q.bikeStats().wx,8);q.renderShop();q.renderForge();});
+test('components: three tiers, stats add up, not customizable, only one survives load',c=>{const {q}=c;const P=id=>q.PARTS.find(x=>x.id===id);
+ const a=P('compm'),b=P('comph'),d=P('compi');assert.ok(a&&b&&d);assert.ok(a.price<b.price&&b.price<d.price);for(const k of ['climb','cruise'])assert.ok(a[k]<b[k]&&b[k]<d[k],k);
+ q.newGame(q.PREF[0].id);q.S.bike='mama';const base=q.bikeStats();q.S.owned.parts=['compm','comph','compi'];q.S.parts=['compi'];const st=q.bikeStats();assert.equal(st.climb,base.climb+d.climb);assert.equal(st.cruise,base.cruise+d.cruise);
+ q.S.plus={compi:3};assert.equal(q.bikeStats().climb,st.climb,'no customization');q.S.plus={};
+ q.S.parts=['compm','comph','compi'];q.save();const o=q.load();assert.equal(o.parts.filter(x=>x.startsWith('comp')).length,1);
+ q.S.money=1e7;q.renderShop();q.renderForge();});
 const summary={file:filename,passed:results.filter(x=>x.ok).length,failed:results.filter(x=>!x.ok).length,results};
 if(process.argv[3])fs.writeFileSync(process.argv[3],JSON.stringify(summary,null,2));
 console.log(JSON.stringify({passed:summary.passed,failed:summary.failed}));process.exitCode=summary.failed?1:0;
