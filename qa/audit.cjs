@@ -137,6 +137,10 @@ test('rinko never skips every trial: every prefecture reached by rinko has at le
  for(const wx of q.WXL)for(const p of q.PREF)for(let k=0;k<12;k++){clear(c);q.newGame(12);q.S.turn=53;q.S.money=1e8;q.S.forecast=Object.fromEntries(q.PREF.map(x=>[x.id,{temp:15,wx}]));
   if(p.id===q.S.loc)continue;q.startTrip(p,true);if(!c.$('ov-storm').hidden){c.$('st-stay').click();c.$('ov-storm').hidden=true;}n++;if(q.trip.enc.filter(e=>e!=='rival').length<1)zero++;}
  assert.ok(n>1000);assert.equal(zero,0);});
+test('used road bike sits between cross and road: price/stat order, art exists, buyable and usable in battle',c=>{const {q}=c;const ids=q.BIKES.map(b=>b.id);const u=q.BIKES.find(b=>b.id==='uroad'),r=q.BIKES.find(b=>b.id==='road'),x=q.BIKES.find(b=>b.id==='cross');
+ assert.ok(u&&ids.indexOf('uroad')===ids.indexOf('road')-1);assert.ok(x.price<u.price&&u.price<r.price);for(const k of ['climb','rough','cruise','wx'])assert.ok(u[k]>=x[k]-3&&u[k]<=r[k],k);
+ for(const f of ['img/bike_uroad.webp','img/icon_bike_uroad.webp'])assert.ok(fs.existsSync(path.join(__dirname,'..',f)),f);
+ q.S.money=1e8;q.S.bike='uroad';assert.equal(q.bikeStats().cruise,7);q.renderShop();assert.ok(c.$('shop-bike')?c.$('shop-bike').textContent.includes('中古ロードバイク'):true);});
 const summary={file:filename,passed:results.filter(x=>x.ok).length,failed:results.filter(x=>!x.ok).length,results};
 if(process.argv[3])fs.writeFileSync(process.argv[3],JSON.stringify(summary,null,2));
 console.log(JSON.stringify({passed:summary.passed,failed:summary.failed}));process.exitCode=summary.failed?1:0;
