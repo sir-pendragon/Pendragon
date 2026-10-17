@@ -145,6 +145,10 @@ test('used cross bike sits between mama and cross: order, art exists, usable',c=
  assert.equal(ids.indexOf('ucross'),ids.indexOf('cross')-1);assert.ok(m.price<u.price&&u.price<x.price);for(const k of ['climb','rough','cruise','wx'])assert.ok(u[k]>=m[k]&&u[k]<=x[k],k);
  for(const f of ['img/bike_ucross.webp','img/icon_bike_ucross.webp'])assert.ok(fs.existsSync(path.join(__dirname,'..',f)),f);
  q.S.bike='ucross';assert.equal(q.bikeStats().cruise,4);q.renderShop();});
+test('randonneur sits between fold and tigrav: order, art exists, customizable, not foldable',c=>{const {q}=c;const ids=q.BIKES.map(b=>b.id),u=q.BIKES.find(b=>b.id==='rando'),f=q.BIKES.find(b=>b.id==='fold'),t=q.BIKES.find(b=>b.id==='tigrav');
+ assert.equal(ids.indexOf('rando'),ids.indexOf('tigrav')-1);assert.ok(f.price<u.price&&u.price<t.price);assert.ok(!u.fold);for(const k of ['climb','rough','cruise','wx'])assert.ok(u[k]<=t[k],k);
+ for(const f2 of ['img/bike_rando.webp','img/icon_bike_rando.webp'])assert.ok(fs.existsSync(path.join(__dirname,'..',f2)),f2);
+ q.S.bike='rando';assert.equal(q.bikeStats().wx,8);q.renderShop();q.renderForge();});
 const summary={file:filename,passed:results.filter(x=>x.ok).length,failed:results.filter(x=>!x.ok).length,results};
 if(process.argv[3])fs.writeFileSync(process.argv[3],JSON.stringify(summary,null,2));
 console.log(JSON.stringify({passed:summary.passed,failed:summary.failed}));process.exitCode=summary.failed?1:0;
