@@ -141,6 +141,10 @@ test('used road bike sits between cross and road: price/stat order, art exists, 
  assert.ok(u&&ids.indexOf('uroad')===ids.indexOf('road')-1);assert.ok(x.price<u.price&&u.price<r.price);for(const k of ['climb','rough','cruise','wx'])assert.ok(u[k]>=x[k]-3&&u[k]<=r[k],k);
  for(const f of ['img/bike_uroad.webp','img/icon_bike_uroad.webp'])assert.ok(fs.existsSync(path.join(__dirname,'..',f)),f);
  q.S.money=1e8;q.S.bike='uroad';assert.equal(q.bikeStats().cruise,7);q.renderShop();assert.ok(c.$('shop-bike')?c.$('shop-bike').textContent.includes('中古ロードバイク'):true);});
+test('used cross bike sits between mama and cross: order, art exists, usable',c=>{const {q}=c;const ids=q.BIKES.map(b=>b.id),u=q.BIKES.find(b=>b.id==='ucross'),m=q.BIKES.find(b=>b.id==='mama'),x=q.BIKES.find(b=>b.id==='cross');
+ assert.equal(ids.indexOf('ucross'),ids.indexOf('cross')-1);assert.ok(m.price<u.price&&u.price<x.price);for(const k of ['climb','rough','cruise','wx'])assert.ok(u[k]>=m[k]&&u[k]<=x[k],k);
+ for(const f of ['img/bike_ucross.webp','img/icon_bike_ucross.webp'])assert.ok(fs.existsSync(path.join(__dirname,'..',f)),f);
+ q.S.bike='ucross';assert.equal(q.bikeStats().cruise,4);q.renderShop();});
 const summary={file:filename,passed:results.filter(x=>x.ok).length,failed:results.filter(x=>!x.ok).length,results};
 if(process.argv[3])fs.writeFileSync(process.argv[3],JSON.stringify(summary,null,2));
 console.log(JSON.stringify({passed:summary.passed,failed:summary.failed}));process.exitCode=summary.failed?1:0;
