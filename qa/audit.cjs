@@ -88,7 +88,7 @@ test('special prefecture (Gunma): 3 visits are not clear, the 4th is the forest-
  assert.ok(g>=0&&other>=0);assert.equal(q.needV(q.PREF[g]),4);assert.equal(q.needV(q.PREF[other]),3);
  clear(c);q.newGame(12);q.S.money=1e8;q.S.visits[g]=3;q.S.visits[other]=3;q.S.fam[g]=false;
  q.save();let r=q.load();assert.equal(r.fam[g],false,'3 visits do not make Gunma a familiar inn');assert.equal(r.fam[other],true);
- q.S.visits[g]=4;q.save();r=q.load();assert.equal(r.fam[g],true,'4 visits do');
+ q.S.visits[g]=4;q.S.stats.en.collapse=[1,1,0];q.save();r=q.load();assert.equal(r.fam[g],true,'4 visits do (after meeting the boss)');
  q.newGame(12);q.S.money=1e8;q.S.visits[g]=2;assert.equal(q.isCourse(q.PREF[g],false),false);q.S.visits[g]=3;assert.equal(q.isCourse(q.PREF[g],false),true);assert.equal(q.isCourse(q.PREF[other],false),false);
  q.S.loc=other;q.askGo(q.PREF[g],false);assert.equal(c.$('ov-sp').hidden,false,'TOP表示');assert.ok(c.$('sp-tr').innerHTML.includes('？？？'));assert.equal(c.$('ov-go').hidden,true);c.$('sp-yes').click();assert.equal(c.$('ov-sp').hidden,true);assert.equal(c.$('ov-go').hidden,false);c.$('ov-go').hidden=true;q.S.visits[g]=2;c.$('ov-sp').hidden=true;q.askGo(q.PREF[g],false);assert.equal(c.$('ov-sp').hidden,true);c.$('ov-go').hidden=true;q.S.visits[g]=3;
  const pool=new Set(['rockfall','slide','ford','tree','rough','lost','pass']);
@@ -121,6 +121,13 @@ test('special prefectures: the 4th-visit course also starts when staying at the 
    q.startTrip(p,false);assert.equal(q.trip.course,true,nm+wx);assert.equal(q.trip.enc.length,4,nm+wx);assert.equal(q.trip.enc[3],q.SPEC[nm].boss,nm+wx);}
   // 3回目までの連泊は従来どおり（コースにならない）
   clear(c);q.newGame(p.id);q.S.visits[p.id]=2;q.S.loc=p.id;assert.equal(q.isCourse(p,true),false,nm);}});
+test('rescue: a special prefecture cleared without ever meeting its boss goes back to 3/4 on load; a real clear stays',c=>{const {q,w}=c;
+ const T=q.PREF.findIndex(x=>x.name==='東京'),F=q.PREF.findIndex(x=>x.name==='福島'),N=q.PREF.findIndex(x=>x.name==='北海道');
+ const s=JSON.parse(q.pack());s.visits[T]=4;s.visits[F]=4;s.visits[N]=3;s.stats.en=s.stats.en||{};s.stats.en.boss_fukushima=[1,1,0];delete s.stats.en.boss_tokyo;
+ w.localStorage.setItem('charicamp',JSON.stringify(s));q.S=q.load();
+ assert.equal(q.S.fam[T],false,'Tokyo rescued');assert.equal(q.S.visits[T],3);assert.equal(q.isCourse(q.PREF[T],true),true,'course opens');
+ assert.equal(q.S.fam[F],true,'Fukushima had its boss, stays cleared');assert.equal(q.S.visits[F],4);assert.equal(q.S.fam[N],true,'ordinary prefecture untouched');
+ w.localStorage.setItem('charicamp',q.pack());q.S=q.load();assert.equal(q.S.fam[T],false,'idempotent');});
 const summary={file:filename,passed:results.filter(x=>x.ok).length,failed:results.filter(x=>!x.ok).length,results};
 if(process.argv[3])fs.writeFileSync(process.argv[3],JSON.stringify(summary,null,2));
 console.log(JSON.stringify({passed:summary.passed,failed:summary.failed}));process.exitCode=summary.failed?1:0;

@@ -816,6 +816,10 @@ function load(){try{const s=localStorage.getItem('charicamp');if(!s)return null;
   o.home=num(o.home,12,0,46);o.loc=num(o.loc,o.home,0,46);o.sel=o.loc;
   o.stay=num(o.stay,0,0,99);
   o.visits=Array.from({length:47},(_,i)=>num(o.visits&&o.visits[i],0,0,9999));o.fam=o.visits.map((v,i)=>v>=needV(PREF[i])||!!(o.fam&&o.fam[i]));// v3以前の保存にはfamがある
+  // 救済：特別コースの5県（群馬・福島・東京・岐阜・秋田）で、ボスに一度も会わないまま馴染み宿になった県（連泊で専用コースを飛ばしてしまった不具合など）は、訪問3回に戻して4回目のコースに挑めるようにする
+  {const en=o.stats&&typeof o.stats==='object'&&o.stats.en&&typeof o.stats.en==='object'?o.stats.en:{};
+   for(const [nm,bk] of [['群馬','collapse'],['福島','boss_fukushima'],['東京','boss_tokyo'],['岐阜','boss_gifu'],['秋田','boss_akita']]){const i=PREF.findIndex(x=>x.name===nm);
+    if(i>=0&&o.fam[i]&&!(Array.isArray(en[bk])&&+en[bk][0]>0)){o.fam[i]=false;o.visits[i]=Math.min(o.visits[i],3);}}}
   o.owned=o.owned&&typeof o.owned==='object'?o.owned:{};
   o.owned.bikes=(Array.isArray(o.owned.bikes)?o.owned.bikes:[]).filter(x=>has(BIKES,x));if(!o.owned.bikes.includes('mama'))o.owned.bikes.unshift('mama');
   o.owned.cloth=(Array.isArray(o.owned.cloth)?o.owned.cloth:[]).filter(x=>has(CLOTHES,x));if(!o.owned.cloth.includes('plain'))o.owned.cloth.unshift('plain');
