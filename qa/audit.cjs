@@ -2,7 +2,7 @@ const fs=require('node:fs'),path=require('node:path'),assert=require('node:asser
 const {JSDOM,VirtualConsole}=require('jsdom');
 const filename=path.resolve(process.argv[2]||path.join(__dirname,'..','index.html'));
 const html=fs.readFileSync(filename,'utf8');
-const expose=`window.qa={newGame,render,renderMap,renderBattle,renderShop,renderForge,renderDetail,renderList,renderTrials,renderSights,load,save,pack,snap,advance,calendar,rollForecast,startTrip,stayWx,startBattle,cmd,endTrip,endTrip2,nextEncounter,tsuchinoko,tcRate,bikeStats,gearFx,travelInfo,restHome,yearEval,eventAt,stoveOn,plv,rkLv,PREF,ENEMY,GEAR_ITEMS,PARTS,BIKES,CLOTHES,WXL,TRIAL_KEYS,AUD,tcRate,playBGM,bgmApply,
+const expose=`window.qa={needV,isCourse,newGame,render,renderMap,renderBattle,renderShop,renderForge,renderDetail,renderList,renderTrials,renderSights,load,save,pack,snap,advance,calendar,rollForecast,startTrip,stayWx,startBattle,cmd,endTrip,endTrip2,nextEncounter,tsuchinoko,tcRate,bikeStats,gearFx,travelInfo,restHome,yearEval,eventAt,stoveOn,plv,rkLv,PREF,ENEMY,GEAR_ITEMS,PARTS,BIKES,CLOTHES,WXL,TRIAL_KEYS,AUD,tcRate,playBGM,bgmApply,
 get S(){return S},set S(v){S=v},get B(){return B},get trip(){return trip},set trip(v){trip=v},get TS(){return TS},get inTrip(){return INTRIP},get lastSave(){return LASTSAVE},
 quiet(){render=()=>save();renderBattle=()=>{};playSE=()=>{};playBGM=()=>{};}};`;
 const js=html.match(/<script>([\s\S]*?)<\/script>/)[1];
@@ -84,7 +84,22 @@ test('third consecutive stay brings one nuisance camper (any weather), replacing
  run(5,'rain',0.5);c.$('st-stay').click();assert.ok(q.ENEMY[q.trip.enc[0]].camper,'fourth stay too');
  run(1,'sun',0.5);assert.equal(c.$('ov-storm').hidden,true,'second stay on a sunny day has no trial');
  run(2,'sun',0.5);c.$('st-home').click();assert.equal(q.S.stay,0,'going home resets');});
-test('trial collection hides undiscovered legend and names it after success',c=>{c.q.renderTrials();assert.equal(c.q.TRIAL_KEYS.length,21);assert.ok(c.$('p-ach').textContent.includes('伝説の生き物'));c.q.S.stats.en.tsuchi=[1,1,0];c.q.renderTrials();assert.ok(c.$('p-ach').textContent.includes('ツチノコ'));});
+test('special prefecture (Gunma): 3 visits are not clear, the 4th is the forest-road course (3 sections + boss), then clear with +50k followers',c=>{const {q,w}=c;q.quiet();const g=q.PREF.findIndex(x=>x.name==='群馬'),other=q.PREF.findIndex(x=>x.name==='栃木');
+ assert.ok(g>=0&&other>=0);assert.equal(q.needV(q.PREF[g]),4);assert.equal(q.needV(q.PREF[other]),3);
+ clear(c);q.newGame(12);q.S.money=1e8;q.S.visits[g]=3;q.S.visits[other]=3;q.S.fam[g]=false;
+ q.save();let r=q.load();assert.equal(r.fam[g],false,'3 visits do not make Gunma a familiar inn');assert.equal(r.fam[other],true);
+ q.S.visits[g]=4;q.save();r=q.load();assert.equal(r.fam[g],true,'4 visits do');
+ q.newGame(12);q.S.money=1e8;q.S.visits[g]=2;assert.equal(q.isCourse(q.PREF[g],false),false);q.S.visits[g]=3;assert.equal(q.isCourse(q.PREF[g],false),true);assert.equal(q.isCourse(q.PREF[other],false),false);
+ const pool=new Set(['rockfall','slide','ford','tree','rough','lost','pass']);
+ for(let i=0;i<30;i++){clear(c);q.newGame(12);q.S.money=1e8;q.S.visits[g]=3;q.S.forecast=Object.fromEntries(q.PREF.map(x=>[x.id,{temp:15,wx:'sun'}]));q.startTrip(q.PREF[g],false);assert.equal(q.trip.course,true);assert.equal(q.trip.enc.length,4);assert.equal(q.trip.enc[3],'collapse');assert.ok(q.trip.enc.slice(0,3).every(k=>pool.has(k)),q.trip.enc.join());}
+ // 輪行（電車で区間を飛ばす）は林道コースでは使えない
+ clear(c);q.newGame(12);q.S.money=1e6;batt(c,'collapse');q.trip.course=true;const m0=q.S.money;q.cmd('rinko');assert.equal(q.S.money,m0);assert.equal(q.B.hp>0,true);
+ // クリア：馴染み宿になり、フォロワー+5万人以上
+ clear(c);q.newGame(12);q.S.money=1e6;q.S.visits[g]=3;q.S.loc=g;q.trip={p:q.PREF[g],enc:[],i:0,late:false,stay:false,course:true};q.snap();const f0=q.S.fame;q.endTrip();c.$('camp-btns').querySelector('button').click();
+ assert.equal(q.S.visits[g],4);assert.equal(q.S.fam[g],true);assert.ok(q.S.fame-f0>=50000,'bonus '+(q.S.fame-f0));
+ // 名所図鑑：群馬だけ4枚
+ q.renderSights();assert.ok(c.$('p-sight').textContent.includes('スーパー御荷鉾林道')||c.$('sightbook').textContent.includes('スーパー御荷鉾林道'));});
+test('trial collection hides undiscovered legend and names it after success',c=>{c.q.renderTrials();assert.equal(c.q.TRIAL_KEYS.length,26);assert.ok(c.$('p-ach').textContent.includes('伝説の生き物'));c.q.S.stats.en.tsuchi=[1,1,0];c.q.renderTrials();assert.ok(c.$('p-ach').textContent.includes('ツチノコ'));});
 test('all tent and tarp combinations render finite SVG positions',c=>{const {q}=c;for(const t of [1,36])for(const sh of [null,'sh1','sh2','sh3','sh4','sh5','sh6','sh7'])for(const tp of [null,'tp1','tp2','tp3','tp4']){q.S.turn=t;q.S.gear={fire:sh==='sh5'?'fire4':'fire1',shelter:sh,tarp:tp};q.renderMap();assert.equal(/NaN|Infinity/.test(c.$('map').innerHTML),false,sh+' / '+tp);}});
 test('event camp registers festival and uses event image',c=>{const {q}=c;q.S.turn=2;q.S.loc=1;q.S.sel=1;const p=q.PREF[1];q.trip={p,enc:[],ev:q.eventAt(2,1),i:0,late:false,stay:true};assert.ok(q.trip.ev);q.snap();q.endTrip2({});assert.equal(q.S.stats.ev,1);assert.ok(c.$('result-box').querySelector('img').src.includes('ev_aomori_sakura'));});
 test('all enemies expose the expected command set',c=>{for(const kind of Object.keys(c.q.ENEMY)){batt(c,kind);const commands=Array.from(c.$('bt-cmds').querySelectorAll('[data-cmd]'),b=>b.dataset.cmd);assert.ok(commands.includes('tactic'));assert.ok(commands.includes(kind==='rival'?'post':'push'));assert.equal(commands.includes('rinko'),kind!=='rival');assert.equal(commands.includes('escape'),kind==='rival');}});
