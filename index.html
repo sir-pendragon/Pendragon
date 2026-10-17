@@ -201,7 +201,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .sp-mist{position:absolute;inset:0;background:linear-gradient(rgba(235,240,240,.45),rgba(235,240,240,.15) 60%,rgba(20,30,25,.55))}
 .sp-t{position:absolute;left:10px;bottom:6px;color:#fff;text-shadow:0 1px 3px #000;display:flex;flex-direction:column;line-height:1.2}
 .sp-t b{font-size:1.2rem}.sp-t small{font-size:.72rem}
-.sp-prog{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;text-align:center}
+.sp-prog{display:grid;grid-template-columns:1fr auto 1fr auto 1fr auto 1fr;gap:4px;align-items:center;text-align:center}.sp-prog i{font-style:normal;color:var(--muted)}
 .sp-prog span{border:2px solid var(--line);border-radius:6px;padding:3px 0;font-size:var(--fs-s)}
 .sp-prog span.b{border-color:#a33;color:#a33}
 #sp-tr{display:block;font-size:var(--fs-s);line-height:1.5}
@@ -1100,7 +1100,7 @@ function askPay(what,price,yes){
 function askSpecial(p,rinko){const sp=SPEC[p.name],K=ENEMY;
   $('sp-pref').textContent=p.name;$('sp-name').textContent=sp.course;
   $('sp-desc').textContent='舗装は途切れ、岩ガレと崩落跡が続く林道。携帯は圏外、補給も撤退も利かない。生半可な装備では、最後の崩落区間までたどり着けない。';
-  $('sp-prog').innerHTML=['1','2','3'].map(n=>`<span>区間${n}</span>`).join('')+'<span class="b">ボス</span>';
+  $('sp-prog').innerHTML=['<span class="b">ボス</span>','<span>区間3</span>','<span>区間2</span>','<span>区間1</span>'].join('<i>←</i>');
   $('sp-tr').innerHTML='<b>登場予定の試練</b><br>'+sp.pool.map(k=>K[k].name.replace('土砂崩れの跡','土砂崩れ')).join('・')+'<br><b>ボス：</b>？？？';
   $('sp-no').onclick=()=>{$('ov-sp').hidden=true;};
   $('sp-yes').onclick=()=>{$('ov-sp').hidden=true;askGo(p,rinko,true);};$('ov-sp').hidden=false;$('sp-yes').focus();}
