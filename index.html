@@ -308,8 +308,9 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .res{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-variant-numeric:tabular-nums}
 .res span:nth-child(odd){color:var(--muted)}
 @media (prefers-reduced-motion:no-preference){ .shake{animation:shake .35s} @keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}} }
-.rules-box{text-align:left;border:1px solid #b89a5e;background:#e6d3a0;color:#000;border-radius:8px;padding:5px 9px;margin:0}
+.rules-box{position:relative;text-align:left;border:1px solid #b89a5e;background:#e6d3a0;color:#000;border-radius:8px;padding:5px 9px;margin:0}
 .rules-box .rules-h{margin:0 0 1px;font-size:12px;text-align:left;color:#000}
+.rules-box .vid-btn{position:absolute;top:3px;right:6px;width:auto;margin:0;padding:3px 9px;font-size:11px;min-height:0;line-height:1.3;border:1px solid #7a5c2a;border-radius:999px;background:#fff7dc;color:#2a2118}
 .rules-box .hint{margin:0;font-size:var(--fs-xs);line-height:1.35;color:#000}
 .copy{text-align:center;margin:1em 0 0;font-size:11px}
 #ov-title label[for=start-pref]{display:block;text-align:left;margin:2px 0 0;line-height:1.2}
@@ -322,6 +323,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .sg-c small{font-size:var(--fs-xs);line-height:1.2;padding:0 3px 3px;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .sg-c.lock{opacity:.55}.sg-c.lock span{aspect-ratio:3/2;display:flex;align-items:center;justify-content:center;font-size:1.6rem;background:rgba(128,128,128,.18)}
 #ov-sight .modal img{width:100%;height:auto;border-radius:6px}
+#ov-video .vid{position:relative;width:100%;aspect-ratio:16/9;background:#000;border-radius:6px;overflow:hidden}#ov-video .vid iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
 </style>
 
 <div class="app" id="app">
@@ -402,7 +404,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
     <div class="hero"><img src="img/title.webp" width="1200" height="1030" alt="夕暮れの尾根道から日本の山並みと海を見渡す自転車旅行者"><h1 class="logo"><img src="img/logo.webp" width="720" height="368" alt="日本巡る自転車旅"></h1></div>
     <p>自転車インフルエンサーとして<br>全国47か所のキャンプ場を巡ろう</p>
     <div class="rules-box">
-    <h3 class="rules-h">ゲームのルール</h3>
+    <h3 class="rules-h">ゲームのルール</h3><button id="btn-video" class="vid-btn" aria-haspopup="dialog">▶ プレイ動画</button>
     <p class="hint">毎週末が1ターン。1年＝52ターン。<br>坂・動物・強風・大雨・台風・ライバルがあなたの自転車旅を阻む！</p>
     </div>
     <label class="hint" for="start-pref">出発地（自宅）を選ぶ</label><select id="start-pref"></select>
@@ -451,6 +453,9 @@ button:disabled{opacity:.45;cursor:not-allowed}
 </div>
 <div class="overlay" id="ov-tc" hidden>
   <div class="modal"><img id="tc-img" class="tc-img" loading="lazy" decoding="async" src="img/tsuchinoko.webp" width="512" height="512" alt="ツチノコ"><h2 id="tc-h">草むらがガサッと動いた…</h2><p class="hint" id="tc-sum" style="margin:0"></p><div class="row" id="tc-btns"></div></div>
+</div>
+<div class="overlay" id="ov-video" hidden style="z-index:40">
+  <div class="modal"><h2>プレイ動画</h2><div class="vid" id="vid-box"></div><button class="primary" id="vid-x">閉じる</button></div>
 </div>
 <div class="overlay" id="ov-sight" hidden>
   <div class="modal"><img id="sg-img" alt="" decoding="async"><h2 id="sg-name"></h2><p class="hint" id="sg-desc" hidden style="margin:0"></p><button class="primary" id="sg-x">閉じる</button></div>
@@ -1153,6 +1158,10 @@ function showLogSub(){$('p-trip').hidden=LOGSUB!=='trip';$('p-sight').hidden=LOG
 $('log-tabs').onclick=e=>{const b=e.target.closest('button[data-sub]');if(!b)return;LOGSUB=b.dataset.sub;showLogSub();};
 $('sightbook').onclick=e=>{const b=e.target.closest('.sg-c[data-sg]');if(!b)return;$('sg-img').src='img/sights/'+b.dataset.sg+'.webp';$('sg-img').alt=b.dataset.n;$('sg-name').textContent=b.dataset.n;$('sg-desc').textContent=b.dataset.d||'';$('sg-desc').hidden=!b.dataset.d;$('ov-sight').hidden=false;};
 $('sg-x').onclick=()=>{$('ov-sight').hidden=true;};
+// タイトル画面の動画：押したときだけ YouTube を読み込む（プライバシー強化モード）。閉じると iframe ごと消して再生を止める
+const VIDEO_ID='32V6wl-Hv6k';
+$('btn-video').onclick=()=>{const f=document.createElement('iframe');f.src='https://www.youtube-nocookie.com/embed/'+VIDEO_ID+'?autoplay=1&rel=0&playsinline=1';f.title='日本巡る自転車旅 プレイ動画';f.allow='autoplay; encrypted-media; picture-in-picture; fullscreen';f.allowFullscreen=true;f.referrerPolicy='strict-origin-when-cross-origin';$('vid-box').replaceChildren(f);$('ov-video').hidden=false;try{const a=AUD.cur&&AUD.cache[AUD.cur];if(a)a.pause();}catch(e){}};
+$('vid-x').onclick=()=>{$('vid-box').replaceChildren();$('ov-video').hidden=true;bgmApply();};
 $('go-no').onclick=()=>{$('ov-go').hidden=true;};
 $('go-eq').onclick=()=>{$('ov-go').hidden=true;$('tab-gear').click();};
 // 連泊（同じ場所）：荒れた天気の日だけ、天候の試練が起きうる。先に確率を確定し、起きる場合は「帰る／帰らない」を選ばせる
