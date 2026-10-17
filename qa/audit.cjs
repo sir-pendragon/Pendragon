@@ -128,12 +128,11 @@ test('rescue: a special prefecture cleared without ever meeting its boss goes ba
  assert.equal(q.S.fam[T],false,'Tokyo rescued');assert.equal(q.S.visits[T],3);assert.equal(q.isCourse(q.PREF[T],true),true,'course opens');
  assert.equal(q.S.fam[F],true,'Fukushima had its boss, stays cleared');assert.equal(q.S.visits[F],4);assert.equal(q.S.fam[N],true,'ordinary prefecture untouched');
  w.localStorage.setItem('charicamp',q.pack());q.S=q.load();assert.equal(q.S.fam[T],false,'idempotent');});
-const summary={file:filename,passed:results.filter(x=>x.ok).length,failed:results.filter(x=>!x.ok).length,results};
-if(process.argv[3])fs.writeFileSync(process.argv[3],JSON.stringify(summary,null,2));
-console.log(JSON.stringify({passed:summary.passed,failed:summary.failed}));process.exitCode=summary.failed?1:0;
-
 test('sight book pages by region: prev/next buttons, ends disabled, every prefecture shown once, tap still opens',c=>{const {q}=c;clear(c);q.newGame(q.PREF.find(x=>x.name==='大阪').id);q.sgPage=-1;q.renderSights();
  assert.ok(c.$('sightbook').textContent.includes('近畿'),'opens on the current region');
  const seen=new Set();q.sgPage=0;q.renderSights();
  for(let i=0;i<6;i++){for(const b of c.$('sightbook').querySelectorAll('.sg-h b'))seen.add(b.textContent);const nx=c.$('sightbook').querySelector('[data-pg="1"]');assert.equal(nx.disabled,i===5);if(i<5)nx.click();}
- assert.equal(seen.size,47);const pv=c.$('sightbook').querySelector('[data-pg="-1"]');assert.equal(pv.disabled,false);q.sgPage=0;q.renderSights();assert.equal(c.$('sightbook').querySelector('[data-pg="-1"]').disabled,true);});
+ assert.equal(seen.size,47);assert.ok(fs.existsSync(path.join(__dirname,'..','audio','se_page.mp3')));const pv=c.$('sightbook').querySelector('[data-pg="-1"]');assert.equal(pv.disabled,false);q.sgPage=0;q.renderSights();assert.equal(c.$('sightbook').querySelector('[data-pg="-1"]').disabled,true);});
+const summary={file:filename,passed:results.filter(x=>x.ok).length,failed:results.filter(x=>!x.ok).length,results};
+if(process.argv[3])fs.writeFileSync(process.argv[3],JSON.stringify(summary,null,2));
+console.log(JSON.stringify({passed:summary.passed,failed:summary.failed}));process.exitCode=summary.failed?1:0;
