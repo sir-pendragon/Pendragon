@@ -188,7 +188,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:16px;z-index:10;overflow:auto;overscroll-behavior:contain}
 .setrow{display:grid;grid-template-columns:4.5em 4.5em 1fr;gap:8px;align-items:center}
 .setrow input[type=range]{width:100%;accent-color:var(--accent)}
-#set-code{width:100%;box-sizing:border-box;height:5.5em;font:inherit;font-size:.8rem;word-break:break-all;resize:vertical}
+#set-out,#set-in{width:100%;box-sizing:border-box;height:5.5em;font:inherit;font-size:.8rem;word-break:break-all;resize:vertical}
 #set-xmsg{min-height:1.4em}
 #pop{position:fixed;left:50%;transform:translateX(-50%) rotate(-.5deg);width:min(calc(100vw - 32px),420px);z-index:9;color:#2e2415;font-family:'Zen Old Mincho','Hiragino Mincho ProN','Yu Mincho',serif;border:2px solid #000;border-radius:3px;padding:14px 16px 12px;box-shadow:0 0 0 1px rgba(0,0,0,.6),6px 8px 0 rgba(0,0,0,.75),0 14px 34px rgba(0,0,0,.65);
   background:linear-gradient(90deg,transparent 0 30px,rgba(190,70,60,.35) 30px 31px,transparent 31px),repeating-linear-gradient(transparent 0 26px,rgba(90,120,160,.22) 26px 27px),#f6efdc}
@@ -461,9 +461,14 @@ button:disabled{opacity:.45;cursor:not-allowed}
     <div class="setrow"><span>効果音</span><button id="set-se-t"></button><input type="range" min="0" max="100" id="set-se-v" aria-label="効果音の音量"></div>
     <p class="hint">スマホでは、画面を一度タップしてから音が鳴ります。</p>
     <h3>データの引き継ぎ</h3>
-    <p class="hint">別の端末やブラウザへセーブを移せます。「コードを出す」→ 新しい側の同じ欄に貼って「読み込む」。読み込むと、その端末のセーブは置き換わります。</p>
-    <textarea id="set-code" spellcheck="false" autocomplete="off" aria-label="引き継ぎコード" placeholder="ここに引き継ぎコード"></textarea>
-    <div class="row"><button id="set-xout">コードを出す</button><button id="set-xcopy">コピー</button><button id="set-xin">読み込む</button></div>
+    <p class="hint">別の端末やブラウザへセーブを移せます。移す元で「コード出力」、移す先で「コード入力」を使います。</p>
+    <h4>コード出力（移す元）</h4>
+    <textarea id="set-out" readonly spellcheck="false" aria-label="出力された引き継ぎコード" placeholder="「コードを出す」を押すと、ここにコードが出ます"></textarea>
+    <div class="row"><button id="set-xout">コードを出す</button><button id="set-xcopy">コピー</button></div>
+    <h4>コード入力（移す先）</h4>
+    <p class="hint">読み込むと、この端末のセーブは置き換わります。</p>
+    <textarea id="set-in" spellcheck="false" autocomplete="off" aria-label="引き継ぎコードの入力" placeholder="ここにコードを貼り付け"></textarea>
+    <div class="row"><button id="set-xin">読み込む</button></div>
     <p class="hint" id="set-xmsg" role="status"></p>
     <h3>出典</h3>
     <p class="hint">地図：地球地図日本（国土地理院）を加工して作成</p>
@@ -1167,19 +1172,19 @@ $('set-xout').onclick=()=>{
   if(INTRIP){xmsg('旅の途中は出せません。旅を終えてからお試しください。');return;}
   save();let j=null;try{j=localStorage.getItem('charicamp');}catch(e){}
   if(!j){xmsg('出せるセーブがありません。');return;}
-  $('set-code').value=XP+b64e(j);$('set-code').select();xmsg('コードを出しました。「コピー」で写せます。');};
-$('set-xcopy').onclick=async()=>{const t=$('set-code').value;if(!t){xmsg('先に「コードを出す」を押してください。');return;}
-  try{await navigator.clipboard.writeText(t);xmsg('コピーしました。');}catch(e){$('set-code').select();xmsg('コピーできませんでした。選択された文字を手動でコピーしてください。');}};
-$('set-code').addEventListener('input',()=>{$('set-xin').textContent='読み込む';});
+  $('set-out').value=XP+b64e(j);$('set-out').select();xmsg('コードを出しました。「コピー」で写せます。');};
+$('set-xcopy').onclick=async()=>{const t=$('set-out').value;if(!t){xmsg('先に「コードを出す」を押してください。');return;}
+  try{await navigator.clipboard.writeText(t);xmsg('コピーしました。');}catch(e){$('set-out').select();xmsg('コピーできませんでした。選択された文字を手動でコピーしてください。');}};
+$('set-in').addEventListener('input',()=>{$('set-xin').textContent='読み込む';});
 $('set-xin').onclick=()=>{
   if(INTRIP){xmsg('旅の途中は読み込めません。');return;}
-  const raw=$('set-code').value.replace(/\s+/g,'');let o=null;
-  if(raw.startsWith(XP)){try{const j=b64d(raw.slice(XP.length));o=load(j);if(o)$('set-code').dataset.ok=j;}catch(e){}}
+  const raw=$('set-in').value.replace(/\s+/g,'');let o=null;
+  if(raw.startsWith(XP)){try{const j=b64d(raw.slice(XP.length));o=load(j);if(o)$('set-in').dataset.ok=j;}catch(e){}}
   if(!o){xmsg('コードを読み取れませんでした。最後まで正しく貼れているか確認してください。');$('set-xin').textContent='読み込む';return;}
   if($('set-xin').textContent!=='本当に置き換える？'){
     xmsg(`このコードのセーブ：${calendar(o.turn).year}年目${calendar(o.turn).month}月・フォロワー${fol(o.fame)}。この端末のセーブは消えます。よければもう一度押してください。`);
     $('set-xin').textContent='本当に置き換える？';setTimeout(()=>{$('set-xin').textContent='読み込む';},6000);return;}
-  try{localStorage.setItem('charicamp',$('set-code').dataset.ok);}catch(e){xmsg('保存できませんでした（容量や設定を確認してください）。');return;}
+  try{localStorage.setItem('charicamp',$('set-in').dataset.ok);}catch(e){xmsg('保存できませんでした（容量や設定を確認してください）。');return;}
   S=null;location.reload();};
 $('ov-set').addEventListener('click',e=>{if(e.target===$('ov-set'))$('ov-set').hidden=true;});
 $('set-bgm-t').onclick=()=>{AUD.mb=!AUD.mb;saveSnd();renderSet();if(!AUD.cur)playBGM('bgm_main');bgmApply();};
