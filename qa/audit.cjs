@@ -2,7 +2,7 @@ const fs=require('node:fs'),path=require('node:path'),assert=require('node:asser
 const {JSDOM,VirtualConsole}=require('jsdom');
 const filename=path.resolve(process.argv[2]||path.join(__dirname,'..','index.html'));
 const html=fs.readFileSync(filename,'utf8');
-const expose=`window.qa={needV,isCourse,newGame,render,renderMap,renderBattle,renderShop,renderForge,renderDetail,renderList,renderTrials,renderSights,load,save,pack,snap,advance,calendar,rollForecast,startTrip,stayWx,startBattle,cmd,endTrip,endTrip2,nextEncounter,tsuchinoko,tcRate,bikeStats,gearFx,travelInfo,restHome,yearEval,eventAt,stoveOn,plv,rkLv,PREF,ENEMY,GEAR_ITEMS,PARTS,BIKES,CLOTHES,WXL,TRIAL_KEYS,AUD,tcRate,playBGM,bgmApply,
+const expose=`window.qa={needV,isCourse,askGo,newGame,render,renderMap,renderBattle,renderShop,renderForge,renderDetail,renderList,renderTrials,renderSights,load,save,pack,snap,advance,calendar,rollForecast,startTrip,stayWx,startBattle,cmd,endTrip,endTrip2,nextEncounter,tsuchinoko,tcRate,bikeStats,gearFx,travelInfo,restHome,yearEval,eventAt,stoveOn,plv,rkLv,PREF,ENEMY,GEAR_ITEMS,PARTS,BIKES,CLOTHES,WXL,TRIAL_KEYS,AUD,tcRate,playBGM,bgmApply,
 get S(){return S},set S(v){S=v},get B(){return B},get trip(){return trip},set trip(v){trip=v},get TS(){return TS},get inTrip(){return INTRIP},get lastSave(){return LASTSAVE},
 quiet(){render=()=>save();renderBattle=()=>{};playSE=()=>{};playBGM=()=>{};}};`;
 const js=html.match(/<script>([\s\S]*?)<\/script>/)[1];
@@ -90,6 +90,7 @@ test('special prefecture (Gunma): 3 visits are not clear, the 4th is the forest-
  q.save();let r=q.load();assert.equal(r.fam[g],false,'3 visits do not make Gunma a familiar inn');assert.equal(r.fam[other],true);
  q.S.visits[g]=4;q.save();r=q.load();assert.equal(r.fam[g],true,'4 visits do');
  q.newGame(12);q.S.money=1e8;q.S.visits[g]=2;assert.equal(q.isCourse(q.PREF[g],false),false);q.S.visits[g]=3;assert.equal(q.isCourse(q.PREF[g],false),true);assert.equal(q.isCourse(q.PREF[other],false),false);
+ q.S.loc=other;q.askGo(q.PREF[g],false);assert.equal(c.$('ov-sp').hidden,false,'TOP表示');assert.ok(c.$('sp-tr').innerHTML.includes('？？？'));assert.equal(c.$('ov-go').hidden,true);c.$('sp-yes').click();assert.equal(c.$('ov-sp').hidden,true);assert.equal(c.$('ov-go').hidden,false);c.$('ov-go').hidden=true;q.S.visits[g]=2;c.$('ov-sp').hidden=true;q.askGo(q.PREF[g],false);assert.equal(c.$('ov-sp').hidden,true);c.$('ov-go').hidden=true;q.S.visits[g]=3;
  const pool=new Set(['rockfall','slide','ford','tree','rough','lost','pass']);
  for(let i=0;i<30;i++){clear(c);q.newGame(12);q.S.money=1e8;q.S.visits[g]=3;q.S.forecast=Object.fromEntries(q.PREF.map(x=>[x.id,{temp:15,wx:'sun'}]));q.startTrip(q.PREF[g],false);assert.equal(q.trip.course,true);assert.equal(q.trip.enc.length,4);assert.equal(q.trip.enc[3],'collapse');assert.ok(q.trip.enc.slice(0,3).every(k=>pool.has(k)),q.trip.enc.join());}
  // 輪行（電車で区間を飛ばす）は林道コースでは使えない

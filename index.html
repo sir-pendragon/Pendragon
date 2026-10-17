@@ -194,6 +194,17 @@ button:disabled{opacity:.45;cursor:not-allowed}
 #pop::after{content:"確認済";position:absolute;right:14px;top:14px;transform:rotate(-12deg);font-weight:700;font-size:.8rem;letter-spacing:.1em;white-space:nowrap;color:#c0392b;border:2px solid #c0392b;border-radius:4px;padding:5px 8px;opacity:.8;mix-blend-mode:multiply}
 #pop .doc-t{font-size:.72rem;letter-spacing:.4em;color:#6b5a3a;margin:0 0 2px 36px}
 #pop h3{margin:0 0 8px 36px;font-family:inherit;font-size:1.15rem;font-weight:700;color:#2e2415;border-bottom:2px solid #2e2415;padding-bottom:3px;width:max-content;max-width:calc(100% - 90px)}
+#ov-sp .row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+#ov-sp .modal{gap:8px;padding:12px}
+.sp-pic{position:relative;height:104px;overflow:hidden;border-radius:6px;background:#2b2f4a}
+.sp-pic img{width:100%;height:100%;object-fit:cover;filter:blur(3px) brightness(.8) saturate(.7);transform:scale(1.08)}
+.sp-mist{position:absolute;inset:0;background:linear-gradient(rgba(235,240,240,.45),rgba(235,240,240,.15) 60%,rgba(20,30,25,.55))}
+.sp-t{position:absolute;left:10px;bottom:6px;color:#fff;text-shadow:0 1px 3px #000;display:flex;flex-direction:column;line-height:1.2}
+.sp-t b{font-size:1.2rem}.sp-t small{font-size:.72rem}
+.sp-prog{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;text-align:center}
+.sp-prog span{border:2px solid var(--line);border-radius:6px;padding:3px 0;font-size:var(--fs-s)}
+.sp-prog span.b{border-color:#a33;color:#a33}
+#sp-tr{display:block;font-size:var(--fs-s);line-height:1.5}
 #ov-go .row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 #ov-pay .row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 #ov-camp .row{display:grid;grid-template-columns:1fr;gap:8px}
@@ -403,6 +414,15 @@ button:disabled{opacity:.45;cursor:not-allowed}
 </div>
 
 <div id="pop" role="status" hidden></div>
+<div class="overlay" id="ov-sp" hidden>
+  <div class="modal">
+    <div class="sp-pic"><img src="img/sights/gunma-4.webp" width="480" height="320" alt=""><div class="sp-mist"></div><div class="sp-t"><small id="sp-pref"></small><b id="sp-name"></b></div></div>
+    <p class="hint" id="sp-desc"></p>
+    <div class="sp-prog" id="sp-prog"></div>
+    <div class="res" id="sp-tr"></div>
+    <div class="row"><button id="sp-no">やめる</button><button class="primary" id="sp-yes">出発する</button></div>
+  </div>
+</div>
 <div class="overlay" id="ov-go" hidden>
   <div class="modal">
     <h2>この装備で行きますか？</h2>
@@ -1077,7 +1097,14 @@ function askPay(what,price,yes){
   $('pay-sum').innerHTML=[['支払い',yen(price)],['所持金',yen(S.money)],['支払い後',yen(S.money-price)]].map(r=>`<span>${r[0]}</span><span>${r[1]}</span>`).join('');
   $('pay-yes').onclick=()=>{$('ov-pay').hidden=true;playSE('se_buy');yes();};$('pay-no').onclick=()=>{$('ov-pay').hidden=true;};
   $('ov-pay').hidden=false;$('pay-no').focus();}
-function askGo(p,rinko){const ti=travelInfo(p),f=S.forecast[p.id],nm=(l,id)=>(l.find(x=>x.id===id)||{}).name,cl=CLOTHES.find(c=>c.id===S.cloth);
+function askSpecial(p,rinko){const sp=SPEC[p.name],K=ENEMY;
+  $('sp-pref').textContent=p.name;$('sp-name').textContent=sp.course;
+  $('sp-desc').textContent='舗装は途切れ、岩ガレと崩落跡が続く林道。携帯は圏外、補給も撤退も利かない。生半可な装備では、最後の崩落区間までたどり着けない。';
+  $('sp-prog').innerHTML=['1','2','3'].map(n=>`<span>区間${n}</span>`).join('')+'<span class="b">ボス</span>';
+  $('sp-tr').innerHTML='<b>登場予定の試練</b><br>'+sp.pool.map(k=>K[k].name.replace('土砂崩れの跡','土砂崩れ')).join('・')+'<br><b>ボス：</b>？？？';
+  $('sp-no').onclick=()=>{$('ov-sp').hidden=true;};
+  $('sp-yes').onclick=()=>{$('ov-sp').hidden=true;askGo(p,rinko,true);};$('ov-sp').hidden=false;$('sp-yes').focus();}
+function askGo(p,rinko,skipSp){if(!skipSp&&p.id!==S.loc&&isCourse(p,false))return askSpecial(p,rinko);const ti=travelInfo(p),f=S.forecast[p.id],nm=(l,id)=>(l.find(x=>x.id===id)||{}).name,cl=CLOTHES.find(c=>c.id===S.cloth);
   const how=p.id===S.loc?'同じ場所（気力-15）':rinko?`輪行 ${yen(ti.rinko)}`:`自走 ${ti.d}km（遭遇${ti.enc}回）`;
   const gi=k=>S.gear[k]?nm(GEAR_ITEMS,S.gear[k]):'なし';
   $('go-sum').innerHTML=[['行き先',`${p.site}（${p.name}）`],['移動',how],['予報',`${WX_J[f.wx]} ${f.temp}℃`],
