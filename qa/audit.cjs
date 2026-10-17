@@ -5,7 +5,7 @@ const html=fs.readFileSync(filename,'utf8');
 const expose=`window.qa={needV,isCourse,askGo,ENEMY,SPEC,SIGHTS,TACT,tlEnc,tlDec,newGame,render,renderMap,renderBattle,renderShop,renderForge,renderDetail,renderList,renderTrials,renderSights,load,save,pack,snap,advance,calendar,rollForecast,startTrip,stayWx,startBattle,cmd,endTrip,endTrip2,nextEncounter,tsuchinoko,tcRate,bikeStats,gearFx,travelInfo,restHome,yearEval,eventAt,stoveOn,plv,rkLv,PREF,ENEMY,GEAR_ITEMS,PARTS,BIKES,CLOTHES,WXL,TRIAL_KEYS,AUD,tcRate,playBGM,bgmApply,
 get S(){return S},set S(v){S=v},get B(){return B},get trip(){return trip},set trip(v){trip=v},get TS(){return TS},get inTrip(){return INTRIP},get lastSave(){return LASTSAVE},
 quiet(){render=()=>save();renderBattle=()=>{};playSE=()=>{};playBGM=()=>{};}};`;
-const js=html.match(/<script>([\s\S]*?)<\/script>/)[1];
+const js=[...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(m=>m[1]).sort((x,y)=>y.length-x.length)[0];// 先頭の短い移動スクリプトではなく、本体（最長）を読む
 const marked=js.replace(/\}\)\(\);\s*$/,expose+'\n})();');
 function boot(saved,sound,url='https://example.test/'){
  const errors=[],vc=new VirtualConsole();vc.on('jsdomError',e=>errors.push(e.message));
