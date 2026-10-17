@@ -133,6 +133,10 @@ test('sight book pages by region: prev/next buttons, ends disabled, every prefec
  const seen=new Set();q.sgPage=0;q.renderSights();
  for(let i=0;i<6;i++){for(const b of c.$('sightbook').querySelectorAll('.sg-h b'))seen.add(b.textContent);const nx=c.$('sightbook').querySelector('[data-pg="1"]');assert.equal(nx.disabled,i===5);if(i<5)nx.click();}
  assert.equal(seen.size,47);assert.ok(fs.existsSync(path.join(__dirname,'..','audio','se_page.mp3')));const pv=c.$('sightbook').querySelector('[data-pg="-1"]');assert.equal(pv.disabled,false);q.sgPage=0;q.renderSights();assert.equal(c.$('sightbook').querySelector('[data-pg="-1"]').disabled,true);});
+test('rinko never skips every trial: every prefecture reached by rinko has at least 1 non-rival encounter (all weathers)',c=>{const {q}=c;q.quiet();let zero=0,n=0;
+ for(const wx of q.WXL)for(const p of q.PREF)for(let k=0;k<12;k++){clear(c);q.newGame(12);q.S.turn=53;q.S.money=1e8;q.S.forecast=Object.fromEntries(q.PREF.map(x=>[x.id,{temp:15,wx}]));
+  if(p.id===q.S.loc)continue;q.startTrip(p,true);if(!c.$('ov-storm').hidden){c.$('st-stay').click();c.$('ov-storm').hidden=true;}n++;if(q.trip.enc.filter(e=>e!=='rival').length<1)zero++;}
+ assert.ok(n>1000);assert.equal(zero,0);});
 const summary={file:filename,passed:results.filter(x=>x.ok).length,failed:results.filter(x=>!x.ok).length,results};
 if(process.argv[3])fs.writeFileSync(process.argv[3],JSON.stringify(summary,null,2));
 console.log(JSON.stringify({passed:summary.passed,failed:summary.failed}));process.exitCode=summary.failed?1:0;
