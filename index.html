@@ -625,7 +625,7 @@ const SPEC={
  '岐阜':{course:'乗鞍スカイライン',icon:'🏔️',img:'gifu-4',pool:['hill','slide','snow'],boss:'boss_gifu',bonus:50000,list:'激坂・土砂崩れの跡・大雪・畳平の氷竜',kind:'山岳コース',desc:'標高2,702mへ続く、森林限界を超えた登り。空気は薄く、冷え込みは容赦ない。'},
  '秋田':{course:'鳥海ブルーライン',icon:'🌊',img:'akita-4',pool:['hill','gate','snow'],boss:'boss_akita',bonus:50000,list:'激坂・時間制限ゲート・大雪・鳥海の氷結鳥',kind:'山岳コース',desc:'海から山腹へ一気に駆け上がる登り。日が傾く前に走り切らなければ、道は閉ざされる。'}};
 const needV=p=>SPEC[p.name]?4:3;
-const isCourse=(p,stay)=>!stay&&!!SPEC[p.name]&&(S.visits[p.id]||0)===3&&!S.fam[p.id];
+const isCourse=(p,stay)=>!!SPEC[p.name]&&(S.visits[p.id]||0)===3&&!S.fam[p.id];
 const WILDK=new Set(['animal','deer','bear','brownbear','habu']);
 function familiar(p){const own=PREF[S.home];let f=1,why='';
   const set=(v,w)=>{if(v<f){f=v;why=w;}};
@@ -1016,7 +1016,7 @@ function renderDetail(){const p=PREF[S.sel],f=S.forecast[p.id],ti=travelInfo(p),
   if(f.wx==='rain')enemies.push('大雨');if(f.wx==='wind')enemies.push('強風');if(f.wx==='typhoon')enemies.push('台風');if(f.wx==='snow')enemies.push('大雪');if(f.wx==='heat')enemies.push('炎天下');if(p.scen>=5||ev)enemies.push('ライバル?');
   $('info').innerHTML=`<h3>${p.site}</h3><div class="hint">${p.name}・${p.region}</div>${badge}
   <div class="kv"><span>地形</span><span>${TERRAIN[p.terrain]}（${'★'.repeat(p.diff)}）</span><span>景観</span><span>${'📷'.repeat(p.scen)}</span>
-  <span>予報</span><span>${WX_J[f.wx]} ${f.temp}℃<br>${fit}</span><span>距離</span><span>${stay?'同じ場所（気力-15）'+(S.stay>=2?`<br>連泊${S.stay+1}日目：迷惑キャンパーが現れる`:S.stay>0?`<br>連泊${S.stay+1}日目：荒天になりやすい`:''):ti.d+'km<br>'+(ti.ride?(isCourse(p,stay)?'遭遇4回（'+SPEC[p.name].kind+'）':'遭遇'+ti.enc+'回'):'自走不可')}</span>
+  <span>予報</span><span>${WX_J[f.wx]} ${f.temp}℃<br>${fit}</span><span>距離</span><span>${stay&&!isCourse(p,stay)?'同じ場所（気力-15）'+(S.stay>=2?`<br>連泊${S.stay+1}日目：迷惑キャンパーが現れる`:S.stay>0?`<br>連泊${S.stay+1}日目：荒天になりやすい`:''):(stay?'同じ場所から出発<br>':ti.d+'km<br>')+(ti.ride?(isCourse(p,stay)?'遭遇4回（'+SPEC[p.name].kind+'）':'遭遇'+ti.enc+'回'):'自走不可')}</span>
   <span>想定</span><span>${isCourse(p,stay)?`${SPEC[p.name].icon} 4回目：${SPEC[p.name].course}<br>${SPEC[p.name].list}`:(stay?(S.stay>=2?['迷惑キャンパー']:[]).concat(enemies.filter(n=>[...(S.stay>=2?[]:['大雨','強風','台風','大雪','炎天下']),'ライバル?'].includes(n))):enemies).join('・')||'特になし'}${stay||isCourse(p,stay)?'':(()=>{const q=familiar(p);return q.f<1?`<br>${q.why}：動物に出会う確率×${q.f}`:''})()}</span>${ev?`<span>催事</span><span>${EVI}${ev.name}<br>写真+12・フォロワー×1.5</span>`:''}${S.fam[p.id]?'<span>特典</span><span>利用料半額・回復+4</span>':''}<span>利用料</span><span>${yen(fee)}</span></div>`;
   $('detail').innerHTML=`
   <div class="acts">${stay?`<button class="primary" id="go-stay">自転車旅に行く<small>${p.name}（現在地）</small></button><button disabled>輪行で旅に行く<small>${p.name}（現在地）</small></button>`:
@@ -1128,8 +1128,8 @@ function askSpecial(p,rinko){const sp=SPEC[p.name],K=ENEMY;
   $('sp-tr').innerHTML='<b>登場予定の試練</b><br>'+[...new Set(sp.pool)].map(k=>K[k].name.replace('土砂崩れの跡','土砂崩れ')).join('・')+'<br><b>ボス：</b>？？？';
   $('sp-no').onclick=()=>{$('ov-sp').hidden=true;};
   $('sp-yes').onclick=()=>{$('ov-sp').hidden=true;askGo(p,rinko,true);};$('ov-sp').hidden=false;$('sp-yes').focus();}
-function askGo(p,rinko,skipSp){if(!skipSp&&p.id!==S.loc&&isCourse(p,false))return askSpecial(p,rinko);const ti=travelInfo(p),f=S.forecast[p.id],nm=(l,id)=>(l.find(x=>x.id===id)||{}).name,cl=CLOTHES.find(c=>c.id===S.cloth);
-  const how=p.id===S.loc?'同じ場所（気力-15）':rinko?`輪行 ${yen(ti.rinko)}`:`自走 ${ti.d}km（遭遇${ti.enc}回）`;
+function askGo(p,rinko,skipSp){if(!skipSp&&isCourse(p,false))return askSpecial(p,rinko);const ti=travelInfo(p),f=S.forecast[p.id],nm=(l,id)=>(l.find(x=>x.id===id)||{}).name,cl=CLOTHES.find(c=>c.id===S.cloth);
+  const how=p.id===S.loc?(isCourse(p,true)?'同じ場所から出発（'+SPEC[p.name].kind+'）':'同じ場所（気力-15）'):rinko?`輪行 ${yen(ti.rinko)}`:`自走 ${ti.d}km（遭遇${ti.enc}回）`;
   const gi=k=>S.gear[k]?nm(GEAR_ITEMS,S.gear[k]):'なし';
   $('go-sum').innerHTML=[['行き先',`${p.site}（${p.name}）`],['移動',how],['予報',`${WX_J[f.wx]} ${f.temp}℃`],
     ['自転車',nm(BIKES,S.bike)],['衣類',`${cl.name}（${cl.lo}〜${cl.hi}℃）`],['パーツ',S.parts.length?S.parts.map(x=>nm(PARTS,x)).join('、'):'なし'],
@@ -1154,7 +1154,7 @@ const CAMPERS=['camper1','camper2','camper3'];
 function stayWx(f){if((S.stay||0)>=2)return CAMPERS[rnd(0,2)];// 三連泊目以降は、天気に関係なく迷惑キャンパー（天候の試練の代わり）
   if(f.wx==='typhoon')return 'typhoon';return ['rain','wind','snow','heat'].includes(f.wx)&&Math.random()<STAY_P[Math.min(S.stay||0,2)]?f.wx:null;}
 function showStorm(p,rinko,k){const cp=!!ENEMY[k].camper;$('st-t').textContent=cp?'🏕️ 隣のサイトが騒がしい…':'⛈️ 天候が悪くなってきた…';$('st-h').innerHTML=`帰ると、自宅で休養します（自宅以外では輪行費がかかります）。<br>帰らないと、そのまま${cp?'迷惑キャンパーの試練':'天候の試練'}になります。`;$('st-p').textContent=cp?`隣に${ENEMY[k].name.replace('迷惑キャンパー','').replace(/[（）]/g,'')}がいる。このまま続ける？`:`${ENEMY[k].name}になりそうだ。このまま続ける？`;$('st-home').onclick=()=>{$('ov-storm').hidden=true;restHome();};$('st-stay').onclick=()=>{$('ov-storm').hidden=true;startTrip(p,rinko,k);};$('ov-storm').hidden=false;playSE('se_encounter');}
-function startTrip(p,rinko,wx){if(p.id===S.loc&&wx===undefined){const k=stayWx(S.forecast[p.id]);if(k){showStorm(p,rinko,k);return;}wx=null;}snap();{const i=new Image();i.src='img/late.webp';}{const i=new Image();i.src='img/sights/'+sightOf(p.id,S.visits[p.id]+1)[0]+'.webp';}const ti=travelInfo(p);const stay=p.id===S.loc;
+function startTrip(p,rinko,wx){if(p.id===S.loc&&wx===undefined&&!isCourse(p,true)){const k=stayWx(S.forecast[p.id]);if(k){showStorm(p,rinko,k);return;}wx=null;}snap();{const i=new Image();i.src='img/late.webp';}{const i=new Image();i.src='img/sights/'+sightOf(p.id,S.visits[p.id]+1)[0]+'.webp';}const ti=travelInfo(p);const stay=p.id===S.loc;
   if(rinko){S.money-=ti.rinko;log(`${p.name}へ輪行（${yen(ti.rinko)}）`);}
   const f=S.forecast[p.id];const enc=[];
   if(!stay){const pool=[];// 輪行でも、坂・悪路・天候・ツチノコは出る。生き物は出にくい（3割）。ヒグマ・ハブは下の「現地で3割」で別に判定する
@@ -1175,7 +1175,7 @@ function startTrip(p,rinko,wx){if(p.id===S.loc&&wx===undefined){const k=stayWx(S
   const ev=eventAt(S.turn,p.id);
   if((p.scen>=5||ev)&&Math.random()<(ev?(stay?.3:.6):stay?.15:.4))enc.push('rival');
   const course=isCourse(p,stay);if(course){enc.length=0;const sp=SPEC[p.name];for(let i=0;i<3;i++)enc.push(sp.pool[rnd(0,sp.pool.length-1)]);enc.push(sp.boss);}// 4回目：専用の林道コース（3区間＋ボス）
-  S.stay=stay?Math.min(99,(S.stay||0)+1):0;INTRIP=true;const nEnc=Math.max(1,enc.filter(k=>k!=='rival').length);trip={p,rinko,stay,enc,ev,course,i:0,late:false,sec:Math.max(3,Math.min(rinko?12:99,Math.round(ti.d/nEnc))),rk:Math.max(1000,Math.round(ti.rinko/nEnc/100)*100)};S.loc=p.id;if(stay){S.mp-=Math.max(0,15-bikeStats().comfy);}
+  S.stay=stay?Math.min(99,(S.stay||0)+1):0;INTRIP=true;const nEnc=Math.max(1,enc.filter(k=>k!=='rival').length);trip={p,rinko,stay,enc,ev,course,i:0,late:false,sec:Math.max(3,Math.min(rinko?12:99,Math.round(ti.d/nEnc))),rk:Math.max(1000,Math.round(ti.rinko/nEnc/100)*100)};S.loc=p.id;if(stay&&!course){S.mp-=Math.max(0,15-bikeStats().comfy);}
   S.sel=S.loc;render();nextEncounter();}
 // ツチノコ：試練の1回ごとに3%で気配が出る（1回の旅で1回まで）。試練ではなく撮影チャンス。成功は初回+20万人、2回目以降+5万人
 const TC_P=.03;
@@ -1359,7 +1359,7 @@ function endTrip2(camp){const p=trip.p,f=S.forecast[p.id],st=bikeStats(),cl=CLOT
   const lateL=floss(20,.025);if(trip.late){S.fame=Math.max(0,S.fame-lateL);
     html=`<h2>遅刻…</h2><div class="photo pic"><img src="img/late.webp" width="720" height="480" alt="日没後にキャンプ場へ着いた自転車旅行者"><div class="cap"><div>${p.site}</div><div>${WX_J[f.wx]} ${f.temp}℃ ・ 📷 撮影できず</div></div></div><p>${p.site}に着いたのは日没後。写真は撮れず、投稿できなかった。</p><div class="res"><span>フォロワー</span><span>-${fol(lateL)}</span><span>利用料</span><span>-${yen(fee)}</span>${cold?`<span>衣類不適</span><span>体力-${cold}</span>`:''}${campRows}</div>`;
     tlog(-1);}
-  else{const wb0={sun:10,cloud:0,rain:-15,wind:-5,snow:-10,heat:-5,typhoon:-25}[f.wx],wb=wet?Math.round(wb0*(1-g.guard)):wb0;let q=40+p.scen*8+st.photo+g.photo+wb+rnd(0,10)+(camp.q||0)+(trip.ev?12:0)-mpPen;if(trip.stay)q-=10;q=Math.max(10,Math.min(100,q));
+  else{const wb0={sun:10,cloud:0,rain:-15,wind:-5,snow:-10,heat:-5,typhoon:-25}[f.wx],wb=wet?Math.round(wb0*(1-g.guard)):wb0;let q=40+p.scen*8+st.photo+g.photo+wb+rnd(0,10)+(camp.q||0)+(trip.ev?12:0)-mpPen;if(trip.stay&&!trip.course)q-=10;q=Math.max(10,Math.min(100,q));
     playSE('se_photo');S.visits[p.id]++;const became=!S.fam[p.id]&&S.visits[p.id]>=needV(p);if(became)S.fam[p.id]=true;
     let fg=Math.round(q*3+S.fame*.03*q/70)+(S.visits[p.id]===1?300:0)+(became?1000:0)+(became&&SPEC[p.name]?SPEC[p.name].bonus:0);if(trip.ev){fg=Math.round(fg*1.5);S.stats.ev++;}if(f.wx==='typhoon')S.stats.tph++;
     const inc=300+q*25+Math.round(S.fame*.01);S.fame+=fg;S.money+=inc;if(TS){TS.inc=inc;TS.became=became?p.site:null;}S.stats.posts++;S.stats.bestQ=Math.max(S.stats.bestQ,q);

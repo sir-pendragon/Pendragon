@@ -115,6 +115,12 @@ test('special prefectures (Fukushima, Tokyo, Gifu, Akita): course, boss, art, si
  // 作戦アイコンは既存の絵を共用する（新しい敵にも必ず画像がある）
  for(const k of ['gas','volcstorm','curves','gate','boss_fukushima','boss_tokyo','boss_gifu','boss_akita'])assert.ok(q.TACT[k],k);
  const enc=q.tlDec(q.tlEnc(['gas','boss_akita','boss_gifu','tree']));assert.equal(enc.join(),'gas,boss_akita,boss_gifu,tree');});
+test('special prefectures: the 4th-visit course also starts when staying at the same place (no 連泊 bypass)',c=>{const {q}=c;
+ for(const nm of ['群馬','福島','東京','岐阜','秋田']){const p=q.PREF.find(x=>x.name===nm);
+  for(const wx of ['sun','rain','typhoon']){clear(c);q.newGame(p.id);q.S.money=1e8;q.S.visits[p.id]=3;q.S.fam[p.id]=false;q.S.loc=p.id;q.S.forecast=Object.fromEntries(q.PREF.map(x=>[x.id,{temp:15,wx}]));
+   q.startTrip(p,false);assert.equal(q.trip.course,true,nm+wx);assert.equal(q.trip.enc.length,4,nm+wx);assert.equal(q.trip.enc[3],q.SPEC[nm].boss,nm+wx);}
+  // 3回目までの連泊は従来どおり（コースにならない）
+  clear(c);q.newGame(p.id);q.S.visits[p.id]=2;q.S.loc=p.id;assert.equal(q.isCourse(p,true),false,nm);}});
 const summary={file:filename,passed:results.filter(x=>x.ok).length,failed:results.filter(x=>!x.ok).length,results};
 if(process.argv[3])fs.writeFileSync(process.argv[3],JSON.stringify(summary,null,2));
 console.log(JSON.stringify({passed:summary.passed,failed:summary.failed}));process.exitCode=summary.failed?1:0;
