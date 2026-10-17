@@ -2,7 +2,7 @@ const fs=require('node:fs'),path=require('node:path'),assert=require('node:asser
 const {JSDOM,VirtualConsole}=require('jsdom');
 const filename=path.resolve(process.argv[2]||path.join(__dirname,'..','index.html'));
 const html=fs.readFileSync(filename,'utf8');
-const expose=`window.qa={foodMax,get sgPage(){return SGPG},set sgPage(v){SGPG=v},needV,isCourse,askGo,ENEMY,SPEC,SIGHTS,TACT,tlEnc,tlDec,newGame,render,renderMap,renderBattle,renderShop,renderForge,renderDetail,renderList,renderTrials,renderSights,load,save,pack,snap,advance,calendar,rollForecast,startTrip,stayWx,startBattle,cmd,endTrip,endTrip2,nextEncounter,tsuchinoko,tcRate,bikeStats,gearFx,travelInfo,restHome,yearEval,eventAt,stoveOn,plv,rkLv,PREF,ENEMY,GEAR_ITEMS,PARTS,BIKES,CLOTHES,WXL,TRIAL_KEYS,AUD,tcRate,playBGM,bgmApply,
+const expose=`window.qa={foodMax,partSlots,get sgPage(){return SGPG},set sgPage(v){SGPG=v},needV,isCourse,askGo,ENEMY,SPEC,SIGHTS,TACT,tlEnc,tlDec,newGame,render,renderMap,renderBattle,renderShop,renderForge,renderDetail,renderList,renderTrials,renderSights,load,save,pack,snap,advance,calendar,rollForecast,startTrip,stayWx,startBattle,cmd,endTrip,endTrip2,nextEncounter,tsuchinoko,tcRate,bikeStats,gearFx,travelInfo,restHome,yearEval,eventAt,stoveOn,plv,rkLv,PREF,ENEMY,GEAR_ITEMS,PARTS,BIKES,CLOTHES,WXL,TRIAL_KEYS,AUD,tcRate,playBGM,bgmApply,
 get S(){return S},set S(v){S=v},get B(){return B},get trip(){return trip},set trip(v){trip=v},get TS(){return TS},get inTrip(){return INTRIP},get lastSave(){return LASTSAVE},
 quiet(){render=()=>save();renderBattle=()=>{};playSE=()=>{};playBGM=()=>{};}};`;
 const js=[...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(m=>m[1]).sort((x,y)=>y.length-x.length)[0];// 先頭の短い移動スクリプトではなく、本体（最長）を読む
@@ -171,6 +171,15 @@ test('rear racks: four tiers, raise the food cap, one rack only, bike-part tab, 
  q.S.plus={rack4:3};q.S.parts=['rack4'];assert.equal(q.foodMax(),9,'no customization');q.S.plus={};
  q.S.parts=['rack1','rack4','compi','compm'];q.S.food=7;q.save();const o=q.load();assert.equal(o.parts.filter(x=>x.startsWith('rack')).length,1);assert.equal(o.parts.filter(x=>x.startsWith('comp')).length,1);assert.equal(o.food,7);
  });// 絵が届いたら img/part_rack1〜4.webp の存在確認を足す
+test('part slots grow with bike price: 3/4/5, trimmed on bike change and on load',c=>{const {q,w}=c;
+ const sl=id=>q.partSlots(id);for(const b of q.BIKES)assert.equal(sl(b.id),b.price>=450000?5:b.price>=150000?4:3,b.id);
+ assert.equal(sl('mama'),3);assert.equal(sl('road'),4);assert.equal(sl('rando'),5);assert.equal(sl('tigrav'),5);
+ for(let i=1;i<q.BIKES.length;i++)if(q.BIKES[i].price>=q.BIKES[i-1].price)assert.ok(sl(q.BIKES[i].id)>=sl(q.BIKES[i-1].id));
+ q.newGame(q.PREF[0].id);q.S.owned.bikes=q.BIKES.map(b=>b.id);q.S.owned.parts=q.PARTS.map(x=>x.id);q.S.bike='rando';q.S.parts=['wheel','tire','aero','fender','tripod'];q.save();let o=q.load();assert.equal(o.parts.length,5);
+ q.S.bike='mama';q.save();o=q.load();assert.equal(o.parts.length,3,'trimmed on load');
+ q.S.bike='rando';q.S.parts=['wheel','tire','aero','fender','tripod'];q.renderShop();
+ const eq=[...w.document.querySelectorAll('#eq-part .card button[data-act="equip"]')];assert.ok(eq.every(b=>b.disabled),'full: no more equip');
+ assert.ok(w.document.getElementById('slot-hint').textContent.includes('5つ'));});
 const summary={file:filename,passed:results.filter(x=>x.ok).length,failed:results.filter(x=>!x.ok).length,results};
 if(process.argv[3])fs.writeFileSync(process.argv[3],JSON.stringify(summary,null,2));
 console.log(JSON.stringify({passed:summary.passed,failed:summary.failed}));process.exitCode=summary.failed?1:0;
