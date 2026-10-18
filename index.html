@@ -501,8 +501,9 @@ button:disabled{opacity:.45;cursor:not-allowed}
     <div class="setrow"><span>効果音</span><button id="set-se-t"></button><input type="range" min="0" max="100" id="set-se-v" aria-label="効果音の音量"></div>
     <p class="hint">スマホでは、画面を一度タップしてから音が鳴ります。</p>
     <h3>セーブデータ</h3>
-    <p class="hint">セーブはこの端末のブラウザの中だけに保存されます。ブラウザの「サイトデータ」を消すと消えるので、ときどきファイルに保存しておくと安心です。機種変更の引き継ぎにも使えます。</p>
-    <div class="row"><button id="sv-out">ファイルに保存</button><button id="sv-in">ファイルを読み込む</button></div>
+    <div class="setrow"><span>ファイル保存</span><button id="fs-t"></button><select id="fs-every" aria-label="ファイル保存をするタイミング"><option value="1">毎ターン（毎週）</option><option value="4">4ターンごと（約1か月）</option><option value="13">13ターンごと（季節）おすすめ</option><option value="52">52ターンごと（1年）</option></select></div>
+    <p class="hint">ブラウザの閲覧データを消すとゲームデータが消えます。その保険にファイル保存を選べます。オンにすると、選んだタイミングで週末が進むたびにセーブデータのファイルがダウンロードされます。古いセーブデータは手動で削除してください。</p>
+    <div class="row"><button id="sv-out">いまファイルに保存</button><button id="sv-in">ファイルを読み込む</button></div>
     <input type="file" id="sv-file" accept=".json,application/json" hidden>
     <p class="hint" id="sv-msg" hidden></p>
     <h3>出典</h3>
@@ -1323,15 +1324,28 @@ document.addEventListener('pointerdown',()=>{if(!AUD.cur)playBGM($('ov-battle').
 // 設定画面
 function renderSet(){$('set-bgm-t').textContent=AUD.mb?'オフ':'オン';$('set-se-t').textContent=AUD.ms?'オフ':'オン';
   $('set-bgm-v').value=Math.round(AUD.vb*100);$('set-se-v').value=Math.round(AUD.vs*100);
-  $('set-bgm-t').classList.toggle('primary',!AUD.mb);$('set-se-t').classList.toggle('primary',!AUD.ms);}
+  $('set-bgm-t').classList.toggle('primary',!AUD.mb);$('set-se-t').classList.toggle('primary',!AUD.ms);
+  $('fs-t').textContent=FS.on?'オン':'オフ';$('fs-t').classList.toggle('primary',FS.on);$('fs-every').value=String(FS.every);$('fs-every').disabled=!FS.on;}
+// ---- セーブデータの自動ファイル保存の設定（ブラウザの中。初期はオフ、13ターンごと） ----
+const FS={on:false,every:13};
+try{const j=JSON.parse(localStorage.getItem('cc_fsave')||'null');if(j){FS.on=!!j.on;FS.every=[1,4,13,52].includes(+j.every)?+j.every:13;}}catch(e){}
+function saveFS(){try{localStorage.setItem('cc_fsave',JSON.stringify(FS));}catch(e){}}
+$('fs-t').onclick=()=>{FS.on=!FS.on;saveFS();renderSet();};
+$('fs-every').onchange=()=>{FS.every=+$('fs-every').value||13;saveFS();};
+// ブラウザが容量不足などでサイトデータを勝手に消さないよう頼む（手動削除は防げない）
+try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist().catch(()=>{});}catch(e){}
 $('btn-set').onclick=()=>{renderSet();$('ov-set').hidden=false;};
 $('set-close').onclick=()=>{$('ov-set').hidden=true;$('sv-msg').hidden=true;};
 // ---- セーブデータのファイル保存・読み込み（ブラウザの外に残す） ----
 const svMsg=(t,bad)=>{const m=$('sv-msg');m.textContent=t;m.hidden=false;m.style.color=bad?'var(--bad,#d9534f)':'';};
-$('sv-out').onclick=()=>{let j=null;try{j=localStorage.getItem('charicamp');}catch(e){}if(!j&&S&&!INTRIP)j=pack();if(!j){svMsg('保存するセーブデータがありません',true);return;}
-  const d=new Date(),z=n=>String(n).padStart(2,'0'),name=`日本巡る自転車旅_セーブ_${d.getFullYear()}${z(d.getMonth()+1)}${z(d.getDate())}.json`;
-  const blob=new Blob([JSON.stringify({app:'charicamp',saved:d.toISOString(),data:JSON.parse(j)})],{type:'application/json'}),u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),2000);
-  svMsg(`「${name}」を保存しました（ダウンロードフォルダなど）`);};
+// セーブデータをファイルに書き出す。戻り値はファイル名（書き出せなければ null）。ユーザーの操作（タップ）の中で呼ぶこと
+function exportSave(){let j=null;try{j=localStorage.getItem('charicamp');}catch(e){}if(!j&&S&&!INTRIP)j=pack();if(!j)return null;
+  const o=JSON.parse(j),c=calendar(o.turn||1),wk=((+(o.turn||1)-1)%52)+1,name=`日本巡る自転車旅_セーブ_${c.year}年目${wk}週目.json`;
+  try{const blob=new Blob([JSON.stringify({app:'charicamp',saved:new Date().toISOString(),data:o})],{type:'application/json'}),u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),2000);}catch(e){return null;}
+  return name;}
+$('sv-out').onclick=()=>{const n=exportSave();if(n)svMsg(`「${n}」を保存しました（ダウンロードフォルダなど）`);else svMsg('保存するセーブデータがありません',true);};
+// 自動ファイル保存：週末が進んだ直後（「次の週末へ」のタップの中）に、設定の間隔ごとに書き出す
+function autoExport(){if(!FS.on||!S||INTRIP)return;if((S.turn-1)%FS.every!==0)return;const n=exportSave();if(n){log(`セーブデータをファイルに保存した（${n}）`);renderLog();save();}}
 let SVIN=null;// 読み込み先：'set'=設定画面／'title'=タイトル
 $('sv-in').onclick=()=>{if(INTRIP){svMsg('旅の途中は読み込めません。旅を終えてから',true);return;}SVIN='set';$('sv-file').value='';$('sv-file').click();};
 $('btn-load').onclick=()=>{SVIN='title';$('sv-file').value='';$('sv-file').click();};
@@ -1530,8 +1544,8 @@ function yearEval(y){const n=trialKindsCleared(),fc=famCount();
   return {score,rank:pace>=8000?'S':pace>=5000?'A':pace>=2500?'B':'C',goal:Math.min(47,10*y),n,fc};}
 function finishAdvance(){
   if(TS){const o=spOf(TS.fame),n=sponsor();if(n[0]>o[0])spCongrats(o,n);}
-  if((S.turn-1)%52===0){const y=calendar(S.turn-1).year;showResult(`<h2>${y}年目 決算</h2><div class="res"><span>都道府県クリア数</span><span>${famCount()} / 47</span><span>フォロワー</span><span>${fol(S.fame)}（${title(S.fame)}）</span><span>所持金</span><span>${yen(S.money)}</span><span>試練制覇</span><span>${S.stats.wins}回</span>${(()=>{const v=yearEval(y);return `<span>突破した試練の種類</span><span>${v.n} / ${TRIAL_KEYS.length}</span><span>年間目標</span><span>累計${v.goal}県制覇 ${v.fc>=v.goal?'✅ 達成':'❌ 未達'}</span><span>年間評価</span><span><img class="rank" src="img/rank_${v.rank.toLowerCase()}.webp" width="128" height="128" alt="${v.rank}"><b>${v.rank}</b>（${v.score.toLocaleString('ja-JP')}pt）</span>`;})()}</div><p class="hint">${y+1}年目は敵が少し強くなる。</p>`,()=>{render();turnPopup();},true);render();return;}
-  const tt=TS?{df:S.fame-TS.fame,dm:S.money-TS.money,late:!TS.inc}:null;if(tt)LASTRES={place:(PREF[S.loc]||{}).name||'',df:tt.df,late:tt.late};render();turnPopup();if(S.turn===2&&TUTI===3&&!tutSeen())tutShow(4,tt);}
+  if((S.turn-1)%52===0){const y=calendar(S.turn-1).year;showResult(`<h2>${y}年目 決算</h2><div class="res"><span>都道府県クリア数</span><span>${famCount()} / 47</span><span>フォロワー</span><span>${fol(S.fame)}（${title(S.fame)}）</span><span>所持金</span><span>${yen(S.money)}</span><span>試練制覇</span><span>${S.stats.wins}回</span>${(()=>{const v=yearEval(y);return `<span>突破した試練の種類</span><span>${v.n} / ${TRIAL_KEYS.length}</span><span>年間目標</span><span>累計${v.goal}県制覇 ${v.fc>=v.goal?'✅ 達成':'❌ 未達'}</span><span>年間評価</span><span><img class="rank" src="img/rank_${v.rank.toLowerCase()}.webp" width="128" height="128" alt="${v.rank}"><b>${v.rank}</b>（${v.score.toLocaleString('ja-JP')}pt）</span>`;})()}</div><p class="hint">${y+1}年目は敵が少し強くなる。</p>`,()=>{render();turnPopup();autoExport();},true);render();return;}
+  const tt=TS?{df:S.fame-TS.fame,dm:S.money-TS.money,late:!TS.inc}:null;if(tt)LASTRES={place:(PREF[S.loc]||{}).name||'',df:tt.df,late:tt.late};render();turnPopup();if(S.turn===2&&TUTI===3&&!tutSeen())tutShow(4,tt);autoExport();}
 function advance(){INTRIP=false;const sp=sponsor();S.money+=sp[1];if(TS)TS.sp=sp;S.turn++;rollForecast();S.sel=S.loc;
   if(famCount()===47&&TS&&TS.fam<47){showResult(`<h2>🎉 全国クリア！</h2><p>47か所すべてを馴染み宿にした。伝説の自転車インフルエンサー誕生。</p><div class="res"><span>達成</span><span>${calLabel(S.turn)}</span><span>フォロワー</span><span>${fol(S.fame)}</span><span>所持金</span><span>${yen(S.money)}</span></div>`,finishAdvance,true);render();return;}
   finishAdvance();}
