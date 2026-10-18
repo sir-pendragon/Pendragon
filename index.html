@@ -729,7 +729,8 @@ const PARTS=[
 const xg=i=>i&&(i.comp?'comp':i.rack?'rack':i.front?'front':'');// 同じ種類は1つだけ装備できる
 const RACK_TOP=4;
 // パーツ枠：自転車の値段で増える（¥150,000未満=4、¥450,000未満=5、以上=6）
-const partSlots=id=>{const b=BIKES.find(x=>x.id===id),p=b?b.price:0;return p>=450000?6:p>=150000?5:4;};
+const dcfBonus=g=>(g&&g.shelter==='sh4'?1:0)+(g&&g.tarp==='tp4'?1:0);// DCFのテント・タープは超軽いので、パーツ枠を1つずつ増やす
+const partSlots=(id,g)=>{const b=BIKES.find(x=>x.id===id),p=b?b.price:0;return (p>=450000?6:p>=150000?5:4)+dcfBonus(g===undefined?(typeof S==='object'&&S?S.gear:null):g);};
 const GEAR={
  fire:{label:'焚き火台（気力回復）',items:[
   {id:'fire1',name:'簡易焚き火台',price:6000,mp:6,photo:4},
@@ -858,9 +859,10 @@ function load(){try{const s=localStorage.getItem('charicamp');if(!s)return null;
   const pl=o.plus&&typeof o.plus==='object'?o.plus:{};o.plus={};for(const id of [...o.owned.bikes,...o.owned.parts]){const v=num(pl[id],0,0,3);if(v)o.plus[id]=v;}
   if(!o.owned.bikes.includes(o.bike))o.bike=o.owned.bikes[0];if(!o.owned.cloth.includes(o.cloth))o.cloth=o.owned.cloth[0];
   for(const k of ['bikes','cloth','parts','gear'])o.owned[k]=[...new Set(o.owned[k])];
-  o.parts=[...new Set((Array.isArray(o.parts)?o.parts:[]).filter(x=>o.owned.parts.includes(x)))];{const seen=new Set();o.parts=o.parts.filter(x=>{const g=xg(PARTS.find(p=>p.id===x));if(!g)return true;if(seen.has(g))return false;seen.add(g);return true;});}o.parts=o.parts.slice(0,partSlots(o.bike));
+  o.parts=[...new Set((Array.isArray(o.parts)?o.parts:[]).filter(x=>o.owned.parts.includes(x)))];{const seen=new Set();o.parts=o.parts.filter(x=>{const g=xg(PARTS.find(p=>p.id===x));if(!g)return true;if(seen.has(g))return false;seen.add(g);return true;});}o.parts=o.parts.slice(0,partSlots(o.bike,o.gear));
   const g=o.gear&&typeof o.gear==='object'?o.gear:{};o.gear={};for(const k of ['fire','shelter','tarp'])o.gear[k]=GEAR_ITEMS.some(x=>x.slot===k&&x.id===g[k]&&o.owned.gear.includes(x.id))?g[k]:null;
   if(o.gear.fire==='fire4'&&o.gear.shelter!=='sh5')o.gear.fire=null;
+  o.parts=o.parts.slice(0,partSlots(o.bike,o.gear));
   o.log=(Array.isArray(o.log)?o.log:[]).filter(x=>typeof x==='string').slice(0,LOG_MAX);
   o.tl=(Array.isArray(o.tl)?o.tl:[]).filter(x=>Array.isArray(x)&&x.length===4&&Number.isFinite(+x[0])&&Number.isInteger(+x[1])&&+x[1]>=0&&+x[1]<PREF.length&&Number.isFinite(+x[2])&&typeof x[3]==='string').slice(0,TL_MAX).map(x=>[num(x[0],1,1,99999),+x[1],num(x[2],-1,-1,100),x[3]]);
   const st=o.stats&&typeof o.stats==='object'?o.stats:{};o.stats={wins:num(st.wins,0,0,1e9),posts:num(st.posts,0,0,1e9),bestQ:num(st.bestQ,0,0,100),tph:num(st.tph,0,0,1e9),ev:num(st.ev,0,0,1e9),tc:num(st.tc,0,0,1e9),en:{}}
@@ -1100,7 +1102,7 @@ function card(item,kind,mode){const eq=isEq(kind,item),own=owns(kind,item.id);
 let PGRP='bike';// パーツ欄のタブ：bike=自転車パーツ／other=他アイテム
 const isBikePart=i=>!!(i.climb||i.rough||i.cruise||i.wx||i.rack||i.front);// 能力が上がる＝自転車パーツ。ほかは他アイテム
 const pgTabs=()=>`<div class="subtabs pg">${[['bike','自転車パーツ'],['other','他アイテム']].map(([g,t])=>`<button data-pgrp="${g}" aria-selected="${PGRP===g}">${t}</button>`).join('')}</div>`;
-function renderShop(){{const h=$('slot-hint');if(h)h.textContent=`パーツは${partSlots(S.bike)}つまで付けられます（自転車が高いほど増えます）。`;}const lists={bike:BIKES,cloth:CLOTHES,part:PARTS};
+function renderShop(){if(S.parts.length>partSlots(S.bike))S.parts=S.parts.slice(0,partSlots(S.bike));{const h=$('slot-hint');if(h)h.textContent=`パーツは${partSlots(S.bike)}つまで付けられます（自転車が高いほど増えます。DCFのテント・タープは軽いので、1つにつき+1）。`;}const lists={bike:BIKES,cloth:CLOTHES,part:PARTS};
   for(const [k,l0] of Object.entries(lists)){const l=k==='part'?l0.filter(i=>isBikePart(i)===(PGRP==='bike')):l0,tabs=k==='part'?pgTabs():'';$('shop-'+k).innerHTML=tabs+l.map(i=>card(i,k,'shop')).join('');
     const own=l.filter(i=>owns(k,i.id));$('eq-'+k).innerHTML=tabs+(own.length?own.map(i=>card(i,k,'equip')).join(''):'<div class="hint">なし</div>');}
   for(const slot of Object.keys(GEAR)){const l=GEAR_ITEMS.filter(i=>i.slot===slot);$('shop-'+slot).innerHTML=l.map(i=>card(i,'gear','shop')).join('');

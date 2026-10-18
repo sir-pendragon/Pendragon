@@ -2,7 +2,7 @@ const fs=require('node:fs'),path=require('node:path'),assert=require('node:asser
 const {JSDOM,VirtualConsole}=require('jsdom');
 const filename=path.resolve(process.argv[2]||path.join(__dirname,'..','index.html'));
 const html=fs.readFileSync(filename,'utf8');
-const expose=`window.qa={foodMax,partSlots,get sgPage(){return SGPG},set sgPage(v){SGPG=v},needV,isCourse,askGo,ENEMY,SPEC,SIGHTS,TACT,tlEnc,tlDec,newGame,render,renderMap,renderBattle,renderShop,renderForge,renderDetail,renderList,renderTrials,renderSights,load,save,pack,snap,advance,calendar,rollForecast,startTrip,stayWx,startBattle,cmd,endTrip,endTrip2,nextEncounter,tsuchinoko,tcRate,bikeStats,gearFx,travelInfo,restHome,yearEval,eventAt,stoveOn,plv,rkLv,PREF,ENEMY,GEAR_ITEMS,PARTS,BIKES,CLOTHES,WXL,TRIAL_KEYS,AUD,tcRate,playBGM,bgmApply,
+const expose=`window.qa={foodMax,partSlots,dcfBonus,get sgPage(){return SGPG},set sgPage(v){SGPG=v},needV,isCourse,askGo,ENEMY,SPEC,SIGHTS,TACT,tlEnc,tlDec,newGame,render,renderMap,renderBattle,renderShop,renderForge,renderDetail,renderList,renderTrials,renderSights,load,save,pack,snap,advance,calendar,rollForecast,startTrip,stayWx,startBattle,cmd,endTrip,endTrip2,nextEncounter,tsuchinoko,tcRate,bikeStats,gearFx,travelInfo,restHome,yearEval,eventAt,stoveOn,plv,rkLv,PREF,ENEMY,GEAR_ITEMS,PARTS,BIKES,CLOTHES,WXL,TRIAL_KEYS,AUD,tcRate,playBGM,bgmApply,
 get S(){return S},set S(v){S=v},get B(){return B},get trip(){return trip},set trip(v){trip=v},get TS(){return TS},get inTrip(){return INTRIP},get lastSave(){return LASTSAVE},
 quiet(){render=()=>save();renderBattle=()=>{};playSE=()=>{};playBGM=()=>{};}};`;
 const js=[...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(m=>m[1]).sort((x,y)=>y.length-x.length)[0];// 先頭の短い移動スクリプトではなく、本体（最長）を読む
@@ -186,6 +186,16 @@ test('front carriers: four tiers, comfort and photo, independent of the rear rac
  q.S.plus={front4:3};assert.equal(q.bikeStats().comfy,4,'no customization');q.S.plus={};
  q.S.parts=['front1','front3','rack1','rack2'];q.save();const o=q.load();assert.equal(o.parts.filter(x=>x.startsWith('front')).length,1);assert.equal(o.parts.filter(x=>x.startsWith('rack')).length,1);
  q.renderShop();const ids=[...w.document.querySelectorAll('#shop-part .card')].map(e=>e.dataset.id);for(const f of F)assert.ok(ids.includes(f.id),f.id);q.renderForge();});
+test('DCF tent and tarp each add one part slot, trimmed when removed',c=>{const {q,w}=c;
+ q.newGame(q.PREF[0].id);q.S.owned.bikes=q.BIKES.map(b=>b.id);q.S.owned.parts=q.PARTS.map(x=>x.id);q.S.owned.gear=q.S.owned.gear.concat(['sh4','tp4','sh2','tp3']);q.S.bike='mama';
+ q.S.gear={fire:null,shelter:null,tarp:null};assert.equal(q.partSlots('mama'),4);
+ q.S.gear.shelter='sh4';assert.equal(q.partSlots('mama'),5);q.S.gear.tarp='tp4';assert.equal(q.partSlots('mama'),6);
+ q.S.gear.shelter='sh2';assert.equal(q.partSlots('mama'),5,'non-DCF tent: no bonus');q.S.gear.shelter='sh4';q.S.gear.tarp='tp3';assert.equal(q.partSlots('mama'),5);
+ q.S.gear.tarp='tp4';q.S.bike='rando';assert.equal(q.partSlots('rando'),8);
+ q.S.bike='mama';q.S.parts=['wheel','tire','aero','fender','tripod','spray'];q.save();let o=q.load();assert.equal(o.parts.length,6,'kept with both DCF');
+ q.S.gear.tarp=null;q.renderShop();assert.equal(q.S.parts.length,5,'trimmed after tarp removed');
+ q.S.gear.shelter=null;q.save();o=q.load();assert.equal(o.parts.length,4,'trimmed on load without DCF');
+ q.S.parts=['wheel','tire','aero','fender'];q.renderShop();assert.ok(w.document.getElementById('slot-hint').textContent.includes('4つ'));});
 const summary={file:filename,passed:results.filter(x=>x.ok).length,failed:results.filter(x=>!x.ok).length,results};
 if(process.argv[3])fs.writeFileSync(process.argv[3],JSON.stringify(summary,null,2));
 console.log(JSON.stringify({passed:summary.passed,failed:summary.failed}));process.exitCode=summary.failed?1:0;
