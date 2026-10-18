@@ -720,8 +720,13 @@ const PARTS=[
  {id:'rack2',name:'アルミ製リアラック',price:15000,food:2,rack:1},
  {id:'rack3',name:'カーボン製リアラック',price:45000,food:3,rack:1},
  {id:'rack4',name:'チタン製リアラック',price:90000,food:4,rack:1},
+ // フロントキャリア：荷物が前後に分かれて安定する（気力消費-）。前の荷台でも撮影しやすい（写真+）。リアラックとは別に1つだけ装備、カスタム不可
+ {id:'front1',name:'中古フロントキャリア',price:5000,comfy:1,photo:1,front:1},
+ {id:'front2',name:'アルミ製フロントキャリア',price:12000,comfy:2,photo:2,front:1},
+ {id:'front3',name:'カーボン製フロントキャリア',price:36000,comfy:3,photo:3,front:1},
+ {id:'front4',name:'チタン製フロントキャリア',price:72000,comfy:4,photo:4,front:1},
 ];
-const xg=i=>i&&(i.comp?'comp':i.rack?'rack':'');// 同じ種類は1つだけ装備できる
+const xg=i=>i&&(i.comp?'comp':i.rack?'rack':i.front?'front':'');// 同じ種類は1つだけ装備できる
 const RACK_TOP=4;
 // パーツ枠：自転車の値段で増える（¥150,000未満=3、¥450,000未満=4、以上=5）
 const partSlots=id=>{const b=BIKES.find(x=>x.id===id),p=b?b.price:0;return p>=450000?5:p>=150000?4:3;};
@@ -886,7 +891,7 @@ const STATJ={climb:'登坂',rough:'悪路',cruise:'巡航',wx:'耐候',photo:'�
 // 折りたたみ（チタン折りたたみ・分割式チタン製グラベルロード）専用の「輪行カスタム」：輪行費の割合が段階的に下がる（素は半額）
 const RK_RATE=[.5,.4,.3,.15],RK_COST=[8000,15000,30000],RK_TIER=['軽量輪行袋','専用ハードケース','超軽量カーボンケース'];
 const rkLv=id=>Math.min(3,(S.plus&&S.plus[id||S.bike])||0);
-const NOCUSTOM=new Set(['fold','tigrav','compm','comph','compi','rack1','rack2','rack3','rack4']);// チタン製の自転車は、フレーム素材が完成形なのでカスタム（クロモリ→アルミ→カーボン）できない
+const NOCUSTOM=new Set(['fold','tigrav','compm','comph','compi','rack1','rack2','rack3','rack4','front1','front2','front3','front4']);// チタン製の自転車は、フレーム素材が完成形なのでカスタム（クロモリ→アルミ→カーボン）できない
 const plv=id=>NOCUSTOM.has(id)?0:(S.plus&&S.plus[id])||0;
 // カスタムの段階名。自転車はフレーム素材、パーツは仕様（効果は1段ごとに+1のまま）
 const TIER={bike:['クロモリ製','アルミ製','カーボン製'],part:['改良型','高性能','特注品']};
@@ -1080,20 +1085,20 @@ function renderList(){$('sitelist').innerHTML=PREF.map(p=>`<button data-id="${p.
 function owns(kind,id){return S.owned[kind==='bike'?'bikes':kind==='cloth'?'cloth':kind==='gear'?'gear':'parts'].includes(id);}
 function isEq(kind,item){return kind==='bike'?S.bike===item.id:kind==='cloth'?S.cloth===item.id:kind==='gear'?S.gear[item.slot]===item.id:S.parts.includes(item.id);}
 // 新しいギアの絵が届くまでは、近い既存のアイコンを代わりに表示する（読み込みに失敗したときだけ切り替わる）
-const ICON_FB={};
+const ICON_FB={front1:'part_rack1',front2:'part_rack2',front3:'part_rack3',front4:'part_rack4'};
 addEventListener('error',e=>{const i=e.target;if(i&&i.tagName==='IMG'&&i.dataset&&i.dataset.fb){const f='img/'+i.dataset.fb+'.webp';i.dataset.fb='';i.src=f;}},true);
 function card(item,kind,mode){const eq=isEq(kind,item),own=owns(kind,item.id);
   const spec=kind==='bike'?`登坂${bv(item,'climb')} 悪路${bv(item,'rough')} 巡航${bv(item,'cruise')} 耐候${bv(item,'wx')}${item.fold?` 輪行費×${RK_RATE[rkLv(item.id)]}`:''}`:
    kind==='cloth'?`快適 ${item.lo}℃〜${item.hi}℃`:
    kind==='gear'?[item.mp?`気力+${item.mp}`:'',item.hp?`体力+${item.hp}`:'',item.photo?`写真+${item.photo}`:'',item.guard?`雨ガード${Math.round(item.guard*100)}%`:'',item.climb?`登坂+${item.climb}`:'',item.cruise?`巡航+${item.cruise}`:'',item.winter?'冬のみ有効':'',item.req?`要：${(GEAR_ITEMS.find(x=>x.id===item.req)||{}).name}`:''].filter(Boolean).join(' '):
-   (item.comp?'コンポ（1つだけ装備） ':'')+(item.rack?`ラック（1つだけ装備） 補給食の上限+${item.food}`:'')+(item.anti?(item.anti==='bear'?'クマから受ける被害が半分':'暴走車・暴走バイクから受ける被害が半分'):Object.entries(item).filter(([k])=>['climb','rough','cruise','wx','photo','comfy'].includes(k)).map(([k,v])=>({climb:'登坂',rough:'悪路',cruise:'巡航',wx:'耐候',photo:'写真',comfy:'気力消費'}[k]+(k==='comfy'?'-':'+')+v)).join(' '));
+   (item.comp?'コンポ（1つだけ装備） ':'')+(item.rack?`ラック（1つだけ装備） 補給食の上限+${item.food}`:'')+(item.front?'フロントキャリア（1つだけ装備） ':'')+(item.anti?(item.anti==='bear'?'クマから受ける被害が半分':'暴走車・暴走バイクから受ける被害が半分'):Object.entries(item).filter(([k])=>['climb','rough','cruise','wx','photo','comfy'].includes(k)).map(([k,v])=>({climb:'登坂',rough:'悪路',cruise:'巡航',wx:'耐候',photo:'写真',comfy:'気力消費'}[k]+(k==='comfy'?'-':'+')+v)).join(' '));
   let act='';
   if(mode==='shop'){act=own?`<span class="pill">所持</span>`:`<button data-act="buy" ${S.money>=item.price?'':'disabled'}>購入 ${yen(item.price)}</button>`;}
   else if(eq)act=(kind==='part'||kind==='gear')?`<button data-act="unequip">外す</button>`:`<span class="pill">装備中</span>`;
   else act=`<button data-act="equip" ${kind==='part'&&S.parts.length>=partSlots(S.bike)&&!(xg(item)&&S.parts.some(x=>xg(PARTS.find(p=>p.id===x))===xg(item)))||kind==='gear'&&item.req&&S.gear.shelter!==item.req?'disabled':''}>装備</button>`;
   return `<div class="card ${eq?'eq':''}" data-kind="${kind}" data-id="${item.id}"><div class="name"><span class="nm"><img loading="lazy" class="ci" ${(kind==='gear'||kind==='part')&&ICON_FB[item.id]?`data-fb="${ICON_FB[item.id]}" `:''}src="img/${kind==='gear'?'icon_g_'+item.id:(kind==='part'?'part_'+item.id:kind==='cloth'?'cloth_'+item.id:'icon_bike_'+item.id)}.webp" width="28" height="28" alt="">${item.name}${(kind==='bike'||kind==='part')&&plv(item.id)?` <b>${tierOf(kind,plv(item.id)).replace('製','')}</b>`:''}</span>${act}</div><div class="spec">${spec}</div></div>`;}
 let PGRP='bike';// パーツ欄のタブ：bike=自転車パーツ／other=他アイテム
-const isBikePart=i=>!!(i.climb||i.rough||i.cruise||i.wx||i.rack);// 能力が上がる＝自転車パーツ。ほかは他アイテム
+const isBikePart=i=>!!(i.climb||i.rough||i.cruise||i.wx||i.rack||i.front);// 能力が上がる＝自転車パーツ。ほかは他アイテム
 const pgTabs=()=>`<div class="subtabs pg">${[['bike','自転車パーツ'],['other','他アイテム']].map(([g,t])=>`<button data-pgrp="${g}" aria-selected="${PGRP===g}">${t}</button>`).join('')}</div>`;
 function renderShop(){{const h=$('slot-hint');if(h)h.textContent=`パーツは${partSlots(S.bike)}つまで付けられます（自転車が高いほど増えます）。`;}const lists={bike:BIKES,cloth:CLOTHES,part:PARTS};
   for(const [k,l0] of Object.entries(lists)){const l=k==='part'?l0.filter(i=>isBikePart(i)===(PGRP==='bike')):l0,tabs=k==='part'?pgTabs():'';$('shop-'+k).innerHTML=tabs+l.map(i=>card(i,k,'shop')).join('');

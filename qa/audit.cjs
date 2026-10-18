@@ -158,7 +158,7 @@ test('components: three tiers, stats add up, not customizable, only one survives
  q.S.money=1e7;q.renderShop();q.renderForge();});
 test('parts shop and equip lists are split into bike parts and other items',c=>{const {q,w}=c;q.newGame(q.PREF[0].id);q.S.owned.parts=q.PARTS.map(x=>x.id);q.renderShop();
  const ids=sel=>[...w.document.querySelectorAll(sel+' .card')].map(e=>e.dataset.id);
- const bikeSet=['wheel','tire','aero','fender','compm','comph','compi','rack1','rack2','rack3','rack4'],other=['spray','oil','tripod','cam','drone','comfy'];
+ const bikeSet=['wheel','tire','aero','fender','compm','comph','compi','rack1','rack2','rack3','rack4','front1','front2','front3','front4'],other=['spray','oil','tripod','cam','drone','comfy'];
  assert.deepEqual(ids('#shop-part'),bikeSet);assert.deepEqual(ids('#eq-part'),bikeSet);
  w.document.querySelector('#shop-part button[data-pgrp="other"]').click();assert.deepEqual(ids('#shop-part'),other);assert.deepEqual(ids('#eq-part'),other);
  assert.equal(w.document.querySelectorAll('#shop-part button[data-pgrp][aria-selected="true"]').length,1);
@@ -180,6 +180,12 @@ test('part slots grow with bike price: 3/4/5, trimmed on bike change and on load
  q.S.bike='rando';q.S.parts=['wheel','tire','aero','fender','tripod'];q.renderShop();
  const eq=[...w.document.querySelectorAll('#eq-part .card button[data-act="equip"]')];assert.ok(eq.every(b=>b.disabled),'full: no more equip');
  assert.ok(w.document.getElementById('slot-hint').textContent.includes('5つ'));});
+test('front carriers: four tiers, comfort and photo, independent of the rear rack, not customizable',c=>{const {q,w}=c;const F=['front1','front2','front3','front4'].map(id=>q.PARTS.find(x=>x.id===id));assert.ok(F.every(Boolean));
+ for(let i=1;i<4;i++){assert.ok(F[i].price>F[i-1].price);assert.ok(F[i].comfy>F[i-1].comfy);assert.ok(F[i].photo>F[i-1].photo);}
+ q.newGame(q.PREF[0].id);q.S.bike='rando';q.S.owned.parts=q.PARTS.map(x=>x.id);q.S.parts=['rack4','front4'];const st=q.bikeStats();assert.equal(st.comfy,4);assert.equal(st.photo,4);assert.equal(q.foodMax(),9);
+ q.S.plus={front4:3};assert.equal(q.bikeStats().comfy,4,'no customization');q.S.plus={};
+ q.S.parts=['front1','front3','rack1','rack2'];q.save();const o=q.load();assert.equal(o.parts.filter(x=>x.startsWith('front')).length,1);assert.equal(o.parts.filter(x=>x.startsWith('rack')).length,1);
+ q.renderShop();const ids=[...w.document.querySelectorAll('#shop-part .card')].map(e=>e.dataset.id);for(const f of F)assert.ok(ids.includes(f.id),f.id);q.renderForge();});
 const summary={file:filename,passed:results.filter(x=>x.ok).length,failed:results.filter(x=>!x.ok).length,results};
 if(process.argv[3])fs.writeFileSync(process.argv[3],JSON.stringify(summary,null,2));
 console.log(JSON.stringify({passed:summary.passed,failed:summary.failed}));process.exitCode=summary.failed?1:0;
