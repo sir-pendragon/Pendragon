@@ -196,6 +196,9 @@ test('DCF tent and tarp each add one part slot, trimmed when removed',c=>{const 
  q.S.gear.tarp=null;q.renderShop();assert.equal(q.S.parts.length,5,'trimmed after tarp removed');
  q.S.gear.shelter=null;q.save();o=q.load();assert.equal(o.parts.length,4,'trimmed on load without DCF');
  q.S.parts=['wheel','tire','aero','fender'];q.renderShop();assert.ok(w.document.getElementById('slot-hint').textContent.includes('4つ'));});
+test('battle food buttons: Nagano food shown with the normal food button, both full width (no half-empty row)',c=>{const {q}=c;
+ batt(c,'hill');let b=[...c.$('bt-cmds').querySelectorAll('button')];assert.equal(b.find(x=>x.dataset.cmd==='food').classList.contains('wide'),false);
+ q.S.food2=1;batt(c,'hill');b=[...c.$('bt-cmds').querySelectorAll('button')];assert.equal(b.find(x=>x.dataset.cmd==='food').classList.contains('wide'),true);assert.equal(b.find(x=>x.dataset.cmd==='food2').classList.contains('wide'),true);});
 const summary={file:filename,passed:results.filter(x=>x.ok).length,failed:results.filter(x=>!x.ok).length,results};
 if(process.argv[3])fs.writeFileSync(process.argv[3],JSON.stringify(summary,null,2));
 console.log(JSON.stringify({passed:summary.passed,failed:summary.failed}));process.exitCode=summary.failed?1:0;
