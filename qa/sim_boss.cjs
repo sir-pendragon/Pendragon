@@ -23,7 +23,7 @@ const CONFIGS_ALL={
  'ランドナー+5枠':{bike:'rando',parts:'full5'},
  'チタン分割+5枠':{bike:'tigrav',parts:'full5'},
 };
-const PARTBY={climb:'wheel',rough:'tire',cruise:'aero',wx:'fender'};
+const PARTBY={climb:'wheelc2',rough:'tire',cruise:'aero',wx:'fender'};// ホイールは1つだけ装備：登坂・巡航は最上位のカーボン製軽量、悪路はMTB用
 
 function smart(){const S=q.S,B=q.B,left=B.limit-B.turn+1;
  if(S.hp<=15)return S.food>0?'food':S.food2>0?'food2':'rest';
@@ -59,7 +59,7 @@ function runCourse(prefName,cfg,year,policy,hp0,mp0){
  const p=q.PREF.find(x=>x.name===prefName),start=q.PREF.find(x=>x.name==='茨城').id;
  for(const id of ['ov-result','ov-battle','ov-camp','ov-tc','ov-pay','ov-storm','pop'])if($(id))$(id).hidden=true;
  q.newGame(start);const S=q.S;S.money=1e8;S.turn=year===1?1:53;S.bike=cfg.bike;
- let parts=cfg.parts,full=false;if(parts==='full4'||parts==='full5'){full=true;const sp=q.ENEMY[q.SPEC[prefName].boss].stat,n=parts==='full4'?4:5;const base=parts==='full4'?['comph','rack2']:['compi','rack4'];const pool=[PARTBY[sp],'wheel','tire','aero','fender'].filter((x,i,a)=>a.indexOf(x)===i);parts=[...base,...pool].slice(0,n);}else if(parts==='best'){const sp=q.ENEMY[q.SPEC[prefName].boss].stat;parts=[PARTBY[sp],'fender'===PARTBY[sp]?'wheel':'fender'];}
+ let parts=cfg.parts,full=false;if(parts==='full4'||parts==='full5'){full=true;const sp=q.ENEMY[q.SPEC[prefName].boss].stat,n=parts==='full4'?4:5;const base=parts==='full4'?['comph','rack2']:['compi','rack4'];const pool=[PARTBY[sp],'aero','fender'].filter((x,i,a)=>a.indexOf(x)===i);parts=[...base,...pool].slice(0,n);}else if(parts==='best'){const sp=q.ENEMY[q.SPEC[prefName].boss].stat;parts=[PARTBY[sp],'fender'===PARTBY[sp]?'tire':'fender'];}
  S.parts=parts.slice();S.food=full?q.foodMax():3;S.hp=hp0;S.mp=mp0;S.visits[p.id]=3;S.fam[p.id]=false;
  S.forecast=Object.fromEntries(q.PREF.map(x=>[x.id,{temp:15,wx:'sun'}]));
  q.startTrip(p,false);
