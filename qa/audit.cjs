@@ -209,11 +209,12 @@ test('custom tab is tier-first: 1/2/3段階目 cards list the owned bikes and pa
  const before=q.S.money;c.$('shop-forge').querySelector('[data-forge="bike:rando"]').click();c.$('pay-yes').click();assert.equal(q.S.plus.rando,1);assert.ok(q.S.money<before);});
 test('sponsor SNS post does not state an amount',c=>{const {q,w}=c;q.newGame(q.PREF[0].id);q.S.log=[...(q.S.log||[]),{t:q.S.turn||1,x:'スポンサー「旅行会社」がつきました（毎週¥10,000）'}];
  const src=fs.readFileSync(path.join(__dirname,'..','index.html'),'utf8');const m=/\^スポンサー「\(\.\+\)」がつきました[\s\S]{0,700}/.exec(src);assert.ok(m);assert.ok(!/応援金|yen\(pay\)/.test(m[0]));});
-test('trial collection is split into tabs 今までのボス and 4つ目のボス; special-course entries appear only under the latter',c=>{const {q}=c;q.newGame(q.PREF[0].id);q.renderTrials();
+test('trial collection tabs: 試練 and 都道府県限定試練 (prefecture bosses only)',c=>{const {q}=c;q.newGame(q.PREF[0].id);q.renderTrials();
  const tab=g=>c.$('tr-tabs').querySelector('button[data-trs="'+g+'"]'),txt=()=>c.$('achlist').textContent;
- assert.equal(c.$('tr-tabs').querySelectorAll('button').length,2);assert.equal(tab('old').getAttribute('aria-selected'),'true');
- assert.ok(txt().includes('激坂'));assert.ok(!txt().includes('落石'));assert.ok(!txt().includes('鬼ノ城の温羅'));
- tab('4th').click();assert.equal(tab('4th').getAttribute('aria-selected'),'true');assert.ok(txt().includes('落石'));assert.ok(!txt().includes('激坂'));
+ assert.equal(c.$('tr-tabs').querySelectorAll('button').length,2);assert.deepEqual([...c.$('tr-tabs').querySelectorAll('button')].map(b=>b.textContent),['試練','都道府県限定試練']);assert.equal(tab('old').getAttribute('aria-selected'),'true');
+ assert.ok(txt().includes('激坂'));assert.ok(txt().includes('落石'),'course enemies stay in 試練');assert.ok(!txt().includes('最後の崩落区間'));assert.ok(!txt().includes('鬼ノ城の温羅'));
+ tab('4th').click();assert.equal(tab('4th').getAttribute('aria-selected'),'true');assert.ok(txt().includes('最後の崩落区間'));assert.ok(!txt().includes('激坂'));assert.ok(!txt().includes('落石'));
+ const bosses=[...q.TRIAL_KEYS].filter(k=>k.startsWith('boss_')||k==='collapse');assert.equal(bosses.length,Object.values(q.SPEC).length,'one prefecture boss per special prefecture');
  q.S.stats.en.boss_okayama=[1,1,0];q.renderTrials();assert.ok(txt().includes('鬼ノ城の温羅'));
  tab('old').click();assert.ok(txt().includes('激坂'));assert.ok(!txt().includes('鬼ノ城の温羅'));});
 const summary={file:filename,passed:results.filter(x=>x.ok).length,failed:results.filter(x=>!x.ok).length,results};

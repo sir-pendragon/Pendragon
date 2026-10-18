@@ -1223,16 +1223,16 @@ function askGo(p,rinko,skipSp){if(!skipSp&&isCourse(p,false))return askSpecial(p
     ['焚き火台',gi('fire')],['寝床',gi('shelter')],['タープ',gi('tarp')],['補給食',S.food+'個'+(S.food2?`＋長野${S.food2}個`:'')]].map(r=>`<span>${r[0]}</span><span>${r[1]}</span>`).join('');
   $('go-yes').onclick=()=>{$('ov-go').hidden=true;startTrip(p,rinko);};$('ov-go').hidden=false;$('go-yes').focus();}
 let LOGSUB='trip';
-let TRSUB='old';// 試練欄のタブ：old=今までのボス／4th=4つ目のボス
-const G4=new Set(['rockfall','slide','ford','tree','collapse']),is4th=k=>NEWK.has(k)||G4.has(k);// 4つ目の特別コースの敵（群馬の5種＋新しい特別コースの敵・ボス）
+let TRSUB='old';// 試練欄のタブ：old=試練／4th=都道府県限定試練（各県のボス）
+const is4th=k=>k.startsWith('boss_')||k==='collapse';// 都道府県限定試練＝各県の特別コースのボス（群馬のボスは「最後の崩落区間」）。ほかの特別コースの敵は「試練」側
 function renderTrials(){let w=0,f=0;for(const k of TRIAL_KEYS){const v=S.stats.en[k]||[0,0,0];w+=v[1];f+=v[2];}
   $('ach-sum').textContent=`突破 ${w}回 ／ 失敗 ${f}回`;
   const row=k=>{const v=S.stats.en[k]||[0,0,0],z=v[0]?'':' z',cols=`<div class="num${z}">${v[0]}</div><div class="num${z}">${v[1]}</div><div class="num${z}${v[2]?' bad':''}">${v[2]}</div>`;
     if(k==='tsuchi'){const got=v[1]>0;return `<div class="n${got?'':' leg'}"><img loading="lazy" decoding="async" src="img/${got?'tsuchinoko':'tsuchinoko_unknown'}.webp" alt="">${got?'ツチノコ':'伝説の生き物'}</div>${cols}`;}
     if(NEWK.has(k)&&!v[0])return '';const e=ENEMY[k];return `<div class="n"><img loading="lazy" decoding="async" src="${e.img}" alt="" onerror="this.style.display='none'">${e.name.replace('インフルエンサー','').replace('迷惑キャンパー','迷惑')}</div>${cols}`;};
-  $('tr-tabs').innerHTML=[['old','今までのボス'],['4th','4つ目のボス']].map(([g,t])=>`<button data-trs="${g}" aria-selected="${TRSUB===g}">${t}</button>`).join('');
+  $('tr-tabs').innerHTML=[['old','試練'],['4th','都道府県限定試練']].map(([g,t])=>`<button data-trs="${g}" aria-selected="${TRSUB===g}">${t}</button>`).join('');
   const rows=TRIAL_KEYS.filter(k=>is4th(k)===(TRSUB==='4th')).map(row).join('');
-  $('achlist').innerHTML='<div class="th">試練</div><div class="th">遭遇</div><div class="th">突破</div><div class="th">失敗</div>'+(rows||'<div class="none">まだ出会っていません（特別コースで出会うと載ります）</div>');}
+  $('achlist').innerHTML='<div class="th">試練</div><div class="th">遭遇</div><div class="th">突破</div><div class="th">失敗</div>'+(rows||'<div class="none">まだ出会っていません（その県の特別コースで出会うと載ります）</div>');}
 $('tr-tabs').onclick=e=>{const b=e.target.closest('button[data-trs]');if(!b)return;TRSUB=b.dataset.trs;renderTrials();};
 {let tx=0,ty=0;$('sightbook').addEventListener('touchstart',e=>{const t=e.changedTouches[0];tx=t.clientX;ty=t.clientY;},{passive:true});$('sightbook').addEventListener('touchend',e=>{const t=e.changedTouches[0],dx=t.clientX-tx,dy=t.clientY-ty;if(Math.abs(dx)>60&&Math.abs(dx)>Math.abs(dy)*1.5){const n=SGPG+(dx<0?1:-1);if(n>=0&&n<SGPAGES.length){SGPG=n;renderSights();playSE('se_page');}}},{passive:true});}
 function showLogSub(){$('p-trip').hidden=LOGSUB!=='trip';$('p-sight').hidden=LOGSUB!=='sight';$('p-ach').hidden=LOGSUB!=='ach';if(LOGSUB==='ach')renderTrials();document.querySelectorAll('#log-tabs button').forEach(x=>x.setAttribute('aria-selected',x.dataset.sub===LOGSUB));if(LOGSUB==='sight')renderSights();}
