@@ -72,7 +72,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .ci{width:28px;height:28px;flex:none;object-fit:contain}
 .subtabs{display:flex;gap:5px;flex-wrap:wrap;margin:0}
 .subtabs button{flex:1 1 0;min-width:22%;min-height:50px;padding:4px 2px;font-size:var(--fs-s);white-space:nowrap;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px}
-.subtabs.pg button{min-height:38px;flex-direction:row;font-size:var(--fs-m);min-width:30%}
+.subtabs.pg button{min-height:38px;flex-direction:row;font-size:var(--fs-m);min-width:20%}
 .subtabs button .wi{width:1.6em;height:1.6em;margin:0}
 #shop-tabs button,#camp-tabs button,#gear-tabs button{min-height:44px}
 .campsec{display:flex;flex-direction:column;gap:8px}
@@ -1115,10 +1115,9 @@ function card(item,kind,mode){const eq=isEq(kind,item),own=owns(kind,item.id);
   else if(eq)act=(kind==='part'||kind==='gear')?`<button data-act="unequip">外す</button>`:`<span class="pill">装備中</span>`;
   else act=`<button data-act="equip" ${kind==='part'&&S.parts.length>=partSlots(S.bike)&&!(xg(item)&&S.parts.some(x=>xg(PARTS.find(p=>p.id===x))===xg(item)))||kind==='gear'&&item.req&&S.gear.shelter!==item.req?'disabled':''}>装備</button>`;
   return `<div class="card ${eq?'eq':''}" data-kind="${kind}" data-id="${item.id}"><div class="name"><span class="nm"><img loading="lazy" class="ci" ${(kind==='gear'||kind==='part')&&ICON_FB[item.id]?`data-fb="${ICON_FB[item.id]}" `:''}src="img/${kind==='gear'?'icon_g_'+item.id:(kind==='part'?'part_'+item.id:kind==='cloth'?'cloth_'+item.id:'icon_bike_'+item.id)}.webp" width="28" height="28" alt="">${item.name}${(kind==='bike'||kind==='part')&&plv(item.id)?` <b>${tierOf(kind,plv(item.id)).replace('製','')}</b>`:''}</span>${act}</div><div class="spec">${spec}</div></div>`;}
-let PGRP='rack';// パーツ欄のタブ：rack=ラック類／comp=コンポ類／wheel=ホイール／etc=その他パーツ／other=他アイテム
-const isBikePart=i=>!!(i.climb||i.rough||i.cruise||i.wx||i.rack||i.front);// 能力が上がる＝自転車パーツ。ほかは他アイテム
-const grpOf=i=>i.rack||i.front?'rack':i.comp?'comp':(i.id==='wheel'||i.id==='tire')?'wheel':isBikePart(i)?'etc':'other';// 前後ラック／コンポ／ホイール＋タイヤ／その他の自転車パーツ／他アイテム
-const PG_TABS=[['rack','ラック類'],['comp','コンポ類'],['wheel','ホイール'],['etc','その他'],['other','他アイテム']];
+let PGRP='rack';// パーツ欄のタブ：rack=ラック類／comp=コンポ類／wheel=ホイール／etc=その他（残りすべて）
+const grpOf=i=>i.rack||i.front?'rack':i.comp?'comp':(i.id==='wheel'||i.id==='tire')?'wheel':'etc';// 前後ラック／コンポ／ホイール＋タイヤ／その他（エアロバー・フェンダー・熊スプレー・カメラ等すべて）
+const PG_TABS=[['rack','ラック類'],['comp','コンポ類'],['wheel','ホイール'],['etc','その他']];
 const pgTabs=()=>`<div class="subtabs pg">${PG_TABS.map(([g,t])=>`<button data-pgrp="${g}" aria-selected="${PGRP===g}">${t}</button>`).join('')}</div>`;
 function renderShop(){if(S.parts.length>partSlots(S.bike))S.parts=S.parts.slice(0,partSlots(S.bike));{const h=$('slot-hint');if(h)h.textContent=`パーツは${partSlots(S.bike)}つまで付けられます（自転車が高いほど増えます。DCFのテント・タープは軽いので、1つにつき+1）。`;}const lists={bike:BIKES,cloth:CLOTHES,part:PARTS};
   for(const [k,l0] of Object.entries(lists)){const l=k==='part'?l0.filter(i=>grpOf(i)===PGRP):l0,tabs=k==='part'?pgTabs():'';$('shop-'+k).innerHTML=tabs+l.map(i=>card(i,k,'shop')).join('');
