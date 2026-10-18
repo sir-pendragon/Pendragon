@@ -200,7 +200,7 @@ test('battle food buttons: Nagano food shown with the normal food button, both f
  batt(c,'hill');let b=[...c.$('bt-cmds').querySelectorAll('button')];assert.equal(b.find(x=>x.dataset.cmd==='food').classList.contains('wide'),false);
  q.S.food2=1;batt(c,'hill');b=[...c.$('bt-cmds').querySelectorAll('button')];assert.equal(b.find(x=>x.dataset.cmd==='food').classList.contains('wide'),true);assert.equal(b.find(x=>x.dataset.cmd==='food2').classList.contains('wide'),true);});
 test('custom tab is tier-first: 1/2/3段階目 cards list the owned bikes and parts that can go to that tier (new bikes included, max listed separately)',c=>{const {q}=c;q.S.money=1e7;
- for(const id of ['ucross','uroad','rando'])if(!q.S.owned.bikes.includes(id))q.S.owned.bikes.push(id);q.S.plus.cross=1;q.S.plus.road=3;q.renderForge();
+ for(const id of ['ucross','uroad','rando','cross','road'])if(!q.S.owned.bikes.includes(id))q.S.owned.bikes.push(id);q.S.plus.cross=1;q.S.plus.road=3;q.renderForge();
  const cards=[...c.$('shop-forge').querySelectorAll('.fg-t')];assert.equal(cards.length,3,'3 tiers for bikes (no parts owned yet)');
  const ids=card=>[...card.querySelectorAll('[data-forge]')].map(b=>b.dataset.forge);
  assert.ok(ids(cards[0]).includes('bike:ucross')&&ids(cards[0]).includes('bike:uroad')&&ids(cards[0]).includes('bike:rando')&&ids(cards[0]).includes('bike:mama'));
