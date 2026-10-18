@@ -1000,7 +1000,8 @@ function renderMap(){const svg=$('map');const mk=JSON.stringify([S.loc,S.sel,S.v
   // 山岳テントは背が高く、そのままだとタープの屋根を突き抜ける。テントごとにタープの大きさ・位置を決める [scale, 接地のy]
   // 接地yを413にして、タープのポールの根元をテントの前の地面に出す（403だとポールがテントの床に刺さって見える）
   const PB=(248-178)*.18,PX=-23*.18;// DCFタープの絵：ポールの根元から絵の下端まで／ポールが絵の中央からずれている分（単位）
-  const TARP_FIT={sh3:{tp1:[.30,413],tp2:[.30,413],tp3:[.175,420,20],tp4:[.18,413+PB,PX]},sh2:{tp1:[.27,413],tp2:[.215,413],tp3:[.175,420,20],tp4:[.18,413+PB,PX]}};const tf=(S.gear.tarp&&TARP_FIT[shA]&&(TARP_FIT[shA][S.gear.tarp]||TARP_FIT[shA][tpA]))||[tk[S.gear.tarp]||tk[tpA],403+(S.gear.tarp==='tp4'?PB:0),S.gear.tarp==='tp4'?PX:0];// [scale, 接地y, 横ずれ]
+  const HAM_TP3={tp3:[.15,414]};// 大型ウイングタープ：ハンモックの杭の間・寝ている人の上に屋根が来るよう、少し大きく・低くする
+  const TARP_FIT={sh1:HAM_TP3,sh6:HAM_TP3,sh7:HAM_TP3,sh3:{tp1:[.30,413],tp2:[.30,413],tp3:[.175,420,20],tp4:[.18,413+PB,PX]},sh2:{tp1:[.27,413],tp2:[.215,413],tp3:[.175,420,20],tp4:[.18,413+PB,PX]}};const tf=(S.gear.tarp&&TARP_FIT[shA]&&(TARP_FIT[shA][S.gear.tarp]||TARP_FIT[shA][tpA]))||[tk[S.gear.tarp]||tk[tpA],403+(S.gear.tarp==='tp4'?PB:0),S.gear.tarp==='tp4'?PX:0];// [scale, 接地y, 横ずれ]
   // 大型タープ＋テントのときは、テントをさらにタープの奥（地図の上側）に置く
   const hasTent=shA==='sh2'||shA==='sh3';
   const UK={sh2:[.16,392],sh3:[.1,397],sh4:[.08,395.7],sh5:[.0877,392.9]};// 大型タープの奥に置くときの [大きさ, 接地y]
