@@ -357,7 +357,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
     <div class="subtabs" id="gear-tabs"><button data-sub="bike" aria-selected="true"><img loading="lazy" class="wi" src="img/icon_bike.webp" width="128" height="128" alt="">自転車</button><button data-sub="cloth" aria-selected="false"><img loading="lazy" class="wi" src="img/icon_cloth.webp" width="128" height="128" alt="">衣類</button><button data-sub="part" aria-selected="false"><img loading="lazy" class="wi" src="img/icon_part.webp" width="128" height="128" alt="">パーツ</button></div>
     <div class="campsec" data-sub="bike"><p class="hint">持っている自転車。新しいものは「店」で買えます。</p><div class="shop" id="eq-bike"></div></div>
     <div class="campsec" data-sub="cloth" hidden><p class="hint">持っている衣類。気温に合わせて着替えます。</p><div class="shop" id="eq-cloth"></div></div>
-    <div class="campsec" data-sub="part" hidden><p class="hint" id="slot-hint">パーツは3つまで付けられます。</p><div class="shop" id="eq-part"></div></div>
+    <div class="campsec" data-sub="part" hidden><p class="hint" id="slot-hint">パーツは4つまで付けられます。</p><div class="shop" id="eq-part"></div></div>
   </section>
 
   <section class="panel" id="p-camp" hidden>
@@ -728,8 +728,8 @@ const PARTS=[
 ];
 const xg=i=>i&&(i.comp?'comp':i.rack?'rack':i.front?'front':'');// 同じ種類は1つだけ装備できる
 const RACK_TOP=4;
-// パーツ枠：自転車の値段で増える（¥150,000未満=3、¥450,000未満=4、以上=5）
-const partSlots=id=>{const b=BIKES.find(x=>x.id===id),p=b?b.price:0;return p>=450000?5:p>=150000?4:3;};
+// パーツ枠：自転車の値段で増える（¥150,000未満=4、¥450,000未満=5、以上=6）
+const partSlots=id=>{const b=BIKES.find(x=>x.id===id),p=b?b.price:0;return p>=450000?6:p>=150000?5:4;};
 const GEAR={
  fire:{label:'焚き火台（気力回復）',items:[
   {id:'fire1',name:'簡易焚き火台',price:6000,mp:6,photo:4},

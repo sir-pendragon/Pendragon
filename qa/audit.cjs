@@ -171,15 +171,15 @@ test('rear racks: four tiers, raise the food cap, one rack only, bike-part tab, 
  q.S.plus={rack4:3};q.S.parts=['rack4'];assert.equal(q.foodMax(),9,'no customization');q.S.plus={};
  q.S.parts=['rack1','rack4','compi','compm'];q.S.food=7;q.save();const o=q.load();assert.equal(o.parts.filter(x=>x.startsWith('rack')).length,1);assert.equal(o.parts.filter(x=>x.startsWith('comp')).length,1);assert.equal(o.food,7);
  for(const id of ['rack1','rack2','rack3','rack4'])assert.ok(fs.existsSync(path.join(__dirname,'..','img/part_'+id+'.webp')),id+' art');});
-test('part slots grow with bike price: 3/4/5, trimmed on bike change and on load',c=>{const {q,w}=c;
- const sl=id=>q.partSlots(id);for(const b of q.BIKES)assert.equal(sl(b.id),b.price>=450000?5:b.price>=150000?4:3,b.id);
- assert.equal(sl('mama'),3);assert.equal(sl('road'),4);assert.equal(sl('rando'),5);assert.equal(sl('tigrav'),5);
+test('part slots grow with bike price: 4/5/6, trimmed on bike change and on load',c=>{const {q,w}=c;
+ const sl=id=>q.partSlots(id);for(const b of q.BIKES)assert.equal(sl(b.id),b.price>=450000?6:b.price>=150000?5:4,b.id);
+ assert.equal(sl('mama'),4);assert.equal(sl('road'),5);assert.equal(sl('rando'),6);assert.equal(sl('tigrav'),6);
  for(let i=1;i<q.BIKES.length;i++)if(q.BIKES[i].price>=q.BIKES[i-1].price)assert.ok(sl(q.BIKES[i].id)>=sl(q.BIKES[i-1].id));
  q.newGame(q.PREF[0].id);q.S.owned.bikes=q.BIKES.map(b=>b.id);q.S.owned.parts=q.PARTS.map(x=>x.id);q.S.bike='rando';q.S.parts=['wheel','tire','aero','fender','tripod'];q.save();let o=q.load();assert.equal(o.parts.length,5);
- q.S.bike='mama';q.save();o=q.load();assert.equal(o.parts.length,3,'trimmed on load');
- q.S.bike='rando';q.S.parts=['wheel','tire','aero','fender','tripod'];q.renderShop();
+ q.S.bike='mama';q.save();o=q.load();assert.equal(o.parts.length,4,'trimmed on load');
+ q.S.bike='rando';q.S.parts=['wheel','tire','aero','fender','tripod','spray'];q.renderShop();
  const eq=[...w.document.querySelectorAll('#eq-part .card button[data-act="equip"]')];assert.ok(eq.every(b=>b.disabled),'full: no more equip');
- assert.ok(w.document.getElementById('slot-hint').textContent.includes('5つ'));});
+ assert.ok(w.document.getElementById('slot-hint').textContent.includes('6つ'));});
 test('front carriers: four tiers, comfort and photo, independent of the rear rack, not customizable',c=>{const {q,w}=c;const F=['front1','front2','front3','front4'].map(id=>q.PARTS.find(x=>x.id===id));assert.ok(F.every(Boolean));
  for(let i=1;i<4;i++){assert.ok(F[i].price>F[i-1].price);assert.ok(F[i].comfy>F[i-1].comfy);assert.ok(F[i].photo>F[i-1].photo);}
  q.newGame(q.PREF[0].id);q.S.bike='rando';q.S.owned.parts=q.PARTS.map(x=>x.id);q.S.parts=['rack4','front4'];const st=q.bikeStats();assert.equal(st.comfy,4);assert.equal(st.photo,4);assert.equal(q.foodMax(),9);
