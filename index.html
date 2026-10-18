@@ -503,7 +503,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
     <h3>セーブデータ</h3>
     <div class="setrow"><span>ファイル保存</span><button id="fs-t"></button><select id="fs-every" aria-label="ファイル保存をするタイミング"><option value="1">毎ターン（毎週）</option><option value="4">4ターンごと（約1か月）</option><option value="13">13ターンごと（季節）おすすめ</option><option value="52">52ターンごと（1年）</option></select></div>
     <p class="hint">ブラウザの閲覧データを消すとゲームデータが消えます。その保険にファイル保存を選べます。オンにすると、選んだタイミングで週末が進むたびにセーブデータのファイルがダウンロードされます。古いセーブデータは手動で削除してください。</p>
-    <div class="row"><button id="sv-out">いまファイルに保存</button><button id="sv-in">ファイルを読み込む</button></div>
+    <div class="row" style="margin-top:10px"><button id="sv-out">今すぐ保存する</button><button id="sv-in">データを読み込む</button></div>
     <input type="file" id="sv-file" accept=".json,application/json" hidden>
     <p class="hint" id="sv-msg" hidden></p>
     <h3>出典</h3>
