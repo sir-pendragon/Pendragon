@@ -212,8 +212,8 @@ test('sponsor SNS post does not state an amount',c=>{const {q,w}=c;q.newGame(q.P
 test('trial collection tabs: 試練 and 都道府県限定試練 (prefecture bosses only)',c=>{const {q}=c;q.newGame(q.PREF[0].id);q.renderTrials();
  const tab=g=>c.$('tr-tabs').querySelector('button[data-trs="'+g+'"]'),txt=()=>c.$('achlist').textContent;
  assert.equal(c.$('tr-tabs').querySelectorAll('button').length,2);assert.deepEqual([...c.$('tr-tabs').querySelectorAll('button')].map(b=>b.textContent),['試練','都道府県限定試練']);assert.equal(tab('old').getAttribute('aria-selected'),'true');
- assert.ok(txt().includes('激坂'));assert.ok(txt().includes('落石'),'course enemies stay in 試練');assert.ok(!txt().includes('最後の崩落区間'));assert.ok(!txt().includes('鬼ノ城の温羅'));
- tab('4th').click();assert.equal(tab('4th').getAttribute('aria-selected'),'true');assert.ok(txt().includes('最後の崩落区間'));assert.ok(!txt().includes('激坂'));assert.ok(!txt().includes('落石'));
+ assert.ok(txt().includes('激坂'));assert.ok(txt().includes('落石'),'course enemies stay in 試練');assert.ok(!txt().includes('御荷鉾の崩れ神'));assert.ok(!txt().includes('鬼ノ城の温羅'));
+ tab('4th').click();assert.equal(tab('4th').getAttribute('aria-selected'),'true');assert.ok(txt().includes('御荷鉾の崩れ神'));assert.ok(!txt().includes('激坂'));assert.ok(!txt().includes('落石'));
  const bosses=[...q.TRIAL_KEYS].filter(k=>k.startsWith('boss_')||k==='collapse');assert.equal(bosses.length,Object.values(q.SPEC).length,'one prefecture boss per special prefecture');
  q.S.stats.en.boss_okayama=[1,1,0];q.renderTrials();assert.ok(txt().includes('鬼ノ城の温羅'));
  tab('old').click();assert.ok(txt().includes('激坂'));assert.ok(!txt().includes('鬼ノ城の温羅'));});
