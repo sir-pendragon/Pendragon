@@ -153,12 +153,14 @@ button:disabled{opacity:.45;cursor:not-allowed}
 
 .mdate{position:absolute;right:1.5%;top:1.2%;width:max-content;max-width:48%;display:flex;flex-direction:column;align-items:flex-end;gap:1px;text-align:right;white-space:nowrap;padding:4px 8px;border-radius:8px;background:color-mix(in srgb,var(--panel) 84%,transparent);border:1px solid var(--line);font-family:var(--display);font-size:var(--fs-s);line-height:1.25;backdrop-filter:blur(2px);pointer-events:none}
 .md2{display:flex;align-items:center;gap:6px}
-.info{position:absolute;left:1.5%;top:1.2%;width:47%;padding:6px 8px;border-radius:8px;background:color-mix(in srgb,var(--panel) 84%,transparent);border:1px solid var(--line);font-size:var(--fs-xs);line-height:1.35;backdrop-filter:blur(2px);pointer-events:none}
+.info{position:absolute;left:1.5%;top:1.2%;width:47%;padding:6px 8px;border-radius:8px;background:color-mix(in srgb,var(--panel) 84%,transparent);border:1px solid var(--line);font-size:var(--fs-xs);line-height:1.25;backdrop-filter:blur(2px);pointer-events:none}
 .info h3{font-size:var(--fs-m);line-height:1.25;margin:0}
 .info .hint{font-size:var(--fs-xs);margin-bottom:2px}
 @media (max-width:390px){.info{font-size:var(--fs-xs)}.info h3{font-size:var(--fs-s)}}
 .info .kv{display:grid;grid-template-columns:auto 1fr;gap:1px 6px}
 .info .kv span:nth-child(odd){color:var(--muted)}
+.info.nolook .kv>:nth-child(3),.info.nolook .kv>:nth-child(4){display:none}
+.info.tight .tk{display:none}
 .info .pill{font-size:var(--fs-xs);padding:0 6px;display:inline-block;margin:2px 0;white-space:nowrap}
 .detail{display:grid;grid-template-columns:1fr auto;gap:8px 12px;align-items:start}
 .detail .acts{display:flex;flex-direction:row;gap:6px;grid-column:1/-1}
@@ -1070,6 +1072,10 @@ function travelInfo(p){const d=dist(PREF[S.loc],p);const st=bikeStats();
   let enc=d===0?0:d<=120?1:d<=250?2:d<=400?3:99;if(enc>1&&enc<99&&S.fam[S.loc])enc--;// 馴染み宿から出発すると道を知っているので遭遇-1
   return {d,rinko:okinawa?rinko+6000:rinko,enc,ride:enc<99&&!okinawa};}
 
+// 情報パネルが長くなって地図の県を隠さないよう、高さが地図の半分を超えたら 景観の行→文字を小さく の順で詰める
+function fitInfo(){const i=$('info');if(!i||!i.parentElement)return;i.classList.remove('nolook','tight');i.style.fontSize='';const h3=i.querySelector('h3');if(h3)h3.style.fontSize='';const lim=i.parentElement.clientHeight*.5;if(!lim)return;
+  if(i.offsetHeight>lim){i.classList.add('nolook');if(i.offsetHeight>lim){i.classList.add('tight');
+    let sz=parseFloat(getComputedStyle(i).fontSize)||12;while(i.offsetHeight>lim&&sz>9){sz-=.5;i.style.fontSize=sz+'px';if(h3)h3.style.fontSize=(sz*1.15)+'px';}}}}
 function renderDetail(){const p=PREF[S.sel],f=S.forecast[p.id],ti=travelInfo(p),cl=CLOTHES.find(c=>c.id===S.cloth);
   const stay=S.sel===S.loc;const badge=S.fam[p.id]?'<span class="pill fam">馴染み宿</span>':`<span class="pill">訪問 ${Math.min(needV(p),S.visits[p.id])}/${needV(p)}</span>`;
   const fit=f.temp<cl.lo?`❄️ この衣類では寒い（${cl.lo-f.temp}℃不足）`:f.temp>cl.hi?`🔥 この衣類では暑い（${f.temp-cl.hi}℃超過）`:'👕 衣類OK';
@@ -1079,8 +1085,9 @@ function renderDetail(){const p=PREF[S.sel],f=S.forecast[p.id],ti=travelInfo(p),
   if(f.wx==='rain')enemies.push('大雨');if(f.wx==='wind')enemies.push('強風');if(f.wx==='typhoon')enemies.push('台風');if(f.wx==='snow')enemies.push('大雪');if(f.wx==='heat')enemies.push('炎天下');if(p.scen>=5||ev)enemies.push('ライバル?');
   $('info').innerHTML=`<h3>${p.site}</h3><div class="hint">${p.name}・${p.region}</div>${badge}
   <div class="kv"><span>地形</span><span>${TERRAIN[p.terrain]}（${'★'.repeat(p.diff)}）</span><span>景観</span><span>${'📷'.repeat(p.scen)}</span>
-  <span>予報</span><span>${WX_J[f.wx]} ${f.temp}℃<br>${fit}</span><span>距離</span><span>${stay&&!isCourse(p,stay)?'同じ場所（気力-15）'+(S.stay>=2?`<br>連泊${S.stay+1}日目：迷惑キャンパーが現れる`:S.stay>0?`<br>連泊${S.stay+1}日目：荒天になりやすい`:''):(stay?'同じ場所から出発<br>':ti.d+'km<br>')+(ti.ride?(isCourse(p,stay)?'遭遇4回（'+SPEC[p.name].kind+'）':'遭遇'+ti.enc+'回'):'自走不可')}</span>
-  <span>想定</span><span>${isCourse(p,stay)?`${SPEC[p.name].icon} 4回目：${SPEC[p.name].course}<br>${SPEC[p.name].list}`:(stay?(S.stay>=2?['迷惑キャンパー']:[]).concat(enemies.filter(n=>[...(S.stay>=2?[]:['大雨','強風','台風','大雪','炎天下']),'ライバル?'].includes(n))):enemies).join('・')||'特になし'}${stay||isCourse(p,stay)?'':(()=>{const q=familiar(p);return q.f<1?`<br>${q.why}：動物に出会う確率×${q.f}`:''})()}</span>${ev?`<span>催事</span><span>${EVI}${ev.name}<br>写真+12・フォロワー×1.5</span>`:''}${S.fam[p.id]?'<span>特典</span><span>利用料半額・回復+4</span>':''}<span>利用料</span><span>${yen(fee)}</span></div>`;
+  <span>予報</span><span>${WX_J[f.wx]} ${f.temp}℃<br>${fit}</span><span>距離</span><span>${stay&&!isCourse(p,stay)?'同じ場所（気力-15）'+(S.stay>=2?`<br>連泊${S.stay+1}日目：迷惑キャンパー`:S.stay>0?`<br>連泊${S.stay+1}日目：荒天に注意`:''):(stay?'同じ場所から出発<br>':ti.d+'km<br>')+(ti.ride?(isCourse(p,stay)?'遭遇4回':'遭遇'+ti.enc+'回'):'自走不可')}</span>
+  <span>想定</span><span>${isCourse(p,stay)?`${SPEC[p.name].icon}${SPEC[p.name].course}`:(stay?(S.stay>=2?['迷惑キャンパー']:[]).concat(enemies.filter(n=>[...(S.stay>=2?[]:['大雨','強風','台風','大雪','炎天下']),'ライバル?'].includes(n))):enemies).join('・')||'特になし'}${stay||isCourse(p,stay)?'':(()=>{const q=familiar(p);return q.f<1?`<br>${q.why}：動物に出会う確率×${q.f}`:''})()}</span>${ev?`<span>催事</span><span>${EVI}${ev.name}<br>写真+12・フォロワー×1.5</span>`:''}${S.fam[p.id]?'<span class="tk">特典</span><span class="tk">利用料半額・回復+4</span>':''}<span>利用料</span><span>${yen(fee)}</span></div>`;
+  fitInfo();
   $('detail').innerHTML=`
   <div class="acts">${stay?`<button class="primary" id="go-stay">自転車旅に行く<small>${p.name}（現在地）</small></button><button disabled>輪行で旅に行く<small>${p.name}（現在地）</small></button>`:
    `<button class="primary" id="go-ride" ${ti.ride?'':'disabled'}>自転車旅に行く<small>${p.name}${ti.ride?'へ':'は遠すぎる'}</small></button>
