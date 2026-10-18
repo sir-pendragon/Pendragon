@@ -1027,7 +1027,7 @@ function renderMap(){const svg=$('map');const mk=JSON.stringify([S.loc,S.sel,S.v
    +(S.gear.fire&&S.gear.fire!=='fire4'?put('fire_'+S.gear.fire,300,420,fk[S.gear.fire]):'')+`</g>`
    +(S.parts.includes('drone')?`<g class="drone">${put('part_drone',300,392,.15)}</g>`:'');
   s+=`<g id="hero" style="pointer-events:none"><ellipse id="hs" cy="0" ry="1.8" fill="#000" opacity=".28"/><g id="hf">${HFR.map(k=>`<image id="hi_${k}" href="img/hero_${k}.webp" width="${HDIM[k[0]][0]*HK}" height="${HDIM[k[0]][1]*HK}" style="display:none"/>`).join('')}</g><text id="hz1" style="font-size:6px;fill:#fff;paint-order:stroke;stroke:#234;stroke-width:1.5px">z</text><text id="hz2" style="font-size:5px;fill:#fff;paint-order:stroke;stroke:#234;stroke-width:1.5px">z</text></g>`
-   +(isHam(S.gear.shelter)?hamFront(sk[S.gear.shelter],S.gear.shelter):'')
+   +(isHam(S.gear.shelter)?hamFront(sk[S.gear.shelter],S.gear.shelter):'')+(isHam(S.gear.shelter)&&S.gear.tarp==='tp2'?tp2Pole(252+(tf[2]||0),tf[1],tf[0],tf[3]||1):'')
    +(hasTent?zzzFx(tpos.by-SPR['shelter_'+S.gear.shelter][1]*tpos.k+(S.gear.shelter==='sh5'?10:1),tpos.x-252):'')
    +(chim?chim.smoke:'');svg.innerHTML=s;HLAST=null;drawHero();}
 // テントで寝ている間、テントの上に立ちのぼる「Z z z」（ty：テントの頂点のy）
@@ -1035,6 +1035,8 @@ function zzzFx(ty,dx=0){return `<g id="zzz" style="display:none;pointer-events:n
 // テントの手前に重ねるタープの部分（元の絵の座標 [x0,x1,y0,y1]、絵のサイズ）
 //  ヘキサ(tp2)：中央ポール x=245〜259。簡易(tp1)：屋根の明るい面 y=0〜53（濃い帯＝屋根の裏側はテントの奥のまま）
 const TARP_FRONT={tp1:{size:[476,166],r:[0,476,0,53]},tp2:{size:[565,199],r:[245,259,0,199]}};
+function tp2Pole(cx,by,k,kx){const w=565*k*kx,hh=199*k,x=cx-w/2,y=by-hh,r=[250,255];// ポールの柱だけ（絵の x=250〜254）。ヘキサタープ＋ハンモックで寝ているときだけ、真ん中のポールを寝ている人の手前に描く
+  return `<clipPath id="tp2pclip"><rect x="${(x+r[0]*k*kx).toFixed(1)}" y="${y.toFixed(1)}" width="${((r[1]-r[0])*k*kx).toFixed(1)}" height="${hh.toFixed(1)}"/></clipPath><image id="tp2pole" href="img/tarp_tp2.webp" x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${w.toFixed(1)}" height="${hh.toFixed(1)}" clip-path="url(#tp2pclip)" style="display:none;pointer-events:none"/>`;}
 function tarpPart(key,cx,by,k){const f=TARP_FRONT[key],w=f.size[0]*k,hh=f.size[1]*k,x=cx-w/2,y=by-hh,r=f.r;
   return `<clipPath id="tpart"><rect x="${(x+r[0]*k).toFixed(1)}" y="${(y+r[2]*k).toFixed(1)}" width="${((r[1]-r[0])*k).toFixed(1)}" height="${((r[3]-r[2])*k).toFixed(1)}"/></clipPath><image href="img/tarp_${key}.webp${key==='tp4'?'?v=2':''}" x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${w.toFixed(1)}" height="${hh.toFixed(1)}" clip-path="url(#tpart)"/>`;}
 // 薪ストーブ用テントの煙突と煙。煙突は、屋根のストーブ口（絵の x=281,y=120）から立てる
@@ -1072,7 +1074,7 @@ function drawHero(){if(!$('hero'))return;const k=heroImg(),d=HDIM[k[0]],w=d[0]*H
   const flip=HERO.dir<0&&HERO.mode==='walk',tx=HERO.x-w/2,ty=HERO.y-hh;
   if(HLAST!==k){if(HLAST&&$('hi_'+HLAST))$('hi_'+HLAST).style.display='none';$('hi_'+k).style.display='';HLAST=k;}
   const im=$('hi_'+k);im.setAttribute('x',flip?-(tx+w):tx);im.setAttribute('y',ty);im.setAttribute('transform',flip?'scale(-1 1)':'');
-  const hf=$('hamf');if(hf)hf.style.display=HERO.ham&&HERO.mode==='sleep'?'':'none';
+  const hf=$('hamf');if(hf)hf.style.display=HERO.ham&&HERO.mode==='sleep'?'':'none';const tpp=$('tp2pole');if(tpp)tpp.style.display=HERO.ham&&HERO.mode==='sleep'?'':'none';
   const sh=$('hs');sh.style.display=HERO.ham&&HERO.mode==='sleep'?'none':'';sh.setAttribute('cx',HERO.x);sh.setAttribute('cy',HERO.y);sh.setAttribute('rx',w/2.2);
   const sl=HERO.mode==='sleep',tentSleep=sl&&HERO.tent,o=HERO.f%3,z1=$('hz1'),z2=$('hz2');
   $('hf').style.display=tentSleep?'none':'';if(tentSleep)sh.style.display='none';
