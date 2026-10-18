@@ -1020,7 +1020,7 @@ function renderMap(){const svg=$('map');const mk=JSON.stringify([S.loc,S.sel,S.v
   const chim=S.gear.shelter==='sh5'&&stoveOn()?chimney(tpos.x,tpos.by,tpos.k,put):null;// 薪ストーブ用テント＋薪ストーブ＋冬：煙突と煙
   const shS=S.gear.shelter?put('shelter_'+S.gear.shelter,tpos.x,tpos.by,tpos.k):'';
   s+=`<g style="pointer-events:none">${put('camp_ground',272,462,244/451)}${put('tree_'+season(calendar(S.turn).mi),332,380,.385)}`
-   +(BEHIND?shS+tarpS+(chim?chim.pipe:''):isHam(S.gear.shelter)?shS+(S.gear.tarp&&S.gear.tarp!=="tp3"?hamPosts(sk[S.gear.shelter],S.gear.shelter):'')+tarpS+hamBody(sk[S.gear.shelter],S.gear.shelter):tarpS+shS+(hasTent&&TARP_FRONT[S.gear.tarp]?tarpPart(S.gear.tarp,252+(tf[2]||0),tf[1],tf[0]):'')+(chim?chim.pipe:''))
+   +(BEHIND?shS+tarpS+(chim?chim.pipe:''):isHam(S.gear.shelter)?shS+(S.gear.tarp&&S.gear.tarp!=="tp3"?hamPosts(sk[S.gear.shelter],S.gear.shelter):'')+tarpS+(S.gear.tarp==='tp2'?hamLeftPost(sk[S.gear.shelter],S.gear.shelter):'')+hamBody(sk[S.gear.shelter],S.gear.shelter):tarpS+shS+(hasTent&&TARP_FRONT[S.gear.tarp]?tarpPart(S.gear.tarp,252+(tf[2]||0),tf[1],tf[0]):'')+(chim?chim.pipe:''))
    +(S.parts.includes('tripod')?put('part_tripod',222,424,.2)+(S.parts.includes('cam')?put('part_cam',222,402,.1):''):(S.parts.includes('cam')?put('part_cam',284,436,.1):''))
    +(S.parts.includes('comfy')?put('part_comfy',204,418,.2):'')
    +put('bike_'+S.bike,344,406,.26)
@@ -1048,6 +1048,8 @@ const HAMF={x0:95,x1:425,y0:98};// 切り抜く範囲（元の絵の座標）。
 const isHam=id=>id==='sh1'||id==='sh6'||id==='sh7';
 function hamPosts(k,id){const d=[481,185],w=d[0]*k,hh=d[1]*k*1.5,x=252-w/2,y=408-hh;// タープがあるときは、ハンモックの杭だけを縦に1.5倍にして、先がタープの布の下に確実に入るようにする（布は杭より手前に描く）
   return `<clipPath id="hampostclip"><rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${(HAMF.x0*k).toFixed(1)}" height="${hh.toFixed(1)}"/><rect x="${(x+HAMF.x1*k).toFixed(1)}" y="${y.toFixed(1)}" width="${((481-HAMF.x1)*k).toFixed(1)}" height="${hh.toFixed(1)}"/></clipPath><image href="img/shelter_${id}.webp" x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${w.toFixed(1)}" height="${hh.toFixed(1)}" clip-path="url(#hampostclip)"/>`;}
+function hamLeftPost(k,id){const d=[481,185],w=d[0]*k,hh=d[1]*k,x=252-w/2,y=408-hh;// ヘキサタープのときだけ、ハンモックの左の杭を布の手前に描く
+  return `<clipPath id="hamlpclip"><rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${(HAMF.x0*k).toFixed(1)}" height="${hh.toFixed(1)}"/></clipPath><image href="img/shelter_${id}.webp" x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${w.toFixed(1)}" height="${hh.toFixed(1)}" clip-path="url(#hamlpclip)"/>`;}
 function hamBody(k,id){const d=[481,185],w=d[0]*k,hh=d[1]*k,x=252-w/2,y=408-hh;// 布のたるみ（杭を含まない）だけを、タープの布の手前に重ねる。杭の先は布の下に入る
   return `<image href="img/shelter_${id}.webp" x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${w.toFixed(1)}" height="${hh.toFixed(1)}" clip-path="url(#hamclip)"/>`;}
 function hamFront(k,id){const d=[481,185],w=d[0]*k,hh=d[1]*k,x=252-w/2,y=408-hh;
