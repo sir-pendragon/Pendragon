@@ -156,13 +156,13 @@ test('components: three tiers, stats add up, not customizable, only one survives
  q.S.parts=['compm','comph','compi'];q.save();const o=q.load();assert.equal(o.parts.filter(x=>x.startsWith('comp')).length,1);
  for(const id of ['compm','comph','compi'])assert.ok(fs.existsSync(path.join(__dirname,'..','img/part_'+id+'.webp')),id);
  q.S.money=1e7;q.renderShop();q.renderForge();});
-test('parts shop and equip lists are split into bike parts and other items',c=>{const {q,w}=c;q.newGame(q.PREF[0].id);q.S.owned.parts=q.PARTS.map(x=>x.id);q.renderShop();
+test('parts shop and equip lists are split into rack / component / wheel / other-bike / other-item tabs',c=>{const {q,w}=c;q.newGame(q.PREF[0].id);q.S.owned.parts=q.PARTS.map(x=>x.id);q.renderShop();
  const ids=sel=>[...w.document.querySelectorAll(sel+' .card')].map(e=>e.dataset.id);
- const bikeSet=['wheel','tire','aero','fender','compm','comph','compi','rack1','rack2','rack3','rack4','front1','front2','front3','front4'],other=['spray','oil','tripod','cam','drone','comfy'];
- assert.deepEqual(ids('#shop-part'),bikeSet);assert.deepEqual(ids('#eq-part'),bikeSet);
- w.document.querySelector('#shop-part button[data-pgrp="other"]').click();assert.deepEqual(ids('#shop-part'),other);assert.deepEqual(ids('#eq-part'),other);
- assert.equal(w.document.querySelectorAll('#shop-part button[data-pgrp][aria-selected="true"]').length,1);
- assert.equal([...bikeSet,...other].length,q.PARTS.length);w.document.querySelector('#eq-part button[data-pgrp="bike"]').click();assert.deepEqual(ids('#shop-part'),bikeSet);});
+ const G={rack:['rack1','rack2','rack3','rack4','front1','front2','front3','front4'],comp:['compm','comph','compi'],wheel:['wheel','tire'],etc:['aero','fender'],other:['spray','oil','tripod','cam','drone','comfy']};
+ assert.equal(w.document.querySelectorAll('#shop-part button[data-pgrp]').length,5);
+ let n=0;for(const [g,want] of Object.entries(G)){w.document.querySelector('#shop-part button[data-pgrp="'+g+'"]').click();assert.deepEqual(ids('#shop-part').sort(),[...want].sort(),g);assert.deepEqual(ids('#eq-part').sort(),[...want].sort(),g+' equip');
+  assert.equal(w.document.querySelectorAll('#shop-part button[data-pgrp][aria-selected="true"]').length,1);n+=want.length;}
+ assert.equal(n,q.PARTS.length);w.document.querySelector('#eq-part button[data-pgrp="rack"]').click();assert.deepEqual(ids('#shop-part').sort(),[...G.rack].sort());});
 test('rear racks: four tiers, raise the food cap, one rack only, bike-part tab, not customizable',c=>{const {q,w}=c;const R=['rack1','rack2','rack3','rack4'].map(id=>q.PARTS.find(x=>x.id===id));assert.ok(R.every(Boolean));
  for(let i=1;i<4;i++){assert.ok(R[i].price>R[i-1].price);assert.ok(R[i].food>R[i-1].food);}
  q.newGame(q.PREF[0].id);q.S.owned.parts=q.PARTS.map(x=>x.id);q.S.parts=[];q.renderShop();
