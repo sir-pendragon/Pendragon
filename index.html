@@ -997,7 +997,7 @@ function renderMap(){const svg=$('map');const mk=JSON.stringify([S.loc,S.sel,S.v
   const SPR={"tarp_tp2":[565,199],"shelter_sh2":[355,185],"bike_gravel":[190,144],"bike_cross":[185,142],"bike_road":[176,136],"fire_fire3":[480,470],"bike_mama":[162,126],"fire_fire2":[241,200],"tarp_tp1":[476,166],"shelter_sh3":[560,401],"bike_tigrav":[194,122],"tarp_tp3":[760,586],"shelter_sh1":[481,185],"shelter_sh6":[481,185],"shelter_sh7":[481,185],"bike_mtb":[202,134],"camp_ground":[451,193],"fire_fire1":[197,153],"bike_fold":[143,124],"tree_spring":[256,338],"tree_summer":[256,338],"tree_autumn":[256,338],"tree_winter":[256,338],"part_tripod":[128,128],"part_cam":[128,128],"part_drone":[128,128],"part_comfy":[128,128]};
   // 新しいギアの絵が届くまでの代用：近い既存の絵を使い、DCFは薄いグリーンに寄せる。絵が届いたら STAND から外し、SPR に寸法を足す
   Object.assign(SPR,{shelter_sh4:[700,381],shelter_sh5:[700,474],tarp_tp4:[476,166]});// 新しい絵の寸法（DCFテント・薪ストーブ用テント本体と煙突）。DCFタープは簡易タープの色違い（絵も寸法も同じ）
-  const put=(key,cx,by,k)=>{const d=SPR[key];if(!d)return '';const w=d[0]*k,hh=d[1]*k;return `<image href="img/${key}.webp${key==='tarp_tp4'?'?v=2':''}" x="${(cx-w/2).toFixed(1)}" y="${(by-hh).toFixed(1)}" width="${w.toFixed(1)}" height="${hh.toFixed(1)}"/>`;};
+  const put=(key,cx,by,k,kx)=>{const d=SPR[key];if(!d)return '';const w=d[0]*k*(kx||1),hh=d[1]*k;return `<image href="img/${key}.webp${key==='tarp_tp4'?'?v=2':''}" x="${(cx-w/2).toFixed(1)}" y="${(by-hh).toFixed(1)}" width="${w.toFixed(1)}" height="${hh.toFixed(1)}"/>`;};
   // 配置の決まり（重なり順・位置）は、近い既存のものと同じにする（DCFテント＝入門テント、薪ストーブ用テント＝山岳テント、DCFタープ＝ヘキサ）。大きさと接地は新しい絵に合わせて個別に決める
   const A_SH={sh4:'sh2',sh5:'sh3'},A_TP={tp4:'tp1'};const shA=A_SH[S.gear.shelter]||S.gear.shelter,tpA=A_TP[S.gear.tarp]||S.gear.tarp;
   // 山岳テントの絵は下端に杭・ガイロープが長く伸びていて、本体の底が下端より約8単位上にある。入門テント(約3単位)と地面の高さを揃えるため下げる
@@ -1005,7 +1005,7 @@ function renderMap(){const svg=$('map');const mk=JSON.stringify([S.loc,S.sel,S.v
   const DROP={sh2:0,sh3:SH3_DROP,sh4:3.7,sh5:.1};// タープは寝床（特にハンモックの杭の間）を覆える幅にする
   // 山岳テントは背が高く、そのままだとタープの屋根を突き抜ける。テントごとにタープの大きさ・位置を決める [scale, 接地のy]
   // 接地yを413にして、タープのポールの根元をテントの前の地面に出す（403だとポールがテントの床に刺さって見える）
-  const HAM_TP3={tp1:[.36,430],tp2:[.30,428],tp3:[.16,428]};// ハンモックの杭の間・寝ている人の上に屋根が来るよう、どのタープも大きく・低くする [大きさ, 接地y, 横ずれ]
+  const HAM_TP3={tp1:[.22,410,0,1.45],tp2:[.18,410,0,1.45],tp3:[.10,410,0,1.45]};// ハンモックの杭の間・寝ている人の上に屋根が来るよう、どのタープも大きく・低くする [大きさ, 接地y, 横ずれ]
   const TARP_FIT={sh1:HAM_TP3,sh6:HAM_TP3,sh7:HAM_TP3,sh3:{tp1:[.30,413],tp2:[.30,413],tp3:[.175,420,20]},sh2:{tp1:[.27,413],tp2:[.215,413],tp3:[.175,420,20]}};const tf=(S.gear.tarp&&TARP_FIT[shA]&&(TARP_FIT[shA][S.gear.tarp]||TARP_FIT[shA][tpA]))||[tk[S.gear.tarp]||tk[tpA],403,0];// [scale, 接地y, 横ずれ]
   // 大型タープ＋テントのときは、テントをさらにタープの奥（地図の上側）に置く
   const hasTent=shA==='sh2'||shA==='sh3';
@@ -1015,7 +1015,7 @@ function renderMap(){const svg=$('map');const mk=JSON.stringify([S.loc,S.sel,S.v
   const TENT_LOW=hasTent&&(tpA==='tp1'||tpA==='tp2')?3.3:0;
   // 簡易・ヘキサ：布(奥)→テント→ポール(手前)。テントの頂点が布の手前に出て、屋根の下に入って見える。大型タープだけは布を手前に重ねてテントを隠す
   const BEHIND=tpA==='tp3'&&hasTent;
-  const tarpS=S.gear.tarp?put('tarp_'+S.gear.tarp,252+(tf[2]||0),tf[1],tf[0]):'';
+  const tarpS=S.gear.tarp?put('tarp_'+S.gear.tarp,252+(tf[2]||0),tf[1],tf[0],tf[3]):'';
   const tpos=UNDER?{x:UNDER.x,by:UNDER.by,k:UNDER.k}:{x:252,by:408+(DROP[S.gear.shelter]||0)+TENT_LOW,k:sk[S.gear.shelter]||sk[shA]};
   const chim=S.gear.shelter==='sh5'&&stoveOn()?chimney(tpos.x,tpos.by,tpos.k,put):null;// 薪ストーブ用テント＋薪ストーブ＋冬：煙突と煙
   const shS=S.gear.shelter?put('shelter_'+S.gear.shelter,tpos.x,tpos.by,tpos.k):'';
