@@ -18,6 +18,8 @@ const CONFIGS_ALL={
  'グラベル+部品(約27万)':{bike:'gravel',parts:'best'},
  'チタン分割グラベル(80万)':{bike:'tigrav',parts:[]},
  'グラベル+4枠':{bike:'gravel',parts:'full4'},
+ 'MTB+4枠':{bike:'mtb',parts:'full4'},
+ 'MTB+5枠':{bike:'mtb',parts:'full5'},
  'ランドナー+5枠':{bike:'rando',parts:'full5'},
  'チタン分割+5枠':{bike:'tigrav',parts:'full5'},
 };
@@ -73,7 +75,7 @@ function runCourse(prefName,cfg,year,policy,hp0,mp0){
  return {win:!q.trip.late&&q.trip.i>=q.trip.enc.length,reached,bossHp,bossMp,failAt:q.trip.late?q.trip.i:-1};
 }
 const bosses=Object.keys(q.SPEC).map(n=>({n,b:q.SPEC[n].boss,st:q.ENEMY[q.SPEC[n].boss].stat,d:q.PREF.find(x=>x.name===n).diff}));
-const CONFIGS=process.env.NEWCFG?Object.fromEntries(Object.entries(CONFIGS_ALL).filter(([k])=>/枠|ママ|グラベル\(/.test(k)||k.startsWith('クロス'))):CONFIGS_ALL;
+const CONFIGS=process.env.NEWCFG?Object.fromEntries(Object.entries(CONFIGS_ALL).filter(([k])=>/MTB/.test(k)||(process.env.MTBONLY?false:/枠|ママ|グラベル\(/.test(k)||k.startsWith('クロス')))):CONFIGS_ALL;
 const out=[];
 const POLS=process.env.PLAN?[['先読み(上手い人)',planner]]:[['賢め',smart],['ただ踏む',naive]];
 for(const [pname,policy] of POLS)
@@ -81,7 +83,7 @@ for(const [pname,policy] of POLS)
   for(const [hp0,mp0,lab] of (process.env.FULL?[[100,100,'満タン出発']]:[[100,100,'満タン出発'],[80,60,'やや消耗(80/60)']])){
    console.log(`\n### ${pname}／${year}年目／${lab}   勝率%（4戦全部）  [ボス到着時の体力/気力 平均]`);
    console.log(['県(難度,ボス能力)'.padEnd(16),...Object.keys(CONFIGS).map(s=>s.padEnd(22))].join(' '));
-   for(const b of bosses){
+   for(const b of bosses.filter(x=>!process.env.ONLY||process.env.ONLY.split(',').includes(x.n))){
     const row=[`${b.n}(${b.d},${b.st})`.padEnd(16)];
     for(const [cn,cfg] of Object.entries(CONFIGS)){
      let n=0,win=0,hpS=0,mpS=0,rc=0;
