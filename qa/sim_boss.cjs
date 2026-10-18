@@ -11,12 +11,15 @@ const dom=new JSDOM(html.replace(js,marked),{url:'https://example.test/',runScri
 const w=dom.window,q=w.qa,$=id=>w.document.getElementById(id);q.quiet();
 const N=+process.argv[2]||200;
 
-const CONFIGS={
+const CONFIGS_ALL={
  'ママチャリ(¥0)':{bike:'mama',parts:[]},
  'クロスバイク(6万)':{bike:'cross',parts:[]},
  'グラベル(20万)':{bike:'gravel',parts:[]},
  'グラベル+部品(約27万)':{bike:'gravel',parts:'best'},
  'チタン分割グラベル(80万)':{bike:'tigrav',parts:[]},
+ 'グラベル+4枠':{bike:'gravel',parts:'full4'},
+ 'ランドナー+5枠':{bike:'rando',parts:'full5'},
+ 'チタン分割+5枠':{bike:'tigrav',parts:'full5'},
 };
 const PARTBY={climb:'wheel',rough:'tire',cruise:'aero',wx:'fender'};
 
@@ -54,8 +57,8 @@ function runCourse(prefName,cfg,year,policy,hp0,mp0){
  const p=q.PREF.find(x=>x.name===prefName),start=q.PREF.find(x=>x.name==='茨城').id;
  for(const id of ['ov-result','ov-battle','ov-camp','ov-tc','ov-pay','ov-storm','pop'])if($(id))$(id).hidden=true;
  q.newGame(start);const S=q.S;S.money=1e8;S.turn=year===1?1:53;S.bike=cfg.bike;
- let parts=cfg.parts;if(parts==='best'){const sp=q.ENEMY[q.SPEC[prefName].boss].stat;parts=[PARTBY[sp],'fender'===PARTBY[sp]?'wheel':'fender'];}
- S.parts=parts.slice();S.food=3;S.hp=hp0;S.mp=mp0;S.visits[p.id]=3;S.fam[p.id]=false;
+ let parts=cfg.parts,full=false;if(parts==='full4'||parts==='full5'){full=true;const sp=q.ENEMY[q.SPEC[prefName].boss].stat,n=parts==='full4'?4:5;const base=parts==='full4'?['comph','rack2']:['compi','rack4'];const pool=[PARTBY[sp],'wheel','tire','aero','fender'].filter((x,i,a)=>a.indexOf(x)===i);parts=[...base,...pool].slice(0,n);}else if(parts==='best'){const sp=q.ENEMY[q.SPEC[prefName].boss].stat;parts=[PARTBY[sp],'fender'===PARTBY[sp]?'wheel':'fender'];}
+ S.parts=parts.slice();S.food=full?q.foodMax():3;S.hp=hp0;S.mp=mp0;S.visits[p.id]=3;S.fam[p.id]=false;
  S.forecast=Object.fromEntries(q.PREF.map(x=>[x.id,{temp:15,wx:'sun'}]));
  q.startTrip(p,false);
  let bossHp=null,bossMp=null,guard=0;
@@ -70,6 +73,7 @@ function runCourse(prefName,cfg,year,policy,hp0,mp0){
  return {win:!q.trip.late&&q.trip.i>=q.trip.enc.length,reached,bossHp,bossMp,failAt:q.trip.late?q.trip.i:-1};
 }
 const bosses=Object.keys(q.SPEC).map(n=>({n,b:q.SPEC[n].boss,st:q.ENEMY[q.SPEC[n].boss].stat,d:q.PREF.find(x=>x.name===n).diff}));
+const CONFIGS=process.env.NEWCFG?Object.fromEntries(Object.entries(CONFIGS_ALL).filter(([k])=>/枠|ママ|グラベル\(/.test(k)||k.startsWith('クロス'))):CONFIGS_ALL;
 const out=[];
 const POLS=process.env.PLAN?[['先読み(上手い人)',planner]]:[['賢め',smart],['ただ踏む',naive]];
 for(const [pname,policy] of POLS)
