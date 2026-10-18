@@ -1001,11 +1001,11 @@ function renderMap(){const svg=$('map');const mk=JSON.stringify([S.loc,S.sel,S.v
   // 配置の決まり（重なり順・位置）は、近い既存のものと同じにする（DCFテント＝入門テント、薪ストーブ用テント＝山岳テント、DCFタープ＝ヘキサ）。大きさと接地は新しい絵に合わせて個別に決める
   const A_SH={sh4:'sh2',sh5:'sh3'},A_TP={tp4:'tp1'};const shA=A_SH[S.gear.shelter]||S.gear.shelter,tpA=A_TP[S.gear.tarp]||S.gear.tarp;
   // 山岳テントの絵は下端に杭・ガイロープが長く伸びていて、本体の底が下端より約8単位上にある。入門テント(約3単位)と地面の高さを揃えるため下げる
-  const SH3_DROP=4,fk={fire1:.115,fire2:.115,fire3:.085,fire4:0},sk={sh1:.165,sh6:.165,sh7:.165,sh2:.16,sh3:.085,sh4:.08,sh5:.0743},tk={tp1:.27,tp2:.215,tp3:.125};
+  const SH3_DROP=4,fk={fire1:.115,fire2:.115,fire3:.085,fire4:0},sk={sh1:.135,sh6:.135,sh7:.135,sh2:.16,sh3:.085,sh4:.08,sh5:.0743},tk={tp1:.27,tp2:.215,tp3:.125};
   const DROP={sh2:0,sh3:SH3_DROP,sh4:3.7,sh5:.1};// タープは寝床（特にハンモックの杭の間）を覆える幅にする
   // 山岳テントは背が高く、そのままだとタープの屋根を突き抜ける。テントごとにタープの大きさ・位置を決める [scale, 接地のy]
   // 接地yを413にして、タープのポールの根元をテントの前の地面に出す（403だとポールがテントの床に刺さって見える）
-  const HAM_TP3={tp1:[.34,421],tp2:[.285,419],tp3:[.15,419]};// ハンモックの杭の間・寝ている人の上に屋根が来るよう、どのタープも大きく・低くする [大きさ, 接地y, 横ずれ]
+  const HAM_TP3={tp1:[.36,430],tp2:[.30,428],tp3:[.16,428]};// ハンモックの杭の間・寝ている人の上に屋根が来るよう、どのタープも大きく・低くする [大きさ, 接地y, 横ずれ]
   const TARP_FIT={sh1:HAM_TP3,sh6:HAM_TP3,sh7:HAM_TP3,sh3:{tp1:[.30,413],tp2:[.30,413],tp3:[.175,420,20]},sh2:{tp1:[.27,413],tp2:[.215,413],tp3:[.175,420,20]}};const tf=(S.gear.tarp&&TARP_FIT[shA]&&(TARP_FIT[shA][S.gear.tarp]||TARP_FIT[shA][tpA]))||[tk[S.gear.tarp]||tk[tpA],403,0];// [scale, 接地y, 横ずれ]
   // 大型タープ＋テントのときは、テントをさらにタープの奥（地図の上側）に置く
   const hasTent=shA==='sh2'||shA==='sh3';
@@ -1020,7 +1020,7 @@ function renderMap(){const svg=$('map');const mk=JSON.stringify([S.loc,S.sel,S.v
   const chim=S.gear.shelter==='sh5'&&stoveOn()?chimney(tpos.x,tpos.by,tpos.k,put):null;// 薪ストーブ用テント＋薪ストーブ＋冬：煙突と煙
   const shS=S.gear.shelter?put('shelter_'+S.gear.shelter,tpos.x,tpos.by,tpos.k):'';
   s+=`<g style="pointer-events:none">${put('camp_ground',272,462,244/451)}${put('tree_'+season(calendar(S.turn).mi),332,380,.385)}`
-   +(BEHIND||isHam(S.gear.shelter)?shS+tarpS+(chim?chim.pipe:''):tarpS+shS+(hasTent&&TARP_FRONT[S.gear.tarp]?tarpPart(S.gear.tarp,252+(tf[2]||0),tf[1],tf[0]):'')+(chim?chim.pipe:''))
+   +(BEHIND?shS+tarpS+(chim?chim.pipe:''):isHam(S.gear.shelter)?shS+tarpS+hamBody(sk[S.gear.shelter],S.gear.shelter):tarpS+shS+(hasTent&&TARP_FRONT[S.gear.tarp]?tarpPart(S.gear.tarp,252+(tf[2]||0),tf[1],tf[0]):'')+(chim?chim.pipe:''))
    +(S.parts.includes('tripod')?put('part_tripod',222,424,.2)+(S.parts.includes('cam')?put('part_cam',222,402,.1):''):(S.parts.includes('cam')?put('part_cam',284,436,.1):''))
    +(S.parts.includes('comfy')?put('part_comfy',204,418,.2):'')
    +put('bike_'+S.bike,344,406,.26)
@@ -1028,7 +1028,6 @@ function renderMap(){const svg=$('map');const mk=JSON.stringify([S.loc,S.sel,S.v
    +(S.parts.includes('drone')?`<g class="drone">${put('part_drone',300,392,.15)}</g>`:'');
   s+=`<g id="hero" style="pointer-events:none"><ellipse id="hs" cy="0" ry="1.8" fill="#000" opacity=".28"/><g id="hf">${HFR.map(k=>`<image id="hi_${k}" href="img/hero_${k}.webp" width="${HDIM[k[0]][0]*HK}" height="${HDIM[k[0]][1]*HK}" style="display:none"/>`).join('')}</g><text id="hz1" style="font-size:6px;fill:#fff;paint-order:stroke;stroke:#234;stroke-width:1.5px">z</text><text id="hz2" style="font-size:5px;fill:#fff;paint-order:stroke;stroke:#234;stroke-width:1.5px">z</text></g>`
    +(isHam(S.gear.shelter)?hamFront(sk[S.gear.shelter],S.gear.shelter):'')
-   +(isHam(S.gear.shelter)&&tarpS?tarpS.replace('<image ','<image id="tarpf" style="display:none;pointer-events:none" '):'')// 寝ているあいだは、タープの布を寝ている人の上にも重ねる（帽子・杭が布の中に入る）
    +(hasTent?zzzFx(tpos.by-SPR['shelter_'+S.gear.shelter][1]*tpos.k+(S.gear.shelter==='sh5'?10:1),tpos.x-252):'')
    +(chim?chim.smoke:'');svg.innerHTML=s;HLAST=null;drawHero();}
 // テントで寝ている間、テントの上に立ちのぼる「Z z z」（ty：テントの頂点のy）
@@ -1047,6 +1046,8 @@ function chimney(tx,by,k,put){const px=tx-700*k/2+281*k,py=by-474*k+120*k,h=15,w
 // ハンモックで寝るとき、寝袋の下半分を手前の布で隠す（同じ絵を、布の手前側だけ切り抜いてキャラの上に重ねる）
 const HAMF={x0:95,x1:425,y0:98};// 切り抜く範囲（元の絵の座標）。杭を含めず、布のたるみの手前側だけ
 const isHam=id=>id==='sh1'||id==='sh6'||id==='sh7';
+function hamBody(k,id){const d=[481,185],w=d[0]*k,hh=d[1]*k,x=252-w/2,y=408-hh;// 布のたるみ（杭を含まない）だけを、タープの布の手前に重ねる。杭の先は布の下に入る
+  return `<image href="img/shelter_${id}.webp" x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${w.toFixed(1)}" height="${hh.toFixed(1)}" clip-path="url(#hamclip)"/>`;}
 function hamFront(k,id){const d=[481,185],w=d[0]*k,hh=d[1]*k,x=252-w/2,y=408-hh;
   return `<clipPath id="hamclip"><rect x="${(x+HAMF.x0*k).toFixed(1)}" y="${(y+HAMF.y0*k).toFixed(1)}" width="${((HAMF.x1-HAMF.x0)*k).toFixed(1)}" height="${(hh-HAMF.y0*k).toFixed(1)}"/></clipPath><image id="hamf" href="img/shelter_${id}.webp" x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${w.toFixed(1)}" height="${hh.toFixed(1)}" clip-path="url(#hamclip)" style="display:none;pointer-events:none"/>`;}
 // ---- ドット絵の主人公：歩く／座って焚き火／寝る ----
@@ -1067,7 +1068,7 @@ function drawHero(){if(!$('hero'))return;const k=heroImg(),d=HDIM[k[0]],w=d[0]*H
   const flip=HERO.dir<0&&HERO.mode==='walk',tx=HERO.x-w/2,ty=HERO.y-hh;
   if(HLAST!==k){if(HLAST&&$('hi_'+HLAST))$('hi_'+HLAST).style.display='none';$('hi_'+k).style.display='';HLAST=k;}
   const im=$('hi_'+k);im.setAttribute('x',flip?-(tx+w):tx);im.setAttribute('y',ty);im.setAttribute('transform',flip?'scale(-1 1)':'');
-  const hf=$('hamf');if(hf)hf.style.display=HERO.ham&&HERO.mode==='sleep'?'':'none';const tfp=$('tarpf');if(tfp)tfp.style.display=HERO.ham&&HERO.mode==='sleep'?'':'none';
+  const hf=$('hamf');if(hf)hf.style.display=HERO.ham&&HERO.mode==='sleep'?'':'none';
   const sh=$('hs');sh.style.display=HERO.ham&&HERO.mode==='sleep'?'none':'';sh.setAttribute('cx',HERO.x);sh.setAttribute('cy',HERO.y);sh.setAttribute('rx',w/2.2);
   const sl=HERO.mode==='sleep',tentSleep=sl&&HERO.tent,o=HERO.f%3,z1=$('hz1'),z2=$('hz2');
   $('hf').style.display=tentSleep?'none':'';if(tentSleep)sh.style.display='none';
