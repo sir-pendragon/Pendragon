@@ -225,6 +225,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .cmds button.ic{display:flex;align-items:center;gap:6px}
 .cmds button.ic img{width:26px;height:26px;flex:none;object-fit:contain}
 .rank{width:40px;height:40px;vertical-align:middle;margin-right:4px}
+.fg-h{font-weight:700;margin:10px 2px 4px;font-size:var(--fs-m)}.fg-h small{display:block;font-weight:400;color:var(--muted);font-size:var(--fs-xs)}.fg-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}.fg-chips button{font-size:var(--fs-s);flex:1 1 40%;min-width:0;display:flex;align-items:center;gap:6px;text-align:left;padding:6px 8px}.fg-chips button span{min-width:0;display:flex;flex-direction:column;line-height:1.2}.fg-chips button small{opacity:.85;font-size:var(--fs-xs)}.fg-t .name .nm b{color:var(--gold,#f0c75a)}
 @media (max-width:360px){#shop-forge button .wi{display:none}#shop-forge button{padding:8px 6px;white-space:nowrap;font-size:var(--fs-m)}}
 #ov-camp .row button small{display:block;color:var(--muted);font-size:var(--fs-s)}
 #ov-go .row button{white-space:nowrap}
@@ -1123,19 +1124,27 @@ function renderShop(){if(S.parts.length>partSlots(S.bike))S.parts=S.parts.slice(
   for(const slot of Object.keys(GEAR)){const l=GEAR_ITEMS.filter(i=>i.slot===slot);$('shop-'+slot).innerHTML=l.map(i=>card(i,'gear','shop')).join('');
     const own=l.filter(i=>owns('gear',i.id));$('eq-'+slot).innerHTML=noneCard(slot)+own.map(i=>card(i,'gear','equip')).join('');}
   $('shop-food').innerHTML=`<div class="card"><div class="name"><span class="nm"><img loading="lazy" class="ci" src="img/icon_food.webp" width="28" height="28" alt="">補給食</span><span class="cnt${S.food?' has':''}"><b>${S.food}</b>/${foodMax()}</span><button data-food="1" ${S.money>=FOOD_PRICE&&S.food<foodMax()?'':'disabled'}>購入 ${yen(FOOD_PRICE)}</button></div><div class="spec">試練の最中に食べると体力+25 気力+10。</div></div><div class="card"><div class="name"><span class="nm"><img loading="lazy" class="ci" src="img/icon_food_nagano.webp" width="28" height="28" alt="" onerror="this.onerror=null;this.src='img/icon_food.webp'">長野県の補給食</span><span class="cnt${S.food2?' has':''}"><b>${S.food2}</b>/${NAGANO.max}</span><button data-food2="1" ${S.money>=NAGANO.price&&S.food2<NAGANO.max?'':'disabled'}>購入 ${yen(NAGANO.price)}</button></div><div class="spec">赤マムシドリンク風の元気ドリンク。体力+${NAGANO.hp} 気力+${NAGANO.mp}。</div></div>`;renderForge();}
+const fxOf=(kind,item)=>(kind==='bike'?bikeBoost(item):['climb','rough','cruise','wx','photo','comfy'].filter(k=>item[k])).map(k=>STATJ[k]+(k==='comfy'?'-1':'+1')).join(' ');
 function renderForge(){
-  const row=(kind,item)=>{const lv=plv(item.id),nx=lv+1,keys=kind==='bike'?bikeBoost(item):['climb','rough','cruise','wx','photo','comfy'].filter(k=>item[k]);
-    const fx=keys.map(k=>STATJ[k]+(k==='comfy'?'-1':'+1')).join(' ');
-    const act=lv>=3?'<span class="pill">最大</span>':`<button data-forge="${kind}:${item.id}" ${S.money>=upCost(kind,item,nx)?'':'disabled'}><img loading="lazy" class="wi" src="img/icon_upgrade.webp" width="128" height="128" alt=""><span>${tierOf(kind,nx)}<small>${yen(upCost(kind,item,nx))}</small></span></button>`;
-    return `<div class="card"><div class="name"><span class="nm"><img loading="lazy" class="ci" src="img/${kind==='bike'?'icon_bike_':'part_'}${item.id}.webp" width="28" height="28" alt="">${item.name}${lv?` <b>${tierOf(kind,lv).replace('製','')}</b>`:''}</span>${act}</div><div class="spec">1段階ごとに ${fx}${lv?`（現在 ${tierOf(kind,lv)}）`:''}</div></div>`;};
-  $('shop-forge').innerHTML=BIKES.filter(i=>owns('bike',i.id)&&!NOCUSTOM.has(i.id)).map(i=>row('bike',i)).join('')+BIKES.filter(b=>b.fold&&owns('bike',b.id)).map(b=>{const lv=rkLv(b.id),nx=lv+1,act=lv>=3?'<span class="pill">最大</span>':`<button data-rk="${b.id}" ${S.money>=RK_COST[lv]?'':'disabled'}><img loading="lazy" class="wi" src="img/icon_upgrade.webp" width="128" height="128" alt=""><span>${RK_TIER[lv]}<small>${yen(RK_COST[lv])}</small></span></button>`;
-    return `<div class="card"><div class="name"><span class="nm"><img loading="lazy" class="ci" src="img/icon_bike_${b.id}.webp" width="28" height="28" alt="">${b.name}</span>${act}</div><div class="spec">${lv?`装備中：${RK_TIER[lv-1]}　`:''}輪行費 ×${RK_RATE[lv]}${lv<3?` → ×${RK_RATE[nx]}`:''}</div></div>`;}).join('')+(BIKES.some(i=>NOCUSTOM.has(i.id)&&owns('bike',i.id))?'<div class="hint">チタン製の自転車は、完成された一台なので、フレームのカスタムはできません（折りたたみ式・分割式は、輪行用の装備だけ強化できます）。</div>':'')+PARTS.filter(i=>!i.anti&&!xg(i)&&owns('part',i.id)).map(i=>row('part',i)).join('');}
+  // 段階（1〜3段階目）ごとに、その段階へ上げられる自転車／パーツを並べる。品物ごとに行を作らないので、持ち物が増えても縦に伸びない
+  const tiers=(kind,list)=>{const chip=(i,nx)=>`<button data-forge="${kind}:${i.id}" ${S.money>=upCost(kind,i,nx)?'':'disabled'}><img loading="lazy" class="ci" src="img/${kind==='bike'?'icon_bike_':'part_'}${i.id}.webp" width="24" height="24" alt=""><span>${i.name}<small>${yen(upCost(kind,i,nx))}</small></span></button>`;
+    const maxed=list.filter(i=>plv(i.id)>=3);
+    return [1,2,3].map(nx=>{const its=list.filter(i=>plv(i.id)===nx-1);
+      return `<div class="card fg-t"><div class="name"><span class="nm"><b>${nx}段階目</b>　${TIER[kind][nx-1]}</span></div><div class="fg-chips">${its.length?its.map(i=>chip(i,nx)).join(''):'<span class="hint">対象なし</span>'}</div></div>`;}).join('')
+      +(maxed.length?`<div class="hint">最大：${maxed.map(i=>i.name).join('・')}</div>`:'');};
+  const bl=BIKES.filter(i=>owns('bike',i.id)&&!NOCUSTOM.has(i.id)),pl=PARTS.filter(i=>!i.anti&&!xg(i)&&owns('part',i.id)&&!NOCUSTOM.has(i.id));
+  const now=(kind,list)=>list.filter(i=>plv(i.id)>0).map(i=>`${i.name}（${tierOf(kind,plv(i.id))}）`).join('・');
+  $('shop-forge').innerHTML='<div class="fg-h">自転車のフレーム<small>1段階ごとに、その自転車の得意な能力2つが+1</small></div>'+(bl.length?tiers('bike',bl)+(now('bike',bl)?`<div class="hint">現在：${now('bike',bl)}</div>`:''):'<div class="hint">カスタムできる自転車がありません（自転車の店で購入できます）。</div>')
+    +(BIKES.some(i=>NOCUSTOM.has(i.id)&&owns('bike',i.id))?'<div class="hint">チタン製の自転車は、完成された一台なので、フレームのカスタムはできません（折りたたみ式・分割式は、輪行用の装備だけ強化できます）。</div>':'')
+    +BIKES.filter(b=>b.fold&&owns('bike',b.id)).map(b=>{const lv=rkLv(b.id),nx=lv+1,act=lv>=3?'<span class="pill">最大</span>':`<button data-rk="${b.id}" ${S.money>=RK_COST[lv]?'':'disabled'}><img loading="lazy" class="wi" src="img/icon_upgrade.webp" width="128" height="128" alt=""><span>${RK_TIER[lv]}<small>${yen(RK_COST[lv])}</small></span></button>`;
+    return `<div class="card"><div class="name"><span class="nm"><img loading="lazy" class="ci" src="img/icon_bike_${b.id}.webp" width="28" height="28" alt="">${b.name}</span>${act}</div><div class="spec">${lv?`装備中：${RK_TIER[lv-1]}　`:''}輪行費 ×${RK_RATE[lv]}${lv<3?` → ×${RK_RATE[nx]}`:''}</div></div>`;}).join('')
+    +'<div class="fg-h">パーツ<small>1段階ごとに、そのパーツの能力が+1</small></div>'+(pl.length?tiers('part',pl)+(now('part',pl)?`<div class="hint">現在：${now('part',pl)}</div>`:''):'<div class="hint">カスタムできるパーツがありません。</div>');}
 $('shop-forge').addEventListener('click',e=>{const rb=e.target.closest('button[data-rk]');if(rb){const bid=rb.dataset.rk,bk=BIKES.find(x=>x.id===bid);if(!bk||!bk.fold||!owns('bike',bid))return;const lv=rkLv(bid);if(lv>=3||S.money<RK_COST[lv])return;const c=RK_COST[lv];
     askPay(`${bk.name}に「${RK_TIER[lv]}」を付けますか？（輪行費が×${RK_RATE[lv+1]}に）`,c,()=>{S.money-=c;S.plus[bid]=lv+1;log(`${bk.name}に${RK_TIER[lv]}を付けた（${yen(c)}）`);render();});return;}
   const b=e.target.closest('button[data-forge]');if(!b)return;
   const [kind,id]=b.dataset.forge.split(':'),item=(kind==='bike'?BIKES:PARTS).find(x=>x.id===id),nx=plv(id)+1;if(!item||nx>3||NOCUSTOM.has(id))return;
   const c=upCost(kind,item,nx);if(S.money<c)return;
-  askPay(`「${item.name}」を${tierOf(kind,nx)}にカスタムしますか？`,c,()=>{S.money-=c;S.plus[id]=nx;log(`${item.name}を${tierOf(kind,nx)}にカスタム（${yen(c)}）`);render();});});
+  askPay(`「${item.name}」を${tierOf(kind,nx)}にカスタムしますか？（${fxOf(kind,item)}）`,c,()=>{S.money-=c;S.plus[id]=nx;log(`${item.name}を${tierOf(kind,nx)}にカスタム（${yen(c)}）`);render();});});
 $('shop-food').addEventListener('click',e=>{if(e.target.closest('button[data-food2]')){if(S.money<NAGANO.price||S.food2>=NAGANO.max)return;askPay('長野県の補給食を買いますか？',NAGANO.price,()=>{S.money-=NAGANO.price;S.food2++;log(`長野県の補給食を購入（${yen(NAGANO.price)}）`);render();});return;}
   if(!e.target.closest('button[data-food]')||S.money<FOOD_PRICE||S.food>=foodMax())return;
   askPay('補給食を買いますか？',FOOD_PRICE,()=>{S.money-=FOOD_PRICE;S.food++;log(`補給食を購入（${yen(FOOD_PRICE)}）`);render();});});
