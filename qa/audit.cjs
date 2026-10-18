@@ -218,6 +218,7 @@ test('trial collection tabs: 試練 and 都道府県限定試練 (prefecture bos
  q.S.stats.en.boss_okayama=[1,1,0];q.renderTrials();assert.ok(txt().includes('鬼ノ城の温羅'));
  tab('old').click();assert.ok(txt().includes('激坂'));assert.ok(!txt().includes('鬼ノ城の温羅'));});
 test('wheels: five kinds, only one can be equipped (extra ones are dropped on load), still customizable',c=>{const q=c.q;assert.deepEqual(['tire','wheel','wheel2','wheelc','wheelc2'].map(id=>q.PARTS.find(p=>p.id===id).name),['MTB用ホイール','アルミ製ホイール','アルミ製軽量ホイール','カーボン製ホイール','カーボン製軽量ホイール']);q.newGame(q.PREF[0].id);q.S.owned.parts=['wheel','wheelc','tire'];q.S.bike='gravel';q.S.parts=['wheel','wheelc','tire'];q.save();const o=q.load();assert.equal(o.parts.length,1);assert.equal(o.parts[0],'wheel');});
+test('save file export/import UI exists (settings + title) and export wraps the save',c=>{const q=c.q,w=c.w,d=w.document;assert.ok(d.getElementById('sv-out')&&d.getElementById('sv-in')&&d.getElementById('sv-file')&&d.getElementById('btn-load'));assert.ok(d.getElementById('sv-file').accept.includes('json'));});
 const summary={file:filename,passed:results.filter(x=>x.ok).length,failed:results.filter(x=>!x.ok).length,results};
 if(process.argv[3])fs.writeFileSync(process.argv[3],JSON.stringify(summary,null,2));
 console.log(JSON.stringify({passed:summary.passed,failed:summary.failed}));process.exitCode=summary.failed?1:0;

@@ -415,7 +415,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
     <p class="hint">毎週末が1ターン。1年＝52ターン。<br>坂・動物・強風・大雨・台風・ライバルがあなたの自転車旅を阻む！</p>
     </div>
     <label class="hint" for="start-pref">出発地（自宅）を選ぶ</label><select id="start-pref"></select>
-    <div class="row"><button class="primary" id="btn-new">スタート</button><button id="btn-cont" hidden>再開する</button><button id="btn-video" aria-haspopup="dialog">▶ 酔狂な作者の<br>YouTube動画</button></div>
+    <div class="row"><button class="primary" id="btn-new">スタート</button><button id="btn-cont" hidden>再開する</button><button id="btn-load">セーブデータを<br>読み込む</button><button id="btn-video" aria-haspopup="dialog">▶ 酔狂な作者の<br>YouTube動画</button></div>
     <p class="hint copy">(c) キャメロット王国自転車旅推進室</p>
   </div>
 </div>
@@ -500,6 +500,11 @@ button:disabled{opacity:.45;cursor:not-allowed}
     <div class="setrow"><span>BGM</span><button id="set-bgm-t"></button><input type="range" min="0" max="100" id="set-bgm-v" aria-label="BGMの音量"></div>
     <div class="setrow"><span>効果音</span><button id="set-se-t"></button><input type="range" min="0" max="100" id="set-se-v" aria-label="効果音の音量"></div>
     <p class="hint">スマホでは、画面を一度タップしてから音が鳴ります。</p>
+    <h3>セーブデータ</h3>
+    <p class="hint">セーブはこの端末のブラウザの中だけに保存されます。ブラウザの「サイトデータ」を消すと消えるので、ときどきファイルに保存しておくと安心です。機種変更の引き継ぎにも使えます。</p>
+    <div class="row"><button id="sv-out">ファイルに保存</button><button id="sv-in">ファイルを読み込む</button></div>
+    <input type="file" id="sv-file" accept=".json,application/json" hidden>
+    <p class="hint" id="sv-msg" hidden></p>
     <h3>出典</h3>
     <p class="hint">地図：地球地図日本（国土地理院）を加工して作成</p>
     <p class="hint">効果音（レジ）：<a href="https://otologic.jp" target="_blank" rel="noopener noreferrer">OtoLogic</a></p>
@@ -1320,7 +1325,26 @@ function renderSet(){$('set-bgm-t').textContent=AUD.mb?'オフ':'オン';$('set-
   $('set-bgm-v').value=Math.round(AUD.vb*100);$('set-se-v').value=Math.round(AUD.vs*100);
   $('set-bgm-t').classList.toggle('primary',!AUD.mb);$('set-se-t').classList.toggle('primary',!AUD.ms);}
 $('btn-set').onclick=()=>{renderSet();$('ov-set').hidden=false;};
-$('set-close').onclick=()=>{$('ov-set').hidden=true;};
+$('set-close').onclick=()=>{$('ov-set').hidden=true;$('sv-msg').hidden=true;};
+// ---- セーブデータのファイル保存・読み込み（ブラウザの外に残す） ----
+const svMsg=(t,bad)=>{const m=$('sv-msg');m.textContent=t;m.hidden=false;m.style.color=bad?'var(--bad,#d9534f)':'';};
+$('sv-out').onclick=()=>{let j=null;try{j=localStorage.getItem('charicamp');}catch(e){}if(!j&&S&&!INTRIP)j=pack();if(!j){svMsg('保存するセーブデータがありません',true);return;}
+  const d=new Date(),z=n=>String(n).padStart(2,'0'),name=`日本巡る自転車旅_セーブ_${d.getFullYear()}${z(d.getMonth()+1)}${z(d.getDate())}.json`;
+  const blob=new Blob([JSON.stringify({app:'charicamp',saved:d.toISOString(),data:JSON.parse(j)})],{type:'application/json'}),u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),2000);
+  svMsg(`「${name}」を保存しました（ダウンロードフォルダなど）`);};
+let SVIN=null;// 読み込み先：'set'=設定画面／'title'=タイトル
+$('sv-in').onclick=()=>{if(INTRIP){svMsg('旅の途中は読み込めません。旅を終えてから',true);return;}SVIN='set';$('sv-file').value='';$('sv-file').click();};
+$('btn-load').onclick=()=>{SVIN='title';$('sv-file').value='';$('sv-file').click();};
+$('sv-file').onchange=()=>{const f=$('sv-file').files&&$('sv-file').files[0];if(!f)return;const r=new FileReader();
+  r.onload=()=>{let o=null;try{o=JSON.parse(r.result);}catch(e){}if(o&&o.app==='charicamp'&&o.data)o=o.data;
+    const ok=o&&typeof o==='object'&&Number.isFinite(+o.turn)&&o.owned&&typeof o.owned==='object';
+    if(!ok){const m='このファイルはセーブデータではないか、壊れています';if(SVIN==='set')svMsg(m,true);else alert(m);return;}
+    let prev=null;try{prev=localStorage.getItem('charicamp');}catch(e){}
+    if(prev&&!confirm('いまのセーブデータを、ファイルの内容で上書きします。よろしいですか？'))return;
+    try{localStorage.setItem('charicamp',JSON.stringify(o));}catch(e){const m='保存領域に書き込めませんでした';if(SVIN==='set')svMsg(m,true);else alert(m);return;}
+    const o2=load();if(!o2){try{prev?localStorage.setItem('charicamp',prev):localStorage.removeItem('charicamp');}catch(e){}const m='セーブデータを読み込めませんでした（形式が合いません）';if(SVIN==='set')svMsg(m,true);else alert(m);return;}
+    S=o2;TS=null;trip=null;B=null;INTRIP=false;LASTSAVE='';if(!S.forecast)rollForecast();$('btn-cont').hidden=false;$('ov-set').hidden=true;$('sv-msg').hidden=true;$('ov-title').hidden=true;$('pop').hidden=true;$('tab-map').click();render();log('セーブデータをファイルから読み込んだ');save();};
+  r.readAsText(f);};
 $('ov-set').addEventListener('click',e=>{if(e.target===$('ov-set'))$('ov-set').hidden=true;});
 $('set-bgm-t').onclick=()=>{AUD.mb=!AUD.mb;saveSnd();renderSet();if(!AUD.cur)playBGM('bgm_main');bgmApply();};
 $('set-se-t').onclick=()=>{AUD.ms=!AUD.ms;saveSnd();renderSet();playSE('se_hit');};
