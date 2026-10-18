@@ -158,7 +158,7 @@ test('components: three tiers, stats add up, not customizable, only one survives
  q.S.money=1e7;q.renderShop();q.renderForge();});
 test('parts shop and equip lists are split into rack / component / wheel / other tabs',c=>{const {q,w}=c;q.newGame(q.PREF[0].id);q.S.owned.parts=q.PARTS.map(x=>x.id);q.renderShop();
  const ids=sel=>[...w.document.querySelectorAll(sel+' .card')].map(e=>e.dataset.id);
- const G={rack:['rack1','rack2','rack3','rack4','front1','front2','front3','front4'],comp:['compm','comph','compi'],wheel:['wheel','tire'],etc:['aero','fender','spray','oil','tripod','cam','drone','comfy']};
+ const G={rack:['rack1','rack2','rack3','rack4','front1','front2','front3','front4'],comp:['compm','comph','compi'],wheel:['tire','wheel','wheel2','wheelc','wheelc2'],etc:['aero','fender','spray','oil','tripod','cam','drone','comfy']};
  assert.equal(w.document.querySelectorAll('#shop-part button[data-pgrp]').length,4);
  let n=0;for(const [g,want] of Object.entries(G)){w.document.querySelector('#shop-part button[data-pgrp="'+g+'"]').click();assert.deepEqual(ids('#shop-part').sort(),[...want].sort(),g);assert.deepEqual(ids('#eq-part').sort(),[...want].sort(),g+' equip');
   assert.equal(w.document.querySelectorAll('#shop-part button[data-pgrp][aria-selected="true"]').length,1);n+=want.length;}
@@ -175,9 +175,9 @@ test('part slots grow with bike price: 4/5/6, trimmed on bike change and on load
  const sl=id=>q.partSlots(id);for(const b of q.BIKES)assert.equal(sl(b.id),b.price>=450000?6:b.price>=150000?5:4,b.id);
  assert.equal(sl('mama'),4);assert.equal(sl('road'),5);assert.equal(sl('rando'),6);assert.equal(sl('tigrav'),6);
  for(let i=1;i<q.BIKES.length;i++)if(q.BIKES[i].price>=q.BIKES[i-1].price)assert.ok(sl(q.BIKES[i].id)>=sl(q.BIKES[i-1].id));
- q.newGame(q.PREF[0].id);q.S.owned.bikes=q.BIKES.map(b=>b.id);q.S.owned.parts=q.PARTS.map(x=>x.id);q.S.bike='rando';q.S.parts=['wheel','tire','aero','fender','tripod'];q.save();let o=q.load();assert.equal(o.parts.length,5);
+ q.newGame(q.PREF[0].id);q.S.owned.bikes=q.BIKES.map(b=>b.id);q.S.owned.parts=q.PARTS.map(x=>x.id);q.S.bike='rando';q.S.parts=['wheel','comfy','aero','fender','tripod'];q.save();let o=q.load();assert.equal(o.parts.length,5);
  q.S.bike='mama';q.save();o=q.load();assert.equal(o.parts.length,4,'trimmed on load');
- q.S.bike='rando';q.S.parts=['wheel','tire','aero','fender','tripod','spray'];q.renderShop();
+ q.S.bike='rando';q.S.parts=['wheel','comfy','aero','fender','tripod','spray'];q.renderShop();
  const eq=[...w.document.querySelectorAll('#eq-part .card button[data-act="equip"]')];assert.ok(eq.every(b=>b.disabled),'full: no more equip');
  assert.ok(w.document.getElementById('slot-hint').textContent.includes('6つ'));});
 test('front carriers: four tiers, comfort and photo, independent of the rear rack, not customizable',c=>{const {q,w}=c;const F=['front1','front2','front3','front4'].map(id=>q.PARTS.find(x=>x.id===id));assert.ok(F.every(Boolean));
@@ -192,10 +192,10 @@ test('DCF tent and tarp each add one part slot, trimmed when removed',c=>{const 
  q.S.gear.shelter='sh4';assert.equal(q.partSlots('mama'),5);q.S.gear.tarp='tp4';assert.equal(q.partSlots('mama'),6);
  q.S.gear.shelter='sh2';assert.equal(q.partSlots('mama'),5,'non-DCF tent: no bonus');q.S.gear.shelter='sh4';q.S.gear.tarp='tp3';assert.equal(q.partSlots('mama'),5);
  q.S.gear.tarp='tp4';q.S.bike='rando';assert.equal(q.partSlots('rando'),8);
- q.S.bike='mama';q.S.parts=['wheel','tire','aero','fender','tripod','spray'];q.save();let o=q.load();assert.equal(o.parts.length,6,'kept with both DCF');
+ q.S.bike='mama';q.S.parts=['wheel','comfy','aero','fender','tripod','spray'];q.save();let o=q.load();assert.equal(o.parts.length,6,'kept with both DCF');
  q.S.gear.tarp=null;q.renderShop();assert.equal(q.S.parts.length,5,'trimmed after tarp removed');
  q.S.gear.shelter=null;q.save();o=q.load();assert.equal(o.parts.length,4,'trimmed on load without DCF');
- q.S.parts=['wheel','tire','aero','fender'];q.renderShop();assert.ok(w.document.getElementById('slot-hint').textContent.includes('4つ'));});
+ q.S.parts=['wheel','comfy','aero','fender'];q.renderShop();assert.ok(w.document.getElementById('slot-hint').textContent.includes('4つ'));});
 test('battle food buttons: Nagano food sits beside the normal food button, both half width (no full-width row)',c=>{const {q}=c;
  batt(c,'hill');let b=[...c.$('bt-cmds').querySelectorAll('button')];assert.equal(b.some(x=>x.classList.contains('wide')),false);assert.equal(b.some(x=>x.dataset.cmd==='food2'),false);
  q.S.food2=1;batt(c,'hill');b=[...c.$('bt-cmds').querySelectorAll('button')];const k=b.map(x=>x.dataset.cmd);assert.equal(b.some(x=>x.classList.contains('wide')),false);assert.equal(k.indexOf('food2'),k.indexOf('food')+1);assert.equal(k.indexOf('food')%2,0,'food starts a row so food+food2 share it');});
@@ -217,6 +217,7 @@ test('trial collection tabs: 試練 and 都道府県限定試練 (prefecture bos
  const bosses=[...q.TRIAL_KEYS].filter(k=>k.startsWith('boss_')||k==='collapse');assert.equal(bosses.length,Object.values(q.SPEC).length,'one prefecture boss per special prefecture');
  q.S.stats.en.boss_okayama=[1,1,0];q.renderTrials();assert.ok(txt().includes('鬼ノ城の温羅'));
  tab('old').click();assert.ok(txt().includes('激坂'));assert.ok(!txt().includes('鬼ノ城の温羅'));});
+test('wheels: five kinds, only one can be equipped (extra ones are dropped on load), still customizable',c=>{const q=c.q;assert.deepEqual(['tire','wheel','wheel2','wheelc','wheelc2'].map(id=>q.PARTS.find(p=>p.id===id).name),['MTB用ホイール','アルミ製ホイール','アルミ製軽量ホイール','カーボン製ホイール','カーボン製軽量ホイール']);q.newGame(q.PREF[0].id);q.S.owned.parts=['wheel','wheelc','tire'];q.S.bike='gravel';q.S.parts=['wheel','wheelc','tire'];q.save();const o=q.load();assert.equal(o.parts.length,1);assert.equal(o.parts[0],'wheel');});
 const summary={file:filename,passed:results.filter(x=>x.ok).length,failed:results.filter(x=>!x.ok).length,results};
 if(process.argv[3])fs.writeFileSync(process.argv[3],JSON.stringify(summary,null,2));
 console.log(JSON.stringify({passed:summary.passed,failed:summary.failed}));process.exitCode=summary.failed?1:0;
