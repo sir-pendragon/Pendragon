@@ -207,6 +207,8 @@ test('custom tab is tier-first: 1/2/3段階目 cards list the owned bikes and pa
  assert.ok(ids(cards[1]).includes('bike:cross')&&!ids(cards[0]).includes('bike:cross'));assert.ok(ids(cards[2]).length===0&&ids(cards[1]).includes('bike:cross')&&!ids(cards[0]).concat(ids(cards[1]),ids(cards[2])).includes('bike:road'));
  assert.ok(c.$('shop-forge').textContent.includes('最大：ロードバイク'));
  const before=q.S.money;c.$('shop-forge').querySelector('[data-forge="bike:rando"]').click();c.$('pay-yes').click();assert.equal(q.S.plus.rando,1);assert.ok(q.S.money<before);});
+test('sponsor SNS post does not state an amount',c=>{const {q,w}=c;q.newGame(q.PREF[0].id);q.S.log=[...(q.S.log||[]),{t:q.S.turn||1,x:'スポンサー「旅行会社」がつきました（毎週¥10,000）'}];
+ const src=fs.readFileSync(path.join(__dirname,'..','index.html'),'utf8');const m=/\^スポンサー「\(\.\+\)」がつきました[\s\S]{0,700}/.exec(src);assert.ok(m);assert.ok(!/応援金|yen\(pay\)/.test(m[0]));});
 const summary={file:filename,passed:results.filter(x=>x.ok).length,failed:results.filter(x=>!x.ok).length,results};
 if(process.argv[3])fs.writeFileSync(process.argv[3],JSON.stringify(summary,null,2));
 console.log(JSON.stringify({passed:summary.passed,failed:summary.failed}));process.exitCode=summary.failed?1:0;
