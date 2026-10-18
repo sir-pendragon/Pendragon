@@ -996,7 +996,7 @@ function renderMap(){const svg=$('map');const mk=JSON.stringify([S.loc,S.sel,S.v
   s+=top;
   const SPR={"tarp_tp2":[565,199],"shelter_sh2":[355,185],"bike_gravel":[190,144],"bike_cross":[185,142],"bike_road":[176,136],"fire_fire3":[480,470],"bike_mama":[162,126],"fire_fire2":[241,200],"tarp_tp1":[476,166],"shelter_sh3":[560,401],"bike_tigrav":[194,122],"tarp_tp3":[760,359],"shelter_sh1":[481,185],"shelter_sh6":[481,185],"shelter_sh7":[481,185],"bike_mtb":[202,134],"camp_ground":[451,193],"fire_fire1":[197,153],"bike_fold":[143,124],"tree_spring":[256,338],"tree_summer":[256,338],"tree_autumn":[256,338],"tree_winter":[256,338],"part_tripod":[128,128],"part_cam":[128,128],"part_drone":[128,128],"part_comfy":[128,128]};
   // 新しいギアの絵が届くまでの代用：近い既存の絵を使い、DCFは薄いグリーンに寄せる。絵が届いたら STAND から外し、SPR に寸法を足す
-  Object.assign(SPR,{shelter_sh4:[700,381],shelter_sh5:[700,474],tarp_tp4:[476,166]});// 新しい絵の寸法（DCFテント・薪ストーブ用テント本体と煙突）。DCFタープは簡易タープの色違い（絵も寸法も同じ）
+  Object.assign(SPR,{shelter_sh4:[700,381],shelter_sh5:[700,474],tarp_tp4:[476,166],bike_rando:[190,118],bike_ucross:[185,142],bike_uroad:[176,136]});// 自転車は絵の半分の寸法（ランドナー・中古クロス・中古ロードは足し忘れていて島に出ていなかった）// 新しい絵の寸法（DCFテント・薪ストーブ用テント本体と煙突）。DCFタープは簡易タープの色違い（絵も寸法も同じ）
   const put=(key,cx,by,k,kx)=>{const d=SPR[key];if(!d)return '';const w=d[0]*k*(kx||1),hh=d[1]*k;return `<image href="img/${key}.webp${key==='tarp_tp4'||key==='tarp_tp3'?'?v=2':''}" x="${(cx-w/2).toFixed(1)}" y="${(by-hh).toFixed(1)}" width="${w.toFixed(1)}" height="${hh.toFixed(1)}"/>`;};
   // 配置の決まり（重なり順・位置）は、近い既存のものと同じにする（DCFテント＝入門テント、薪ストーブ用テント＝山岳テント、DCFタープ＝ヘキサ）。大きさと接地は新しい絵に合わせて個別に決める
   const A_SH={sh4:'sh2',sh5:'sh3'},A_TP={tp4:'tp1'};const shA=A_SH[S.gear.shelter]||S.gear.shelter,tpA=A_TP[S.gear.tarp]||S.gear.tarp;
