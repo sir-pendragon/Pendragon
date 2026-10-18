@@ -695,7 +695,7 @@ const BIKES=[
  {id:'road',name:'ロードバイク',price:150000,climb:7,rough:2,cruise:8,wx:3},
  {id:'gravel',name:'グラベルバイク',price:200000,climb:6,rough:7,cruise:6,wx:6},
  {id:'mtb',name:'マウンテンバイク',price:180000,climb:6,rough:9,cruise:4,wx:6},
- {id:'fold',name:'チタン折りたたみ',price:300000,climb:5,rough:4,cruise:5,wx:5,fold:true},
+ {id:'fold',name:'チタン製折りたたみ自転車',price:300000,climb:5,rough:4,cruise:5,wx:5,fold:true},
  {id:'rando',name:'ランドナー',price:450000,climb:6,rough:6,cruise:8,wx:8},
  {id:'tigrav',name:'分割式チタン製グラベルロード',price:800000,climb:8,rough:8,cruise:8,wx:8,fold:true},
 ];
@@ -900,7 +900,7 @@ function bikeStats(){const b=BIKES.find(x=>x.id===S.bike);const st={climb:b.clim
   for(const pid of S.parts){const p=PARTS.find(x=>x.id===pid);for(const k of ['climb','rough','cruise','wx','photo','comfy']) if(p[k]) st[k]+=p[k]+plv(pid);}return st;}
 // ---------- カスタム（自転車・パーツを+1〜+3に改造） ----------
 const STATJ={climb:'登坂',rough:'悪路',cruise:'巡航',wx:'耐候',photo:'写真',comfy:'気力消費'};
-// 折りたたみ（チタン折りたたみ・分割式チタン製グラベルロード）専用の「輪行カスタム」：輪行費の割合が段階的に下がる（素は半額）
+// 折りたたみ（チタン製折りたたみ自転車・分割式チタン製グラベルロード）専用の「輪行カスタム」：輪行費の割合が段階的に下がる（素は半額）
 const RK_RATE=[.5,.4,.3,.15],RK_COST=[8000,15000,30000],RK_TIER=['軽量輪行袋','専用ハードケース','超軽量カーボンケース'];
 const rkLv=id=>Math.min(3,(S.plus&&S.plus[id||S.bike])||0);
 const NOCUSTOM=new Set(['fold','tigrav','compm','comph','compi','rack1','rack2','rack3','rack4','front1','front2','front3','front4']);// チタン製の自転車は、フレーム素材が完成形なのでカスタム（クロモリ→アルミ→カーボン）できない
