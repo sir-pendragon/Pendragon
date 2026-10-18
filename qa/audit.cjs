@@ -170,7 +170,7 @@ test('rear racks: four tiers, raise the food cap, one rack only, bike-part tab, 
  q.S.parts=['rack4'];assert.equal(q.foodMax(),5+4);q.S.parts=['rack1'];assert.equal(q.foodMax(),6);q.S.parts=[];assert.equal(q.foodMax(),5);
  q.S.plus={rack4:3};q.S.parts=['rack4'];assert.equal(q.foodMax(),9,'no customization');q.S.plus={};
  q.S.parts=['rack1','rack4','compi','compm'];q.S.food=7;q.save();const o=q.load();assert.equal(o.parts.filter(x=>x.startsWith('rack')).length,1);assert.equal(o.parts.filter(x=>x.startsWith('comp')).length,1);assert.equal(o.food,7);
- });// 絵が届いたら img/part_rack1〜4.webp の存在確認を足す
+ for(const id of ['rack1','rack2','rack3','rack4'])assert.ok(fs.existsSync(path.join(__dirname,'..','img/part_'+id+'.webp')),id+' art');});
 test('part slots grow with bike price: 3/4/5, trimmed on bike change and on load',c=>{const {q,w}=c;
  const sl=id=>q.partSlots(id);for(const b of q.BIKES)assert.equal(sl(b.id),b.price>=450000?5:b.price>=150000?4:3,b.id);
  assert.equal(sl('mama'),3);assert.equal(sl('road'),4);assert.equal(sl('rando'),5);assert.equal(sl('tigrav'),5);
