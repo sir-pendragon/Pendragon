@@ -185,7 +185,7 @@ test('front carriers: four tiers, comfort and photo, independent of the rear rac
  q.newGame(q.PREF[0].id);q.S.bike='rando';q.S.owned.parts=q.PARTS.map(x=>x.id);q.S.parts=['rack4','front4'];const st=q.bikeStats();assert.equal(st.comfy,4);assert.equal(st.photo,4);assert.equal(q.foodMax(),9);
  q.S.plus={front4:3};assert.equal(q.bikeStats().comfy,4,'no customization');q.S.plus={};
  q.S.parts=['front1','front3','rack1','rack2'];q.save();const o=q.load();assert.equal(o.parts.filter(x=>x.startsWith('front')).length,1);assert.equal(o.parts.filter(x=>x.startsWith('rack')).length,1);
- q.renderShop();const ids=[...w.document.querySelectorAll('#shop-part .card')].map(e=>e.dataset.id);for(const f of F)assert.ok(ids.includes(f.id),f.id);q.renderForge();});
+ q.renderShop();const ids=[...w.document.querySelectorAll('#shop-part .card')].map(e=>e.dataset.id);for(const f of F){assert.ok(ids.includes(f.id),f.id);assert.ok(fs.existsSync(path.join(__dirname,'..','img/part_'+f.id+'.webp')),f.id+' art');}q.renderForge();});
 test('DCF tent and tarp each add one part slot, trimmed when removed',c=>{const {q,w}=c;
  q.newGame(q.PREF[0].id);q.S.owned.bikes=q.BIKES.map(b=>b.id);q.S.owned.parts=q.PARTS.map(x=>x.id);q.S.owned.gear=q.S.owned.gear.concat(['sh4','tp4','sh2','tp3']);q.S.bike='mama';
  q.S.gear={fire:null,shelter:null,tarp:null};assert.equal(q.partSlots('mama'),4);
