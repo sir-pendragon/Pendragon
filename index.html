@@ -1113,7 +1113,7 @@ function card(item,kind,mode){const eq=isEq(kind,item),own=owns(kind,item.id);
   if(mode==='shop'){act=own?`<span class="pill">所持</span>`:`<button data-act="buy" ${S.money>=item.price?'':'disabled'}>購入 ${yen(item.price)}</button>`;}
   else if(eq)act=(kind==='part'||kind==='gear')?`<button data-act="unequip">外す</button>`:`<span class="pill">装備中</span>`;
   else act=`<button data-act="equip" ${kind==='part'&&S.parts.length>=partSlots(S.bike)&&!(xg(item)&&S.parts.some(x=>xg(PARTS.find(p=>p.id===x))===xg(item)))||kind==='gear'&&item.req&&S.gear.shelter!==item.req?'disabled':''}>装備</button>`;
-  return `<div class="card ${eq?'eq':''}" data-kind="${kind}" data-id="${item.id}"><div class="name"><span class="nm"><img loading="lazy" class="ci" ${(kind==='gear'||kind==='part')&&ICON_FB[item.id]?`data-fb="${ICON_FB[item.id]}" `:''}src="img/${kind==='gear'?'icon_g_'+item.id:(kind==='part'?'part_'+item.id:kind==='cloth'?'cloth_'+item.id:'icon_bike_'+item.id)}.webp" width="28" height="28" alt="">${item.name}${(kind==='bike'||kind==='part')&&plv(item.id)?` <b>${tierOf(kind,plv(item.id))}</b>`:''}</span>${act}</div><div class="spec">${spec}</div></div>`;}
+  return `<div class="card ${eq?'eq':''}" data-kind="${kind}" data-id="${item.id}"><div class="name"><span class="nm"><img loading="lazy" class="ci" ${(kind==='gear'||kind==='part')&&ICON_FB[item.id]?`data-fb="${ICON_FB[item.id]}" `:''}src="img/${kind==='gear'?'icon_g_'+item.id:(kind==='part'?'part_'+item.id:kind==='cloth'?'cloth_'+item.id:'icon_bike_'+item.id)}.webp" width="28" height="28" alt="">${item.name}${(kind==='bike'||kind==='part')&&plv(item.id)?` <b>+${plv(item.id)}</b>`:''}</span>${act}</div><div class="spec">${spec}</div></div>`;}
 let PGRP='rack';// パーツ欄のタブ：rack=ラック類／comp=コンポ類／wheel=ホイール／etc=その他（残りすべて）
 const grpOf=i=>i.rack||i.front?'rack':i.comp?'comp':(i.id==='wheel'||i.id==='tire')?'wheel':'etc';// 前後ラック／コンポ／ホイール＋タイヤ／その他（エアロバー・フェンダー・熊スプレー・カメラ等すべて）
 const PG_TABS=[['rack','ラック類'],['comp','コンポ類'],['wheel','ホイール'],['etc','その他']];
@@ -1133,7 +1133,7 @@ function renderForge(){
       return `<div class="card fg-t"><div class="name"><span class="nm"><b>${TIER[kind][nx-1]}</b></span></div><div class="fg-chips">${its.length?its.map(i=>chip(i,nx)).join(''):'<span class="hint">対象なし</span>'}</div></div>`;}).join('')
       +(maxed.length?`<div class="hint">最大：${maxed.map(i=>i.name).join('・')}</div>`:'');};
   const bl=BIKES.filter(i=>owns('bike',i.id)&&!NOCUSTOM.has(i.id)),pl=PARTS.filter(i=>!i.anti&&!xg(i)&&owns('part',i.id)&&!NOCUSTOM.has(i.id));
-  const now=(kind,list)=>list.filter(i=>plv(i.id)>0).map(i=>`${i.name}（${tierOf(kind,plv(i.id))}）`).join('・');
+  const now=(kind,list)=>list.filter(i=>plv(i.id)>0).map(i=>`${i.name}（+${plv(i.id)}）`).join('・');
   $('shop-forge').innerHTML='<div class="fg-h">自転車のフレーム<small>1段階ごとに、その自転車の得意な能力2つが+1（持ち物が多いときは、各段階の行を横にスワイプ）</small></div>'+(bl.length?tiers('bike',bl)+(now('bike',bl)?`<div class="hint">現在：${now('bike',bl)}</div>`:''):'<div class="hint">カスタムできる自転車がありません（自転車の店で購入できます）。</div>')
     +(BIKES.some(i=>NOCUSTOM.has(i.id)&&owns('bike',i.id))?'<div class="hint">チタン製の自転車は、完成された一台なので、フレームのカスタムはできません（折りたたみ式・分割式は、輪行用の装備だけ強化できます）。</div>':'')
     +BIKES.filter(b=>b.fold&&owns('bike',b.id)).map(b=>{const lv=rkLv(b.id),nx=lv+1,act=lv>=3?'<span class="pill">最大</span>':`<button data-rk="${b.id}" ${S.money>=RK_COST[lv]?'':'disabled'}><img loading="lazy" class="wi" src="img/icon_upgrade.webp" width="128" height="128" alt=""><span>${RK_TIER[lv]}<small>${yen(RK_COST[lv])}</small></span></button>`;
