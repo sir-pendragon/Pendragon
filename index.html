@@ -225,7 +225,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .cmds button.ic{display:flex;align-items:center;gap:6px}
 .cmds button.ic img{width:26px;height:26px;flex:none;object-fit:contain}
 .rank{width:40px;height:40px;vertical-align:middle;margin-right:4px}
-.fg-h{font-weight:700;margin:10px 2px 4px;font-size:var(--fs-m)}.fg-h small{display:block;font-weight:400;color:var(--muted);font-size:var(--fs-xs)}.fg-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}.fg-chips button{font-size:var(--fs-s);flex:1 1 40%;min-width:0;display:flex;align-items:center;gap:6px;text-align:left;padding:6px 8px}.fg-chips button span{min-width:0;display:flex;flex-direction:column;line-height:1.2}.fg-chips button small{opacity:.85;font-size:var(--fs-xs)}.fg-t .name .nm b{color:var(--gold,#f0c75a)}
+.fg-h{font-weight:700;margin:10px 2px 4px;font-size:var(--fs-m)}.fg-h small{display:block;font-weight:400;color:var(--muted);font-size:var(--fs-xs)}.fg-chips{display:flex;flex-wrap:nowrap;overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch;gap:6px;margin-top:6px;padding-bottom:6px;scrollbar-width:thin}.fg-chips button{font-size:var(--fs-s);flex:0 0 min(46%,170px);scroll-snap-align:start;min-width:0;display:flex;align-items:center;gap:6px;text-align:left;padding:6px 8px}.fg-chips button span{min-width:0;display:flex;flex-direction:column;line-height:1.2}.fg-chips button small{opacity:.85;font-size:var(--fs-xs)}.fg-t .name .nm b{color:var(--gold,#f0c75a)}
 @media (max-width:360px){#shop-forge button .wi{display:none}#shop-forge button{padding:8px 6px;white-space:nowrap;font-size:var(--fs-m)}}
 #ov-camp .row button small{display:block;color:var(--muted);font-size:var(--fs-s)}
 #ov-go .row button{white-space:nowrap}
@@ -1134,7 +1134,7 @@ function renderForge(){
       +(maxed.length?`<div class="hint">最大：${maxed.map(i=>i.name).join('・')}</div>`:'');};
   const bl=BIKES.filter(i=>owns('bike',i.id)&&!NOCUSTOM.has(i.id)),pl=PARTS.filter(i=>!i.anti&&!xg(i)&&owns('part',i.id)&&!NOCUSTOM.has(i.id));
   const now=(kind,list)=>list.filter(i=>plv(i.id)>0).map(i=>`${i.name}（${tierOf(kind,plv(i.id))}）`).join('・');
-  $('shop-forge').innerHTML='<div class="fg-h">自転車のフレーム<small>1段階ごとに、その自転車の得意な能力2つが+1</small></div>'+(bl.length?tiers('bike',bl)+(now('bike',bl)?`<div class="hint">現在：${now('bike',bl)}</div>`:''):'<div class="hint">カスタムできる自転車がありません（自転車の店で購入できます）。</div>')
+  $('shop-forge').innerHTML='<div class="fg-h">自転車のフレーム<small>1段階ごとに、その自転車の得意な能力2つが+1（持ち物が多いときは、各段階の行を横にスワイプ）</small></div>'+(bl.length?tiers('bike',bl)+(now('bike',bl)?`<div class="hint">現在：${now('bike',bl)}</div>`:''):'<div class="hint">カスタムできる自転車がありません（自転車の店で購入できます）。</div>')
     +(BIKES.some(i=>NOCUSTOM.has(i.id)&&owns('bike',i.id))?'<div class="hint">チタン製の自転車は、完成された一台なので、フレームのカスタムはできません（折りたたみ式・分割式は、輪行用の装備だけ強化できます）。</div>':'')
     +BIKES.filter(b=>b.fold&&owns('bike',b.id)).map(b=>{const lv=rkLv(b.id),nx=lv+1,act=lv>=3?'<span class="pill">最大</span>':`<button data-rk="${b.id}" ${S.money>=RK_COST[lv]?'':'disabled'}><img loading="lazy" class="wi" src="img/icon_upgrade.webp" width="128" height="128" alt=""><span>${RK_TIER[lv]}<small>${yen(RK_COST[lv])}</small></span></button>`;
     return `<div class="card"><div class="name"><span class="nm"><img loading="lazy" class="ci" src="img/icon_bike_${b.id}.webp" width="28" height="28" alt="">${b.name}</span>${act}</div><div class="spec">${lv?`装備中：${RK_TIER[lv-1]}　`:''}輪行費 ×${RK_RATE[lv]}${lv<3?` → ×${RK_RATE[nx]}`:''}</div></div>`;}).join('')
