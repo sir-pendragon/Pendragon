@@ -348,7 +348,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 
   <section class="panel" id="p-map">
     <div class="mapbox"><svg class="map" id="map" viewBox="0 0 400 472" aria-label="日本地図"></svg><div class="wxfx" id="wxfx" aria-hidden="true"></div><div class="info" id="info"></div><div id="tut-bub" role="dialog" aria-label="チュートリアル" hidden><span class="hint" id="tb-n"></span><b id="tb-h"></b><img id="tb-img" class="tb-img" alt="" hidden onerror="this.hidden=true"><p id="tb-p"></p><div class="tb-row"><button id="tb-skip">スキップ</button><button class="primary" id="tb-next">次へ</button></div></div><div class="mdate"><span id="d-date">1年目 4月第1週</span><span class="md2"><span id="d-wk">（1/52）</span><span id="d-season"></span></span></div></div>
-    <div class="legend"><span style="--c:var(--a0)">未踏破</span><span style="--c:var(--a1)">1回</span><span style="--c:var(--a2)">2回</span><span style="--c:var(--a3)">3回(馴染み宿)</span><span style="--c:var(--sky)">現在地</span></div>
+    <div class="legend"><span style="--c:var(--a0)">未踏破</span><span style="--c:var(--a1)">1回</span><span style="--c:var(--a2)">2回</span><span style="--c:var(--a3)">3回（馴染み宿）</span><span style="--c:var(--sky)">現在地</span></div>
     <div class="detail" id="detail"></div>
     <details><summary class="hint">行き先を一覧から選ぶ</summary><div class="sitelist" id="sitelist"></div></details>
   </section>
@@ -1067,7 +1067,7 @@ function renderDetail(){const p=PREF[S.sel],f=S.forecast[p.id],ti=travelInfo(p),
   const fit=f.temp<cl.lo?`❄️ この衣類では寒い（${cl.lo-f.temp}℃不足）`:f.temp>cl.hi?`🔥 この衣類では暑い（${f.temp-cl.hi}℃超過）`:'👕 衣類OK';
   const ev=eventAt(S.turn,p.id),fee=S.fam[p.id]?Math.round(p.fee/2):p.fee;
   const enemies=[];if(p.terrain==='hill')enemies.push('激坂','峠');if(p.terrain==='rough'){enemies.push('ダート','廃道');}if(hasBoar(p))enemies.push('いのしし');
-  if(HABU.has(p.name)&&PREF[S.home].name!=='沖縄')enemies.push('ハブ');if(DEER.has(p.name))enemies.push('牡鹿');if(calendar(S.turn).year>=2&&bearSeason(calendar(S.turn).month)){if(BROWNBEAR.has(p.name)&&PREF[S.home].name!=='北海道')enemies.push('ヒグマ');if(BLACKBEAR.has(p.name))enemies.push(RAREBEAR.has(p.name)?'ツキノワグマ(まれ)':'ツキノワグマ');}if(calendar(S.turn).year>=2&&URBAN.has(p.name))enemies.push(ENEMY[urbanEnemy()].name);
+  if(HABU.has(p.name)&&PREF[S.home].name!=='沖縄')enemies.push('ハブ');if(DEER.has(p.name))enemies.push('牡鹿');if(calendar(S.turn).year>=2&&bearSeason(calendar(S.turn).month)){if(BROWNBEAR.has(p.name)&&PREF[S.home].name!=='北海道')enemies.push('ヒグマ');if(BLACKBEAR.has(p.name))enemies.push(RAREBEAR.has(p.name)?'ツキノワグマ（まれ）':'ツキノワグマ');}if(calendar(S.turn).year>=2&&URBAN.has(p.name))enemies.push(ENEMY[urbanEnemy()].name);
   if(f.wx==='rain')enemies.push('大雨');if(f.wx==='wind')enemies.push('強風');if(f.wx==='typhoon')enemies.push('台風');if(f.wx==='snow')enemies.push('大雪');if(f.wx==='heat')enemies.push('炎天下');if(p.scen>=5||ev)enemies.push('ライバル?');
   $('info').innerHTML=`<h3>${p.site}</h3><div class="hint">${p.name}・${p.region}</div>${badge}
   <div class="kv"><span>地形</span><span>${TERRAIN[p.terrain]}（${'★'.repeat(p.diff)}）</span><span>景観</span><span>${'📷'.repeat(p.scen)}</span>
@@ -1250,7 +1250,7 @@ function tsuchinoko(then){trip.tc=1;tstat('tsuchi')[0]++;const has=S.parts.inclu
   const first=!S.stats.tc;
   const go=(via)=>{const rate=tcRate(via);S.mp=Math.max(0,S.mp-10);const ok=Math.random()<rate;$('tc-img').className='tc-img';$('tc-btns').innerHTML='';
     if(ok){const fg=first?200000:50000,inc=first?50000:10000;S.fame+=fg;S.money+=inc;S.stats.tc++;tstat('tsuchi')[1]++;playSE('se_win');log(`ツチノコの撮影に成功！フォロワー+${fol(fg)}`);
-      $('tc-h').textContent='🎉 ツチノコを撮影した！';$('tc-sum').innerHTML=`ブレずに撮れた。ネットが大騒ぎに！<br>フォロワー <b>+${fol(fg)}</b>　SNS収入 +${yen(inc)}${first?'<br>（初めての発見）':'<br>（2回目以降は、少し控えめに話題）'}`;}
+      $('tc-h').textContent='🎉 ツチノコを撮影した！';$('tc-sum').innerHTML=`ブレずに撮れた。ネットが大騒ぎに！<br>フォロワー <b>+${fol(fg)}</b>　SNS収入 +${yen(inc)}${first?'<br>（初めての発見）':'<br>（2回目以降は、少し控えめな話題に）'}`;}
     else{tstat('tsuchi')[2]++;$('tc-h').textContent='逃げられた…';$('tc-sum').innerHTML='シャッターを切る前に、草むらの奥へ消えてしまった。<br>また会えるだろうか。';}
     const b=document.createElement('button');b.className='primary';b.textContent='旅を続ける';b.onclick=()=>{$('ov-tc').hidden=true;render();then();};$('tc-btns').appendChild(b);};
   const mk=(txt,sub,fn,dis)=>`<button ${dis?'disabled':''}>${txt}<small>${sub}</small></button>`;
@@ -1294,18 +1294,18 @@ function startBattle(kind){tstat(kind)[0]++;const e=ENEMY[kind],p=trip.p,c=calen
   B={kind,e,hp,max:hp,limit:e.limit,turn:1,charge:0,cut:1,next:rollNext(),atk:Math.round(e.atk*scale*(S.parts.includes('spray')&&(kind==='bear'||kind==='brownbear')||S.parts.includes('oil')&&(kind==='car'||kind==='bike')?.5:1))};
   $('ov-battle').hidden=false;playSE('se_encounter');playBGM('bgm_battle');if(kind!=='rival')tutBattle();$('bt-face').innerHTML=e.img?`<img loading="lazy" src="${e.img}" alt="${e.name}" width="190" height="190" onerror="this.replaceWith(document.createTextNode('${e.face}'))">`:e.face;$('bt-name').textContent=`区間 ${trip.i+1}/${trip.enc.length}`;
   $('bt-title').textContent=kind==='rival'?'SNSの試練':e.name;
-  blog(kind==='rival'?`ライバルも同じ撮影スポットを狙っている！\n${e.hint}。日没まで あと${B.limit}時間。`:`${e.camper?'隣のサイトに'+e.name+'がいる！夜になっても静かにならない。':WILDK.has(kind)?e.name+'に遭遇した！':e.name+'の区間に入った。'}\n${e.hint}。日没まで あと${B.limit}時間。`);renderBattle();}
+  blog(kind==='rival'?`ライバルも同じ撮影スポットを狙っている！\n${e.hint}。日没まで、あと${B.limit}時間。`:`${e.camper?'隣のサイトに'+e.name+'がいる！夜になっても静かにならない。':WILDK.has(kind)?e.name+'に遭遇した！':e.name+'の区間に入った。'}\n${e.hint}。日没まで、あと${B.limit}時間。`);renderBattle();}
 function blog(t){$('bt-log').textContent=t;}
 // 区間の距離（ライバル戦は撮影スポットまでのm）。内部の数値（hp）を距離に換算して表示する
 const isRival=()=>B.kind==='rival';
 function kmOf(v){const L=isRival()?400:trip.sec;return Math.max(0,v)/B.max*L;}
 function fmtD(v){const x=kmOf(v);return isRival()?Math.round(x)+'m':(x>=10?Math.round(x):x.toFixed(1))+'km';}
 const LEFT=()=>isRival()?'撮影スポットまで':'ゴールまで';
-const HIT={hill:'坂がきつい',animal:'いのししに追いつかれ、突進された',pass:'長い登りに脚を削られた',snow:'吹雪に視界を奪われた',heat:'炎天下で頭がくらくらする',rough:'荒れたダートにハンドルを取られた',lost:'藪に埋もれた道を見失いかけた',deer:'鹿が飛び出して急ブレーキ。逃げ遅れた',bear:'ツキノワグマに迫られた！全力で逃げる',brownbear:'ヒグマに迫られた！必死で逃げる',habu:'ハブに咬まれかけた！慌てて逃げる',car:'暴走車に幅寄せされた',bike:'暴走バイクが横をかすめた',wind:'向かい風に押し戻された',rain:'冷たい雨に体温を奪われた',typhoon:'暴風雨にあおられた',rockfall:'落ちてきた岩にかすめられた',slide:'ぬかるんだ土砂にタイヤを取られた',ford:'冷たい水に足を取られた',tree:'倒木の枝に引っかかった',collapse:'崩れた路肩に足を取られた',gas:'喉が焼けるガスを吸い込んだ',volcstorm:'急な風雨と雷に打たれた',curves:'急なコーナーで体勢を崩した',gate:'閉まりかけたゲートに焦らされた',boss_fukushima:'噴き出したガスに視界を奪われた',boss_tokyo:'夕闇に紛れた遮断棒に行く手を阻まれた',boss_gifu:'氷の息吹に体温を奪われた',boss_akita:'凍てつく風に翼で押し戻された',boss_tokushima:'砕けた岩に行く手を阻まれた',boss_aomori:'大きな根と枝に押し返された',boss_hyogo:'霧にまかれて道を見失いかけた',boss_osaka:'石の陰から古猿に飛びかかられ、押し返された',boss_tochigi:'双頭の蛇のとぐろに巻かれ、荷ごと締め上げられた',boss_miyagi:'雪煙の中から白い狼に飛びかかられた',camper1:'酒臭い大声に絡まれた',camper2:'夜通しの馬鹿騒ぎで眠れない',camper3:'犬の吠え声が鳴りやまない'};
+const HIT={hill:'坂がきつい',animal:'いのししに追いつかれ、突進された',pass:'長い登りに脚を削られた',snow:'吹雪に視界を奪われた',heat:'炎天下で頭がくらくらする',rough:'荒れたダートにハンドルを取られた',lost:'藪に埋もれた道を見失いかけた',deer:'鹿が飛び出して急ブレーキ。逃げ遅れた',bear:'ツキノワグマに迫られた！全力で逃げる',brownbear:'ヒグマに迫られた！必死で逃げる',habu:'ハブに咬まれかけた！慌てて逃げる',car:'暴走車に幅寄せされた',bike:'暴走バイクが横をかすめた',wind:'向かい風に押し戻された',rain:'冷たい雨に体温を奪われた',typhoon:'暴風雨にあおられた',rockfall:'落ちてきた岩にかすめられた',slide:'ぬかるんだ土砂にタイヤを取られた',ford:'冷たい水に足を取られた',tree:'倒木の枝に引っかかった',collapse:'崩れた路肩に足を取られた',gas:'喉が焼けるガスを吸い込んだ',volcstorm:'急な風雨と雷にあおられた',curves:'急なコーナーで体勢を崩した',gate:'閉まりかけたゲートに焦らされた',boss_fukushima:'噴き出したガスに視界を奪われた',boss_tokyo:'夕闇に紛れた遮断棒に行く手を阻まれた',boss_gifu:'氷の息吹に体温を奪われた',boss_akita:'凍てつく風に翼で押し戻された',boss_tokushima:'砕けた岩に行く手を阻まれた',boss_aomori:'大きな根と枝に押し返された',boss_hyogo:'霧にまかれて道を見失いかけた',boss_osaka:'石の陰から古猿に飛びかかられ、押し返された',boss_tochigi:'双頭の蛇のとぐろに巻かれ、荷ごと締め上げられた',boss_miyagi:'雪煙の中から白い狼に飛びかかられた',camper1:'酒臭い大声に絡まれた',camper2:'夜通しの馬鹿騒ぎで眠れない',camper3:'犬の吠え声が鳴りやまない'};
 function tacOK(){const k=B.kind;return k==='hill'?S.hp>5:k==='animal'?S.mp>=5:k==='pass'||k==='heat'||k==='rough'||k==='lost'||k==='deer'||k==='car'||k==='bike'?S.mp>=3:k==='bear'||k==='brownbear'?S.mp>=8:k==='habu'?S.mp>=6:k==='rival'?S.mp>=8:k==='rain'||k==='snow'?!!(S.gear.tarp||S.gear.shelter)&&S.mp>=3:k==='typhoon'?!!S.gear.shelter&&S.mp>=4:k==='wind'?S.mp>=3:k==='rockfall'||k==='ford'||k==='gas'||k==='volcstorm'||k==='curves'||k==='gate'?S.mp>=3:k==='boss_fukushima'||k==='boss_tokyo'||k==='boss_gifu'||k==='boss_akita'||k==='boss_tokushima'||k==='boss_aomori'||k==='boss_hyogo'||k==='boss_osaka'||k==='boss_tochigi'||k==='boss_miyagi'?S.mp>=4:k==='slide'||k==='tree'?S.mp>=3&&S.hp>5:k==='collapse'?S.mp>=4:k==='camper1'?S.mp>=5:k==='camper2'||k==='camper3'?S.mp>=3:true;}
 function playerPower(){const st=bikeStats();if(B.kind==='rival')return 8+FL()/8+st.photo/2;return st[B.e.stat]*4;}
 function renderBattle(){const pr=Math.min(100,Math.max(0,(1-B.hp/B.max)*100));$('bt-hp').style.width=pr+'%';$('bt-bike').style.left=pr+'%';$('bt-bike').src=isRival()?'img/part_cam.webp':'img/icon_bike_'+S.bike+'.webp';$('bt-goal').src=isRival()?'img/part_tripod.webp':'img/icon_g_sh2.webp';
-  $('bt-km').innerHTML=`<span class="bt-km">${B.hp<=0?(isRival()?'撮影スポットに到着！':'区間ゴール！'):LEFT()+' '+fmtD(B.hp)}</span><span class="bt-km">日没まで あと${B.limit-B.turn+1}時間</span>`;
+  $('bt-km').innerHTML=`<span class="bt-km">${B.hp<=0?(isRival()?'撮影スポットに到着！':'区間ゴール！'):LEFT()+' '+fmtD(B.hp)}</span><span class="bt-km">日没まで、あと${B.limit-B.turn+1}時間</span>`;
   $('bt-info').innerHTML=`<div class="bt-bar"><span>体力</span><div class="bar"><i style="width:${Math.max(0,S.hp)}%"></i></div><b>${S.hp}</b></div><div class="bt-bar"><span>気力</span><div class="bar mp"><i style="width:${Math.max(0,S.mp)}%"></i></div><b>${S.mp}</b></div>`;
   $('bt-nx').innerHTML=`${isRival()?`<span>フォロワー ${fol(S.fame)}</span>`:''}<span>次の${isRival()?'ライバル':'敵'}の勢い：${B.next==='heavy'?`<b style="color:var(--bad)">${NEXT.heavy[0]}</b>`:NEXT[B.next][0]}</span><span>補給食 ${S.food}個${S.food2?`・長野 ${S.food2}個`:''}</span>`;
   const st=bikeStats(),ti={rinko:trip.rk};const pw=playerPower(),pd=v=>fmtD(v);
@@ -1314,7 +1314,7 @@ function renderBattle(){const pr=Math.min(100,Math.max(0,(1-B.hp/B.max)*100));$(
     ['kiai','気合い','気力-20 次が3倍'],
     ['rest','休む','体力+20 人気減'],
     ['tactic',...TACT.rival],
-    ['food','補給食','体力+25 気+10'],...(S.food2?[['food2','長野県の補給食',`体力+${NAGANO.hp} 気力+${NAGANO.mp}`]]:[]),
+    ['food','補給食','体力+25 気力+10'],...(S.food2?[['food2','長野県の補給食',`体力+${NAGANO.hp} 気力+${NAGANO.mp}`]]:[]),
     ['escape','場所を譲る','失敗（遅刻扱い）']]:[
     ['push','全力で踏む',`体力-15 ${pd(pw+4)}進む`],
     ['walk','押し歩き',`体力-8 ${pd(10)}進む`],
@@ -1322,7 +1322,7 @@ function renderBattle(){const pr=Math.min(100,Math.max(0,(1-B.hp/B.max)*100));$(
     ['rest','休む','体力+20 気力+5'],
     ['guard','身構える','被害7割減'],
     ['tactic',...TACT[B.kind]],
-    ['food','補給食','体力+25 気+10'],...(S.food2?[['food2','長野県の補給食',`体力+${NAGANO.hp} 気力+${NAGANO.mp}`]]:[]),
+    ['food','補給食','体力+25 気力+10'],...(S.food2?[['food2','長野県の補給食',`体力+${NAGANO.hp} 気力+${NAGANO.mp}`]]:[]),
     ['rinko',`輪行 ${yen(ti.rinko)}`,trip.course?'特別コースは自走のみ':'電車で飛ばす']];
   // 作戦アイコンは tac_敵名.webp（ヒグマはツキノワグマと共用）
   const TACI={brownbear:'tac_bear',habu:'tac_deer',gas:'tac_heat',volcstorm:'tac_typhoon',curves:'tac_hill',gate:'tac_wind',boss_fukushima:'tac_collapse',boss_tokyo:'tac_collapse',boss_gifu:'tac_snow',boss_akita:'tac_collapse',boss_tokushima:'tac_collapse',boss_aomori:'tac_hill',boss_hyogo:'tac_wind',boss_osaka:'tac_hill',boss_tochigi:'tac_wind',boss_miyagi:'tac_snow'};
@@ -1469,7 +1469,7 @@ addEventListener('pagehide',save);
 
 // ---------- チュートリアル ----------
 const TUT=[
- ['目標','47都道府県のキャンプ場を、それぞれ「馴染み宿」にすれば全国クリアで、旅は終わりです。\n同じ場所に3回、無事に着いて撮影できると馴染み宿になります（一部の県には特別コースがあり、その県は4回）。1年は52週、毎週末が1ターンです。'],
+ ['目標','47都道府県のキャンプ場を、それぞれ「馴染み宿」にすれば全国クリアです。旅は、そこで終わります。\n同じ場所に3回、無事に着いて撮影できると馴染み宿になります（一部の県には特別コースがあり、その県は4回）。1年は52週、毎週末が1ターンです。'],
  ['スポンサー','毎週、スポンサーの「地元の自転車店」から ¥2,000 が入ります。\nフォロワーが増えると、スポンサーが変わり、もらえる金額も増えます。'],
  ['まずは買い物',`所持金は ${yen(30000)}。画面下の「店」タブで装備を買えます。\nハンモック（${yen(8000)}）を買うと、島でキャラが寝ます。タープ（${yen(5000)}）と焚き火台（${yen(6000)}）も、買ってから旅に出ましょう。\n全部買っても ${yen(30000-8000-5000-6000)} 残ります。旅の利用料も残しておくと安心です。`],
  ['出発','最初は地元のキャンプ場から。「地図」タブで自宅の県を選んで、「自転車旅に行く」を押します。\n道中で坂や動物などの試練が出ます。コマンドを選んで乗り越えましょう。'],
