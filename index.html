@@ -275,7 +275,6 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .card .name .cnt b{font-size:1.25rem;font-weight:700;margin:0 1px;color:var(--fg)}
 .card .name .cnt.has{border-color:#d9a734;background:rgba(217,167,52,.15)}
 .card .name .cnt.has b{color:#f0c75a}
-.cmds button.wide{grid-column:1/-1}
 .cmds button.primary{grid-column:1/-1;text-align:center;padding:14px;font-size:var(--fs-xl)}
 @media (max-width:380px){.cmds button{font-size:var(--fs-m);padding-left:8px;padding-right:6px}.cmds button.ic{gap:4px}.cmds button.ic img{width:22px;height:22px}}
 .cmds button.ic span{min-width:0;overflow:hidden;text-overflow:ellipsis}
@@ -1353,7 +1352,7 @@ function renderBattle(){const pr=Math.min(100,Math.max(0,(1-B.hp/B.max)*100));$(
   const TACI={brownbear:'tac_bear',habu:'tac_deer',gas:'tac_heat',volcstorm:'tac_typhoon',curves:'tac_hill',gate:'tac_wind',boss_fukushima:'tac_collapse',boss_tokyo:'tac_collapse',boss_gifu:'tac_snow',boss_akita:'tac_collapse',boss_tokushima:'tac_collapse',boss_aomori:'tac_hill',boss_hyogo:'tac_wind',boss_osaka:'tac_hill',boss_tochigi:'tac_wind',boss_miyagi:'tac_snow',boss_hokkaido:'tac_wind',boss_tottori:'tac_hill',boss_kumamoto:'tac_wind',boss_okinawa:'tac_wind'};
   const RC={push:'atk',post:'atk',kiai:'gold',rest:'heal',food:'heal',food2:'heal',guard:'def',tactic:'def',rinko:'sub',escape:'sub'};
   const ic={tactic:TACI[B.kind]||'tac_'+B.kind,guard:'cmd_guard',food:'icon_food',food2:'icon_food_nagano'};
-  $('bt-cmds').innerHTML=cmds.map(([k,l,s])=>`<button data-cmd="${k}" class="${ic[k]?'ic ':''}c-${RC[k]||'nrm'}${k==='food2'||(k==='food'&&S.food2)?' wide':''}" ${k==='kiai'&&S.mp<20||k==='rinko'&&(S.money<ti.rinko||trip.course)||k==='push'&&S.hp<=15||k==='walk'&&S.hp<=8||k==='food'&&S.food<=0||k==='tactic'&&!tacOK()?'disabled':''}>${ic[k]?`<img src="img/${ic[k]}.webp" width="30" height="30" alt="" onerror="this.onerror=null;this.src='img/icon_food.webp'"><span>${l}<small>${s}</small></span>`:`${l}<small>${s}</small>`}</button>`).join('');}
+  $('bt-cmds').innerHTML=cmds.map(([k,l,s])=>`<button data-cmd="${k}" class="${ic[k]?'ic ':''}c-${RC[k]||'nrm'}" ${k==='kiai'&&S.mp<20||k==='rinko'&&(S.money<ti.rinko||trip.course)||k==='push'&&S.hp<=15||k==='walk'&&S.hp<=8||k==='food'&&S.food<=0||k==='tactic'&&!tacOK()?'disabled':''}>${ic[k]?`<img src="img/${ic[k]}.webp" width="30" height="30" alt="" onerror="this.onerror=null;this.src='img/icon_food.webp'"><span>${l}<small>${s}</small></span>`:`${l}<small>${s}</small>`}</button>`).join('');}
 $('bt-cmds').addEventListener('click',e=>{const b=e.target.closest('button[data-cmd]');if(b&&b.dataset.cmd!=='next')cmd(b.dataset.cmd);});// 'next'（区間クリア後の進むボタン）は専用のonclickで処理する。ここでも拾うと勝利や敵の攻撃が二重に数えられる
 function cmd(k){if(!B||!trip||$('ov-battle').hidden||B.hp<=0||trip.late)return;
   const allowed=isRival()?['post','kiai','rest','tactic','food','food2','escape']:['push','walk','kiai','rest','guard','tactic','food','food2','rinko'];

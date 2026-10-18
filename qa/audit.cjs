@@ -196,9 +196,9 @@ test('DCF tent and tarp each add one part slot, trimmed when removed',c=>{const 
  q.S.gear.tarp=null;q.renderShop();assert.equal(q.S.parts.length,5,'trimmed after tarp removed');
  q.S.gear.shelter=null;q.save();o=q.load();assert.equal(o.parts.length,4,'trimmed on load without DCF');
  q.S.parts=['wheel','tire','aero','fender'];q.renderShop();assert.ok(w.document.getElementById('slot-hint').textContent.includes('4つ'));});
-test('battle food buttons: Nagano food shown with the normal food button, both full width (no half-empty row)',c=>{const {q}=c;
- batt(c,'hill');let b=[...c.$('bt-cmds').querySelectorAll('button')];assert.equal(b.find(x=>x.dataset.cmd==='food').classList.contains('wide'),false);
- q.S.food2=1;batt(c,'hill');b=[...c.$('bt-cmds').querySelectorAll('button')];assert.equal(b.find(x=>x.dataset.cmd==='food').classList.contains('wide'),true);assert.equal(b.find(x=>x.dataset.cmd==='food2').classList.contains('wide'),true);});
+test('battle food buttons: Nagano food sits beside the normal food button, both half width (no full-width row)',c=>{const {q}=c;
+ batt(c,'hill');let b=[...c.$('bt-cmds').querySelectorAll('button')];assert.equal(b.some(x=>x.classList.contains('wide')),false);assert.equal(b.some(x=>x.dataset.cmd==='food2'),false);
+ q.S.food2=1;batt(c,'hill');b=[...c.$('bt-cmds').querySelectorAll('button')];const k=b.map(x=>x.dataset.cmd);assert.equal(b.some(x=>x.classList.contains('wide')),false);assert.equal(k.indexOf('food2'),k.indexOf('food')+1);assert.equal(k.indexOf('food')%2,0,'food starts a row so food+food2 share it');});
 test('custom tab is tier-first: 1/2/3段階目 cards list the owned bikes and parts that can go to that tier (new bikes included, max listed separately)',c=>{const {q}=c;q.S.money=1e7;
  for(const id of ['ucross','uroad','rando','cross','road'])if(!q.S.owned.bikes.includes(id))q.S.owned.bikes.push(id);q.S.plus.cross=1;q.S.plus.road=3;q.renderForge();
  const cards=[...c.$('shop-forge').querySelectorAll('.fg-t')];assert.equal(cards.length,3,'3 tiers for bikes (no parts owned yet)');
