@@ -906,7 +906,7 @@ const rkLv=id=>Math.min(3,(S.plus&&S.plus[id||S.bike])||0);
 const NOCUSTOM=new Set(['fold','tigrav','compm','comph','compi','rack1','rack2','rack3','rack4','front1','front2','front3','front4']);// チタン製の自転車は、フレーム素材が完成形なのでカスタム（クロモリ→アルミ→カーボン）できない
 const plv=id=>NOCUSTOM.has(id)?0:(S.plus&&S.plus[id])||0;
 // カスタムの段階名。自転車はフレーム素材、パーツは仕様（効果は1段ごとに+1のまま）
-const TIER={bike:['クロモリ製','アルミ製','カーボン製'],part:['改良型','高性能','特注品']};
+const TIER={bike:['カスタム一段階目','カスタム二段階目','カスタム三段階目'],part:['カスタム一段階目','カスタム二段階目','カスタム三段階目']};// 段階の呼び名（素材名などは使わない）
 const tierOf=(kind,lv)=>lv>0?TIER[kind==='bike'?'bike':'part'][lv-1]:'';
 const bv=(b,k)=>b[k]+(plv(b.id)&&bikeBoost(b).includes(k)?plv(b.id):0);// 強化後の能力値（表示用）
 function bikeBoost(b){return ['climb','rough','cruise','wx'].sort((x,y)=>b[y]-b[x]).slice(0,2);}
@@ -1113,7 +1113,7 @@ function card(item,kind,mode){const eq=isEq(kind,item),own=owns(kind,item.id);
   if(mode==='shop'){act=own?`<span class="pill">所持</span>`:`<button data-act="buy" ${S.money>=item.price?'':'disabled'}>購入 ${yen(item.price)}</button>`;}
   else if(eq)act=(kind==='part'||kind==='gear')?`<button data-act="unequip">外す</button>`:`<span class="pill">装備中</span>`;
   else act=`<button data-act="equip" ${kind==='part'&&S.parts.length>=partSlots(S.bike)&&!(xg(item)&&S.parts.some(x=>xg(PARTS.find(p=>p.id===x))===xg(item)))||kind==='gear'&&item.req&&S.gear.shelter!==item.req?'disabled':''}>装備</button>`;
-  return `<div class="card ${eq?'eq':''}" data-kind="${kind}" data-id="${item.id}"><div class="name"><span class="nm"><img loading="lazy" class="ci" ${(kind==='gear'||kind==='part')&&ICON_FB[item.id]?`data-fb="${ICON_FB[item.id]}" `:''}src="img/${kind==='gear'?'icon_g_'+item.id:(kind==='part'?'part_'+item.id:kind==='cloth'?'cloth_'+item.id:'icon_bike_'+item.id)}.webp" width="28" height="28" alt="">${item.name}${(kind==='bike'||kind==='part')&&plv(item.id)?` <b>${tierOf(kind,plv(item.id)).replace('製','')}</b>`:''}</span>${act}</div><div class="spec">${spec}</div></div>`;}
+  return `<div class="card ${eq?'eq':''}" data-kind="${kind}" data-id="${item.id}"><div class="name"><span class="nm"><img loading="lazy" class="ci" ${(kind==='gear'||kind==='part')&&ICON_FB[item.id]?`data-fb="${ICON_FB[item.id]}" `:''}src="img/${kind==='gear'?'icon_g_'+item.id:(kind==='part'?'part_'+item.id:kind==='cloth'?'cloth_'+item.id:'icon_bike_'+item.id)}.webp" width="28" height="28" alt="">${item.name}${(kind==='bike'||kind==='part')&&plv(item.id)?` <b>${tierOf(kind,plv(item.id))}</b>`:''}</span>${act}</div><div class="spec">${spec}</div></div>`;}
 let PGRP='rack';// パーツ欄のタブ：rack=ラック類／comp=コンポ類／wheel=ホイール／etc=その他（残りすべて）
 const grpOf=i=>i.rack||i.front?'rack':i.comp?'comp':(i.id==='wheel'||i.id==='tire')?'wheel':'etc';// 前後ラック／コンポ／ホイール＋タイヤ／その他（エアロバー・フェンダー・熊スプレー・カメラ等すべて）
 const PG_TABS=[['rack','ラック類'],['comp','コンポ類'],['wheel','ホイール'],['etc','その他']];
@@ -1130,7 +1130,7 @@ function renderForge(){
   const tiers=(kind,list)=>{const chip=(i,nx)=>`<button data-forge="${kind}:${i.id}" ${S.money>=upCost(kind,i,nx)?'':'disabled'}><img loading="lazy" class="ci" src="img/${kind==='bike'?'icon_bike_':'part_'}${i.id}.webp" width="24" height="24" alt=""><span>${i.name}<small>${yen(upCost(kind,i,nx))}</small></span></button>`;
     const maxed=list.filter(i=>plv(i.id)>=3);
     return [1,2,3].map(nx=>{const its=list.filter(i=>plv(i.id)===nx-1).sort((x,y)=>upCost(kind,y,nx)-upCost(kind,x,nx));
-      return `<div class="card fg-t"><div class="name"><span class="nm"><b>${nx}段階目</b>　${TIER[kind][nx-1]}</span></div><div class="fg-chips">${its.length?its.map(i=>chip(i,nx)).join(''):'<span class="hint">対象なし</span>'}</div></div>`;}).join('')
+      return `<div class="card fg-t"><div class="name"><span class="nm"><b>${TIER[kind][nx-1]}</b></span></div><div class="fg-chips">${its.length?its.map(i=>chip(i,nx)).join(''):'<span class="hint">対象なし</span>'}</div></div>`;}).join('')
       +(maxed.length?`<div class="hint">最大：${maxed.map(i=>i.name).join('・')}</div>`:'');};
   const bl=BIKES.filter(i=>owns('bike',i.id)&&!NOCUSTOM.has(i.id)),pl=PARTS.filter(i=>!i.anti&&!xg(i)&&owns('part',i.id)&&!NOCUSTOM.has(i.id));
   const now=(kind,list)=>list.filter(i=>plv(i.id)>0).map(i=>`${i.name}（${tierOf(kind,plv(i.id))}）`).join('・');
@@ -1144,7 +1144,7 @@ $('shop-forge').addEventListener('click',e=>{const rb=e.target.closest('button[d
   const b=e.target.closest('button[data-forge]');if(!b)return;
   const [kind,id]=b.dataset.forge.split(':'),item=(kind==='bike'?BIKES:PARTS).find(x=>x.id===id),nx=plv(id)+1;if(!item||nx>3||NOCUSTOM.has(id))return;
   const c=upCost(kind,item,nx);if(S.money<c)return;
-  askPay(`「${item.name}」を${tierOf(kind,nx)}にカスタムしますか？（${fxOf(kind,item)}）`,c,()=>{S.money-=c;S.plus[id]=nx;log(`${item.name}を${tierOf(kind,nx)}にカスタム（${yen(c)}）`);render();});});
+  askPay(`「${item.name}」を${tierOf(kind,nx)}に上げますか？（${fxOf(kind,item)}）`,c,()=>{S.money-=c;S.plus[id]=nx;log(`${item.name}を${tierOf(kind,nx)}に（${yen(c)}）`);render();});});
 $('shop-food').addEventListener('click',e=>{if(e.target.closest('button[data-food2]')){if(S.money<NAGANO.price||S.food2>=NAGANO.max)return;askPay('長野県の補給食を買いますか？',NAGANO.price,()=>{S.money-=NAGANO.price;S.food2++;log(`長野県の補給食を購入（${yen(NAGANO.price)}）`);render();});return;}
   if(!e.target.closest('button[data-food]')||S.money<FOOD_PRICE||S.food>=foodMax())return;
   askPay('補給食を買いますか？',FOOD_PRICE,()=>{S.money-=FOOD_PRICE;S.food++;log(`補給食を購入（${yen(FOOD_PRICE)}）`);render();});});
