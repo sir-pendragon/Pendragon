@@ -1347,7 +1347,8 @@ $('set-close').onclick=()=>{$('ov-set').hidden=true;$('sv-msg').hidden=true;};
 const svMsg=(t,bad)=>{const m=$('sv-msg');m.textContent=t;m.hidden=false;m.style.color=bad?'var(--bad,#d9534f)':'';};
 // セーブデータをファイルに書き出す。戻り値はファイル名（書き出せなければ null）。ユーザーの操作（タップ）の中で呼ぶこと
 function exportSave(){let j=null;try{j=localStorage.getItem('charicamp');}catch(e){}if(!j&&S&&!INTRIP)j=pack();if(!j)return null;
-  const o=JSON.parse(j),c=calendar(o.turn||1),wk=((+(o.turn||1)-1)%52)+1,name=`日本巡る自転車旅_セーブ_${c.year}年目${wk}週目.json`;
+  let o;try{o=JSON.parse(j);if(!o||typeof o!=='object'||Array.isArray(o))return null;}catch(e){return null;}
+  const c=calendar(o.turn||1),wk=((+(o.turn||1)-1)%52)+1,name=`日本巡る自転車旅_セーブ_${c.year}年目${wk}週目.json`;
   try{const blob=new Blob([JSON.stringify({app:'charicamp',saved:new Date().toISOString(),data:o})],{type:'application/json'}),u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),2000);}catch(e){return null;}
   return name;}
 $('sv-out').onclick=()=>{const n=exportSave();if(n)svMsg(`「${n}」を保存しました（ダウンロードフォルダなど）`);else svMsg('保存するセーブデータがありません',true);};
