@@ -226,10 +226,11 @@ button:disabled{opacity:.45;cursor:not-allowed}
 #pop h3{margin:0 0 8px 36px;font-family:inherit;font-size:1.15rem;font-weight:700;color:#2e2415;border-bottom:2px solid #2e2415;padding-bottom:3px;width:max-content;max-width:calc(100% - 90px)}
 #ov-sp .row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 #ov-sns .modal{background:#fff;color:#14171a;border:0;border-radius:14px;padding:0;gap:0;overflow:hidden;box-shadow:0 10px 40px rgba(0,0,0,.45)}
-#ov-sns .snshd{display:flex;align-items:center;justify-content:space-between;background:linear-gradient(#2aa9ff,#129efd);padding:8px 12px}
+#ov-sns .modal{max-height:calc(100vh - 32px);max-height:calc(100dvh - 32px)}
+#ov-sns .snshd{flex:none;position:sticky;top:0;z-index:1;display:flex;align-items:center;justify-content:space-between;background:linear-gradient(#2aa9ff,#129efd);padding:8px 12px}
 #ov-sns .snshd img{width:30px;height:30px;display:block}
 #ov-sns .snshd button{background:transparent;color:#fff;border:1px solid rgba(255,255,255,.75);border-radius:999px;min-height:0;padding:4px 14px;font-weight:700}
-#ov-sns .feed{margin:0;border-top:0;padding:0 12px 8px;background:#fff}
+#ov-sns .feed{margin:0;border-top:0;padding:0 12px 8px;background:#fff;flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
 #ov-sns .post{border-bottom:1px solid #e1e8ed;padding:9px 0;color:#14171a}
 #ov-sns .post .ph b{color:#14171a}#ov-sns .post .ph span{color:#657786}
 #ov-sns .post .av{background:#e1e8ed;border-color:#e1e8ed;color:#657786}
