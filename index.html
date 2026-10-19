@@ -1227,7 +1227,7 @@ function feedItems(){const out=[],seen={};
     if(q<0){out.push({t,r:1,p:{name:'旅の自転車乗り',id:'jitensha_tabi',av:TRIP_AV,when:CAL_S(t),text:pick([`日没に間に合わず…😭 ${p.name}のキャンプ場は遅刻でした。次こそ！`,`暗くなっちゃった🌙 ${p.name}はまた今度…`,en?`${en}にやられて遅刻💦 ${p.name}、次はリベンジ！`:`ペース配分をミスった…💦 ${p.name}は遅刻でした`],h),n:[h%2,0,1+h%7],rp:infRp(h,'late',25)}});return;}
     const sg=sightOf(pid,e.vn||1),lk=Math.round(q*q/12+h%25+3),band=RPL.find(b=>q>=b[0]),fan=FANS[h%FANS.length],pl=`${p.name}の${p.site}`;
     const head=q>=70?pick([`${pl}に到着〜！🚴✨\n景色が最高すぎた…写真${q}点！`,`${pl}で絶景ゲット📷\n${q}点！これは自信作`,`ついに${pl}！🏕️\n写真${q}点、神回です`],h):q>=40?pick([`${pl}に到着！🏕️\n写真${q}点。いい旅だった〜`,`${pl}までなんとか走り切った🚴\n${q}点、まずまず！`],h):pick([`${pl}に着いたけど、写真は${q}点…😅\n次はリベンジ！`,`${pl}到着🏕️ 天気がいまいちで${q}点💦`],h);
-    out.push({t,r:1,p:{name:'旅の自転車乗り',id:'jitensha_tabi',av:TRIP_AV,when:CAL_S(t),text:head+(en?`\n道中で${en}に遭遇💥`:'')+'\n#日本巡る自転車旅',img:'img/sights/'+sg[0]+'.webp',alt:sg[1],n:[Math.round(lk*.06)+1,Math.round(lk*.18),lk],rp:infRp(h,q>=70?'hi':q>=40?'mid':'lo')||[fan[0],fan[1],pick(band[1],h>>>5)]}});});
+    out.push({t,r:1,p:{name:'旅の自転車乗り',id:'jitensha_tabi',av:TRIP_AV,when:CAL_S(t),text:head+(en?`\n道中で${en}に遭遇💥`:'')+'\n#日本巡る自転車旅',img:'img/sights/'+sg[0]+'.webp',alt:sg[1],n:[Math.round(lk*.06)+1,Math.round(lk*.18),lk],rp:infRp(h,q>=70?'hi':q>=40?'mid':'lo')||spRp(h,15)||[fan[0],fan[1],pick(band[1],h>>>5)]}});});
   S.log.forEach(l=>{const m=/^(\d+)\|(.*)$/s.exec(l);if(!m)return;const t=+m[1],x=m[2],when=CAL_S(t);let mm;
     if(mm=/^スポンサー「(.+)」がつきました/.exec(x)){const i=SPONSOR.findIndex(z=>z[2]===mm[1]);out.push({t,r:0,p:{name:mm[1],id:'sponsor_'+Math.max(i,0),av:i>=0?'img/sponsor_'+i+'.webp':'',ini:'S',when,text:`旅の自転車乗りさん、いつも応援しています！今週から、旅を支援させてください。\n#日本巡る自転車旅`}});}
     else if(x==='ライバルより先に撮影スポットへ着いた')out.push({t,r:2,p:{name:'ライバル配信者',id:'rival_cam',ini:'R',when,text:'くっ、先に撮られた…！次は負けない。#映え勝負'}});
@@ -1424,6 +1424,9 @@ const infHere=(d,p)=>!p||(!d.reg&&!d.pref)||d.reg===p.region||d.pref===p.name;//
 const infPool=p=>INF.filter(d=>infHere(d,p));
 const infLocal=p=>INF.some(d=>(d.reg||d.pref)&&infHere(d,p));
 // 旅の投稿へのひとこと返信（出会っていなくても付く。場所の限定はなし）。h＝投稿ごとの固定値で、見るたびに変わらない
+const SPRP=['いつも応援しています！安全第一で、良い旅を🚴','素敵な一枚ですね。この景色、社内でも見せてもらいました✨','ご活躍、社内でも話題です！次の旅も楽しみにしています','お疲れさまです！無理せず、しっかり休んでくださいね☺️','この景色を見て、私もまた旅に出たくなりました🌄','天気の急変にはお気をつけて。ご無事の旅を願っています','スポンサーとして誇らしいです。引き続きよろしくお願いします！','タイヤの空気圧とチェーンの注油も、お忘れなく🔧','いい旅ですね。次の目的地も楽しみにしています📷','ここ、いつか行ってみたいです…！旅の話、また聞かせてください'];
+// スポンサーのコメント：いま契約中の段階までのスポンサーから、投稿ごとに決まった1社が時々コメントする
+const spRp=(h,pct)=>{if((h>>>11)%100>=pct)return null;const i=(h>>>13)%(SPONSOR.indexOf(sponsor())+1);return [SPONSOR[i][2],'sponsor_'+i,SPRP[(h>>>5)%SPRP.length]];};
 const infRp=(h,band,pct)=>{if(h%100>=(pct||30))return null;const d=INF[(h>>>9)%INF.length],a=d.rep[band];return [d.name,d.handle,a[(h>>>4)%a.length]];};
 const infD=id=>INF.find(x=>x.id===id)||INF[0];
 const infSt=id=>{if(!S.inf||typeof S.inf!=='object')S.inf={};return S.inf[id]||(S.inf[id]={w:0,e:0,g:0});};
