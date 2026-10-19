@@ -1306,7 +1306,7 @@ function startTrip(p,rinko,wx){if(p.id===S.loc&&wx===undefined&&!isCourse(p,true
   if(rinko&&!stay){const bs=[];if(HABU.has(p.name)&&PREF[S.home].name!=='沖縄')bs.push('habu');if(calendar(S.turn).year>=2&&bearSeason(calendar(S.turn).month)&&BROWNBEAR.has(p.name)&&PREF[S.home].name!=='北海道')bs.push('brownbear');
     const fm=familiar(p).f;for(const k of bs)if(Math.random()<.3*fm)enc.push(k);}
   const ev=eventAt(S.turn,p.id);
-  if((p.scen>=5||ev)&&Math.random()<(ev?(stay?.3:.6):stay?.15:.4))enc.push('rival');
+  if((p.scen>=5||ev||infLocal(p))&&Math.random()<(ev?(stay?.3:.6):stay?.15:.4))enc.push('rival');
   const course=isCourse(p,stay);if(course){enc.length=0;const sp=SPEC[p.name];for(let i=0;i<3;i++)enc.push(sp.pool[rnd(0,sp.pool.length-1)]);enc.push(sp.boss);}// 4回目：専用の林道コース（3区間＋ボス）
   S.stay=stay?Math.min(99,(S.stay||0)+1):0;INTRIP=true;const nEnc=Math.max(1,enc.filter(k=>k!=='rival').length);trip={p,rinko,stay,enc,ev,course,i:0,late:false,sec:Math.max(3,Math.min(rinko?12:99,Math.round(ti.d/nEnc))),rk:Math.max(1000,Math.round(ti.rinko/nEnc/100)*100)};S.loc=p.id;if(stay&&!course){S.mp-=Math.max(0,15-bikeStats().comfy);}
   S.sel=S.loc;render();nextEncounter();}
@@ -1394,7 +1394,7 @@ $('set-se-v').onchange=()=>playSE('se_photo');
 // バトル・自分のSNSのコメント・週の始めの登場に出る。その人に通算3勝すると、次の年末決算で持ち物（part）をもらえる
 const INF_WIN=3;
 const INF=[
- {id:'tomy',name:'トミー',handle:'tomy_wafuku',img:'img/inf_tomy.webp',av:'img/inf_tomy_s.webp',part:'wafu',
+ {id:'tomy',name:'トミー',reg:'近畿',handle:'tomy_wafuku',img:'img/inf_tomy.webp',av:'img/inf_tomy_s.webp',part:'wafu',
   intro:'ほう、あなたも同じ景色を狙っておいででしたか',win:'お見事。今宵の月は、あなたに譲りましょう',lose:'この景色は、わたくしがいただきました。また、どこかで',
   turn:['今週は風が良い。一句、詠みたくなりますね','和装で走ると、風の音がよく聞こえるのですよ','旅の途中で見かけたら、お声がけください'],
   gift:'何度も勝負していただき、ありがとうございます。わたくしの和装、お納めください'},
@@ -1402,21 +1402,24 @@ const INF=[
   intro:'まあまあ、そう急ぎなさんな。一服してから撮ろうや',win:'やるねえ。今日は完敗だ',lose:'ははは、今日は俺の勝ちだな。一服してからでも間に合ったぜ',
   turn:['今週は焚き火がよく燃える。寄ってくかい','チタンは焼くと虹色になるんだ。見てくかい','まあまあ、急ぎなさんな。一服していきな'],
   gift:'よく付き合ってくれたな。こいつは俺からの礼だ。一服どうだい'},
- {id:'lcc',name:'タマキーン',handle:'lcc_heavypack',img:'img/inf_lcc.webp',av:'img/inf_lcc_s.webp',part:'framebag',
+ {id:'lcc',name:'タマキーン',reg:'関東',handle:'lcc_heavypack',img:'img/inf_lcc.webp',av:'img/inf_lcc_s.webp',part:'framebag',
   intro:'俺の荷物、見てくれよ！全部実用品だ、タマキーン！',win:'くっ…荷物が重すぎたか。タマキーン…！',lose:'積載量が勝負を分けたな！軽量化は邪道だ、タマキーン！',
   turn:['今週のパッキング、美しく決まったぞ。タマキーン！','荷物が増えた。でも全部必要なんだ、タマキーン！','軽量化？聞こえないな、タマキーン！'],
   gift:'おまえの粘り、気に入った！俺のフレームバッグを持っていけ、タマキーン！'}];
+const infHere=(d,p)=>!p||(!d.reg&&!d.pref)||d.reg===p.region||d.pref===p.name;// 登場できる場所（reg=地方、pref=県。どちらもなければ全国）
+const infPool=p=>INF.filter(d=>infHere(d,p));
+const infLocal=p=>INF.some(d=>(d.reg||d.pref)&&infHere(d,p));
 const infD=id=>INF.find(x=>x.id===id)||INF[0];
 const infSt=id=>{if(!S.inf||typeof S.inf!=='object')S.inf={};return S.inf[id]||(S.inf[id]={w:0,e:0,g:0});};
 let INFEV=null;// 週の始めに登場した人（その週のポップアップに1回だけ出す）
-function rollInf(){if(!TS||Math.random()>=.25)return;const d=INF[Math.floor(Math.random()*INF.length)],k=Math.floor(Math.random()*d.turn.length);INFEV={d,k};log(`INFEV@${d.id}@${k}`);}
+function rollInf(){if(!TS||Math.random()>=.25)return;const pl=infPool(PREF[S.loc]),d=pl[Math.floor(Math.random()*pl.length)],k=Math.floor(Math.random()*d.turn.length);INFEV={d,k};log(`INFEV@${d.id}@${k}`);}
 function infBlock(){if(!INFEV)return '';const {d,k}=INFEV;INFEV=null;return `<div class="infev"><img src="${d.av}" width="48" height="48" alt=""><div><b>${esc(d.name)}</b><span>@${d.handle}</span><p>「${esc(d.turn[k])}」</p></div></div>`;}
 function giftYear(){let h='';for(const d of INF){const st=infSt(d.id);if(st.w>=INF_WIN&&!st.g){st.g=1;if(!S.owned.parts.includes(d.part))S.owned.parts.push(d.part);log(`INFGIFT@${d.id}`);h+=`<p class="hint">🎁 ${esc(d.name)}から「${esc(PARTS.find(x=>x.id===d.part).name)}」が届いた！（パーツ欄で装備できます）</p>`;}}return h;}
 let B=null;
 function startBattle(kind){tstat(kind)[0]++;const e=ENEMY[kind],p=trip.p,c=calendar(S.turn);const scale=1+.4*(p.diff-1)+.2*(c.year-1);
   const hp=kind==='rival'?Math.round(40+FL()/3):Math.round(e.hp*scale);
   B={kind,e,hp,max:hp,limit:e.limit,turn:1,charge:0,cut:1,next:rollNext(),atk:Math.round(e.atk*scale*(S.parts.includes('spray')&&(kind==='bear'||kind==='brownbear')||S.parts.includes('oil')&&(kind==='car'||kind==='bike')?.5:1))};
-  let fi=null;if(kind==='rival'){fi=INF[Math.floor(Math.random()*INF.length)];B.inf=fi.id;infSt(fi.id).e++;}
+  let fi=null;if(kind==='rival'){const pl=infPool(p);fi=pl[Math.floor(Math.random()*pl.length)];B.inf=fi.id;infSt(fi.id).e++;}
   $('ov-battle').hidden=false;playSE('se_encounter');playBGM('bgm_battle');if(kind!=='rival')tutBattle();$('bt-face').innerHTML=(fi?fi.img:e.img)?`<img loading="lazy" src="${fi?fi.img:e.img}" alt="${fi?fi.name:e.name}" width="190" height="190" onerror="this.replaceWith(document.createTextNode('${e.face}'))">`:e.face;$('bt-name').textContent=`区間 ${trip.i+1}/${trip.enc.length}`;
   $('bt-title').textContent=kind==='rival'?fi.name:e.name;
   blog(kind==='rival'?`${fi.name}「${fi.intro}」\nライバルも同じ撮影スポットを狙っている！\n${e.hint}。日没まで、あと${B.limit}時間。`:`${e.camper?'隣のサイトに'+e.name+'がいる！夜になっても静かにならない。':WILDK.has(kind)?e.name+'に遭遇した！':e.name+'の区間に入った。'}\n${e.hint}。日没まで、あと${B.limit}時間。`);renderBattle();}
