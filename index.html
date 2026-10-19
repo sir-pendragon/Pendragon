@@ -908,7 +908,6 @@ const tlDec=z=>z?z[0]==='~'?[...z.slice(1)].map(c=>TLK[TLC.indexOf(c)]).filter(B
 function tlog(q){const k=(trip.late?trip.enc.slice(0,trip.i+1):trip.enc).concat(trip.tc?['tsuchi']:[]);S.tl.unshift([S.turn,trip.p.id,q,tlEnc(k)]);if(S.tl.length>TL_MAX)S.tl.length=TL_MAX;}
 function log(t){S.log.unshift(`${S.turn}|${t}`);if(S.log.length>LOG_MAX)S.log.length=LOG_MAX;}
 // ログ1行を表示用に戻す（v3以前の保存には日付入りの文字列がそのまま入っている）
-const logLine=l=>{const m=/^(\d+)\|(.*)$/s.exec(l);return m?`${calLabel(+m[1])} ${m[2]}`:l;};
 function calLabel(t){const c=calendar(t);return `${c.year}年目${c.month}月第${c.week}週`;}
 function bikeStats(){const b=BIKES.find(x=>x.id===S.bike);const st={climb:b.climb,rough:b.rough,cruise:b.cruise,wx:b.wx,photo:0,comfy:0,fold:!!b.fold};
   const bl=plv(b.id);if(bl)for(const k of bikeBoost(b))st[k]+=bl;// カスタム：得意な上位2能力が+段数
@@ -983,9 +982,6 @@ function render(){if(S.gear.fire==='fire4'&&S.gear.shelter!=='sh5')S.gear.fire=n
   $('d-loc').textContent=PREF[S.loc].name;$('d-fam').textContent=`${famCount()} / 47`;
   renderMap();renderWx();renderDetail();renderList();renderShop();renderLog();save();}
 
-function xy(p){ // Okinawa is pulled up into an inset position
-  const lon=p.name==='沖縄'?130.2:p.lon,lat=p.name==='沖縄'?30.6:p.lat;
-  return [ (lon-127.5)*22+12, (45.5-lat)*22-20 ];}
 let MAPKEY='';
 function renderMap(){const svg=$('map');const mk=JSON.stringify([S.loc,S.sel,S.visits,S.bike,S.gear,S.parts,season(calendar(S.turn).mi)]);if(mk===MAPKEY&&svg.firstChild)return;MAPKEY=mk;let s=`<defs><pattern id="tex" patternUnits="userSpaceOnUse" width="160" height="160"><image class="bgimg" href="img/land_tex.webp" width="160" height="160"/></pattern></defs><image class="bgimg" href="img/map_bg.webp" x="0" y="0" width="400" height="${MAP_H}" preserveAspectRatio="xMidYMid slice"/>`,top='';
   s+=`<path data-id="46" d="M14 386H142V470H14Z" fill="transparent" style="stroke:var(--line);stroke-dasharray:3 3;stroke-width:1"/><text x="20" y="399" style="fill:var(--muted)">沖縄</text>`;
@@ -995,32 +991,27 @@ function renderMap(){const svg=$('map');const mk=JSON.stringify([S.loc,S.sel,S.v
     if(p.id===S.loc||p.id===S.sel)top+=d;else s+=d;}
   s+=top;
   const SPR={"tarp_tp2":[565,199],"shelter_sh2":[355,185],"bike_gravel":[190,144],"bike_cross":[185,142],"bike_road":[176,136],"fire_fire3":[480,470],"bike_mama":[162,126],"fire_fire2":[241,200],"tarp_tp1":[476,166],"shelter_sh3":[560,401],"bike_tigrav":[194,122],"tarp_tp3":[760,359],"shelter_sh1":[481,185],"shelter_sh6":[481,185],"shelter_sh7":[481,185],"bike_mtb":[202,134],"camp_ground":[451,193],"fire_fire1":[197,153],"bike_fold":[143,124],"tree_spring":[256,338],"tree_summer":[256,338],"tree_autumn":[256,338],"tree_winter":[256,338],"part_tripod":[128,128],"part_cam":[128,128],"part_drone":[128,128],"part_comfy":[128,128]};
-  // 新しいギアの絵が届くまでの代用：近い既存の絵を使い、DCFは薄いグリーンに寄せる。絵が届いたら STAND から外し、SPR に寸法を足す
   Object.assign(SPR,{shelter_sh4:[700,381],shelter_sh5:[700,474],tarp_tp4:[476,166],bike_rando:[190,118],bike_ucross:[185,142],bike_uroad:[176,136]});// 自転車は絵の半分の寸法（ランドナー・中古クロス・中古ロードは足し忘れていて島に出ていなかった）// 新しい絵の寸法（DCFテント・薪ストーブ用テント本体と煙突）。DCFタープは簡易タープの色違い（絵も寸法も同じ）
   const put=(key,cx,by,k,kx)=>{const d=SPR[key];if(!d)return '';const w=d[0]*k*(kx||1),hh=d[1]*k;return `<image href="img/${key}.webp${key==='tarp_tp4'||key==='tarp_tp3'?'?v=2':''}" x="${(cx-w/2).toFixed(1)}" y="${(by-hh).toFixed(1)}" width="${w.toFixed(1)}" height="${hh.toFixed(1)}"/>`;};
   // 配置の決まり（重なり順・位置）は、近い既存のものと同じにする（DCFテント＝入門テント、薪ストーブ用テント＝山岳テント、DCFタープ＝ヘキサ）。大きさと接地は新しい絵に合わせて個別に決める
   const A_SH={sh4:'sh2',sh5:'sh3'},A_TP={tp4:'tp1'};const shA=A_SH[S.gear.shelter]||S.gear.shelter,tpA=A_TP[S.gear.tarp]||S.gear.tarp;
   // 山岳テントの絵は下端に杭・ガイロープが長く伸びていて、本体の底が下端より約8単位上にある。入門テント(約3単位)と地面の高さを揃えるため下げる
-  const SH3_DROP=4,fk={fire1:.115,fire2:.115,fire3:.085,fire4:0},sk={sh1:.135,sh6:.135,sh7:.135,sh2:.16,sh3:.085,sh4:.08,sh5:.0743},tk={tp1:.27,tp2:.215,tp3:.125};
+  const SH3_DROP=4,fk={fire1:.115,fire2:.115,fire3:.085},sk={sh1:.135,sh6:.135,sh7:.135,sh2:.16,sh3:.085,sh4:.08,sh5:.0743},tk={tp1:.27,tp2:.215,tp3:.125};
   const DROP={sh2:0,sh3:SH3_DROP,sh4:3.7,sh5:.1};// タープは寝床（特にハンモックの杭の間）を覆える幅にする
   // 山岳テントは背が高く、そのままだとタープの屋根を突き抜ける。テントごとにタープの大きさ・位置を決める [scale, 接地のy]
   // 接地yを413にして、タープのポールの根元をテントの前の地面に出す（403だとポールがテントの床に刺さって見える）
   const HAM_TP3={tp1:[.34,412,0,1.1],tp2:[.33,423,-6,1.1],tp3:[.25,410,-8,1]};// ハンモックの杭の間・寝ている人の上に屋根が来るよう、どのタープも大きく・低くする [大きさ, 接地y, 横ずれ]
   const TARP_FIT={sh1:HAM_TP3,sh6:HAM_TP3,sh7:HAM_TP3,sh3:{tp1:[.30,413],tp2:[.30,413],tp3:[.25,410,-8]},sh2:{tp1:[.27,413],tp2:[.215,413],tp3:[.25,410,-8]}};const tf=(S.gear.tarp&&TARP_FIT[shA]&&(TARP_FIT[shA][S.gear.tarp]||TARP_FIT[shA][tpA]))||[tk[S.gear.tarp]||tk[tpA],403,0];// [scale, 接地y, 横ずれ]
-  // 大型タープ＋テントのときは、テントをさらにタープの奥（地図の上側）に置く
   const hasTent=shA==='sh2'||shA==='sh3';
-  const UK={sh2:[.16,392],sh3:[.1,397],sh4:[.08,395.7],sh5:[.0877,392.9]};// 大型タープの奥に置くときの [大きさ, 接地y]
-  const UNDER=false?{x:264,by:UK[S.gear.shelter][1],k:UK[S.gear.shelter][0]}:null;
   // 簡易・ヘキサタープの下では、テントの底の線を約3.3単位下げる（タープの脚の接地線に近づける）
   const TENT_LOW=hasTent&&(tpA==='tp1'||tpA==='tp2')?3.3:0;
-  // 簡易・ヘキサ：布(奥)→テント→ポール(手前)。テントの頂点が布の手前に出て、屋根の下に入って見える。大型タープだけは布を手前に重ねてテントを隠す
-  const BEHIND=false;// 大型ウイングタープの絵を2026-10-19に差し替え。テントは布の手前・奥へ動かさない（UNDERも使わない）
+  // 重なり順：テントのときは 布(奥)→テント→ポール(手前)。ハンモックのときは 杭→布→ハンモックのたるみ
   const tarpS=S.gear.tarp?put('tarp_'+S.gear.tarp,252+(tf[2]||0),tf[1],tf[0],tf[3]):'';
-  const tpos=UNDER?{x:UNDER.x,by:UNDER.by,k:UNDER.k}:{x:252,by:408+(DROP[S.gear.shelter]||0)+TENT_LOW,k:sk[S.gear.shelter]||sk[shA]};
+  const tpos={x:252,by:408+(DROP[S.gear.shelter]||0)+TENT_LOW,k:sk[S.gear.shelter]||sk[shA]};
   const chim=S.gear.shelter==='sh5'&&stoveOn()?chimney(tpos.x,tpos.by,tpos.k,put):null;// 薪ストーブ用テント＋薪ストーブ＋冬：煙突と煙
   const shS=S.gear.shelter?put('shelter_'+S.gear.shelter,tpos.x,tpos.by,tpos.k):'';
   s+=`<g style="pointer-events:none">${put('camp_ground',272,462,244/451)}${put('tree_'+season(calendar(S.turn).mi),332,380,.385)}`
-   +(BEHIND?shS+tarpS+(chim?chim.pipe:''):isHam(S.gear.shelter)?shS+(S.gear.tarp&&S.gear.tarp!=="tp3"?hamPosts(sk[S.gear.shelter],S.gear.shelter):'')+tarpS+(S.gear.tarp==='tp2'||S.gear.tarp==='tp3'?hamLeftPost(sk[S.gear.shelter],S.gear.shelter,S.gear.tarp==='tp3'):'')+hamBody(sk[S.gear.shelter],S.gear.shelter):tarpS+shS+(hasTent&&TARP_FRONT[S.gear.tarp]?tarpPart(S.gear.tarp,252+(tf[2]||0),tf[1],tf[0]):'')+(chim?chim.pipe:''))
+   +(isHam(S.gear.shelter)?shS+(S.gear.tarp&&S.gear.tarp!=="tp3"?hamPosts(sk[S.gear.shelter],S.gear.shelter):'')+tarpS+(S.gear.tarp==='tp2'||S.gear.tarp==='tp3'?hamLeftPost(sk[S.gear.shelter],S.gear.shelter,S.gear.tarp==='tp3'):'')+hamBody(sk[S.gear.shelter],S.gear.shelter):tarpS+shS+(hasTent&&TARP_FRONT[S.gear.tarp]?tarpPart(S.gear.tarp,252+(tf[2]||0),tf[1],tf[0]):'')+(chim?chim.pipe:''))
    +(S.parts.includes('tripod')?put('part_tripod',222,424,.2)+(S.parts.includes('cam')?put('part_cam',222,402,.1):''):(S.parts.includes('cam')?put('part_cam',284,436,.1):''))
    +(S.parts.includes('comfy')?put('part_comfy',204,418,.2):'')
    +put('bike_'+S.bike,344,406,.26)
