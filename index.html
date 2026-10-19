@@ -913,7 +913,7 @@ function load(){try{const s=localStorage.getItem('charicamp');if(!s)return null;
   const st=o.stats&&typeof o.stats==='object'?o.stats:{};o.stats={wins:num(st.wins,0,0,1e9),posts:num(st.posts,0,0,1e9),bestQ:num(st.bestQ,0,0,100),tph:num(st.tph,0,0,1e9),ev:num(st.ev,0,0,1e9),tc:num(st.tc,0,0,1e9),en:{}}
   for(const k of TRIAL_KEYS){const v=st.en&&st.en[k];if(Array.isArray(v)&&v.length===3)o.stats.en[k]=v.map(x=>num(x,0,0,1e9));};
   {const iv=o.inf&&typeof o.inf==='object'?o.inf:{};o.inf={};for(const d of INF){const v=iv[d.id];if(v&&typeof v==='object')o.inf[d.id]={w:num(v.w,0,0,1e9),e:num(v.e,0,0,1e9),g:num(v.g,0,0,1)};}}
-  o.food=num(o.food,0,0,FOOD_MAX+RACK_TOP);o.food2=num(o.food2,0,0,NAGANO.max);
+  o.food=num(o.food,0,0,FOOD_MAX+RACK_TOP+((PARTS.find(p=>p.id==='framebag')||{}).food||0));o.food2=num(o.food2,0,0,NAGANO.max);
   delete o.ach;
   let f=o.forecast&&typeof o.forecast==='object'?o.forecast:{};o.forecast=null;
   if(Array.isArray(o.fc)&&o.fc.length===47&&o.fc.every(n=>Number.isInteger(n)&&n>=0&&n<7*100)){const M=(o.v||0)>=6?7:(o.v||0)>=5?6:5;f={};o.fc.forEach((n,i)=>f[i]={temp:Math.floor(n/M)-30,wx:WXL[n%M]});}
@@ -1518,7 +1518,7 @@ function cmd(k){if(!B||!trip||$('ov-battle').hidden||B.hp<=0||trip.late)return;
     else if(kd==='typhoon'){S.mp-=4;B.cut=.5;S.hp=Math.min(100,S.hp+15);t='寝床を広げてビバーク。体力+15';}
     else if(kd==='rival'){S.mp-=8;B.cut=0;B.charge=Math.max(B.charge||0,1.5);t='ハッシュタグを練り直した。次の投稿1.5倍';}}
   else if(k==='rinko'){if(!$('ov-pay').dataset.ok){askPay('輪行で区間を飛ばしますか？',trip.rk,()=>{$('ov-pay').dataset.ok='1';cmd('rinko');});return;}delete $('ov-pay').dataset.ok;S.money-=trip.rk;t='輪行で区間を飛ばした！';log(`${B.e.name}の区間を輪行（${yen(trip.rk)}）`);S.stats.wins++;tstat(B.kind)[1]++;trip.i++;$('ov-battle').hidden=true;battleOver();nextEncounter();return;}
-  else if(k==='escape'){tstat(B.kind)[2]++;trip.late=true;$('ov-battle').hidden=true;battleOver();nextEncounter();return;}
+  else if(k==='escape'){tstat(B.kind)[2]++;if(B.kind==='rival')log('ライバルに先を越された@'+B.inf);trip.late=true;$('ov-battle').hidden=true;battleOver();nextEncounter();return;}
   B.hp-=dmg;if(dmg>0&&B.hp>0)playSE('se_hit');
   if(B.hp<=0){blog(t+(isRival()?'\n先に撮影スポットに着いた！':(WILDK.has(B.kind)?'\n'+B.e.name+'を振り切った！':'\nこの区間を走り切った！')));S.stats.wins++;tstat(B.kind)[1]++;if(isRival()){log('ライバルより先に撮影スポットへ着いた@'+B.inf);infSt(B.inf).w++;}playSE('se_win');renderBattle();$('bt-cmds').innerHTML=`<button class="primary c-atk" data-cmd="next">キャンプ場へ向かう</button>`;
     $('bt-cmds').querySelector('button').onclick=()=>{trip.i++;$('ov-battle').hidden=true;battleOver();nextEncounter();};return;}
@@ -1592,7 +1592,7 @@ function turnPopup(){const t=TS;TS=null;if(!t)return;const e=$('pop'),sg=n=>(n>0
   if(df)R.push(['フォロワー',`${sfol(df)}（${fol(S.fame)}）`]);if(dh)R.push(['体力',`${sg(dh)}（${S.hp}）`]);if(dp)R.push(['気力',`${sg(dp)}（${S.mp}）`]);
   if(t.became)R.push(['🏅 馴染み宿',t.became]);if(fc!==t.fam)R.push(['都道府県クリア数',`${fc} / 47`]);
   e.innerHTML=`<div class="doc-t">収支報告書</div><h3>${calLabel(S.turn)}</h3><div class="res">${R.map(r=>`<span>${r[0]}</span><span class="${/^[+＋]/.test(r[1])?'pos':/^[-－]/.test(r[1])?'neg':''}">${r[1]}</span>`).join('')}<span class="tot">残高</span><span class="tot"><b>${yen(S.money)}</b></span></div>${infBlock()}<button class="primary" id="pop-x">閉じる</button>`;
-  const tb=document.querySelector('.tabs').getBoundingClientRect();e.style.top=Math.max(8,Math.min(tb.top,innerHeight-260))+'px';e.hidden=false;playSE('se_turn');$('pop-x').focus({preventScroll:true});}
+  const tb=document.querySelector('.tabs').getBoundingClientRect();e.style.maxHeight='';e.style.overflowY='';e.style.top=Math.max(8,Math.min(tb.top,innerHeight-260))+'px';e.hidden=false;{const h=e.offsetHeight,vh=innerHeight;if(h>vh-16){e.style.maxHeight=(vh-16)+'px';e.style.overflowY='auto';e.style.top='12px';}else e.style.top=Math.max(8,Math.min(parseFloat(e.style.top),vh-h-8))+'px';}playSE('se_turn');$('pop-x').focus({preventScroll:true});}
 $('pop').onclick=e=>{if(e.target.id==='pop-x')$('pop').hidden=true;};
 function yearEval(y){const n=trialKindsCleared(),fc=famCount();
   const score=Math.round(S.fame/100+fc*300+n*200+Math.max(0,S.money)/1000+S.stats.wins*10),pace=score/y;
