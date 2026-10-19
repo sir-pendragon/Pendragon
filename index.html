@@ -110,6 +110,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .map path.cur{stroke:var(--sky);stroke-width:1.6}
 .map text{font-family:var(--display);font-size:10px;fill:var(--fg);pointer-events:none}
 .map .sm{fill:url(#smg);opacity:0;transform-box:fill-box;transform-origin:center}
+@media (prefers-reduced-motion:no-preference){.map .fl{transform-box:fill-box;transform-origin:50% 100%;animation:flk 1.7s ease-in-out infinite}@keyframes flk{0%{transform:scaleY(1) skewX(0)}18%{transform:scaleY(1.04) skewX(1.4deg)}37%{transform:scaleY(.98) skewX(-1deg)}55%{transform:scaleY(1.05) skewX(-1.6deg)}76%{transform:scaleY(.99) skewX(1deg)}100%{transform:scaleY(1) skewX(0)}}}
 @media (prefers-reduced-motion:no-preference){.map .sm{animation:smk 4.2s ease-out infinite}.map .sm2{animation-delay:1s}.map .sm3{animation-delay:2.1s}.map .sm4{animation-delay:3.1s}@keyframes smk{0%{opacity:0;transform:translate(0,0) scale(.5)}12%{opacity:1}100%{opacity:0;transform:translate(10px,-26px) scale(1.8)}}}
 @media (prefers-reduced-motion:reduce){.map .sm1{opacity:.8;transform:translate(1px,-6px)}.map .sm2{opacity:.6;transform:translate(3px,-13px) scale(1.3)}.map .sm3{opacity:.4;transform:translate(6px,-20px) scale(1.6)}}
 .map .zq{fill:#fff;paint-order:stroke;stroke:#234;stroke-width:1.6px;stroke-linejoin:round}
@@ -1035,7 +1036,7 @@ function renderMap(){const svg=$('map');const mk=JSON.stringify([S.loc,S.sel,S.v
    +(S.parts.includes('tripod')?put('part_tripod',222,424,.2)+(S.parts.includes('cam')?put('part_cam',222,402,.1):''):(S.parts.includes('cam')?put('part_cam',284,436,.1):''))
    +(S.parts.includes('comfy')?put('part_comfy',204,418,.2):'')
    +put('bike_'+S.bike,344,406,.26)
-   +(S.gear.fire&&S.gear.fire!=='fire4'?put('fire_'+S.gear.fire,300,420,fk[S.gear.fire]):'')+`</g>`
+   +(S.gear.fire&&S.gear.fire!=='fire4'?`<g class="fl">${put('fire_'+S.gear.fire,300,420,fk[S.gear.fire])}</g>`:'')+`</g>`
    +(S.parts.includes('drone')?`<g class="drone">${put('part_drone',300,392,.15)}</g>`:'');
   s+=`<g id="hero" style="pointer-events:none"><ellipse id="hs" cy="0" ry="1.8" fill="#000" opacity=".28"/><g id="hf">${HFR.map(k=>`<image id="hi_${k}" href="img/hero_${k}.webp" width="${HDIM[k[0]][0]*HK}" height="${HDIM[k[0]][1]*HK}" style="display:none"/>`).join('')}</g><text id="hz1" style="font-size:6px;fill:#fff;paint-order:stroke;stroke:#234;stroke-width:1.5px">z</text><text id="hz2" style="font-size:5px;fill:#fff;paint-order:stroke;stroke:#234;stroke-width:1.5px">z</text></g>`
    +(isHam(S.gear.shelter)?hamFront(sk[S.gear.shelter],S.gear.shelter):'')+(isHam(S.gear.shelter)&&S.gear.tarp==='tp2'?tp2Pole(252+(tf[2]||0),tf[1],tf[0],tf[3]||1):'')
