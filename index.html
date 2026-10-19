@@ -397,7 +397,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
     <div id="sightbook"></div>
     </div>
     <div id="p-trip">
-    <div class="loghead"><h2>旅の記録</h2><span class="logbtns"><button id="btn-set" aria-label="設定">⚙ 設定</button><button id="btn-reset">リセット</button></span></div>
+    <div class="loghead"><h2>旅の記録</h2><span class="logbtns"><button id="btn-set" aria-label="設定">⚙ 設定</button></span></div>
     <div class="profile"><div class="pcol"><img loading="lazy" decoding="async" src="img/hero.webp" width="84" height="84" alt="主人公の自転車旅行者"><button id="btn-share" class="primary">SNSに投稿<small>（画像つき）</small></button></div><div class="res" id="summary"></div></div><p class="hint" id="share-note" style="margin:4px 0 0"></p>
     <div class="subtabs" id="tl-tabs"><button data-v="tl" aria-selected="true">旅履歴</button><button data-v="log" aria-selected="false">自分のSNS</button></div>
     <div class="tl" id="tl"></div>
@@ -1632,7 +1632,6 @@ $('result-box').addEventListener('click',e=>{if(e.target.closest('#res-share'))d
 $('start-pref').innerHTML=PREF.map(p=>`<option value="${p.id}">${p.name}（${p.site}）</option>`).join('');$('start-pref').value='12';
 $('btn-new').onclick=()=>{newGame(+$('start-pref').value);$('ov-title').hidden=true;render();if(!tutSeen())tutShow(0);};
 $('btn-cont').onclick=()=>{$('ov-title').hidden=true;render();};
-$('btn-reset').onclick=()=>{if($('btn-reset').textContent==='本当に消す？'){try{localStorage.removeItem('charicamp');}catch(e){}S=null;TS=null;trip=null;B=null;INTRIP=false;LASTSAVE='';$('pop').hidden=true;$('btn-cont').hidden=true;$('ov-title').hidden=false;$('btn-reset').textContent='リセット';$('tab-map').click();}else{$('btn-reset').textContent='本当に消す？';setTimeout(()=>$('btn-reset').textContent='リセット',3000);}};
 const saved=load();if(saved){S=saved;if(!S.forecast)rollForecast();$('btn-cont').hidden=false;render();}
 })();
 </script>
