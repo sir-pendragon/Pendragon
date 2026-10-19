@@ -110,9 +110,9 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .map path.cur{stroke:var(--sky);stroke-width:1.6}
 .map text{font-family:var(--display);font-size:10px;fill:var(--fg);pointer-events:none}
 .map .sm{fill:url(#smg);opacity:0;transform-box:fill-box;transform-origin:center}
-.pt{opacity:0}
+.map .ptl{opacity:0}
 @media (prefers-reduced-motion:no-preference){.map .tr-summer{transform-box:fill-box;transform-origin:50% 100%;animation:tsway 3.6s ease-in-out infinite}@keyframes tsway{0%,100%{transform:rotate(-.7deg) skewX(0)}50%{transform:rotate(.9deg) skewX(.8deg)}}
-.map .pt{animation-name:ptfall;animation-timing-function:linear;animation-iteration-count:infinite}.map .pt{transform-box:fill-box;transform-origin:50% 50%}
+.map .ptl{animation-name:ptfall;animation-timing-function:linear;animation-iteration-count:infinite}.map .ptl{transform-box:fill-box;transform-origin:50% 50%}
 @keyframes ptfall{0%{opacity:0;transform:translate(0,0) rotate(0)}12%{opacity:1}50%{opacity:1;transform:translate(calc(var(--dx)*.5 + 6px),48px) rotate(180deg)}100%{opacity:0;transform:translate(var(--dx),105px) rotate(360deg)}}}
 @media (prefers-reduced-motion:no-preference){.map .fl{transform-box:view-box;animation:flk 1.7s ease-in-out infinite}@keyframes flk{0%{transform:scaleY(1) skewX(0)}18%{transform:scaleY(1.04) skewX(1.4deg)}37%{transform:scaleY(.98) skewX(-1deg)}55%{transform:scaleY(1.05) skewX(-1.6deg)}76%{transform:scaleY(.99) skewX(1deg)}100%{transform:scaleY(1) skewX(0)}}}
 @media (prefers-reduced-motion:no-preference){.map .sm{animation:smk 4.2s ease-out infinite}.map .sm2{animation-delay:1s}.map .sm3{animation-delay:2.1s}.map .sm4{animation-delay:3.1s}@keyframes smk{0%{opacity:0;transform:translate(0,0) scale(.5)}12%{opacity:1}100%{opacity:0;transform:translate(10px,-26px) scale(1.8)}}}
@@ -1002,7 +1002,7 @@ function renderWx(){const el=$('wxfx');if(!el)return;const w=S.forecast&&S.forec
 // 県をタップしたときは、選択に関わる部分（地図・詳細・一覧）だけ描き直す（全体のrenderより軽い）
 function renderSel(){renderMap();renderDetail();renderList();}
 // 桜の木の演出：春は花びら、夏は葉のそよぎ（木ごと揺れる）、秋は枯れ葉。動きはCSS（視差効果を減らす設定では止める）
-function treeFx(sn){if(sn!=='spring'&&sn!=='autumn')return '';const sp=sn==='spring',C=sp?['#ffd3e2','#f8a9c6','#fff0f5']:['#d9822b','#b5521e','#e0a93a','#9a4a1a'],N=sp?14:9;let o='<g class="ptc">';for(let i=0;i<N;i++){const x=294+((i*37)%76),y=262+((i*23)%48),dx=(((i*29)%50)-30),dl=(i*0.43)%4.2,du=(sp?4.2:5.4)+(i%3)*.5;o+=`<ellipse class="pt ${sp?'pet':'lef'}" cx="${x}" cy="${y}" rx="${sp?2.3:2.4}" ry="${sp?1.6:1.5}" fill="${C[i%C.length]}" style="--dx:${dx}px;animation-delay:${dl.toFixed(2)}s;animation-duration:${du.toFixed(1)}s"/>`;}return o+'</g>';}
+function treeFx(sn){if(sn!=='spring'&&sn!=='autumn')return '';const sp=sn==='spring',C=sp?['#ffd3e2','#f8a9c6','#fff0f5']:['#d9822b','#b5521e','#e0a93a','#9a4a1a'],N=sp?14:9;let o='<g class="ptc">';for(let i=0;i<N;i++){const x=294+((i*37)%76),y=262+((i*23)%48),dx=(((i*29)%50)-30),dl=(i*0.43)%4.2,du=(sp?4.2:5.4)+(i%3)*.5;o+=`<ellipse class="ptl ${sp?'pet':'lef'}" cx="${x}" cy="${y}" rx="${sp?2.3:2.4}" ry="${sp?1.6:1.5}" fill="${C[i%C.length]}" style="--dx:${dx}px;animation-delay:${dl.toFixed(2)}s;animation-duration:${du.toFixed(1)}s"/>`;}return o+'</g>';}
 function render(){if(S.gear.fire==='fire4'&&S.gear.shelter!=='sh5')S.gear.fire=null;S.parts=S.parts.slice(0,partSlots(S.bike));if(!$('p-sight').hidden&&!$('p-log').hidden)renderSights();if(!$('p-ach').hidden&&!$('p-log').hidden)renderTrials();const c=calendar(S.turn);$('d-date').textContent=`${c.year}年目 ${c.month}月第${c.week}週`;$('d-wk').textContent=`（${(S.turn-1)%52+1}/52）`;$('d-season').innerHTML=SEASON_J[season(c.mi)];
   $('d-fame').textContent=`${fol(S.fame)}（${title(S.fame)}）`;$('d-money').textContent=yen(S.money);
   $('d-hp').textContent=S.hp;$('b-hp').style.width=Math.max(0,S.hp)+'%';$('d-mp').textContent=S.mp;$('b-mp').style.width=Math.max(0,S.mp)+'%';
