@@ -1224,10 +1224,10 @@ function feedItems(){const out=[],seen={};
   [...S.tl].reverse().forEach(e=>{const [t,pid,q]=e;if(q>=0){seen[pid]=(seen[pid]||0)+1;e.vn=seen[pid];}});
   const pick=(a,h)=>a[h%a.length];
   S.tl.forEach(e=>{const [t,pid,q,k]=e,p=PREF[pid],enc=tlDec(k).map(x=>(ENEMY[x]||{name:x==='tsuchi'?'ツチノコ':x}).name),h=hs(t,pid,q+2),en=enc.length?pick(enc,h>>>3):'';
-    if(q<0){out.push({t,r:1,p:{name:'旅の自転車乗り',id:'jitensha_tabi',av:TRIP_AV,when:CAL_S(t),text:pick([`日没に間に合わず…😭 ${p.name}のキャンプ場は遅刻でした。次こそ！`,`暗くなっちゃった🌙 ${p.name}はまた今度…`,en?`${en}にやられて遅刻💦 ${p.name}、次はリベンジ！`:`ペース配分をミスった…💦 ${p.name}は遅刻でした`],h),n:[h%2,0,1+h%7]}});return;}
+    if(q<0){out.push({t,r:1,p:{name:'旅の自転車乗り',id:'jitensha_tabi',av:TRIP_AV,when:CAL_S(t),text:pick([`日没に間に合わず…😭 ${p.name}のキャンプ場は遅刻でした。次こそ！`,`暗くなっちゃった🌙 ${p.name}はまた今度…`,en?`${en}にやられて遅刻💦 ${p.name}、次はリベンジ！`:`ペース配分をミスった…💦 ${p.name}は遅刻でした`],h),n:[h%2,0,1+h%7],rp:infRp(h,'late',25)}});return;}
     const sg=sightOf(pid,e.vn||1),lk=Math.round(q*q/12+h%25+3),band=RPL.find(b=>q>=b[0]),fan=FANS[h%FANS.length],pl=`${p.name}の${p.site}`;
     const head=q>=70?pick([`${pl}に到着〜！🚴✨\n景色が最高すぎた…写真${q}点！`,`${pl}で絶景ゲット📷\n${q}点！これは自信作`,`ついに${pl}！🏕️\n写真${q}点、神回です`],h):q>=40?pick([`${pl}に到着！🏕️\n写真${q}点。いい旅だった〜`,`${pl}までなんとか走り切った🚴\n${q}点、まずまず！`],h):pick([`${pl}に着いたけど、写真は${q}点…😅\n次はリベンジ！`,`${pl}到着🏕️ 天気がいまいちで${q}点💦`],h);
-    out.push({t,r:1,p:{name:'旅の自転車乗り',id:'jitensha_tabi',av:TRIP_AV,when:CAL_S(t),text:head+(en?`\n道中で${en}に遭遇💥`:'')+'\n#日本巡る自転車旅',img:'img/sights/'+sg[0]+'.webp',alt:sg[1],n:[Math.round(lk*.06)+1,Math.round(lk*.18),lk],rp:[fan[0],fan[1],pick(band[1],h>>>5)]}});});
+    out.push({t,r:1,p:{name:'旅の自転車乗り',id:'jitensha_tabi',av:TRIP_AV,when:CAL_S(t),text:head+(en?`\n道中で${en}に遭遇💥`:'')+'\n#日本巡る自転車旅',img:'img/sights/'+sg[0]+'.webp',alt:sg[1],n:[Math.round(lk*.06)+1,Math.round(lk*.18),lk],rp:infRp(h,q>=70?'hi':q>=40?'mid':'lo')||[fan[0],fan[1],pick(band[1],h>>>5)]}});});
   S.log.forEach(l=>{const m=/^(\d+)\|(.*)$/s.exec(l);if(!m)return;const t=+m[1],x=m[2],when=CAL_S(t);let mm;
     if(mm=/^スポンサー「(.+)」がつきました/.exec(x)){const i=SPONSOR.findIndex(z=>z[2]===mm[1]);out.push({t,r:0,p:{name:mm[1],id:'sponsor_'+Math.max(i,0),av:i>=0?'img/sponsor_'+i+'.webp':'',ini:'S',when,text:`旅の自転車乗りさん、いつも応援しています！今週から、旅を支援させてください。\n#日本巡る自転車旅`}});}
     else if(x==='ライバルより先に撮影スポットへ着いた')out.push({t,r:2,p:{name:'ライバル配信者',id:'rival_cam',ini:'R',when,text:'くっ、先に撮られた…！次は負けない。#映え勝負'}});
@@ -1408,18 +1408,23 @@ const INF=[
  {id:'tomy',name:'トミー',reg:'近畿',handle:'tomy_wafuku',img:'img/inf_tomy.webp',av:'img/inf_tomy_s.webp',part:'wafu',
   intro:'ほう、あなたも同じ景色を狙っておいででしたか',win:'お見事。今宵の月は、あなたに譲りましょう',lose:'この景色は、わたくしがいただきました。また、どこかで',
   turn:['今週は風が良い。一句、詠みたくなりますね','和装で走ると、風の音がよく聞こえるのですよ','旅の途中で見かけたら、お声がけください'],
+  rep:{hi:['見事な景色ですね。一句、詠みたくなりました','この一枚、掛け軸にしたいほどです','風雅ですねえ。わたくしも負けてはおれません'],mid:['良い旅路ですね。道中、ご無事で','趣のある一枚です','次の景色も楽しみにしております'],lo:['雨も風流のうちですよ','次の景色に期待しましょう','ゆるりと参りましょう'],late:['日が暮れても、旅は続きます。お気をつけて','また明日、よい風が吹きますよ']},
   gift:'何度も勝負していただき、ありがとうございます。わたくしの和装、お納めください'},
  {id:'takechan',name:'takeちゃん',handle:'take_titan',img:'img/inf_takechan2.webp',av:'img/inf_takechan2_s.webp',part:'kiseru',
   intro:'まあまあ、そう急ぎなさんな。一服してから撮ろうや',win:'やるねえ。今日は完敗だ',lose:'ははは、今日は俺の勝ちだな。一服してからでも間に合ったぜ',
   turn:['今週は焚き火がよく燃える。寄ってくかい','チタンは焼くと虹色になるんだ。見てくかい','まあまあ、急ぎなさんな。一服していきな','昼は溶接、夜は一杯。これが俺の毎日さ','今日の現場は、一日中溶接だった。腕がまだ震えてるぜ','チタンの溶接は、まだ修行中でな。今日も焼き色に叱られたよ','ビードがきれいに並んだ日は、酒がうまいんだ','走り終わったら、まず一杯。いや、先に一服か','煙管の火皿は小さいから、一服をゆっくり楽しめるんだ','チタンの煙管はな、軽くて、丈夫で、色もきれいなんだ','溶接は手が覚えるもんだ。自転車も同じだろ','今夜の肴は何にするかな。旅先の地酒も悪くない','チタンは気難しい。でも、うまく付いた時の色は最高だ','修行中の身だが、いつか自分でフレームを溶接してみたいんだ','煙管に刻みを詰めて、ゆっくり景色を眺める。贅沢だろ','焚き火の前で一杯やると、一日の疲れが溶けていくな','溶接面を外すと、景色がやけに明るく見えるんだ','失敗した溶接の跡も、見てくれよ。勉強になるぜ','今日の酒は、旅の途中で見つけた一本だ。乾杯！','走ったあとの煙管の一服は、格別だな'],
+  rep:{hi:['こりゃいい景色だ。酒が進むねえ🍶','見事なもんだ。一服しながら見入っちまった','この景色で一杯やりたいな'],mid:['いい旅だな。まあ一服して休みな','今夜の肴にいい写真だ','走ったあとの一杯は格別だぜ'],lo:['点数なんて気にすんな。まあ一服だ','焼き色と同じで、次はうまくいくさ','ドンマイ。一杯やって忘れちまえ'],late:['無事ならそれでいい。一服していきな','暗い道は気をつけなよ']},
   gift:'よく付き合ってくれたな。こいつは俺からの礼だ。一服どうだい'},
  {id:'lcc',name:'タマキーン',reg:'関東',handle:'lcc_heavypack',img:'img/inf_lcc.webp',av:'img/inf_lcc_s.webp',part:'framebag',
   intro:'タマキーン！',win:'タマキーン…！',lose:'タマキーン！！',
   turn:['タマキーン！','タマキーン！！','タマキーン？','タマキーン〜','タマキーン…'],
+  rep:{hi:['タマキーン！！','タマキーン！！！','タマキーン〜！'],mid:['タマキーン！','タマキーン〜','タマキーン！'],lo:['タマキーン…','タマキーン…！','タマキーン…'],late:['タマキーン？','タマキーン…']},
   gift:'タマキーン！！！'}];
 const infHere=(d,p)=>!p||(!d.reg&&!d.pref)||d.reg===p.region||d.pref===p.name;// 登場できる場所（reg=地方、pref=県。どちらもなければ全国）
 const infPool=p=>INF.filter(d=>infHere(d,p));
 const infLocal=p=>INF.some(d=>(d.reg||d.pref)&&infHere(d,p));
+// 旅の投稿へのひとこと返信（出会っていなくても付く。場所の限定はなし）。h＝投稿ごとの固定値で、見るたびに変わらない
+const infRp=(h,band,pct)=>{if(h%100>=(pct||30))return null;const d=INF[(h>>>9)%INF.length],a=d.rep[band];return [d.name,d.handle,a[(h>>>4)%a.length]];};
 const infD=id=>INF.find(x=>x.id===id)||INF[0];
 const infSt=id=>{if(!S.inf||typeof S.inf!=='object')S.inf={};return S.inf[id]||(S.inf[id]={w:0,e:0,g:0});};
 let INFEV=null;// 週の始めに登場した人（その週のポップアップに1回だけ出す）
