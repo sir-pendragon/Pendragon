@@ -88,6 +88,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .trl .th:first-child{text-align:left}
 .trl .n{display:flex;align-items:center;gap:6px;min-width:0}
 .trl .n img{width:28px;height:28px;object-fit:contain;flex:none}
+.trl .n .pf{flex:none;font-size:10px;opacity:.65;margin-left:2px;white-space:nowrap}
 .trl .num{text-align:right;font-variant-numeric:tabular-nums}
 .trl .z{opacity:.4}
 .trl>.none{grid-column:1/-1;color:var(--muted);font-size:var(--fs-s);border:0}
@@ -1246,7 +1247,7 @@ function renderTrials(){let w=0,f=0;for(const k of TRIAL_KEYS){const v=S.stats.e
   $('ach-sum').textContent=`突破 ${w}回 ／ 失敗 ${f}回`;
   const row=k=>{const v=S.stats.en[k]||[0,0,0],z=v[0]?'':' z',cols=`<div class="num${z}">${v[0]}</div><div class="num${z}">${v[1]}</div><div class="num${z}${v[2]?' bad':''}">${v[2]}</div>`;
     if(k==='tsuchi'){const got=v[1]>0;return `<div class="n${got?'':' leg'}"><img loading="lazy" decoding="async" src="img/${got?'tsuchinoko':'tsuchinoko_unknown'}.webp" alt="">${got?'ツチノコ':'伝説の生き物'}</div>${cols}`;}
-    if(NEWK.has(k)&&!v[0])return '';const e=ENEMY[k];return `<div class="n" data-en="${k}" style="cursor:pointer"><img loading="lazy" decoding="async" src="${e.img}" alt="" onerror="this.style.display='none'">${e.name.replace('インフルエンサー','').replace('迷惑キャンパー','迷惑')}</div>${cols}`;};
+    if(NEWK.has(k)&&!v[0])return '';const e=ENEMY[k];return `<div class="n" data-en="${k}" style="cursor:pointer"><img loading="lazy" decoding="async" src="${e.img}" alt="" onerror="this.style.display='none'">${e.name.replace('インフルエンサー','').replace('迷惑キャンパー','迷惑')}${is4th(k)?`<small class="pf">${Object.keys(SPEC).find(n=>SPEC[n].boss===k)||''}</small>`:''}</div>${cols}`;};
   $('tr-tabs').innerHTML=[['old','試練'],['4th','都道府県限定試練']].map(([g,t])=>`<button data-trs="${g}" aria-selected="${TRSUB===g}">${t}</button>`).join('');
   const rows=TRIAL_KEYS.filter(k=>is4th(k)===(TRSUB==='4th')).map(row).join('');
   $('achlist').innerHTML='<div class="th">試練</div><div class="th">遭遇</div><div class="th">突破</div><div class="th">失敗</div>'+(rows||'<div class="none">まだ出会っていません（その県の特別コースで出会うと載ります）</div>');}
