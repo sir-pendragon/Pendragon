@@ -54,6 +54,10 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .app{max-width:900px;margin:0 auto;display:flex;flex-direction:column;gap:10px}
 .status{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:3px 16px;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:5px 12px;font-variant-numeric:tabular-nums}
 @media (min-width:560px){.status{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.stat.sf{grid-column:1/-1}.stat.sf b{text-align:left}
+/* スマホ：1行目＝フォロワー／2行目＝所持金／3行目＝体力・気力／4行目＝都道府県クリア数（数字は左）・現在地 */
+@media (max-width:430px){.stat.sf .lp{display:none}}
+@media (max-width:559px){.stat.sm{grid-column:1;grid-row:2}.stat.sh{grid-column:1;grid-row:3}.stat.sp{grid-column:2;grid-row:3}.stat.sf{grid-column:1;grid-row:4}.stat.sl{grid-column:2;grid-row:4}}
 .stat{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:baseline;gap:0 6px;font-size:var(--fs-s);line-height:1.35;color:var(--muted)}
 .stat b{color:var(--fg);font-size:var(--fs-l);white-space:nowrap;text-align:right}
 .stat .bar{grid-column:1/-1;height:12px;margin-top:2px}
@@ -366,11 +370,11 @@ button:disabled{opacity:.45;cursor:not-allowed}
 <div class="app" id="app">
   <div class="status">
     <div class="stat fm" style="grid-column:1/-1"><span class="lb"><img loading="lazy" class="si" src="img/icon_fame.webp" width="16" height="16" alt=""><span class="lt">フォロワー</span></span><b id="d-fame">0</b><button id="btn-sns" class="snsbtn" aria-haspopup="dialog" aria-label="自分のSNSを開く"><img src="img/icon_sns_bird.webp" width="18" height="18" alt="">My SNS</button></div>
-    <div class="stat"><span class="lb"><img loading="lazy" class="si" src="img/icon_money.webp" width="16" height="16" alt="">所持金</span><b id="d-money">¥30,000</b></div>
-    <div class="stat"><span class="lb"><img loading="lazy" class="si" src="img/icon_loc.webp" width="16" height="16" alt="">現在地</span><b id="d-loc">東京</b></div>
-    <div class="stat"><span class="lb"><img loading="lazy" class="si" src="img/icon_hp.webp" width="16" height="16" alt="">体力</span><b id="d-hp">100</b><div class="bar"><i id="b-hp" style="width:100%"></i></div></div>
-    <div class="stat"><span class="lb"><img loading="lazy" class="si" src="img/icon_mp.webp" width="16" height="16" alt="">気力</span><b id="d-mp">100</b><div class="bar mp"><i id="b-mp" style="width:100%"></i></div></div>
-    <div class="stat" style="grid-column:1/-1"><span class="lb"><img loading="lazy" class="si" src="img/icon_inn.webp" width="16" height="16" alt="">都道府県クリア数</span><b id="d-fam">0 / 47</b></div>
+    <div class="stat sm"><span class="lb"><img loading="lazy" class="si" src="img/icon_money.webp" width="16" height="16" alt="">所持金</span><b id="d-money">¥30,000</b></div>
+    <div class="stat sl"><span class="lb"><img loading="lazy" class="si" src="img/icon_loc.webp" width="16" height="16" alt="">現在地</span><b id="d-loc">東京</b></div>
+    <div class="stat sh"><span class="lb"><img loading="lazy" class="si" src="img/icon_hp.webp" width="16" height="16" alt="">体力</span><b id="d-hp">100</b><div class="bar"><i id="b-hp" style="width:100%"></i></div></div>
+    <div class="stat sp"><span class="lb"><img loading="lazy" class="si" src="img/icon_mp.webp" width="16" height="16" alt="">気力</span><b id="d-mp">100</b><div class="bar mp"><i id="b-mp" style="width:100%"></i></div></div>
+    <div class="stat sf"><span class="lb"><img loading="lazy" class="si" src="img/icon_inn.webp" width="16" height="16" alt=""><span class="lp">都道府県</span>クリア数</span><b id="d-fam">0 / 47</b></div>
   </div>
   <div class="tabs" role="tablist">
     <button role="tab" aria-selected="true" data-tab="map" id="tab-map"><img loading="lazy" class="ti" src="img/icon_map.webp" width="22" height="22" alt="">地図</button>
