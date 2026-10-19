@@ -1227,6 +1227,12 @@ function postHtml(p){return `<article class="post"><div class="av">${p.av?`<img 
 function snsText(x){if(/購入/.test(x))x=x.replace(/（[^）]*¥[^）]*）/g,'');if(/^自宅で休養/.test(x))return '今週は自宅でゆっくり休養🛌';if(/強制帰宅/.test(x))return 'お金が尽きて、家に帰ることに…💸';return x.replace(/[。！]?\s*フォロワー[+\-−][^\s。！]*/g,m=>/^！/.test(m)?'！':'');}
 // 購入した商品の絵（ショップのカードと同じ絵）。名前から探す
 function itemArt(nm){let it;if(it=BIKES.find(z=>z.name===nm))return ['img/icon_bike_'+it.id+'.webp','',nm];if(it=CLOTHES.find(z=>z.name===nm))return ['img/cloth_'+it.id+'.webp','',nm];if(it=GEAR_ITEMS.find(z=>z.name===nm))return ['img/icon_g_'+it.id+'.webp',ICON_FB[it.id]||'',nm];if(it=PARTS.find(z=>z.name===nm))return ['img/part_'+it.id+'.webp',ICON_FB[it.id]||'',nm];return null;}
+// すべての投稿に「いいね」とコメントを付ける（旅の投稿のように返信がまだ無いものは、内容に合うファンの一言を足す）。投稿ごとに固定
+const ENG=[[/遅刻|間に合わず|暗くなっちゃった|リベンジ/,['どんまい！次があります💪','無事ならOK！ゆっくり休んで','次はいけますよ！応援してます📣','暗くなる前の判断、えらい！']],[/スポンサー|がつきました|支援/,['おめでとうございます🎉','スポンサーがつくなんてすごい！','これからの旅も楽しみです！']],[/ツチノコ/,['ツチノコ！？すごい！！','写真ください！🐍','見間違いじゃないですか？笑']],[/購入|カスタム|付けた/,['いい買い物ですね！','これは気になる…！','旅が楽しみになりますね🚴','おお、新装備！','似合いそう✨','レビューお願いします！']],[/休養|ゆっくり|帰宅|家に帰る/,['しっかり休んでくださいね☺️','休むのも旅のうち🛌','ゆっくり充電！','無理しないで！','おかえりなさい🏠']],[/輪行/,['輪行も旅の知恵ですね🚃','電車旅もいいですよね！','駅弁も楽しんで〜']],[/映え勝負|ライバル|先に/,['バトルアツい！🔥','次の勝負も楽しみです','見応えありました👏']],[/届きました|🎁/,['うらやましい…🎁','いい贈り物ですね！','大事に使ってあげてください☺️']],[/./,['応援してます📣','いいですね〜☺️','ナイス旅！','次も楽しみにしています🚴','つぎの更新も待ってます！']]];
+function engage(a){return a.map(it=>{const p=it.p,h=hs(it.t,it.r,[...p.text].reduce((x,c)=>x+c.charCodeAt(0),0));
+  if(!p.rp){const pool=ENG.find(e=>e[0].test(p.text))[1],fan=FANS[(h>>>7)%FANS.length];p.rp=[fan[0],fan[1],pool[(h>>>3)%pool.length]];}
+  if(!p.n){const lk=3+h%38;p.n=[1+(h>>>5)%3,(h>>>9)%(Math.floor(lk/3)+1),lk];}else if(p.n[0]<1)p.n[0]=1;
+  return it;});}
 function feedItems(){const out=[],seen={};
   [...S.tl].reverse().forEach(e=>{const [t,pid,q]=e;if(q>=0){seen[pid]=(seen[pid]||0)+1;e.vn=seen[pid];}});
   const pick=(a,h)=>a[h%a.length];
@@ -1245,7 +1251,7 @@ function feedItems(){const out=[],seen={};
     else if(mm=/^INFEV@(\w+)@(\d+)$/.exec(x)){const d=infD(mm[1]);out.push({t,r:2,p:{name:d.name,id:d.handle,av:d.av,when,text:d.turn[+mm[2]%d.turn.length]}});}
     else if(mm=/^INFGIFT@(\w+)$/.exec(x)){const d=infD(mm[1]);out.push({t,r:1,p:{name:d.name,id:d.handle,av:d.av,when,text:d.gift+'\n🎁 パーツ欄に「'+(PARTS.find(z=>z.id===d.part)||{}).name+'」が届きました'}});}
     else out.push({t,r:3,p:{name:'旅の自転車乗り',id:'jitensha_tabi',av:TRIP_AV,when,text:(/ツチノコ/.test(x)?'🐍✨ ':/購入/.test(x)?'🛒 ':/輪行/.test(x)?'🚃 ':/カスタム|付けた/.test(x)?'🔧 ':'')+snsText(x),th:(mm=/^(.+?)を購入/.exec(x))?itemArt(mm[1]):null}});});
-  return out.sort((a,b)=>b.t-a.t||a.r-b.r).slice(0,30);}
+  return engage(out.sort((a,b)=>b.t-a.t||a.r-b.r).slice(0,30));}
 function renderLog(){const it=feedItems();$('log').innerHTML=it.length?it.map(i=>postHtml(i.p)).join(''):'<div class="hint" style="padding:6px 2px">まだ投稿がありません</div>';
   $('tl').innerHTML=S.tl.length?`<div class="th">日付</div><div class="th">行き先</div><div class="th">写真</div><div class="th">遭遇</div>`+S.tl.map(([t,pid,q,k])=>`<div>${CAL_S(t)}</div><div>${PREF[pid].name}</div><div>${q<0?'<span class="bad">遅刻</span>':q+'点'}</div><div>${tlDec(k).length?tlDec(k).map(x=>(ENEMY[x]||{name:x==='tsuchi'?'ツチノコ':x}).name).join('・'):'なし'}</div>`).join(''):'<div class="hint" style="grid-column:1/-1">まだ旅に出ていません</div>';
   const sp=sponsor();$('summary').innerHTML=`<span>称号</span><span>${title(S.fame)}</span><span>スポンサー</span><span><img loading="lazy" class="spi" src="img/sponsor_${SPONSOR.indexOf(sp)}.webp" alt="" onerror="this.remove()">${sp[2]}<br><small>${yen(sp[1])}/週</small></span><span>投稿数</span><span>${S.stats.posts}</span><span>最高写真</span><span>${S.stats.bestQ}点</span><span>試練制覇</span><span>${S.stats.wins}回</span>`;}
