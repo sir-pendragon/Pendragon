@@ -2,11 +2,15 @@ const fs=require('node:fs'),path=require('node:path'),assert=require('node:asser
 const {JSDOM,VirtualConsole}=require('jsdom');
 const filename=path.resolve(process.argv[2]||path.join(__dirname,'..','index.html'));
 const html=fs.readFileSync(filename,'utf8');
-const expose=`window.qa={foodMax,partSlots,dcfBonus,get sgPage(){return SGPG},set sgPage(v){SGPG=v},needV,isCourse,askGo,ENEMY,SPEC,SIGHTS,TACT,tlEnc,tlDec,newGame,render,renderMap,renderBattle,renderShop,renderForge,renderDetail,renderList,renderTrials,renderSights,load,save,pack,snap,advance,calendar,rollForecast,startTrip,stayWx,startBattle,cmd,endTrip,endTrip2,nextEncounter,tsuchinoko,tcRate,bikeStats,gearFx,travelInfo,restHome,yearEval,eventAt,stoveOn,plv,rkLv,PREF,ENEMY,GEAR_ITEMS,PARTS,BIKES,CLOTHES,WXL,TRIAL_KEYS,AUD,tcRate,playBGM,bgmApply,
+const expose=`window.qa={ICON_FB,foodMax,partSlots,dcfBonus,get sgPage(){return SGPG},set sgPage(v){SGPG=v},needV,isCourse,askGo,ENEMY,SPEC,SIGHTS,TACT,tlEnc,tlDec,newGame,render,renderMap,renderBattle,renderShop,renderForge,renderDetail,renderList,renderTrials,renderSights,load,save,pack,snap,advance,calendar,rollForecast,startTrip,stayWx,startBattle,cmd,endTrip,endTrip2,nextEncounter,tsuchinoko,tcRate,bikeStats,gearFx,travelInfo,restHome,yearEval,eventAt,stoveOn,plv,rkLv,PREF,ENEMY,GEAR_ITEMS,PARTS,BIKES,CLOTHES,WXL,TRIAL_KEYS,AUD,tcRate,playBGM,bgmApply,
 get S(){return S},set S(v){S=v},get B(){return B},get trip(){return trip},set trip(v){trip=v},get TS(){return TS},get inTrip(){return INTRIP},get lastSave(){return LASTSAVE},
 quiet(){render=()=>save();renderBattle=()=>{};playSE=()=>{};playBGM=()=>{};}};`;
 const js=[...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(m=>m[1]).sort((x,y)=>y.length-x.length)[0];// 先頭の短い移動スクリプトではなく、本体（最長）を読む
-const marked=js.replace(/\}\)\(\);\s*$/,expose+'\n})();');
+// テスト用HTMLだけに公開口を付ける。本番index.htmlには追加しない。
+// Object.assignによる追加も反映したSPRを、put定義の直前で採取する。
+const spriteProbe=/\bconst put=\(key,/g;
+assert.equal([...js.matchAll(spriteProbe)].length,1,'renderMap SPR probe must match once');
+const marked=js.replace(spriteProbe,'window.__qaSPR=SPR;const put=(key,').replace(/\}\)\(\);\s*$/,expose+'\n})();');
 function boot(saved,sound,url='https://example.test/'){
  const errors=[],vc=new VirtualConsole();vc.on('jsdomError',e=>errors.push(e.message));
  const dom=new JSDOM(html.replace(js,marked),{url,runScripts:'dangerously',virtualConsole:vc,beforeParse(w){
@@ -223,6 +227,13 @@ test('auto file save: off by default, interval options 1/4/13/52, default 13',c=
 test('removing DCF gear trims excess parts before the island is painted',c=>{const {q}=c;q.S.owned.gear=['sh4'];q.S.owned.parts=['aero','fender','spray','oil','drone'];q.S.parts=[...q.S.owned.parts];q.S.gear.shelter='sh4';q.render();assert.ok(c.$('map').querySelector('image[href="img/part_drone.webp"]'));c.$('eq-shelter').querySelector('[data-none] button').click();assert.equal(q.S.parts.length,4);assert.equal(c.$('map').querySelector('image[href="img/part_drone.webp"]'),null);assert.equal(JSON.parse(c.w.localStorage.getItem('charicamp')).parts.includes('drone'),false);});
 test('file import rejects array inventories without overwriting the current save',c=>{const {q,w}=c;q.S.money=123456;q.render();const before=w.localStorage.getItem('charicamp'),state=q.S;w.confirm=()=>true;w.alert=()=>{};c.$('sv-in').click();Object.defineProperty(c.$('sv-file'),'files',{configurable:true,value:[{name:'broken.json'}]});for(const data of [{turn:2,owned:[]},{app:'charicamp',data:{turn:2,owned:[]}}]){w.FileReader=class{readAsText(){this.result=JSON.stringify(data);this.onload();}};c.$('sv-file').onchange();assert.equal(w.localStorage.getItem('charicamp'),before);assert.equal(q.S,state);assert.equal(q.S.money,123456);assert.equal(c.$('sv-msg').hidden,false);}});
 test('file export reports corrupted stored JSON without an uncaught exception',c=>{const {q,w}=c;const state=q.S;for(const text of ['{broken','null','[]']){w.localStorage.setItem('charicamp',text);c.$('sv-msg').textContent='';c.$('sv-out').click();assert.equal(c.$('sv-msg').hidden,false);assert.equal(c.$('sv-msg').textContent,'保存するセーブデータがありません');assert.equal(w.localStorage.getItem('charicamp'),text);assert.equal(q.S,state);}});
+// Registration coverage: new catalogue entries must bring their rendering assets.
+function spriteRegistry(c){c.$('map').replaceChildren();c.q.renderMap();const spr=c.w.__qaSPR;assert.ok(spr,'renderMap must expose its completed SPR to the test');return spr;}
+function spriteAsset(spr,key){assert.ok(Array.isArray(spr[key])&&spr[key].length===2&&spr[key].every(n=>Number.isFinite(n)&&n>0),'SPR missing or invalid: '+key);assert.ok(fs.existsSync(path.join(__dirname,'..','img',key+'.webp')),'island image missing: '+key);}
+test('all bikes have island dimensions, island images, and icons',c=>{const spr=spriteRegistry(c);for(const b of c.q.BIKES){spriteAsset(spr,'bike_'+b.id);assert.ok(fs.existsSync(path.join(__dirname,'..','img','icon_bike_'+b.id+'.webp')),'bike icon missing: '+b.id);}});
+test('all gear drawn by put has island dimensions and images',c=>{const spr=spriteRegistry(c);for(const item of c.q.GEAR_ITEMS){if(item.id==='fire4')continue;// 薪ストーブはputの焚き火画像を使わず、対応テントとchimneyのSVGで描く。
+ assert.ok(['shelter','tarp','fire'].includes(item.slot),'unknown gear slot: '+item.id);spriteAsset(spr,item.slot+'_'+item.id);}});
+test('all parts have a card icon or a valid ICON_FB fallback',c=>{for(const item of c.q.PARTS){const primary=path.join(__dirname,'..','img','part_'+item.id+'.webp'),fb=c.q.ICON_FB[item.id],fallback=fb&&path.join(__dirname,'..','img',fb+'.webp');assert.ok(fs.existsSync(primary)||(fallback&&fs.existsSync(fallback)),'part icon and fallback missing: '+item.id);if(fallback)assert.ok(fs.existsSync(fallback),'ICON_FB target missing: '+item.id+' -> '+fb);}});
 const summary={file:filename,passed:results.filter(x=>x.ok).length,failed:results.filter(x=>!x.ok).length,results};
 if(process.argv[3])fs.writeFileSync(process.argv[3],JSON.stringify(summary,null,2));
 console.log(JSON.stringify({passed:summary.passed,failed:summary.failed}));process.exitCode=summary.failed?1:0;
