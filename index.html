@@ -68,7 +68,10 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .stat.fm{grid-template-columns:auto minmax(0,1fr) auto;align-items:center}
 .snsbtn{display:inline-flex;align-items:center;gap:4px;margin-left:6px;padding:1px 8px 1px 5px;font-size:var(--fs-xs);font-weight:700;line-height:1.3;color:#000;background:#129efd;border:1px solid #0a84dc;border-radius:8px;white-space:nowrap}
 .snsbtn:hover{background:#3db3ff}.snsbtn img{width:18px;height:18px;flex:none;display:block}
-.stat.fm #d-fame{font-size:var(--fs-m);letter-spacing:-.02em}
+.stat.fm #d-fame{font-size:var(--fs-m);letter-spacing:-.02em;text-align:left}
+#tl-tabs button[data-v=log]{flex-direction:row;gap:6px;background:#129efd;color:#000;border-color:#0a84dc;font-weight:700}
+#tl-tabs button[data-v=log] img{width:20px;height:20px;display:block}
+#tl-tabs button[data-v=log][aria-selected="true"]{background:linear-gradient(#4cb9ff,#129efd);color:#000;border-color:#0a84dc;box-shadow:inset 0 1px 0 rgba(255,255,255,.5),0 0 0 2px #fff,0 1px 3px rgba(0,0,0,.35)}
 @media (max-width:380px){.stat.fm .lt{display:none}}
 @media (max-width:340px){.stat.fm{grid-template-columns:minmax(0,1fr) auto}.stat.fm .lb{display:none}}
 @media (max-width:380px){.stat{font-size:var(--fs-s)}.stat .lb{gap:2px}.stat .si{width:14px;height:14px}}
@@ -413,7 +416,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
     <div id="p-trip">
     <div class="loghead"><h2>旅の記録</h2><span class="logbtns"><button id="btn-set" aria-label="設定">⚙ 設定</button></span></div>
     <div class="profile"><div class="pcol"><img loading="lazy" decoding="async" src="img/hero.webp" width="84" height="84" alt="主人公の自転車旅行者"><button id="btn-share" class="primary">SNSに投稿<small>（画像つき）</small></button></div><div class="res" id="summary"></div></div><p class="hint" id="share-note" style="margin:4px 0 0"></p>
-    <div class="subtabs" id="tl-tabs"><button data-v="tl" aria-selected="true">旅履歴</button><button data-v="log" aria-selected="false">自分のSNS</button></div>
+    <div class="subtabs" id="tl-tabs"><button data-v="tl" aria-selected="true">旅履歴</button><button data-v="log" aria-selected="false"><img src="img/icon_sns_bird.webp" width="20" height="20" alt="">My SNS</button></div>
     <div class="tl" id="tl"></div>
     <div class="feed" id="log" hidden></div>
     </div>
