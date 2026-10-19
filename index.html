@@ -1358,7 +1358,7 @@ $('sv-in').onclick=()=>{if(INTRIP){svMsg('旅の途中は読み込めません�
 $('btn-load').onclick=()=>{SVIN='title';$('sv-file').value='';$('sv-file').click();};
 $('sv-file').onchange=()=>{const f=$('sv-file').files&&$('sv-file').files[0];if(!f)return;const r=new FileReader();
   r.onload=()=>{let o=null;try{o=JSON.parse(r.result);}catch(e){}if(o&&o.app==='charicamp'&&o.data)o=o.data;
-    const ok=o&&typeof o==='object'&&Number.isFinite(+o.turn)&&o.owned&&typeof o.owned==='object';
+    const ok=o&&typeof o==='object'&&!Array.isArray(o)&&Number.isFinite(+o.turn)&&o.owned&&typeof o.owned==='object'&&!Array.isArray(o.owned);
     if(!ok){const m='このファイルはセーブデータではないか、壊れています';if(SVIN==='set')svMsg(m,true);else alert(m);return;}
     let prev=null;try{prev=localStorage.getItem('charicamp');}catch(e){}
     if(prev&&!confirm('いまのセーブデータを、ファイルの内容で上書きします。よろしいですか？'))return;
