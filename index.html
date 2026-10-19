@@ -1261,6 +1261,9 @@ function engage(a){return a.map(it=>{const p=it.p,h=hs(it.t,it.r,[...p.text].red
   if(!p.rp){const pool=ENG.find(e=>e[0].test(p.text))[1],fan=FANS[(h>>>7)%FANS.length];p.rp=[fan[0],fan[1],pool[(h>>>3)%pool.length]];}
   if(!p.n){const lk=3+h%38;p.n=[1+(h>>>5)%3,(h>>>9)%(Math.floor(lk/3)+1),lk];}else if(p.n[0]<1)p.n[0]=1;
   return it;});}
+// 来訪したことのあるキャンプ場のコメント（20種）。自分が投稿したキャンプ場は約45%、ほかの来訪済みキャンプ場は約12%
+const SPC=['ご来訪ありがとうございました！またのお越しをお待ちしています🏕️','焚き火の跡は、きれいに片づけておきますね🔥','またいつでもテントを張りに来てください⛺','あの夜の星空、また見せたいです🌌','お気をつけてお帰りください。道中ご安全に🚴','管理人一同、お待ちしております！','写真、スタッフみんなで見ました。うれしいです📷','いい季節になりました。ぜひまた🍃','ご利用ありがとうございます。忘れ物はありませんでしたか？','朝の空気、気持ちよかったでしょうか☀️','サイトの端っこ、特等席にしておきますね','雨の日も風の日も、テントの中は静かですよ🌧','次の旅の途中でも、立ち寄ってくださいね','ゴミの持ち帰り、ありがとうございました！','薪はたっぷり用意しておきます🪵','「おかえりなさい」は、次の来訪のときに言わせてください','いい写真ですね。この景色、ここからもよく見えます','ご縁があって、また会えるのを楽しみにしています','夜は冷えます。寝袋とあたたかい飲み物をお忘れなく☕','また走りに来てください。ペダルの音、覚えています🚲'];
+const campRp=(h,pid)=>{const vs=Object.keys(S.visits||{}).map(Number).filter(k=>(S.visits[k]||0)>=1&&PREF[k]);if(!vs.length)return null;let k=null;if((S.visits[pid]||0)>=1&&(h>>>15)%100<45)k=pid;else if((h>>>17)%100<12)k=vs[(h>>>20)%vs.length];if(k==null)return null;return [PREF[k].site,'camp_'+k,SPC[(h>>>6)%SPC.length]];};
 function feedItems(){const out=[],seen={};
   [...S.tl].reverse().forEach(e=>{const [t,pid,q]=e;if(q>=0){seen[pid]=(seen[pid]||0)+1;e.vn=seen[pid];}});
   const pick=(a,h)=>a[h%a.length];
@@ -1268,7 +1271,7 @@ function feedItems(){const out=[],seen={};
     if(q<0){out.push({t,r:1,p:{name:'旅の自転車乗り',id:'jitensha_tabi',av:TRIP_AV,when:CAL_S(t),text:pick([`日没に間に合わず…😭 ${p.name}のキャンプ場は遅刻でした。次こそ！`,`暗くなっちゃった🌙 ${p.name}はまた今度…`,en?`${en}にやられて遅刻💦 ${p.name}、次はリベンジ！`:`ペース配分をミスった…💦 ${p.name}は遅刻でした`],h),n:[h%2,0,1+h%7],rp:infRp(h,'late',25)}});return;}
     const sg=sightOf(pid,e.vn||1),lk=Math.round(q*q/12+h%25+3),band=RPL.find(b=>q>=b[0]),fan=FANS[h%FANS.length],pl=`${p.name}の${p.site}`;
     const head=q>=70?pick([`${pl}に到着〜！🚴✨\n景色が最高すぎた…写真${q}点！`,`${pl}で絶景ゲット📷\n${q}点！これは自信作`,`ついに${pl}！🏕️\n写真${q}点、神回です`],h):q>=40?pick([`${pl}に到着！🏕️\n写真${q}点。いい旅だった〜`,`${pl}までなんとか走り切った🚴\n${q}点、まずまず！`],h):pick([`${pl}に着いたけど、写真は${q}点…😅\n次はリベンジ！`,`${pl}到着🏕️ 天気がいまいちで${q}点💦`],h);
-    out.push({t,r:1,p:{name:'旅の自転車乗り',id:'jitensha_tabi',av:TRIP_AV,when:CAL_S(t),text:head+(en?`\n道中で${en}に遭遇💥`:'')+'\n#日本巡る自転車旅',img:'img/sights/'+sg[0]+'.webp',alt:sg[1],n:[Math.round(lk*.06)+1,Math.round(lk*.18),lk],rp:infRp(h,q>=70?'hi':q>=40?'mid':'lo')||spRp(h,15)||[fan[0],fan[1],pick(band[1],h>>>5)]}});});
+    out.push({t,r:1,p:{name:'旅の自転車乗り',id:'jitensha_tabi',av:TRIP_AV,when:CAL_S(t),text:head+(en?`\n道中で${en}に遭遇💥`:'')+'\n#日本巡る自転車旅',img:'img/sights/'+sg[0]+'.webp',alt:sg[1],n:[Math.round(lk*.06)+1,Math.round(lk*.18),lk],rp:infRp(h,q>=70?'hi':q>=40?'mid':'lo')||spRp(h,15)||campRp(h,pid)||[fan[0],fan[1],pick(band[1],h>>>5)]}});});
   S.log.forEach(l=>{const m=/^(\d+)\|(.*)$/s.exec(l);if(!m)return;const t=+m[1],x=m[2],when=CAL_S(t);let mm;
     if(/^(セーブデータ|(長野県の)?補給食を購入)/.test(x))return;// 保存・読み込みの記録は、旅の世界の投稿ではないのでSNSに出さない
     if(mm=/^スポンサー「(.+)」がつきました/.exec(x)){const i=SPONSOR.findIndex(z=>z[2]===mm[1]);out.push({t,r:0,p:{name:mm[1],id:'sponsor_'+Math.max(i,0),av:i>=0?'img/sponsor_'+i+'.webp':'',ini:'S',when,text:`旅の自転車乗りさん、いつも応援しています！今週から、旅を支援させてください。\n#日本巡る自転車旅`}});}
