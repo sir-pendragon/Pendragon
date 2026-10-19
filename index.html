@@ -1199,7 +1199,7 @@ const RPL=[[70,['これは神写真…！😭','保存しました。壁紙に�
 const TRIP_AV='img/hero.webp';
 function postHtml(p){return `<article class="post"><div class="av">${p.av?`<img loading="lazy" src="${p.av}" width="40" height="40" alt="">`:`<span>${esc(p.ini||'？')}</span>`}</div><div class="pb"><div class="ph"><b>${esc(p.name)}</b><span>@${esc(p.id)}・${p.when}</span></div><div class="pt">${esc(p.text).replace(/\n/g,'<br>')}</div>${p.img?`<img class="pimg" loading="lazy" src="${p.img}" width="480" height="320" alt="${esc(p.alt||'')}">`:''}${p.n?`<div class="pa"><span>💬 ${p.n[0]}</span><span>🔁 ${p.n[1]}</span><span>♥ ${p.n[2]}</span></div>`:''}${p.rp?`<div class="rp"><b>${esc(p.rp[0])}</b> <span>@${esc(p.rp[1])}</span><br>${esc(p.rp[2])}</div>`:''}</div></article>`;}
 // ゲーム内ログの文章を、SNSの投稿らしく整える（フォロワー増減などの数値は出さない）
-function snsText(x){if(/^自宅で休養/.test(x))return '今週は自宅でゆっくり休養🛌';if(/強制帰宅/.test(x))return 'お金が尽きて、家に帰ることに…💸';return x.replace(/[。！]?\s*フォロワー[+\-−][^\s。！]*/g,m=>/^！/.test(m)?'！':'');}
+function snsText(x){if(/購入/.test(x))x=x.replace(/（[^）]*¥[^）]*）/g,'');if(/^自宅で休養/.test(x))return '今週は自宅でゆっくり休養🛌';if(/強制帰宅/.test(x))return 'お金が尽きて、家に帰ることに…💸';return x.replace(/[。！]?\s*フォロワー[+\-−][^\s。！]*/g,m=>/^！/.test(m)?'！':'');}
 function feedItems(){const out=[],seen={};
   [...S.tl].reverse().forEach(e=>{const [t,pid,q]=e;if(q>=0){seen[pid]=(seen[pid]||0)+1;e.vn=seen[pid];}});
   const pick=(a,h)=>a[h%a.length];

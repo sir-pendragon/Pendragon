@@ -2,7 +2,7 @@ const fs=require('node:fs'),path=require('node:path'),assert=require('node:asser
 const {JSDOM,VirtualConsole}=require('jsdom');
 const filename=path.resolve(process.argv[2]||path.join(__dirname,'..','index.html'));
 const html=fs.readFileSync(filename,'utf8');
-const expose=`window.qa={ICON_FB,foodMax,partSlots,dcfBonus,get sgPage(){return SGPG},set sgPage(v){SGPG=v},needV,isCourse,askGo,ENEMY,SPEC,SIGHTS,TACT,tlEnc,tlDec,newGame,render,renderMap,renderBattle,renderShop,renderForge,renderDetail,renderList,renderTrials,renderSights,load,save,pack,snap,advance,calendar,rollForecast,startTrip,stayWx,startBattle,cmd,endTrip,endTrip2,nextEncounter,tsuchinoko,tcRate,bikeStats,gearFx,travelInfo,restHome,yearEval,eventAt,stoveOn,plv,rkLv,PREF,ENEMY,GEAR_ITEMS,PARTS,BIKES,CLOTHES,WXL,TRIAL_KEYS,AUD,tcRate,playBGM,bgmApply,
+const expose=`window.qa={snsText,ICON_FB,foodMax,partSlots,dcfBonus,get sgPage(){return SGPG},set sgPage(v){SGPG=v},needV,isCourse,askGo,ENEMY,SPEC,SIGHTS,TACT,tlEnc,tlDec,newGame,render,renderMap,renderBattle,renderShop,renderForge,renderDetail,renderList,renderTrials,renderSights,load,save,pack,snap,advance,calendar,rollForecast,startTrip,stayWx,startBattle,cmd,endTrip,endTrip2,nextEncounter,tsuchinoko,tcRate,bikeStats,gearFx,travelInfo,restHome,yearEval,eventAt,stoveOn,plv,rkLv,PREF,ENEMY,GEAR_ITEMS,PARTS,BIKES,CLOTHES,WXL,TRIAL_KEYS,AUD,tcRate,playBGM,bgmApply,
 get S(){return S},set S(v){S=v},get B(){return B},get trip(){return trip},set trip(v){trip=v},get TS(){return TS},get inTrip(){return INTRIP},get lastSave(){return LASTSAVE},
 quiet(){render=()=>save();renderBattle=()=>{};playSE=()=>{};playBGM=()=>{};}};`;
 const js=[...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(m=>m[1]).sort((x,y)=>y.length-x.length)[0];// 先頭の短い移動スクリプトではなく、本体（最長）を読む
@@ -103,6 +103,7 @@ test('special prefecture (Gunma): 3 visits are not clear, the 4th is the forest-
  assert.equal(q.S.visits[g],4);assert.equal(q.S.fam[g],true);assert.ok(q.S.fame-f0>=50000,'bonus '+(q.S.fame-f0));
  // 名所図鑑：群馬だけ4枚
  q.sgPage=1;q.renderSights();assert.ok(c.$('sightbook').textContent.includes('スーパー御荷鉾林道'));});
+test('SNS purchase posts do not show the price',c=>{assert.equal(c.q.snsText('「ハンモック」を購入（¥8,000）'),'「ハンモック」を購入');assert.equal(c.q.snsText('補給食を購入（¥500）'),'補給食を購入');});
 test('trial collection hides undiscovered legend and names it after success',c=>{c.q.renderTrials();assert.equal(c.q.TRIAL_KEYS.length,51);assert.ok(c.$('p-ach').textContent.includes('伝説の生き物'));c.q.S.stats.en.tsuchi=[1,1,0];c.q.renderTrials();assert.ok(c.$('p-ach').textContent.includes('ツチノコ'));});
 test('all tent and tarp combinations render finite SVG positions',c=>{const {q}=c;for(const t of [1,36])for(const sh of [null,'sh1','sh2','sh3','sh4','sh5','sh6','sh7'])for(const tp of [null,'tp1','tp2','tp3','tp4']){q.S.turn=t;q.S.gear={fire:sh==='sh5'?'fire4':'fire1',shelter:sh,tarp:tp};q.renderMap();assert.equal(/NaN|Infinity/.test(c.$('map').innerHTML),false,sh+' / '+tp);}});
 test('event camp registers festival and uses event image',c=>{const {q}=c;q.S.turn=2;q.S.loc=1;q.S.sel=1;const p=q.PREF[1];q.trip={p,enc:[],ev:q.eventAt(2,1),i:0,late:false,stay:true};assert.ok(q.trip.ev);q.snap();q.endTrip2({});assert.equal(q.S.stats.ev,1);assert.ok(c.$('result-box').querySelector('img').src.includes('ev_aomori_sakura'));});
