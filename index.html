@@ -1135,8 +1135,8 @@ function renderMap(){const svg=$('map');const mk=JSON.stringify([S.loc,S.sel,S.v
   const SH3_DROP=4,fk={fire1:.115,fire2:.115,fire3:.085},sk={sh1:.135,sh6:.135,sh7:.135,sh2:.16,sh3:.085,sh4:.08,sh5:.0743},tk={tp1:.27,tp2:.215,tp3:.125};
   // 焚き火：台は動かさず、炎の部分だけ揺らす（絵を「炎の窓」と「それ以外」に分けて重ねる。窓：x0〜x1 の幅、y=0〜cut の高さの割合）
   const FWIN={fire1:[.30,.70,.36],fire2:[.28,.62,.33],fire3:[.34,.66,.40]};
-  const fireFx=id=>{const key='fire_'+id,d=SPR[key],f=FWIN[id];if(!d||!f)return put(key,300,420,fk[id]);const k=fk[id],w=d[0]*k,h=d[1]*k,x=300-w/2,y=420-h,wx0=x+f[0]*w,wx1=x+f[1]*w,wy0=y-.25*h,wy1=y+f[2]*h,img=`<image href="img/${key}.webp" x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${w.toFixed(1)}" height="${h.toFixed(1)}"/>`;
-    return `<defs><clipPath id="fcs"><path clip-rule="evenodd" d="M${(x-5).toFixed(1)},${(y-5).toFixed(1)}H${(x+w+5).toFixed(1)}V${(y+h+5).toFixed(1)}H${(x-5).toFixed(1)}ZM${wx0.toFixed(1)},${wy0.toFixed(1)}H${wx1.toFixed(1)}V${wy1.toFixed(1)}H${wx0.toFixed(1)}Z"/></clipPath><clipPath id="fcm"><rect x="${wx0.toFixed(1)}" y="${wy0.toFixed(1)}" width="${(wx1-wx0).toFixed(1)}" height="${(wy1-wy0).toFixed(1)}"/></clipPath></defs><g clip-path="url(#fcs)">${img}</g><g clip-path="url(#fcm)"><g class="fl" style="transform-origin:${(300).toFixed(1)}px ${wy1.toFixed(1)}px">${img}</g></g>`;};
+  const fireFx=id=>{const key='fire_'+id,d=SPR[key],f=FWIN[id];if(!d||!f)return put(key,FIRE_X,420,fk[id]);const k=fk[id],w=d[0]*k,h=d[1]*k,x=FIRE_X-w/2,y=420-h,wx0=x+f[0]*w,wx1=x+f[1]*w,wy0=y-.25*h,wy1=y+f[2]*h,img=`<image href="img/${key}.webp" x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${w.toFixed(1)}" height="${h.toFixed(1)}"/>`;
+    return `<defs><clipPath id="fcs"><path clip-rule="evenodd" d="M${(x-5).toFixed(1)},${(y-5).toFixed(1)}H${(x+w+5).toFixed(1)}V${(y+h+5).toFixed(1)}H${(x-5).toFixed(1)}ZM${wx0.toFixed(1)},${wy0.toFixed(1)}H${wx1.toFixed(1)}V${wy1.toFixed(1)}H${wx0.toFixed(1)}Z"/></clipPath><clipPath id="fcm"><rect x="${wx0.toFixed(1)}" y="${wy0.toFixed(1)}" width="${(wx1-wx0).toFixed(1)}" height="${(wy1-wy0).toFixed(1)}"/></clipPath></defs><g clip-path="url(#fcs)">${img}</g><g clip-path="url(#fcm)"><g class="fl" style="transform-origin:${(FIRE_X).toFixed(1)}px ${wy1.toFixed(1)}px">${img}</g></g>`;};
   const DROP={sh2:0,sh3:SH3_DROP,sh4:3.7,sh5:.1};// タープは寝床（特にハンモックの杭の間）を覆える幅にする
   // 山岳テントは背が高く、そのままだとタープの屋根を突き抜ける。テントごとにタープの大きさ・位置を決める [scale, 接地のy]
   // 接地yを413にして、タープのポールの根元をテントの前の地面に出す（403だとポールがテントの床に刺さって見える）
@@ -1152,10 +1152,10 @@ function renderMap(){const svg=$('map');const mk=JSON.stringify([S.loc,S.sel,S.v
   const shS=S.gear.shelter?put('shelter_'+S.gear.shelter,tpos.x,tpos.by,tpos.k):'';
   s+=`<g style="pointer-events:none">${put('camp_ground',272,462,244/451)}${(()=>{const sn=season(calendar(S.turn).mi);return `<g class="tr tr-${sn}">${put('tree_'+sn,332,380,.385)}</g>`+treeFx(sn);})()}`
    +(isHam(S.gear.shelter)?shS+(S.gear.tarp&&S.gear.tarp!=="tp3"?hamPosts(sk[S.gear.shelter],S.gear.shelter):'')+tarpS+(S.gear.tarp==='tp2'||S.gear.tarp==='tp3'?hamLeftPost(sk[S.gear.shelter],S.gear.shelter,S.gear.tarp==='tp3'):'')+hamBody(sk[S.gear.shelter],S.gear.shelter):tarpS+shS+(hasTent&&TARP_FRONT[S.gear.tarp]?tarpPart(S.gear.tarp,252+(tf[2]||0),tf[1],tf[0]):'')+(chim?chim.pipe:''))
-   +(S.parts.includes('tripod')?put('part_tripod',222,424,.2)+(S.parts.includes('cam')?put('part_cam',222,402,.1):''):(S.parts.includes('cam')?put('part_cam',284,436,.1):''))
+   +'<g id="pcam">'+(S.parts.includes('tripod')?put('part_tripod',222,424,.2)+(S.parts.includes('cam')?put('part_cam',222,402,.1):''):(S.parts.includes('cam')?put('part_cam',284,436,.1):''))+'</g>'
    +(S.parts.includes('comfy')?put('part_comfy',204,418,.2):'')
    +`<g id="pbike">${put('bike_'+S.bike,344,406,.26)}</g>`
-   +(S.gear.fire&&S.gear.fire!=='fire4'?fireFx(S.gear.fire):'')+`</g>`
+   +'<g id="pfire">'+(S.gear.fire&&S.gear.fire!=='fire4'?fireFx(S.gear.fire):'')+'</g>'+`</g>`
    +(S.parts.includes('drone')?`<g class="drone">${put('part_drone',300,392,.15)}</g>`:'');
   s+=`<g id="hero" style="pointer-events:none"><ellipse id="hs" cy="0" ry="1.8" fill="#000" opacity=".28"/><g id="hf">${HFR.map(k=>`<image id="hi_${k}" href="${heroSrc(k)}" width="${HDIM[k[0]][0]*hk(k)}" height="${HDIM[k[0]][1]*hk(k)}" style="display:none"/>`).join('')}</g><text id="hz1" style="font-size:6px;fill:#fff;paint-order:stroke;stroke:#234;stroke-width:1.5px">z</text><text id="hz2" style="font-size:5px;fill:#fff;paint-order:stroke;stroke:#234;stroke-width:1.5px">z</text></g>`
    +(isHam(S.gear.shelter)?hamFront(sk[S.gear.shelter],S.gear.shelter):'')+(isHam(S.gear.shelter)&&S.gear.tarp==='tp2'?tp2Pole(252+(tf[2]||0),tf[1],tf[0],tf[3]||1):'')
@@ -1190,23 +1190,28 @@ function hamFront(k,id){const d=[481,185],w=d[0]*k,hh=d[1]*k,x=252-w/2,y=408-hh;
 // ---- ドット絵の主人公：歩く／座って焚き火／寝る ----
 const HDIM={w:[90,141],s:[96,132],z:[162,78],r:[160,160]},HK=.26,HKR=.23;// r=自転車に乗った絵（キャンプ地を走り回る）。歩きの絵(w)は今は使わず、読み込めない場合の予備として残す
 const hk=k=>k[0]==='r'?HKR:HK;
-const HERO={ph:36,mode:'sit',x:254,y:426,dir:1,t:20,f:0,goal:null,ham:false,tent:false};
+const SIT_X=280,FIRE_X=326;// 焚き火台はテントから離して右に置き、座る位置もそれに合わせる
+const HERO={ph:36,mode:'sit',run:0,x:SIT_X,y:426,dir:1,t:20,f:0,goal:null,ham:false,tent:false};
 const HAM={x:252,y:399};// ハンモックで寝るときの位置（布のたるみの中央）
 // 雨・台風の日は歩き、それ以外の日は自転車に乗る
 const rainyDay=()=>{const w=S&&S.forecast&&S.forecast[S.loc]?S.forecast[S.loc].wx:'sun';return w==='rain'||w==='typhoon';};
 function heroImg(){const f=HERO.f,m=HERO.mode;return m==='walk'?(rainyDay()?'w'+(1+f%4):'r'+(1+f%2)):m==='sit'?'s'+(f%10<6?1:2):'z'+(f%4<2?1:2);}
-function heroPick(){const r=Math.random(),dry=!rainyDay();// 雨・台風以外の日は、ほとんど自転車で動き回り、座る・寝るのはたまに（雨の日は従来どおり）
-  if(r<(dry?.85:.4)){let gx=215+Math.random()*90;if(dry)for(let i=0;i<6&&Math.abs(gx-HERO.x)<40;i++)gx=215+Math.random()*90;HERO.goal={x:gx,mode:'walk',y:426};}
-  else if(r<(dry?.93:.7))HERO.goal={x:254,mode:'sit',y:426};
-  else{const sh=S&&S.gear&&S.gear.shelter;
-    HERO.goal=isHam(sh)?{x:HAM.x,mode:'sleep',y:HAM.y,ham:true}:(sh==='sh2'||sh==='sh3'||sh==='sh4'||sh==='sh5')?{x:252,mode:'sleep',y:416,tent:true}:{x:240,mode:'sleep',y:416};}
+function heroPick(){const dry=!rainyDay(),resting=HERO.mode!=='walk';
+  const rideGoal=()=>{let gx=215+Math.random()*90;if(dry)for(let i=0;i<6&&Math.abs(gx-HERO.x)<40;i++)gx=215+Math.random()*90;return {x:gx,mode:'walk',y:426};};
+  const sleepGoal=()=>{const sh=S&&S.gear&&S.gear.shelter;return isHam(sh)?{x:HAM.x,mode:'sleep',y:HAM.y,ham:true}:(sh==='sh2'||sh==='sh3'||sh==='sh4'||sh==='sh5')?{x:252,mode:'sleep',y:416,tent:true}:{x:240,mode:'sleep',y:416};};
+  const sitGoal=()=>({x:SIT_X,mode:'sit',y:426});
+  if(dry){// 雨・台風以外の日：一度乗ったら5〜10か所を続けて走り、そのあと短く休んでまた走る
+    if(HERO.run>0){HERO.run--;HERO.goal=rideGoal();}
+    else if(resting){HERO.run=4+Math.floor(Math.random()*6);HERO.goal=rideGoal();}
+    else HERO.goal=Math.random()<.6?sitGoal():sleepGoal();}
+  else{const r=Math.random();HERO.goal=r<.4?rideGoal():r<.7?sitGoal():sleepGoal();}
   HERO.mode='walk';HERO.y=426;HERO.ham=false;HERO.tent=false;}
 const HFR=['r1','r2','w1','w2','w3','w4','s1','s2','z1','z2'];
 HFR.forEach(k=>{const i=new Image();i.src='img/hero_'+k+'.webp';});
 let HLAST=null;
 function drawHero(){if(!$('hero'))return;const k=heroImg(),d=HDIM[k[0]],w=d[0]*hk(k),hh=d[1]*hk(k);
   const flip=HERO.dir<0&&HERO.mode==='walk',tx=HERO.x-w/2,ty=HERO.y-hh;
-  const pbk=$('pbike');if(pbk)pbk.style.display=HERO.mode==='walk'&&k[0]==='r'?'none':'';// 自転車に乗っている間は、飾ってある自転車を消す
+  const riding=HERO.mode==='walk'&&k[0]==='r';for(const id of ['pbike','pcam','pfire']){const e=$(id);if(e)e.style.display=riding?'none':'';}// 自転車に乗っている間は、飾ってある自転車・焚き火台・カメラ（三脚）を消す
   if(HLAST!==k){if(HLAST&&$('hi_'+HLAST))$('hi_'+HLAST).style.display='none';$('hi_'+k).style.display='';HLAST=k;}
   const im=$('hi_'+k);im.setAttribute('x',flip?-(tx+w):tx);im.setAttribute('y',ty);im.setAttribute('transform',flip?'scale(-1 1)':'');
   const hf=$('hamf');if(hf)hf.style.display=HERO.ham&&HERO.mode==='sleep'?'':'none';const tpp=$('tp2pole');if(tpp)tpp.style.display=HERO.ham&&HERO.mode==='sleep'?'':'none';
@@ -1828,7 +1833,7 @@ addEventListener('pagehide',save);
 // 開きっぱなしのタブが古いコードのまま保存し直して、新しい保存項目を失うのを防ぐ。
 // 実行中のコードに埋め込んだ版の識別子 APP_V と、いま配信されている index.html の APP_V を比べる（最初に取れた配信内容を「実行中の版」の代わりにしない）。
 // ★ APP_V は index.html の内容から計算する。index.html を変えたら `node qa/stamp.cjs` で更新する（忘れると監査テストが失敗する）。
-const APP_V='7cc59c04cc42';
+const APP_V='171c345a800c';
 // 旅・戦闘・結果画面（INTRIP）の間は、save() が保存を見送るので、再読み込みすると進行が巻き戻る。旅が終わったあとも trip / B には前回の値が残るため、これらは見ない
 const UPD={pending:'',busy:false,scheduled:false,last:0,every:600000,quiet:600000,timeout:15000,reloadedAt:0,note:null,timer:0,
  safe:()=>!INTRIP,

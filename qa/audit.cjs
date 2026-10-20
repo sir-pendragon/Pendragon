@@ -351,10 +351,10 @@ test('map walking sprites: 6 character sets exist with the original canvas sizes
  q.S.avId='av_ninja';q.S.penId='pen_tabi';q.save();const L=q.load();q.S=L;q.render();showMap();assert.equal(href('z1'),'img/hero_ninja_z1.webp');});
 test('map hero: rides the bicycle on dry days and walks on rainy days; the parked bicycle is hidden only while riding',c=>{const {q}=c;q.render();c.$('tab-map').click();
  const shown=()=>Array.from(c.$('hf').querySelectorAll('image')).filter(i=>i.style.display!=='none').map(i=>i.id);
- const run=(wx,mode)=>{q.S.forecast[q.S.loc].wx=wx;Object.assign(q.HERO,{mode,f:0,x:254,y:426,dir:1,goal:null});q.drawHero();return {img:shown()[0],bike:c.$('pbike').style.display};};
- for(const wx of ['sun','cloud','wind','heat','snow']){const r=run(wx,'walk');assert.equal(r.img,'hi_r1',wx);assert.equal(r.bike,'none',wx);}
- for(const wx of ['rain','typhoon']){const r=run(wx,'walk');assert.equal(r.img,'hi_w1',wx);assert.equal(r.bike,'',wx);}
- for(const mode of ['sit','sleep']){const r=run('sun',mode);assert.equal(r.bike,'',mode);}
+ const run=(wx,mode)=>{q.S.forecast[q.S.loc].wx=wx;Object.assign(q.HERO,{mode,f:0,x:254,y:426,dir:1,goal:null});q.drawHero();return {img:shown()[0],bike:c.$('pbike').style.display,fire:c.$('pfire').style.display,cam:c.$('pcam').style.display};};
+ for(const wx of ['sun','cloud','wind','heat','snow']){const r=run(wx,'walk');assert.equal(r.img,'hi_r1',wx);assert.equal(r.bike,'none',wx);assert.equal(r.fire,'none',wx);assert.equal(r.cam,'none',wx);}
+ for(const wx of ['rain','typhoon']){const r=run(wx,'walk');assert.equal(r.img,'hi_w1',wx);assert.equal(r.bike,'',wx);assert.equal(r.fire,'',wx);assert.equal(r.cam,'',wx);}
+ for(const mode of ['sit','sleep']){const r=run('sun',mode);assert.equal(r.bike,'',mode);assert.equal(r.fire,'',mode);assert.equal(r.cam,'',mode);}
  q.S.forecast[q.S.loc].wx='sun';q.HERO.mode='walk';q.HERO.f=1;q.drawHero();assert.equal(shown()[0],'hi_r2');q.HERO.f=2;q.drawHero();assert.equal(shown()[0],'hi_r1');});
 const ASYNC=[];
 function atest(name,fn){ASYNC.push(async()=>{let c;try{c=boot();assert.ok(c.q,'script must boot');c.q.newGame(12);c.w.Math.random=()=>.99;await fn(c);assert.deepEqual(c.errors,[]);results.push({name,ok:true});console.log('PASS',name);}catch(e){results.push({name,ok:false,error:e.message});console.log('FAIL',name,'—',e.message.slice(0,500));}finally{c?.dom.window.close();}});}
