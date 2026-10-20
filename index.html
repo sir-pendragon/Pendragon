@@ -950,7 +950,7 @@ const TRIAL_KEYS=[...Object.keys(ENEMY),'tsuchi'];
 const tstat=k=>S.stats.en[k]||(S.stats.en[k]=[0,0,0]);
 const trialKindsCleared=()=>TRIAL_KEYS.filter(k=>(S.stats.en[k]||[0,0,0])[1]>0).length;
 // 毎週のスポンサー料。称号（フォロワー数）に応じて増える [必要フォロワー, 週額, スポンサー]
-const SPRESS=[2,3,5];// 契約の記者会見の絵がある スポンサー（2=自転車メーカー、3=旅行会社、5=鉄道会社）
+const SPRESS=[2,3,4,5];// 契約の記者会見の絵がある スポンサー（2=自転車メーカー、3=旅行会社、4=大手スポーツブランド、5=鉄道会社）
 const SPONSOR=[[0,2000,'地元の自転車店'],[2000,3000,'アウトドア用品店'],[20000,5000,'自転車メーカー'],[200000,10000,'旅行会社'],[1000000,20000,'大手スポーツブランド'],[2000000,30000,'鉄道会社']];
 function spCongrats(o,n){log(`スポンサー「${n[2]}」がつきました（毎週${yen(n[1])}）`);const im=$('sp-logo');im.hidden=true;im.onload=()=>{im.hidden=false;};im.src='img/sponsor_'+SPONSOR.indexOf(n)+'.webp';const pr=$('sp-press'),pi=SPONSOR.indexOf(n);pr.hidden=true;if(SPRESS.includes(pi)){pr.onload=()=>{pr.hidden=false;};pr.src='img/sponsor_press_'+pi+'.webp';}else pr.removeAttribute('src');$('sp-new').textContent=n[2];$('sp-amt').textContent=`毎週のスポンサー料：${yen(o[1])} → ${yen(n[1])}`;$('sp-from').textContent=`これまで：${o[2]}`;$('ov-spon').hidden=false;playSE('se_win');}
 function spOf(f){let r=SPONSOR[0];for(const x of SPONSOR)if(f>=x[0])r=x;return r;}
@@ -1387,7 +1387,7 @@ function feedItems(){const out=[],seen={};
     out.push({t,r:1,p:{name:penName(),id:'jitensha_tabi',av:avImg(),when:CAL_S(t),text:head+(en?`\n道中で${en}に遭遇💥`:'')+'\n#日本巡る自転車旅',img:'img/sights/'+sg[0]+'.webp',alt:sg[1],sh:{t,pid,sg},n:[Math.round(lk*.06)+1,Math.round(lk*.18),lk],rp:infRp(h,q>=70?'hi':q>=40?'mid':'lo')||spRp(h,15)||campRp(h,pid)||[fan[0],fan[1],pick(band[1],h>>>5)]}});});
   S.log.forEach(l=>{const m=/^(\d+)\|(.*)$/s.exec(l);if(!m)return;const t=+m[1],x=m[2],when=CAL_S(t);let mm;
     if(/^(セーブデータ|(長野県の)?補給食を購入)/.test(x))return;// 保存・読み込みの記録は、旅の世界の投稿ではないのでSNSに出さない
-    if(mm=/^スポンサー「(.+)」がつきました/.exec(x)){const i=SPONSOR.findIndex(z=>z[2]===mm[1]);out.push({t,r:0,p:{name:mm[1],id:'sponsor_'+Math.max(i,0),av:i>=0?'img/sponsor_'+i+'.webp':'',ini:'S',when,text:`${penName()}さん、いつも応援しています！今週から、旅を支援させてください。\n#日本巡る自転車旅`}});}
+    if(mm=/^スポンサー「(.+)」がつきました/.exec(x)){const i=SPONSOR.findIndex(z=>z[2]===mm[1]);out.push({t,r:0,p:{name:mm[1],id:'sponsor_'+Math.max(i,0),av:i>=0?'img/sponsor_'+i+'.webp':'',ini:'S',when,text:`${penName()}さん、いつも応援しています！今週から、旅を支援させてください。\n#日本巡る自転車旅`,...(SPRESS.includes(i)?{img:'img/sponsor_press_'+i+'.webp',alt:mm[1]+'とのオフィシャルスポンサー契約記者会見'}:{})}});}
     else if(x==='ライバルより先に撮影スポットへ着いた')out.push({t,r:2,p:{name:'ライバル配信者',id:'rival_cam',ini:'R',when,text:'くっ、先に撮られた…！次は負けない。#映え勝負'}});
     else if(x==='ライバルに先を越された')out.push({t,r:2,p:{name:'ライバル配信者',id:'rival_cam',ini:'R',when,text:'撮影スポットは先にいただき！この景色は私のもの。#映え勝負'}});
     else if(mm=/^ライバルより先に撮影スポットへ着いた@(\w+)$/.exec(x)){const d=infD(mm[1]);out.push({t,r:2,p:{name:d.name,id:d.handle,av:d.av,when,text:d.win+' #映え勝負'}});}
@@ -1842,7 +1842,7 @@ addEventListener('pagehide',save);
 // 開きっぱなしのタブが古いコードのまま保存し直して、新しい保存項目を失うのを防ぐ。
 // 実行中のコードに埋め込んだ版の識別子 APP_V と、いま配信されている index.html の APP_V を比べる（最初に取れた配信内容を「実行中の版」の代わりにしない）。
 // ★ APP_V は index.html の内容から計算する。index.html を変えたら `node qa/stamp.cjs` で更新する（忘れると監査テストが失敗する）。
-const APP_V='e3c0683453fc';
+const APP_V='3ed8aef47e52';
 // 旅・戦闘・結果画面（INTRIP）の間は、save() が保存を見送るので、再読み込みすると進行が巻き戻る。旅が終わったあとも trip / B には前回の値が残るため、これらは見ない
 const UPD={pending:'',busy:false,scheduled:false,last:0,every:600000,quiet:600000,timeout:15000,reloadedAt:0,note:null,timer:0,
  safe:()=>!INTRIP,
