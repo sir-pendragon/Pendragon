@@ -1354,7 +1354,7 @@ function engage(a){return a.map(it=>{const p=it.p,h=hs(it.t,it.r,[...p.text].red
 const SPC=['ご来訪ありがとうございました！またのお越しをお待ちしています🏕️','焚き火の跡は、きれいに片づけておきますね🔥','またいつでもテントを張りに来てください⛺','あの夜の星空、また見せたいです🌌','お気をつけてお帰りください。道中ご安全に🚴','管理人一同、お待ちしております！','写真、スタッフみんなで見ました。うれしいです📷','いい季節になりました。ぜひまた🍃','ご利用ありがとうございます。忘れ物はありませんでしたか？','朝の空気、気持ちよかったでしょうか☀️','サイトの端っこ、特等席にしておきますね','雨の日も風の日も、テントの中は静かですよ🌧','次の旅の途中でも、立ち寄ってくださいね','ゴミの持ち帰り、ありがとうございました！','薪はたっぷり用意しておきます🪵','「おかえりなさい」は、次の来訪のときに言わせてください','いい写真ですね。この景色、ここからもよく見えます','ご縁があって、また会えるのを楽しみにしています','夜は冷えます。寝袋とあたたかい飲み物をお忘れなく☕','また走りに来てください。ペダルの音、覚えています🚲'];
 const campRp=(h,pid)=>{const vs=Object.keys(S.visits||{}).map(Number).filter(k=>(S.visits[k]||0)>=1&&PREF[k]);if(!vs.length)return null;let k=null;if((S.visits[pid]||0)>=1&&(h>>>15)%100<45)k=pid;else if((h>>>17)%100<12)k=vs[(h>>>20)%vs.length];if(k==null)return null;return [PREF[k].site,'camp_'+k,SPC[(h>>>6)%SPC.length]];};
 function feedItems(){const out=[],seen={};
-  [...S.tl].reverse().forEach(e=>{const [t,pid,q]=e;if(q>=0){seen[pid]=(seen[pid]||0)+1;e.vn=seen[pid];}});
+  S.tl.forEach(e=>{const [t,pid,q]=e;if(q>=0){const n=seen[pid]||0;seen[pid]=n+1;e.vn=Math.max(1,(S.visits[pid]||0)-n);}});// 新しい順に数え、いちばん新しい成功が「現在の訪問回数」枚目。記録が上限で減った古いセーブでも、結果画面と同じ番号になる
   const pick=(a,h)=>a[h%a.length];
   S.tl.forEach(e=>{const [t,pid,q,k]=e,p=PREF[pid],enc=tlDec(k).map(x=>(ENEMY[x]||{name:x==='tsuchi'?'ツチノコ':x}).name),h=hs(t,pid,q+2),en=enc.length?pick(enc,h>>>3):'';
     if(q<0){out.push({t,r:1,p:{name:penName(),id:'jitensha_tabi',av:avImg(),when:CAL_S(t),text:pick([`日没に間に合わず…😭 ${p.name}のキャンプ場は遅刻でした。次こそ！`,`暗くなっちゃった🌙 ${p.name}はまた今度…`,en?`${en}にやられて遅刻💦 ${p.name}、次はリベンジ！`:`ペース配分をミスった…💦 ${p.name}は遅刻でした`],h),n:[h%2,0,1+h%7],rp:infRp(h,'late',25)}});return;}
@@ -1818,7 +1818,7 @@ addEventListener('pagehide',save);
 // 開きっぱなしのタブが古いコードのまま保存し直して、新しい保存項目を失うのを防ぐ。
 // 実行中のコードに埋め込んだ版の識別子 APP_V と、いま配信されている index.html の APP_V を比べる（最初に取れた配信内容を「実行中の版」の代わりにしない）。
 // ★ APP_V は index.html の内容から計算する。index.html を変えたら `node qa/stamp.cjs` で更新する（忘れると監査テストが失敗する）。
-const APP_V='ce1397639604';
+const APP_V='6e93f64d0a59';
 // 旅・戦闘・結果画面（INTRIP）の間は、save() が保存を見送るので、再読み込みすると進行が巻き戻る。旅が終わったあとも trip / B には前回の値が残るため、これらは見ない
 const UPD={pending:'',busy:false,scheduled:false,last:0,every:600000,quiet:600000,timeout:15000,reloadedAt:0,note:null,timer:0,
  safe:()=>!INTRIP,
