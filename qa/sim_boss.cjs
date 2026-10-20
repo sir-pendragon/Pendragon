@@ -60,7 +60,7 @@ function runCourse(prefName,cfg,year,policy,hp0,mp0){
  for(const id of ['ov-result','ov-battle','ov-camp','ov-tc','ov-pay','ov-storm','pop'])if($(id))$(id).hidden=true;
  q.newGame(start);const S=q.S;S.money=1e8;S.turn=year===1?1:53;S.bike=cfg.bike;
  let parts=cfg.parts,full=false;if(parts==='full4'||parts==='full5'){full=true;const sp=q.ENEMY[q.SPEC[prefName].boss].stat,n=parts==='full4'?4:5;const base=parts==='full4'?['comph','rack2']:['compi','rack4'];const pool=[PARTBY[sp],'aero','fender'].filter((x,i,a)=>a.indexOf(x)===i);parts=[...base,...pool].slice(0,n);}else if(parts==='best'){const sp=q.ENEMY[q.SPEC[prefName].boss].stat;parts=[PARTBY[sp],'fender'===PARTBY[sp]?'tire':'fender'];}
- S.parts=parts.slice();S.food=full?q.foodMax():3;if(process.env.SMALLS){const st=q.ENEMY[q.SPEC[prefName].boss].stat;S.acc=process.env.SMALLS==='max'?['sg2',st==='rough'?'shoe3':'shoe1','hel2']:process.env.SMALLS==='basic'?['sg1','shoe1','hel1']:process.env.SMALLS.split(',');S.owned.acc=S.acc.slice();}// 小物（SMALLS=max：最上位3点／basic：最安3点）S.hp=hp0;S.mp=mp0;S.visits[p.id]=3;S.fam[p.id]=false;
+ S.parts=parts.slice();S.food=full?q.foodMax():3;if(process.env.SMALLS){const st=q.ENEMY[q.SPEC[prefName].boss].stat;S.acc=process.env.SMALLS==='max'?['sg2',st==='rough'?'shoe3':'shoe1','hel2']:process.env.SMALLS==='basic'?['sg1','shoe1','hel1']:process.env.SMALLS.split(',');S.owned.acc=S.acc.slice();}S.hp=hp0;S.mp=mp0;S.visits[p.id]=3;S.fam[p.id]=false;
  S.forecast=Object.fromEntries(q.PREF.map(x=>[x.id,{temp:15,wx:'sun'}]));
  q.startTrip(p,false);
  let bossHp=null,bossMp=null,guard=0;
@@ -76,8 +76,9 @@ function runCourse(prefName,cfg,year,policy,hp0,mp0){
 }
 const bosses=Object.keys(q.SPEC).map(n=>({n,b:q.SPEC[n].boss,st:q.ENEMY[q.SPEC[n].boss].stat,d:q.PREF.find(x=>x.name===n).diff}));
 const CONFIGS=process.env.NEWCFG?Object.fromEntries(Object.entries(CONFIGS_ALL).filter(([k])=>/MTB/.test(k)||(process.env.MTBONLY?false:/枠|ママ|グラベル\(/.test(k)||k.startsWith('クロス')))):CONFIGS_ALL;
+if(process.env.CFGS){const k=process.env.CFGS.split(',');for(const n of Object.keys(CONFIGS))if(!k.some(x=>n.includes(x)))delete CONFIGS[n];}
 const out=[];
-const POLS=process.env.PLAN?[['先読み(上手い人)',planner]]:[['賢め',smart],['ただ踏む',naive]];
+const POLS=process.env.PLAN?[['先読み(上手い人)',planner]]:process.env.SMART?[['賢め',smart]]:[['賢め',smart],['ただ踏む',naive]];
 for(const [pname,policy] of POLS)
  for(const year of (process.env.YEARS||'1,2').split(',').map(Number))
   for(const [hp0,mp0,lab] of (process.env.FULL?[[100,100,'満タン出発']]:[[100,100,'満タン出発'],[80,60,'やや消耗(80/60)']])){
