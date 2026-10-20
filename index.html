@@ -242,11 +242,13 @@ button:disabled{opacity:.45;cursor:not-allowed}
 #ov-sns .modal{background:#fff;color:#14171a;border:0;border-radius:14px;padding:0;gap:0;overflow:hidden;box-shadow:0 10px 40px rgba(0,0,0,.45)}
 #ov-sns .modal{max-height:calc(100vh - 32px);max-height:calc(100dvh - 32px)}
 #ov-sns .snshd{flex:none;position:sticky;top:0;z-index:1;display:flex;align-items:center;justify-content:space-between;background:linear-gradient(#2aa9ff,#129efd);padding:8px 12px}
-#ov-sns .snshd img{width:30px;height:30px;display:block}
+#ov-sns .snshd img{width:auto;height:26px;max-width:44%;object-fit:contain;display:block}
 #ov-sns .snsact{display:flex;align-items:center;gap:8px}
 #ov-sns .snshd #btn-share{background:#000;color:#fff;border-color:#000;padding:3px 23px;line-height:1.15;font-size:var(--fs-s)}#ov-sns .snshd #btn-share small{display:block;font-size:10px;font-weight:700}
 #ov-sns #share-note{margin:0;padding:6px 12px;background:#f5f8fa;border-bottom:1px solid #e1e8ed}
 #ov-sns .snshd button{background:transparent;color:#fff;border:1px solid rgba(255,255,255,.75);border-radius:999px;min-height:0;padding:4px 14px;font-weight:700}
+#ov-sns .snshd button{white-space:nowrap}#ov-sns .snshd .snsact{flex:none}
+@media(max-width:340px){#ov-sns .snshd img{height:20px}#ov-sns .snshd #btn-share{padding:3px 10px}#ov-sns .snshd button{padding:4px 10px}}
 #ov-sns .feed{margin:0;border-top:0;padding:0 12px 8px;background:#fff;flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
 #ov-sns .post{border-bottom:1px solid #e1e8ed;padding:9px 0;color:#14171a}
 #ov-sns .post .ph b{color:#14171a}#ov-sns .post .ph span{color:#657786}
@@ -387,7 +389,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 <div class="app" id="app">
   <div class="status">
     <div class="stat fm"><span class="lb"><img loading="lazy" class="si" src="img/icon_fame.webp" width="16" height="16" alt=""><span class="lt">フォロワー</span></span><b id="d-fame">0</b></div>
-    <button id="btn-sns" class="snsbtn" aria-haspopup="dialog" aria-label="自分のSNSを開く"><img src="img/icon_sns_bird.webp" width="34" height="34" alt=""><span class="sbt"><b>My SNS</b><small id="d-title">無名</small></span></button>
+    <button id="btn-sns" class="snsbtn" aria-haspopup="dialog" aria-label="ヒヨッターを開く"><img src="img/icon_sns_bird.webp" width="34" height="34" alt=""><span class="sbt"><b>ヒヨッター</b><small id="d-title">無名</small></span></button>
     <div class="stat sm"><span class="lb"><img loading="lazy" class="si" src="img/icon_money.webp" width="16" height="16" alt="">所持金</span><b id="d-money">¥30,000</b></div>
     <div class="stat sl"><span class="lb"><img loading="lazy" class="si" src="img/icon_loc.webp" width="16" height="16" alt="">現在地</span><b id="d-loc">東京</b></div>
     <div class="stat sh"><span class="lb"><img loading="lazy" class="si" src="img/icon_hp.webp" width="16" height="16" alt="">体力</span><b id="d-hp">100</b><div class="bar"><i id="b-hp" style="width:100%"></i></div></div>
@@ -548,8 +550,8 @@ button:disabled{opacity:.45;cursor:not-allowed}
   </div>
 </div>
 <div class="overlay" id="ov-sns" hidden>
-  <div class="modal" role="dialog" aria-label="自分のSNS">
-    <div class="snshd"><img src="img/icon_sns_bird.webp" width="30" height="30" alt="My SNS"><span class="snsact"><button id="btn-share">SNSに投稿<small>（画像つき）</small></button><button id="sns-close">閉じる</button></span></div>
+  <div class="modal" role="dialog" aria-label="ヒヨッター">
+    <div class="snshd"><img src="img/logo_hiyotter.webp" width="119" height="26" alt="ヒヨッター"><span class="snsact"><button id="btn-share">SNSに投稿<small>（画像つき）</small></button><button id="sns-close">閉じる</button></span></div>
     <p class="hint" id="share-note"></p>
     <div class="feed" id="sns-list"></div>
   </div>
@@ -1760,7 +1762,7 @@ addEventListener('pagehide',save);
 // 開きっぱなしのタブが古いコードのまま保存し直して、新しい保存項目を失うのを防ぐ。
 // 実行中のコードに埋め込んだ版の識別子 APP_V と、いま配信されている index.html の APP_V を比べる（最初に取れた配信内容を「実行中の版」の代わりにしない）。
 // ★ APP_V は index.html の内容から計算する。index.html を変えたら `node qa/stamp.cjs` で更新する（忘れると監査テストが失敗する）。
-const APP_V='20a1461b5c7c';
+const APP_V='d22b973e7bce';
 // 旅・戦闘・結果画面（INTRIP）の間は、save() が保存を見送るので、再読み込みすると進行が巻き戻る。旅が終わったあとも trip / B には前回の値が残るため、これらは見ない
 const UPD={pending:'',busy:false,scheduled:false,last:0,every:600000,quiet:600000,timeout:15000,reloadedAt:0,note:null,timer:0,
  safe:()=>!INTRIP,
