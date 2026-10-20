@@ -103,7 +103,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .trl .n img{width:28px;height:28px;object-fit:contain;flex:none}
 .infev{display:flex;gap:10px;align-items:center;margin:10px 0;padding:8px;border:1px dashed var(--line);border-radius:10px}.infev img{width:48px;height:48px;border-radius:50%;object-fit:cover;flex:none}.infev p{margin:2px 0 0}.infev span{color:var(--muted);font-size:var(--fs-s);margin-left:6px}
 .trl>.rvh{grid-column:1/-1;color:var(--muted);font-size:var(--fs-s);border:0}
-.trl>.rvc{grid-column:1/-1;display:flex;align-items:center;gap:10px}.trl .rvc img{width:48px;height:48px;border-radius:50%;object-fit:cover;flex:none}
+.trl .rvc img[data-inf]{cursor:pointer}#inf-view{z-index:21}#inf-view .modal{align-items:center;text-align:center}#inf-view img{max-width:100%;max-height:68vh;object-fit:contain;border-radius:10px}.trl>.rvc{grid-column:1/-1;display:flex;align-items:center;gap:10px}.trl .rvc img{width:48px;height:48px;border-radius:50%;object-fit:cover;flex:none}
 .rvm{display:flex;flex-direction:column;min-width:0;flex:1}.rvm b{font-size:var(--fs-m)}.rvm span,.rvm small,.rvs small{color:var(--muted);font-size:var(--fs-s)}.rvm span{margin-left:0}
 .rvm .nw{white-space:nowrap;margin:0;color:inherit;font-size:inherit}
 .rvs{display:flex;flex-direction:column;align-items:flex-end;flex:none;white-space:nowrap}.rvs .dots{color:#f0c75a;letter-spacing:.1em}
@@ -538,6 +538,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
     <button class="primary" id="sp-ok">閉じる</button>
   </div>
 </div>
+<div class="overlay" id="inf-view" hidden><div class="modal" role="dialog" aria-label="ライバルの絵"><img id="inf-img" alt=""><b id="inf-nm"></b><span class="hint" id="inf-hd"></span><div class="row"><button class="primary" id="inf-close">閉じる</button></div></div></div>
 <div class="overlay" id="ov-tut" hidden style="z-index:20">
   <div class="modal">
     <span class="hint" id="tut-n"></span>
@@ -1376,7 +1377,7 @@ function renderTrials(){let w=0,f=0;for(const k of TRIAL_KEYS){const v=S.stats.e
     if(k==='tsuchi'){const got=v[1]>0;return `<div class="n${got?'':' leg'}"><img loading="lazy" decoding="async" src="img/${got?'tsuchinoko':'tsuchinoko_unknown'}.webp" alt="">${got?'ツチノコ':'伝説の生き物'}</div>${cols}`;}
     if(NEWK.has(k)&&!v[0])return '';const e=ENEMY[k];return `<div class="n" data-en="${k}" style="cursor:pointer"><img loading="lazy" decoding="async" src="${e.img}" alt="" onerror="this.style.display='none'">${e.name.replace('インフルエンサー','').replace('迷惑キャンパー','迷惑')}</div>${cols}`;};
   $('tr-tabs').innerHTML=[['old','試練'],['rv','ライバル'],['4th','都道府県限定試練']].map(([g,t])=>`<button data-trs="${g}" aria-selected="${TRSUB===g}">${t}</button>`).join('');
-  if(TRSUB==='rv'){$('achlist').innerHTML=`<div class="rvh">映え勝負：撮影スポットで勝つと、${INF_WIN}勝で次の年末決算に贈り物が届きます</div>`+INF.map(d=>{const v=infSt(d.id),dots='●'.repeat(Math.min(v.w,INF_WIN))+'○'.repeat(Math.max(0,INF_WIN-v.w)),gift=d.dango?`文化祭の団子${d.dango}個`:d.part?(PARTS.find(x=>x.id===d.part)||{}).name:'メッセージのみ',area=d.reg?d.reg+'地方':d.pref||'全国';return `<div class="rvc"><img src="${d.av}" width="48" height="48" alt=""><div class="rvm"><b>${esc(d.name)}</b><span>@${esc(d.handle)}</span><small>登場：${esc(area)}　<span class="nw">${v.w}勝／${v.e}戦</span></small><small>${INF_WIN}勝で：${esc(gift)}</small></div><div class="rvs"><span class="dots">${dots}</span><small>${v.g?'🎁受取済':v.w>=INF_WIN?'🎁次の年末':''}</small></div></div>`;}).join('');return;}
+  if(TRSUB==='rv'){$('achlist').innerHTML=`<div class="rvh">映え勝負：撮影スポットで勝つと、${INF_WIN}勝で次の年末決算に贈り物が届きます</div>`+INF.map(d=>{const v=infSt(d.id),dots='●'.repeat(Math.min(v.w,INF_WIN))+'○'.repeat(Math.max(0,INF_WIN-v.w)),gift=d.dango?`文化祭の団子${d.dango}個`:d.part?(PARTS.find(x=>x.id===d.part)||{}).name:'メッセージのみ',area=d.reg?d.reg+'地方':d.pref||'全国';return `<div class="rvc"><img src="${d.av}" width="48" height="48" alt="${esc(d.name)}の絵を大きく見る" data-inf="${d.id}" role="button" tabindex="0"><div class="rvm"><b>${esc(d.name)}</b><span>@${esc(d.handle)}</span><small>登場：${esc(area)}　<span class="nw">${v.w}勝／${v.e}戦</span></small><small>${INF_WIN}勝で：${esc(gift)}</small></div><div class="rvs"><span class="dots">${dots}</span><small>${v.g?'🎁受取済':v.w>=INF_WIN?'🎁次の年末':''}</small></div></div>`;}).join('');return;}
   const rows=TRIAL_KEYS.filter(k=>is4th(k)===(TRSUB==='4th')).map(row).join('');
   $('achlist').innerHTML='<div class="th">試練</div>'+(TRSUB==='4th'?'<div class="th">都道府県</div><div class="th">遭遇</div><div class="th">突破</div>':'<div class="th">遭遇</div><div class="th">突破</div><div class="th">失敗</div>')+(rows||'<div class="none">まだ出会っていません（その県の特別コースで出会うと載ります）</div>');}
 $('achlist').onclick=e=>{const n=e.target.closest('.n[data-en]');if(!n)return;const en=ENEMY[n.dataset.en];if(!en)return;$('sg-img').src=en.img;$('sg-img').alt=en.name;$('sg-name').textContent=en.name;$('sg-desc').textContent=en.hint||'';$('sg-desc').hidden=!en.hint;$('ov-sight').hidden=false;};
@@ -1759,7 +1760,7 @@ addEventListener('pagehide',save);
 // 開きっぱなしのタブが古いコードのまま保存し直して、新しい保存項目を失うのを防ぐ。
 // 実行中のコードに埋め込んだ版の識別子 APP_V と、いま配信されている index.html の APP_V を比べる（最初に取れた配信内容を「実行中の版」の代わりにしない）。
 // ★ APP_V は index.html の内容から計算する。index.html を変えたら `node qa/stamp.cjs` で更新する（忘れると監査テストが失敗する）。
-const APP_V='38367ae5b825';
+const APP_V='d79ca0edcc57';
 // 旅・戦闘・結果画面（INTRIP）の間は、save() が保存を見送るので、再読み込みすると進行が巻き戻る。旅が終わったあとも trip / B には前回の値が残るため、これらは見ない
 const UPD={pending:'',busy:false,scheduled:false,last:0,every:600000,quiet:600000,wait:1500,timeout:15000,reloadedAt:0,note:null,timer:0,
  safe:()=>!INTRIP,
@@ -1825,6 +1826,11 @@ function tutBattle(){let seen=true;try{seen=localStorage.getItem('cc_tutb')==='1
   $('tut-p').innerHTML='敵の体力を減らしきると、その区間を走り切れます。制限ターンを超えるか、自分の体力が0になると遅刻です。<br><br><b>気合い</b>：気力を20使い、次の行動が3倍進みます。強い敵を一気に抜けたいときに。<br><b>身構える</b>：敵の攻撃を受ける被害を7割減らします。敵の「次の強さ」が強いときに使いましょう。<br><b>休む</b>：体力を回復します。体力が減ってきたら使いましょう。';
   $('ov-tut').hidden=false;}
 $('set-tut').onclick=()=>{$('ov-set').hidden=true;try{localStorage.removeItem('cc_tut');localStorage.removeItem('cc_tutb');}catch(e){}$('tab-map').click();tutShow(0);};
+// ライバル一覧の丸い絵を押すと、大きい絵を見られる
+{const open=id=>{const d=INF.find(x=>x.id===id);if(!d)return;$('inf-img').src=d.img;$('inf-img').alt=d.name;$('inf-nm').textContent=d.name;$('inf-hd').textContent='@'+d.handle;$('inf-view').hidden=false;};
+ const ach=$('achlist');ach.addEventListener('click',e=>{const i=e.target.closest('img[data-inf]');if(i)open(i.dataset.inf);});
+ ach.addEventListener('keydown',e=>{const i=e.target.closest&&e.target.closest('img[data-inf]');if(i&&(e.key==='Enter'||e.key===' ')){e.preventDefault();open(i.dataset.inf);}});
+ $('inf-close').onclick=()=>{$('inf-view').hidden=true;};$('inf-view').addEventListener('click',e=>{if(e.target.id==='inf-view')$('inf-view').hidden=true;});}
 function tutSeen(){try{return localStorage.getItem('cc_tut')==='1';}catch(e){return true;}}
 
 // ---------- Xでシェア（旅の記録を、イラスト入りの画像と文章で投稿） ----------
