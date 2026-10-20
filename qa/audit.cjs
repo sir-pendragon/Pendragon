@@ -311,6 +311,18 @@ test('character edit impact: all 88 illustration x name combos render; sponsor-c
  for(const a of q.AVS)for(const p of q.PENS){q.S.avId=a.id;q.S.penId=p.id;q.render();const it=q.feedItems(),me=it.filter(x=>x.p.id==='jitensha_tabi'),sp=it.find(x=>/^sponsor_/.test(x.p.id));const nm=(p.av&&p.av!==a.id)?'旅の自転車乗り':p.n;
   assert.ok(me.length>0&&me.every(x=>x.p.name===nm&&x.p.av==='img/'+a.s+'.webp'),a.id+'/'+p.id);assert.ok(sp&&sp.p.text.startsWith(nm+'さん'),'sponsor '+a.id+'/'+p.id);assert.equal(c.$('pf-pen').textContent,nm);assert.equal(c.$('pf-img').getAttribute('src'),'img/'+a.f+'.webp');assert.ok(c.$('pf-img').alt.includes(a.n));}});
 
+test('map walking sprites: 6 character sets exist with the original canvas sizes; the map follows the chosen illustration (hero and cat keep the original set)',c=>{const {q}=c;const fs=require('node:fs');
+ const dim=f=>{const b=fs.readFileSync(path.join(path.dirname(filename),f));assert.equal(b.toString('latin1',0,4),'RIFF',f);const t=b.toString('latin1',12,16);if(t==='VP8X')return [1+b.readUIntLE(24,3),1+b.readUIntLE(27,3)];if(t==='VP8 ')return [b.readUInt16LE(26)&0x3fff,b.readUInt16LE(28)&0x3fff];if(t==='VP8L'){const v=b.readUInt32LE(21);return [1+(v&0x3fff),1+((v>>14)&0x3fff)];}throw new Error('webp '+t);};
+ const D={w:[90,141],s:[96,132],z:[162,78]},FR=['w1','w2','w3','w4','s1','s2','z1','z2'];
+ for(const k of FR)assert.deepEqual(dim('img/hero_'+k+'.webp'),D[k[0]],'original '+k);
+ const withSp=q.AVS.filter(a=>a.sp);assert.equal(JSON.stringify(withSp.map(a=>a.id)),JSON.stringify(['av_gal','av_shades','av_glasses','av_traveler','av_ninja','av_hippie']));assert.equal(new Set(withSp.map(a=>a.sp)).size,6,'sp unique');
+ for(const a of withSp)for(const k of FR){const f='img/hero_'+a.sp+'_'+k+'.webp';assert.deepEqual(dim(f),D[k[0]],f);}
+ assert.ok(!q.AVS.find(a=>a.id==='av_hero').sp&&!q.AVS.find(a=>a.id==='av_cat').sp,'hero and cat use the original sprites');
+ const showMap=()=>{c.$('tab-map').click();q.renderMap();};showMap();const href=k=>c.$('hi_'+k).getAttribute('href');assert.equal(href('w1'),'img/hero_w1.webp');
+ c.$('btn-prof').click();const pick=id=>{c.$('av-list').querySelector(`[data-av="${id}"]`).click();c.$('prof-close').click();showMap();};
+ for(const a of q.AVS){pick(a.id);for(const k of FR)assert.equal(href(k),'img/hero_'+(a.sp?a.sp+'_':'')+k+'.webp',a.id+' '+k);c.$('btn-prof').click();}
+ // 保存から読み込んだ直後も、保存したイラストの絵になる
+ q.S.avId='av_ninja';q.S.penId='pen_tabi';q.save();const L=q.load();q.S=L;showMap();assert.equal(href('z1'),'img/hero_ninja_z1.webp');});
 const ASYNC=[];
 function atest(name,fn){ASYNC.push(async()=>{let c;try{c=boot();assert.ok(c.q,'script must boot');c.q.newGame(12);c.w.Math.random=()=>.99;await fn(c);assert.deepEqual(c.errors,[]);results.push({name,ok:true});console.log('PASS',name);}catch(e){results.push({name,ok:false,error:e.message});console.log('FAIL',name,'—',e.message.slice(0,500));}finally{c?.dom.window.close();}});}
 // ---- 自動更新・固定ID（Codexレビュー反映）。タイマーは止められているので、必要なテストでは予約を自分で取り出して実行する ----

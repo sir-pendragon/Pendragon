@@ -1079,7 +1079,7 @@ function render(){if(S.gear.fire==='fire4'&&S.gear.shelter!=='sh5')S.gear.fire=n
   renderMap();renderWx();renderDetail();renderList();renderShop();renderLog();save();}
 
 let MAPKEY='';
-function renderMap(){const svg=$('map');const mk=JSON.stringify([S.loc,S.sel,S.visits,S.bike,S.gear,S.parts,season(calendar(S.turn).mi)]);if(mk===MAPKEY&&svg.firstChild)return;MAPKEY=mk;let s=`<defs><pattern id="tex" patternUnits="userSpaceOnUse" width="160" height="160"><image class="bgimg" href="img/land_tex.webp" width="160" height="160"/></pattern></defs><image class="bgimg" href="img/map_bg.webp" x="0" y="0" width="400" height="${MAP_H}" preserveAspectRatio="xMidYMid slice"/>`,top='';
+function renderMap(){const svg=$('map');const mk=JSON.stringify([S.loc,S.sel,S.visits,S.bike,S.gear,S.parts,season(calendar(S.turn).mi),S.avId]);if(mk===MAPKEY&&svg.firstChild)return;MAPKEY=mk;let s=`<defs><pattern id="tex" patternUnits="userSpaceOnUse" width="160" height="160"><image class="bgimg" href="img/land_tex.webp" width="160" height="160"/></pattern></defs><image class="bgimg" href="img/map_bg.webp" x="0" y="0" width="400" height="${MAP_H}" preserveAspectRatio="xMidYMid slice"/>`,top='';
   s+=`<path data-id="46" d="M14 386H142V470H14Z" fill="transparent" style="stroke:var(--line);stroke-dasharray:3 3;stroke-width:1"/><text x="20" y="399" style="fill:var(--muted)">沖縄</text>`;
   for(const p of PREF){const n=S.fam[p.id]?3:Math.min(2,S.visits[p.id]||0);
     const cls=(p.id===S.loc?'cur ':'')+(p.id===S.sel?'sel ':'')+'l'+n;
@@ -1117,7 +1117,7 @@ function renderMap(){const svg=$('map');const mk=JSON.stringify([S.loc,S.sel,S.v
    +put('bike_'+S.bike,344,406,.26)
    +(S.gear.fire&&S.gear.fire!=='fire4'?fireFx(S.gear.fire):'')+`</g>`
    +(S.parts.includes('drone')?`<g class="drone">${put('part_drone',300,392,.15)}</g>`:'');
-  s+=`<g id="hero" style="pointer-events:none"><ellipse id="hs" cy="0" ry="1.8" fill="#000" opacity=".28"/><g id="hf">${HFR.map(k=>`<image id="hi_${k}" href="img/hero_${k}.webp" width="${HDIM[k[0]][0]*HK}" height="${HDIM[k[0]][1]*HK}" style="display:none"/>`).join('')}</g><text id="hz1" style="font-size:6px;fill:#fff;paint-order:stroke;stroke:#234;stroke-width:1.5px">z</text><text id="hz2" style="font-size:5px;fill:#fff;paint-order:stroke;stroke:#234;stroke-width:1.5px">z</text></g>`
+  s+=`<g id="hero" style="pointer-events:none"><ellipse id="hs" cy="0" ry="1.8" fill="#000" opacity=".28"/><g id="hf">${HFR.map(k=>`<image id="hi_${k}" href="${heroSrc(k)}" width="${HDIM[k[0]][0]*HK}" height="${HDIM[k[0]][1]*HK}" style="display:none"/>`).join('')}</g><text id="hz1" style="font-size:6px;fill:#fff;paint-order:stroke;stroke:#234;stroke-width:1.5px">z</text><text id="hz2" style="font-size:5px;fill:#fff;paint-order:stroke;stroke:#234;stroke-width:1.5px">z</text></g>`
    +(isHam(S.gear.shelter)?hamFront(sk[S.gear.shelter],S.gear.shelter):'')+(isHam(S.gear.shelter)&&S.gear.tarp==='tp2'?tp2Pole(252+(tf[2]||0),tf[1],tf[0],tf[3]||1):'')
    +(hasTent?zzzFx(tpos.by-SPR['shelter_'+S.gear.shelter][1]*tpos.k+(S.gear.shelter==='sh5'?10:1),tpos.x-252):'')
    +(chim?chim.smoke:'');svg.innerHTML=s;HLAST=null;drawHero();}
@@ -1286,10 +1286,13 @@ const FANS=[['ゆうた','yuta_ride'],['みなみ','minami_cmp'],['ペダル太�
 const RPL=[[70,['これは神写真…！😭','保存しました。壁紙にします📱','構図が最高すぎる✨','ここ行きたくなった！','プロの撮影かと思った👏','いいねじゃ足りない…❤️']],[40,['いい景色ですね〜☺️','安全運転で！次も楽しみ🚴','コーヒー飲みたくなる写真☕','応援してます📣','この空気感好き','のんびりしてて癒される']],[0,['お疲れさま！👍','次はもっと撮れるはず💪','無事に着いてよかった😌','天気が惜しかったね…☁️','リベンジ待ってます🔥','ゆっくり休んでね🏕️']]];
 // プロフィールのイラスト：0番＝初期の旅人。big＝旅の記録・投稿画像用（512角）、av＝SNSのアイコン（96角の顔まわり）
 // ★ id は一度決めたら絶対に変えない・消さない（セーブデータと特別ルールが id で結ばれている）。表示名 n・画像 f/s は変えてよい。並び順も自由
-const AVS=[{id:'av_hero',f:'hero',s:'hero',n:'旅人（初期）'},{id:'av_gal',f:'av_gal',s:'av_gal_s',n:'ギャル'},{id:'av_shades',f:'av_shades',s:'av_shades_s',n:'サングラスのライダー'},{id:'av_cat',f:'av_cat',s:'av_cat_s',n:'サイベリアン'},{id:'av_glasses',f:'av_glasses',s:'av_glasses_s',n:'メガネのライダー'},{id:'av_traveler',f:'av_traveler',s:'av_traveler_s',n:'旅する旅行者'},{id:'av_ninja',f:'av_ninja',s:'av_ninja_s',n:'忍者キャンパー'},{id:'av_hippie',f:'av_hippie',s:'av_hippie_s',n:'ヒッピーサイクリスト'}];
+const AVS=[{id:'av_hero',f:'hero',s:'hero',n:'旅人（初期）'},{id:'av_gal',sp:'gal',f:'av_gal',s:'av_gal_s',n:'ギャル'},{id:'av_shades',sp:'shades',f:'av_shades',s:'av_shades_s',n:'サングラスのライダー'},{id:'av_cat',f:'av_cat',s:'av_cat_s',n:'サイベリアン'},{id:'av_glasses',sp:'glasses',f:'av_glasses',s:'av_glasses_s',n:'メガネのライダー'},{id:'av_traveler',sp:'traveler',f:'av_traveler',s:'av_traveler_s',n:'旅する旅行者'},{id:'av_ninja',sp:'ninja',f:'av_ninja',s:'av_ninja_s',n:'忍者キャンパー'},{id:'av_hippie',sp:'hippie',f:'av_hippie',s:'av_hippie_s',n:'ヒッピーサイクリスト'}];
 const AV_DEF='av_hero';
 const avCur=()=>AVS.find(a=>a.id===(S&&S.avId))||AVS.find(a=>a.id===AV_DEF);
 const pfImg=()=>'img/'+avCur().f+'.webp';// 旅の記録の顔絵・投稿画像用（512角）
+// 地図を歩く絵：sp があるイラストは、初期の旅人のドット絵(hero_w1…)の色だけを塗り替えた img/hero_<sp>_w1… を使う。sp が無い（初期の旅人・サイベリアン）は初期の絵のまま
+const heroSrc=k=>'img/hero_'+(avCur().sp?avCur().sp+'_':'')+k+'.webp';
+function heroPreload(){HFR.forEach(k=>{const i=new Image();i.src=heroSrc(k);});}
 const avImg=()=>'img/'+avCur().s+'.webp';// SNSのアイコン（96角の顔まわり。初期の旅人だけ hero.webp）
 function postHtml(p){return `<article class="post"><div class="av">${p.av?`<img loading="lazy" src="${p.av}" width="40" height="40" alt="">`:`<span>${esc(p.ini||'？')}</span>`}</div><div class="pb"><div class="ph"><b>${esc(p.name)}</b><span>@${esc(p.id)}・${p.when}</span></div><div class="pt${p.th?' thw':''}">${p.th?`<img class="thm" loading="lazy" ${p.th[1]?`data-fb="${p.th[1]}" `:''}src="${p.th[0]}" width="64" height="64" alt="${esc(p.th[2])}">`:''}${esc(p.text).replace(/\n/g,'<br>')}</div>${p.img?`<img class="pimg" loading="lazy" src="${p.img}" width="480" height="320" alt="${esc(p.alt||'')}">`:''}${p.n?`<div class="pa"><span>💬 ${p.n[0]}</span><span>🔁 ${p.n[1]}</span><span>♥ ${p.n[2]}</span></div>`:''}${p.rp?`<div class="rp"><b>${esc(p.rp[0])}</b> <span>@${esc(p.rp[1])}</span><br>${esc(p.rp[2])}</div>`:''}</div></article>`;}
 // ゲーム内ログの文章を、SNSの投稿らしく整える（フォロワー増減などの数値は出さない）
@@ -1466,7 +1469,7 @@ $('fs-every').onchange=()=>{FS.every=+$('fs-every').value||13;saveFS();};
 try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist().catch(()=>{});}catch(e){}
 function renderProf(){const a=avCur().id,p=penCur().id;$('av-list').innerHTML=AVS.map(x=>`<button data-av="${x.id}" aria-pressed="${x.id===a}" aria-label="${esc(x.n)}" title="${esc(x.n)}"><img src="img/${x.s}.webp" width="64" height="64" alt=""></button>`).join('');$('pen-list').innerHTML=PENS.filter(x=>penOK(x.id,a)).map(x=>`<button data-pen="${x.id}" aria-pressed="${x.id===p}">${esc(x.n)}</button>`).join('');}
 $('btn-prof').onclick=()=>{if(!S)return;renderProf();$('ov-prof').hidden=false;};
-$('av-list').onclick=e=>{const b=e.target.closest('button[data-av]');if(!b||!S)return;if(!AVS.some(a=>a.id===b.dataset.av))return;S.avId=b.dataset.av;if(!penOK(S.penId,S.avId))S.penId=PEN_DEF;save();renderProf();renderLog();};
+$('av-list').onclick=e=>{const b=e.target.closest('button[data-av]');if(!b||!S)return;if(!AVS.some(a=>a.id===b.dataset.av))return;S.avId=b.dataset.av;if(!penOK(S.penId,S.avId))S.penId=PEN_DEF;heroPreload();save();renderProf();renderLog();};
 $('pen-list').onclick=e=>{const b=e.target.closest('button[data-pen]');if(!b||!S||!penOK(b.dataset.pen,avCur().id))return;S.penId=b.dataset.pen;save();renderProf();renderLog();};
 $('prof-close').onclick=()=>{$('ov-prof').hidden=true;};
 $('ov-prof').addEventListener('click',e=>{if(e.target===$('ov-prof'))$('ov-prof').hidden=true;});
@@ -1746,7 +1749,7 @@ addEventListener('pagehide',save);
 // 開きっぱなしのタブが古いコードのまま保存し直して、新しい保存項目を失うのを防ぐ。
 // 実行中のコードに埋め込んだ版の識別子 APP_V と、いま配信されている index.html の APP_V を比べる（最初に取れた配信内容を「実行中の版」の代わりにしない）。
 // ★ APP_V は index.html の内容から計算する。index.html を変えたら `node qa/stamp.cjs` で更新する（忘れると監査テストが失敗する）。
-const APP_V='b66c76f08663';
+const APP_V='f15a3963f713';
 // 旅・戦闘・結果画面（INTRIP）の間は、save() が保存を見送るので、再読み込みすると進行が巻き戻る。旅が終わったあとも trip / B には前回の値が残るため、これらは見ない
 const UPD={pending:'',busy:false,scheduled:false,last:0,every:600000,quiet:600000,wait:1500,timeout:15000,reloadedAt:0,note:null,timer:0,
  safe:()=>!INTRIP,
