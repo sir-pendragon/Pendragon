@@ -1317,7 +1317,8 @@ function heroPreload(){HFR.forEach(k=>{const i=new Image();i.src=heroSrc(k);});}
 const avImg=()=>'img/'+avCur().s+'.webp';// SNSのアイコン（96角の顔まわり。初期の旅人だけ hero.webp）
 function postHtml(p){return `<article class="post"><div class="av">${p.av?`<img loading="lazy" src="${p.av}" width="40" height="40" alt="">`:`<span>${esc(p.ini||'？')}</span>`}</div><div class="pb"><div class="ph"><b>${esc(p.name)}</b><span>@${esc(p.id)}・${p.when}</span></div><div class="pt${p.th?' thw':''}">${p.th?`<img class="thm" loading="lazy" ${p.th[1]?`data-fb="${p.th[1]}" `:''}src="${p.th[0]}" width="64" height="64" alt="${esc(p.th[2])}">`:''}${esc(p.text).replace(/\n/g,'<br>')}</div>${p.img?`<img class="pimg" loading="lazy" src="${p.img}" width="480" height="320" alt="${esc(p.alt||'')}">`:''}${p.n?`<div class="pa"><span>💬 ${p.n[0]}</span><span>🔁 ${p.n[1]}</span><span>♥ ${p.n[2]}</span></div>`:''}${p.rp?`<div class="rp"><b>${esc(p.rp[0])}</b> <span>@${esc(p.rp[1])}</span><br>${esc(p.rp[2])}</div>`:''}</div></article>`;}
 // ゲーム内ログの文章を、SNSの投稿らしく整える（フォロワー増減などの数値は出さない）
-function snsText(x){if(/購入/.test(x))x=x.replace(/（[^）]*¥[^）]*）/g,'');if(/編集長からインセンティブ/.test(x))return 'ヒヨッター編集長からインセンティブをいただきました！ありがとうございます🙏';if(/^自宅で休養/.test(x))return '今週は自宅でゆっくり休養🛌';if(/強制帰宅/.test(x))return 'お金が尽きて、家に帰ることに…💸';return x.replace(/[。！]?\s*フォロワー[+\-−][^\s。！]*/g,m=>/^！/.test(m)?'！':'');}
+// ヒヨッターの投稿には金額を出さない（購入・輪行・カスタム・インセンティブなど、どの行でも（¥…）と ¥… を外す）
+function snsText(x){x=x.replace(/（[^）]*¥[^）]*）/g,'');if(/編集長からインセンティブ/.test(x))return 'ヒヨッター編集長からインセンティブをいただきました！ありがとうございます🙏';if(/^自宅で休養/.test(x))return '今週は自宅でゆっくり休養🛌';if(/強制帰宅/.test(x))return 'お金が尽きて、家に帰ることに…💸';return x.replace(/\s*¥[\d,]+/g,'').replace(/[。！]?\s*フォロワー[+\-−][^\s。！]*/g,m=>/^！/.test(m)?'！':'');}
 // 購入した商品の絵（ショップのカードと同じ絵）。名前から探す
 function itemArt(nm){let it;if(it=BIKES.find(z=>z.name===nm))return ['img/icon_bike_'+it.id+'.webp','',nm];if(it=CLOTHES.find(z=>z.name===nm))return ['img/cloth_'+it.id+'.webp','',nm];if(it=GEAR_ITEMS.find(z=>z.name===nm))return ['img/icon_g_'+it.id+'.webp',ICON_FB[it.id]||'',nm];if(it=PARTS.find(z=>z.name===nm))return ['img/part_'+it.id+'.webp',ICON_FB[it.id]||'',nm];return null;}
 // すべての投稿に「いいね」とコメントを付ける（旅の投稿のように返信がまだ無いものは、内容に合うファンの一言を足す）。投稿ごとに固定
@@ -1793,7 +1794,7 @@ addEventListener('pagehide',save);
 // 開きっぱなしのタブが古いコードのまま保存し直して、新しい保存項目を失うのを防ぐ。
 // 実行中のコードに埋め込んだ版の識別子 APP_V と、いま配信されている index.html の APP_V を比べる（最初に取れた配信内容を「実行中の版」の代わりにしない）。
 // ★ APP_V は index.html の内容から計算する。index.html を変えたら `node qa/stamp.cjs` で更新する（忘れると監査テストが失敗する）。
-const APP_V='4e0f8f9dd4db';
+const APP_V='8ec84356f4ba';
 // 旅・戦闘・結果画面（INTRIP）の間は、save() が保存を見送るので、再読み込みすると進行が巻き戻る。旅が終わったあとも trip / B には前回の値が残るため、これらは見ない
 const UPD={pending:'',busy:false,scheduled:false,last:0,every:600000,quiet:600000,timeout:15000,reloadedAt:0,note:null,timer:0,
  safe:()=>!INTRIP,
