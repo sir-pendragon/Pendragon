@@ -27,7 +27,7 @@ def rec(name,result):
  if name=='pageerror':raise AssertionError(result)
  if name=='map_switch':assert all(x['href']==x['want'] for x in result),result
  elif name=='map_geometry':assert result['passed']==48
- elif name.startswith('load_map_'):assert result['href']==('img/hero_'+{'av_ninja':'ninja_','av_gal':'gal_'}.get(result['avId'],'')+'w1.webp'),result
+ elif name.startswith('load_map_'):assert result['href']==('img/hero_'+{'av_ninja':'ninja_','av_gal':'gal_','av_hippie':'hippie_','av_glasses':'glasses_','av_shades':'shades_','av_traveler':'traveler_'}.get(result['avId'],'')+'w1.webp'),result
  elif name=='viewer_open_focus':assert not result['hidden'] and result['focus']=='inf-close'
  elif name=='viewer_tab_focus':assert result['inDialog']
  elif name=='viewer_escape':assert result['hidden'] and result['focus']=='cammy'
@@ -59,7 +59,7 @@ with sync_playwright() as pw:
   page.goto(BASE);page.evaluate("localStorage.removeItem('charicamp');sessionStorage.clear();qa.newGame(12);document.getElementById('ov-title').hidden=true;qa.render();")
  boot()
  rec('map_switch',page.evaluate('''()=>{const out=[];const $=id=>document.getElementById(id);for(const a of qa.AVS){$('tab-log').click();$('btn-prof').click();document.querySelector('#av-list [data-av="'+a.id+'"]').click();$('prof-close').click();$('tab-map').click();out.push({id:a.id,href:$('hi_w1').getAttribute('href'),want:qa.heroSrc('w1')})}return out}'''))
- rec('map_geometry',page.evaluate('''()=>{const out=[];for(const a of qa.AVS){qa.S.avId=a.id;qa.renderMap();for(const mode of ['walk','sit','sleep'])for(const dir of [-1,1]){Object.assign(qa.HERO,{x:260,y:426,mode,dir,f:0,ham:false,tent:false});qa.drawHero();const k=mode==='walk'?'r1':mode==='sit'?'s1':'z1',im=document.getElementById('hi_'+k),d={id:a.id,mode,dir,x:+im.getAttribute('x'),bottom:+im.getAttribute('y') + +im.getAttribute('height'),transform:im.getAttribute('transform')};if(d.bottom!==426)throw Error('bottom');if((d.transform==='scale(-1 1)')!==(mode==='walk'&&dir<0))throw Error('flip');out.push(d)}}return {passed:out.length}}'''))
+ rec('map_geometry',page.evaluate('''()=>{qa.S.forecast[qa.S.loc].wx='sun';const out=[];for(const a of qa.AVS){qa.S.avId=a.id;qa.renderMap();for(const mode of ['walk','sit','sleep'])for(const dir of [-1,1]){Object.assign(qa.HERO,{x:260,y:426,mode,dir,f:0,ham:false,tent:false});qa.drawHero();const k=mode==='walk'?'r1':mode==='sit'?'s1':'z1',im=document.getElementById('hi_'+k),d={id:a.id,mode,dir,x:+im.getAttribute('x'),bottom:+im.getAttribute('y') + +im.getAttribute('height'),transform:im.getAttribute('transform')};if(d.bottom!==426)throw Error('bottom');if((d.transform==='scale(-1 1)')!==(mode==='walk'&&dir<0))throw Error('flip');out.push(d)}}return {passed:out.length}}'''))
  for fields in [{'avId':'av_ninja'},{'av':1},{'av':3},{}]:
   page.evaluate("fields=>{const b=JSON.parse(qa.pack());delete b.avId;delete b.av;localStorage.charicamp=JSON.stringify({...b,...fields})}",fields);page.reload()
   rec('load_map_'+json.dumps(fields),page.evaluate("({avId:qa.S.avId,href:document.getElementById('hi_w1').getAttribute('href')})"))
