@@ -214,6 +214,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .post .pt{margin-top:1px;overflow-wrap:anywhere}
 .post .thw{overflow:hidden}.post .thm{float:right;width:64px;height:64px;object-fit:contain;margin:0 0 4px 8px;border-radius:10px;border:1px solid var(--line);background:rgba(255,255,255,.06)}
 .post .pimg{display:block;width:100%;height:auto;aspect-ratio:3/2;object-fit:cover;border-radius:10px;border:1px solid var(--line);margin-top:4px}
+.post .pshare{margin:4px 0 0;padding:3px 10px;font-size:var(--fs-xs);border-radius:14px;background:#fff;color:#129efd;border:1px solid #129efd;cursor:pointer}.post .pshare:disabled{opacity:.5}
 .post .pa{display:flex;justify-content:space-between;max-width:260px;color:var(--muted);font-size:var(--fs-xs);margin-top:3px}
 .post .rp{margin-top:3px;padding:2px 6px;border-left:3px solid var(--line);color:var(--muted);font-size:var(--fs-xs);line-height:1.3}.post .rp b{color:var(--fg)}
 .log{font-size:var(--fs-m);max-height:40vh;overflow:auto;display:flex;flex-direction:column;gap:4px;padding:0;margin:0;list-style:none}
@@ -1338,7 +1339,7 @@ const pfImg=()=>'img/'+avCur().f+'.webp';// 旅の記録の顔絵・投稿画像
 const heroSrc=k=>'img/hero_'+(avCur().sp?avCur().sp+'_':'')+k+'.webp';
 function heroPreload(){HFR.forEach(k=>{const i=new Image();i.src=heroSrc(k);});}
 const avImg=()=>'img/'+avCur().s+'.webp';// SNSのアイコン（96角の顔まわり。初期の旅人だけ hero.webp）
-function postHtml(p){return `<article class="post"><div class="av">${p.av?`<img loading="lazy" src="${p.av}" width="40" height="40" alt="">`:`<span>${esc(p.ini||'？')}</span>`}</div><div class="pb"><div class="ph"><b>${esc(p.name)}</b><span>@${esc(p.id)}・${p.when}</span></div><div class="pt${p.th?' thw':''}">${p.th?`<img class="thm" loading="lazy" ${p.th[1]?`data-fb="${p.th[1]}" `:''}src="${p.th[0]}" width="64" height="64" alt="${esc(p.th[2])}">`:''}${esc(p.text).replace(/\n/g,'<br>')}</div>${p.img?`<img class="pimg" loading="lazy" src="${p.img}" width="480" height="320" alt="${esc(p.alt||'')}">`:''}${p.n?`<div class="pa"><span>💬 ${p.n[0]}</span><span>🔁 ${p.n[1]}</span><span>♥ ${p.n[2]}</span></div>`:''}${p.rp?`<div class="rp"><b>${esc(p.rp[0])}</b> <span>@${esc(p.rp[1])}</span><br>${esc(p.rp[2])}</div>`:''}</div></article>`;}
+function postHtml(p){return `<article class="post"><div class="av">${p.av?`<img loading="lazy" src="${p.av}" width="40" height="40" alt="">`:`<span>${esc(p.ini||'？')}</span>`}</div><div class="pb"><div class="ph"><b>${esc(p.name)}</b><span>@${esc(p.id)}・${p.when}</span></div><div class="pt${p.th?' thw':''}">${p.th?`<img class="thm" loading="lazy" ${p.th[1]?`data-fb="${p.th[1]}" `:''}src="${p.th[0]}" width="64" height="64" alt="${esc(p.th[2])}">`:''}${esc(p.text).replace(/\n/g,'<br>')}</div>${p.img?`<img class="pimg" loading="lazy" src="${p.img}" width="480" height="320" alt="${esc(p.alt||'')}">`:''}${p.sh?`<button class="pshare" data-t="${p.sh.t}">この投稿をシェア</button>`:''}${p.n?`<div class="pa"><span>💬 ${p.n[0]}</span><span>🔁 ${p.n[1]}</span><span>♥ ${p.n[2]}</span></div>`:''}${p.rp?`<div class="rp"><b>${esc(p.rp[0])}</b> <span>@${esc(p.rp[1])}</span><br>${esc(p.rp[2])}</div>`:''}</div></article>`;}
 // ゲーム内ログの文章を、SNSの投稿らしく整える（フォロワー増減などの数値は出さない）
 // ヒヨッターの投稿には金額を出さない（購入・輪行・カスタム・インセンティブなど、どの行でも（¥…）と ¥… を外す）
 function snsText(x){x=x.replace(/（[^）]*¥[^）]*）/g,'');if(/編集長からインセンティブ/.test(x))return 'ヒヨッター編集長からインセンティブをいただきました！ありがとうございます🙏';if(/^自宅で休養/.test(x))return '今週は自宅でゆっくり休養🛌';if(/強制帰宅/.test(x))return 'お金が尽きて、家に帰ることに…💸';return x.replace(/\s*¥[\d,]+/g,'').replace(/[。！]?\s*フォロワー[+\-−][^\s。！]*/g,m=>/^！/.test(m)?'！':'');}
@@ -1360,7 +1361,7 @@ function feedItems(){const out=[],seen={};
     if(q<0){out.push({t,r:1,p:{name:penName(),id:'jitensha_tabi',av:avImg(),when:CAL_S(t),text:pick([`日没に間に合わず…😭 ${p.name}のキャンプ場は遅刻でした。次こそ！`,`暗くなっちゃった🌙 ${p.name}はまた今度…`,en?`${en}にやられて遅刻💦 ${p.name}、次はリベンジ！`:`ペース配分をミスった…💦 ${p.name}は遅刻でした`],h),n:[h%2,0,1+h%7],rp:infRp(h,'late',25)}});return;}
     const sg=sightOf(pid,e[4]||e.vn||1),lk=Math.round(q*q/12+h%25+3),band=RPL.find(b=>q>=b[0]),fan=FANS[h%FANS.length],pl=`${p.name}の${p.site}`;
     const head=q>=70?pick([`${pl}に到着〜！🚴✨\n景色が最高すぎた…写真${q}点！`,`${pl}で絶景ゲット📷\n${q}点！これは自信作`,`ついに${pl}！🏕️\n写真${q}点、神回です`],h):q>=40?pick([`${pl}に到着！🏕️\n写真${q}点。いい旅だった〜`,`${pl}までなんとか走り切った🚴\n${q}点、まずまず！`],h):pick([`${pl}に着いたけど、写真は${q}点…😅\n次はリベンジ！`,`${pl}到着🏕️ 天気がいまいちで${q}点💦`],h);
-    out.push({t,r:1,p:{name:penName(),id:'jitensha_tabi',av:avImg(),when:CAL_S(t),text:head+(en?`\n道中で${en}に遭遇💥`:'')+'\n#日本巡る自転車旅',img:'img/sights/'+sg[0]+'.webp',alt:sg[1],n:[Math.round(lk*.06)+1,Math.round(lk*.18),lk],rp:infRp(h,q>=70?'hi':q>=40?'mid':'lo')||spRp(h,15)||campRp(h,pid)||[fan[0],fan[1],pick(band[1],h>>>5)]}});});
+    out.push({t,r:1,p:{name:penName(),id:'jitensha_tabi',av:avImg(),when:CAL_S(t),text:head+(en?`\n道中で${en}に遭遇💥`:'')+'\n#日本巡る自転車旅',img:'img/sights/'+sg[0]+'.webp',alt:sg[1],sh:{t,pid,sg},n:[Math.round(lk*.06)+1,Math.round(lk*.18),lk],rp:infRp(h,q>=70?'hi':q>=40?'mid':'lo')||spRp(h,15)||campRp(h,pid)||[fan[0],fan[1],pick(band[1],h>>>5)]}});});
   S.log.forEach(l=>{const m=/^(\d+)\|(.*)$/s.exec(l);if(!m)return;const t=+m[1],x=m[2],when=CAL_S(t);let mm;
     if(/^(セーブデータ|(長野県の)?補給食を購入)/.test(x))return;// 保存・読み込みの記録は、旅の世界の投稿ではないのでSNSに出さない
     if(mm=/^スポンサー「(.+)」がつきました/.exec(x)){const i=SPONSOR.findIndex(z=>z[2]===mm[1]);out.push({t,r:0,p:{name:mm[1],id:'sponsor_'+Math.max(i,0),av:i>=0?'img/sponsor_'+i+'.webp':'',ini:'S',when,text:`${penName()}さん、いつも応援しています！今週から、旅を支援させてください。\n#日本巡る自転車旅`}});}
@@ -1807,7 +1808,7 @@ function finishAdvance(){
   if(EDI){$('edi-amt').textContent='+'+yen(EDI);$('edi-who').innerHTML=`称号「${title(S.fame)}」への<span style="white-space:nowrap">四半期インセンティブ</span>`;$('ov-edi').hidden=false;playSE('se_win');EDI=0;}
   if(TS){const o=spOf(TS.fame),n=sponsor();if(n[0]>o[0])spCongrats(o,n);}
   if((S.turn-1)%52===0){const y=calendar(S.turn-1).year;showResult(`<h2>${y}年目 決算</h2><div class="res"><span>都道府県クリア数</span><span>${famCount()} / 47</span><span>フォロワー</span><span>${fol(S.fame)}（${title(S.fame)}）</span><span>所持金</span><span>${yen(S.money)}</span><span>試練制覇</span><span>${S.stats.wins}回</span>${(()=>{const v=yearEval(y);return `<span>突破した試練の種類</span><span>${v.n} / ${TRIAL_KEYS.length}</span><span>年間目標</span><span>累計${v.goal}県制覇 ${v.fc>=v.goal?'✅ 達成':'❌ 未達'}</span><span>年間評価</span><span><img class="rank" src="img/rank_${v.rank.toLowerCase()}.webp" width="128" height="128" alt="${v.rank}"><b>${v.rank}</b>（${v.score.toLocaleString('ja-JP')}pt）</span>`;})()}</div>${giftYear()}<p class="hint">${y+1}年目は敵が少し強くなる。</p>`,()=>{render();turnPopup();autoExport();},true);render();focusEditor();return;}
-  const tt=TS?{df:S.fame-TS.fame,dm:S.money-TS.money,late:!TS.inc}:null;if(tt)LASTRES={place:(PREF[S.loc]||{}).name||'',df:tt.df,late:tt.late};render();turnPopup();if(S.turn===2&&TUTI===3&&!tutSeen())tutShow(4,tt);autoExport();focusEditor();}
+  const tt=TS?{df:S.fame-TS.fame,dm:S.money-TS.money,late:!TS.inc}:null;render();turnPopup();if(S.turn===2&&TUTI===3&&!tutSeen())tutShow(4,tt);autoExport();focusEditor();}
 function advance(){INTRIP=false;const sp=sponsor();S.money+=sp[1];if(TS)TS.sp=sp;EDI=0;{const c=calendar(S.turn),b=editorBonus(S.fame);if(c.month%3===0&&c.week===MONTH_W[c.mi]&&b>0){S.money+=b;EDI=b;if(TS)TS.bonus=b;log(`ヒヨッター編集長からインセンティブ ${yen(b)}`);}}S.turn++;rollForecast();S.sel=S.loc;
   if(famCount()===47&&TS&&TS.fam<47){showResult(`<h2>🎉 全国クリア！</h2><p>47か所すべてを馴染み宿にした。伝説の自転車インフルエンサー誕生。</p><div class="res"><span>達成</span><span>${calLabel(S.turn)}</span><span>フォロワー</span><span>${fol(S.fame)}</span><span>所持金</span><span>${yen(S.money)}</span></div>`,finishAdvance,true);render();return;}
   finishAdvance();}
@@ -1818,7 +1819,7 @@ addEventListener('pagehide',save);
 // 開きっぱなしのタブが古いコードのまま保存し直して、新しい保存項目を失うのを防ぐ。
 // 実行中のコードに埋め込んだ版の識別子 APP_V と、いま配信されている index.html の APP_V を比べる（最初に取れた配信内容を「実行中の版」の代わりにしない）。
 // ★ APP_V は index.html の内容から計算する。index.html を変えたら `node qa/stamp.cjs` で更新する（忘れると監査テストが失敗する）。
-const APP_V='32d94d957434';
+const APP_V='7d76287144b9';
 // 旅・戦闘・結果画面（INTRIP）の間は、save() が保存を見送るので、再読み込みすると進行が巻き戻る。旅が終わったあとも trip / B には前回の値が残るため、これらは見ない
 const UPD={pending:'',busy:false,scheduled:false,last:0,every:600000,quiet:600000,timeout:15000,reloadedAt:0,note:null,timer:0,
  safe:()=>!INTRIP,
@@ -1908,15 +1909,16 @@ $('set-tut').onclick=()=>{$('ov-set').hidden=true;try{localStorage.removeItem('c
 function tutSeen(){try{return localStorage.getItem('cc_tut')==='1';}catch(e){return true;}}
 
 // ---------- Xでシェア（旅の記録を、イラスト入りの画像と文章で投稿） ----------
-let LASTRES=null;
 const SHARE_URL='https://jitensha-tabi.com/';
-function shareText(){const L=[`日本巡る自転車旅 ${calLabel(S.turn)}`,`称号：${title(S.fame)}　フォロワー ${fol(S.fame)}`,`都道府県クリア ${famCount()} / 47`];
-  if(LASTRES&&LASTRES.place)L.push(LASTRES.late?`${LASTRES.place}では遅刻して投稿できず…`:`${LASTRES.place}で投稿成功！ フォロワー ${LASTRES.df>=0?'+':'-'}${fol(Math.abs(LASTRES.df))}`);
+// シェアする内容は、ヒヨッターに載った「成功した投稿」。選ばなければ、いちばん新しい成功した投稿。遅刻の投稿はシェアしない
+function shareTarget(t){const it=feedItems().find(i=>i.p.sh&&(t==null||i.p.sh.t===t));return it?it.p:null;}
+function shareText(post){const T=['称号：'+title(S.fame)+'　フォロワー '+fol(S.fame),`都道府県クリア ${famCount()} / 47`];
+  const L=post?[post.text.replace(/\n?#日本巡る自転車旅$/,''),...T]:[`日本巡る自転車旅 ${calLabel(S.turn)}`,...T];
   L.push('#日本巡る自転車旅',SHARE_URL);return L.join('\n');}
 function loadImg(src){return new Promise(r=>{const i=new Image();i.onload=()=>r(i);i.onerror=()=>r(null);i.src=src;});}
-async function shareCard(){const W=1200,H=630,cv=document.createElement('canvas');cv.width=W;cv.height=H;const g=cv.getContext('2d');
+async function shareCard(post){const W=1200,H=630,cv=document.createElement('canvas');cv.width=W;cv.height=H;const g=cv.getContext('2d');
   try{await Promise.all([document.fonts.load('700 40px "Zen Kaku Gothic New"'),document.fonts.load('40px "DotGothic16"')]);}catch(e){}
-  const sp=sponsor(),sg=(S.visits[S.loc]||0)>=1?sightOf(S.loc,S.visits[S.loc]):null,[bg,hero,logo,spi]=await Promise.all([loadImg(sg?'img/sights/'+sg[0]+'.webp':'img/title.webp'),loadImg(pfImg()),loadImg('img/logo.webp'),loadImg('img/sponsor_'+SPONSOR.indexOf(sp)+'.webp')]);
+  const sp=sponsor(),sg=post?post.sh.sg:null,[bg,hero,logo,spi]=await Promise.all([loadImg(sg?'img/sights/'+sg[0]+'.webp':'img/title.webp'),loadImg(pfImg()),loadImg('img/logo.webp'),loadImg('img/sponsor_'+SPONSOR.indexOf(sp)+'.webp')]);
   g.fillStyle='#2a2118';g.fillRect(0,0,W,H);
   if(bg){const s=Math.max(W/bg.width,H/bg.height),w=bg.width*s,h=bg.height*s;g.drawImage(bg,(W-w)/2,(H-h)*0.55,w,h);}
   const gr=g.createLinearGradient(0,0,0,H);gr.addColorStop(0,'rgba(24,17,10,.35)');gr.addColorStop(.5,'rgba(24,17,10,0)');gr.addColorStop(1,'rgba(24,17,10,.55)');g.fillStyle=gr;g.fillRect(0,0,W,H);
@@ -1925,7 +1927,7 @@ async function shareCard(){const W=1200,H=630,cv=document.createElement('canvas'
   if(hero){const x=40,y=H-370,z=210;g.save();g.beginPath();g.roundRect(x,y,z,z,18);g.clip();g.drawImage(hero,x,y,z,z);g.restore();g.lineWidth=4;g.strokeStyle='#e9c46a';g.beginPath();g.roundRect(x,y,z,z,18);g.stroke();}
   const pill=(t,x,y,fs,al)=>{g.font=`700 ${fs}px ${F}`;const w=g.measureText(t).width+28,h=fs+18,l=al==='r'?x-w:al==='c'?x-w/2:x;g.fillStyle='rgba(24,17,10,.72)';g.beginPath();g.roundRect(l,y,w,h,10);g.fill();g.fillStyle='#f4ead5';g.fillText(t,l+14,y+fs+3);return l+w;};
   if(spi){const h=190,w=Math.round(h*spi.width/spi.height);g.drawImage(spi,W-w-36,H-h-84,w,h);pill('スポンサー：'+sp[2],W-36,H-70,26,'r');}
-  if(sg)pill(`${PREF[S.loc].name}の名所：${sg[1]}`,W-36,24,28,'r');
+  if(sg)pill(`${PREF[post.sh.pid].name}の名所：${sg[1]}`,W-36,24,28,'r');
   pill('称号：'+title(S.fame),40,H-146,32,'l');
   pill('フォロワー '+fol(S.fame),40,H-76,32,'l');
   return new Promise(r=>cv.toBlob(r,'image/png'));}
@@ -1934,12 +1936,12 @@ let SHARE_BUSY=false,SHARE_NOTE_EPOCH=0;
 function copyShareText(text){return new Promise(resolve=>{let timer=setTimeout(()=>done(false),1000);
   const done=ok=>{clearTimeout(timer);resolve(ok);};
   try{Promise.resolve(navigator.clipboard.writeText(text)).then(()=>done(true),()=>done(false));}catch(e){done(false);}});}
-async function doShareImg(noteEl){if(SHARE_BUSY)return;SHARE_BUSY=true;
-  const note=noteEl||$('share-note'),epoch=SHARE_NOTE_EPOCH,buttons=[$('btn-share'),$('res-share')].filter(Boolean);
+async function doShareImg(noteEl,t){if(SHARE_BUSY)return;SHARE_BUSY=true;
+  const note=noteEl||$('share-note'),epoch=SHARE_NOTE_EPOCH,buttons=[$('btn-share'),$('res-share'),...document.querySelectorAll('#sns-list .pshare')].filter(Boolean);
   const say=t=>{if(note.isConnected&&(note!==$('share-note')||epoch===SHARE_NOTE_EPOCH))note.textContent=t;};
   buttons.forEach(b=>b.disabled=true);
-  try{say('画像を作っています…');const text=shareText(),cpP=copyShareText(text);
-   let blob;try{blob=await shareCard();}catch(e){blob=null;}
+  try{say('画像を作っています…');const post=shareTarget(t),text=shareText(post),cpP=copyShareText(text);
+   let blob;try{blob=await shareCard(post);}catch(e){blob=null;}
    let file=null;if(blob){try{file=new File([blob],'nihon-meguru-jitensha-tabi.png',{type:'image/png'});}catch(e){}}
    // Xのアプリは画像付き共有で文章を受け取らないことがある。コピーと共有には、押した時点の同じ文章を使う。
    const copied=await cpP,CP=copied?'文章をコピーしました。Xの投稿欄が空のときは、長押しで貼り付けてください。':'';
@@ -1947,6 +1949,7 @@ async function doShareImg(noteEl){if(SHARE_BUSY)return;SHARE_BUSY=true;
    if(blob){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='nihon-meguru-jitensha-tabi.png';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000);window.open('https://x.com/intent/post?text='+encodeURIComponent(text),'_blank','noopener');say('画像を保存しました。Xの投稿画面で、その画像を添付してください。'+CP);}else{window.open('https://x.com/intent/post?text='+encodeURIComponent(text),'_blank','noopener');say('Xの投稿画面を開きました。'+CP);}
   }catch(e){say('共有できませんでした。もう一度お試しください。');}finally{SHARE_BUSY=false;buttons.forEach(b=>b.disabled=false);}}
 $('btn-share').onclick=()=>doShareImg();
+$('sns-list').addEventListener('click',e=>{const b=e.target.closest('.pshare');if(b)doShareImg(null,+b.dataset.t);});
 $('result-box').addEventListener('click',e=>{if(e.target.closest('#res-share'))doShareImg($('res-note'));});
 // ---------- boot ----------
 $('start-pref').innerHTML=PREF.map(p=>`<option value="${p.id}">${p.name}（${p.site}）</option>`).join('');$('start-pref').value='12';
