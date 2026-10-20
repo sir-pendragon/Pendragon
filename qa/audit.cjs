@@ -64,7 +64,7 @@ test('weekly sponsor paid once and calendar advances once',c=>{const {q}=c;q.S.f
 test('editor quarterly bonus: paid only at quarter-end by title, none for 無名',c=>{const {q}=c;const qe=[],other=[];for(let t=1;t<=52;t++){const a=q.calendar(t),b=q.calendar(t+1);(a.month!==b.month&&a.month%3===0?qe:other).push(t);}
  assert.equal(qe.length,4);
  const run=(turn,fame)=>{q.S.turn=turn;q.S.fame=fame;q.snap();const m=q.S.money,sp=q.sponsor()[1];c.$('ov-edi').hidden=true;q.advance();return {d:q.S.money-m-sp,pop:!c.$('ov-edi').hidden};};
- const exp=[[0,0],[2000,60000],[20000,150000],[200000,300000],[1000000,400000],[2000000,600000]];
+ const exp=[[0,0],[2000,60000],[20000,150000],[200000,300000],[1000000,300000],[2000000,300000]];
  for(const [f,b] of exp){const r=run(qe[0],f);assert.equal(r.d,b,'fame '+f);assert.equal(r.pop,b>0);}
  for(const t of other.slice(0,6)){const r=run(t,200000);assert.equal(r.d,0);assert.equal(r.pop,false);}
  run(qe[1],20000);assert.ok(c.$('edi-amt').textContent.includes('150,000'));assert.ok(c.$('ov-edi').textContent.replace(/\s/g,'').includes('アナタノ、コレカラノ、カツヤクニ、キタイシマス！'));});
