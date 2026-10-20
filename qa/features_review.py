@@ -160,6 +160,12 @@ CASES = [
  }
  return {logoAlt:logo.alt,icons:'fallback loaded'};
 }'''),
+('editor_short_viewport', '''async () => {
+ q.S.turn=13;q.S.fame=200000;q.S.money=1e6;q.snap();q.advance();await document.fonts.ready;
+ const b=document.getElementById('edi-ok').getBoundingClientRect();
+ if(b.top<0||b.bottom>innerHeight)throw Error('close button off-screen at '+innerWidth+'x'+innerHeight+' ('+Math.round(b.bottom)+')');
+ return {size:innerWidth+'x'+innerHeight,bottom:Math.round(b.bottom)};
+}'''),
 ('mobile_layout', '''async () => {
  q.S.turn=13;q.S.fame=200000;q.S.money=1e12;q.snap();q.advance();
  await document.fonts.ready;
@@ -223,6 +229,12 @@ def run():
                         page.mouse.move(10,10);page.mouse.wheel(0,500);page.wait_for_timeout(300)
                         assert page.evaluate('scrollY') == old, 'background scrolled behind update modal'
                         result = {'scrollBefore':old,'scrollAfter':page.evaluate('scrollY')}
+                    elif name == 'editor_short_viewport':
+                        result = []
+                        for width, height in [(320,480),(568,320),(667,375),(390,844)]:
+                            page.set_viewport_size({'width':width,'height':height})
+                            page.evaluate("document.getElementById('ov-edi').hidden=true;q.newGame(12);q.render()")
+                            result.append(page.evaluate(js))
                     elif name == 'mobile_layout':
                         result = []
                         for width in [320,390]:

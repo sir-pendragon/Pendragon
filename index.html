@@ -246,8 +246,9 @@ button:disabled{opacity:.45;cursor:not-allowed}
 #ov-sns .snsact{display:flex;align-items:center;gap:8px}
 #ov-sns .snshd #btn-share{background:#000;color:#fff;border-color:#000;padding:3px 23px;line-height:1.15;font-size:var(--fs-s)}#ov-sns .snshd #btn-share small{display:block;font-size:10px;font-weight:700}
 #ov-sns #share-note{margin:0;padding:6px 12px;background:#f5f8fa;border-bottom:1px solid #e1e8ed}
-#ov-sns .snshd button{background:transparent;color:#fff;border:1px solid rgba(255,255,255,.75);border-radius:999px;min-height:0;padding:4px 14px;font-weight:700}
-#ov-sns .snshd button{white-space:nowrap}#ov-sns .snshd .snsact{flex:none}
+#ov-sns .snshd button{background:transparent;color:#fff;border:1px solid rgba(255,255,255,.75);border-radius:999px;min-height:0;padding:4px 14px;font-weight:700;white-space:nowrap}
+#ov-sns .snshd .snsact{flex:none}
+@media(max-height:440px){#edi-img{display:none}}
 @media(max-width:340px){#ov-sns .snshd img{height:20px}#ov-sns .snshd #btn-share{padding:3px 10px}#ov-sns .snshd button{padding:4px 10px}}
 #ov-sns .feed{margin:0;border-top:0;padding:0 12px 8px;background:#fff;flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
 #ov-sns .post{border-bottom:1px solid #e1e8ed;padding:9px 0;color:#14171a}
@@ -541,9 +542,9 @@ button:disabled{opacity:.45;cursor:not-allowed}
   </div>
 </div>
 <div class="overlay" id="ov-edi" hidden style="z-index:30">
-  <div class="modal" role="dialog" aria-modal="true" aria-label="ヒヨッター編集長からの賞与" style="text-align:center">
+  <div class="modal" role="dialog" aria-modal="true" aria-label="ヒヨッター編集長からの賞与" style="text-align:center;max-height:calc(100vh - 32px);overflow-y:auto">
     <img src="img/logo_hiyotter.webp" width="119" height="26" alt="ヒヨッター" style="align-self:center;height:26px;width:auto">
-    <img id="edi-img" src="img/editor.webp" width="180" height="180" alt="ヒヨッター編集長" style="align-self:center;width:180px;height:180px;object-fit:cover;border-radius:12px;border:2px solid var(--line,#8a6a4a);image-rendering:pixelated" onerror="this.hidden=true"><h2 style="margin:0">📬 編集長から賞与が届いた！</h2>
+    <img id="edi-img" src="img/editor.webp" width="180" height="180" alt="ヒヨッター編集長" style="align-self:center;width:clamp(96px,22vh,180px);height:clamp(96px,22vh,180px);object-fit:cover;border-radius:12px;border:2px solid var(--line,#8a6a4a);image-rendering:pixelated" onerror="this.hidden=true"><h2 style="margin:0">📬 編集長から賞与が届いた！</h2>
     <p style="margin:0;font-size:1.5em"><b id="edi-amt"></b></p>
     <p class="hint" id="edi-who" style="margin:0"></p>
     <p style="margin:0;font-size:1.15em"><b>「<span style="white-space:nowrap">アナタノ、コレカラノ、</span><span style="white-space:nowrap">カツヤクニ、キタイシマス！</span>」</b></p>
@@ -1790,7 +1791,7 @@ addEventListener('pagehide',save);
 // 開きっぱなしのタブが古いコードのまま保存し直して、新しい保存項目を失うのを防ぐ。
 // 実行中のコードに埋め込んだ版の識別子 APP_V と、いま配信されている index.html の APP_V を比べる（最初に取れた配信内容を「実行中の版」の代わりにしない）。
 // ★ APP_V は index.html の内容から計算する。index.html を変えたら `node qa/stamp.cjs` で更新する（忘れると監査テストが失敗する）。
-const APP_V='a31a5c4adafb';
+const APP_V='22ea29350488';
 // 旅・戦闘・結果画面（INTRIP）の間は、save() が保存を見送るので、再読み込みすると進行が巻き戻る。旅が終わったあとも trip / B には前回の値が残るため、これらは見ない
 const UPD={pending:'',busy:false,scheduled:false,last:0,every:600000,quiet:600000,timeout:15000,reloadedAt:0,note:null,timer:0,
  safe:()=>!INTRIP,
