@@ -548,7 +548,7 @@ html:has(.overlay:not([hidden]):not(#ov-tut)),body:has(.overlay:not([hidden]):no
 <div class="overlay" id="ov-edi" hidden style="z-index:30">
   <div class="modal" role="dialog" aria-modal="true" aria-label="ヒヨッター編集長からのインセンティブ" style="text-align:center;max-height:calc(100vh - 32px);overflow-y:auto">
     <img src="img/logo_hiyotter_blue.webp" width="119" height="26" alt="ヒヨッター" style="align-self:center;height:26px;width:auto">
-    <img id="edi-img" src="img/editor.webp" width="180" height="180" alt="ヒヨッター編集長" style="align-self:center;width:clamp(96px,22vh,180px);height:clamp(96px,22vh,180px);object-fit:cover;border-radius:12px;border:2px solid var(--line,#8a6a4a);image-rendering:pixelated" onerror="this.hidden=true"><h2 style="margin:0"><img src="img/icon_cash.webp" width="28" height="28" alt="" style="width:30px;height:30px;vertical-align:-8px;margin-right:6px" onerror="this.remove()">編集長から<span style="white-space:nowrap">入金があった！</span></h2>
+    <img id="edi-img" loading="lazy" src="img/editor.webp" width="180" height="180" alt="ヒヨッター編集長" style="align-self:center;width:clamp(96px,22vh,180px);height:clamp(96px,22vh,180px);object-fit:cover;border-radius:12px;border:2px solid var(--line,#8a6a4a);image-rendering:pixelated" onerror="this.hidden=true"><h2 style="margin:0"><img src="img/icon_cash.webp" width="28" height="28" alt="" style="width:30px;height:30px;vertical-align:-8px;margin-right:6px" onerror="this.remove()">編集長から<span style="white-space:nowrap">入金があった！</span></h2>
     <p style="margin:0;font-size:1.5em"><b id="edi-amt"></b></p>
     <p class="hint" id="edi-who" style="margin:0"></p>
     <p style="margin:0;font-size:1.15em"><b>「<span style="white-space:nowrap">アナタノ、コレカラノ、</span><span style="white-space:nowrap">カツヤクニ、キタイシマス！</span>」</b></p>
@@ -1442,7 +1442,7 @@ const CAMPERS=['camper1','camper2','camper3'];
 function stayWx(f){if((S.stay||0)>=2)return CAMPERS[rnd(0,2)];// 三連泊目以降は、天気に関係なく迷惑キャンパー（天候の試練の代わり）
   if(f.wx==='typhoon')return 'typhoon';return ['rain','wind','snow','heat'].includes(f.wx)&&Math.random()<STAY_P[Math.min(S.stay||0,2)]?f.wx:null;}
 function showStorm(p,rinko,k){const cp=!!ENEMY[k].camper;$('st-t').textContent=cp?'🏕️ 隣のサイトが騒がしい…':'⛈️ 天候が悪くなってきた…';$('st-h').innerHTML=`帰ると、自宅で休養します（自宅以外では輪行費がかかります）。<br>帰らないと、そのまま${cp?'迷惑キャンパーの試練':'天候の試練'}になります。`;$('st-p').textContent=cp?`隣に${ENEMY[k].name.replace('迷惑キャンパー','').replace(/[（）]/g,'')}がいる。このまま続ける？`:`${ENEMY[k].name}になりそうだ。このまま続ける？`;$('st-home').onclick=()=>{$('ov-storm').hidden=true;restHome();};$('st-stay').onclick=()=>{$('ov-storm').hidden=true;startTrip(p,rinko,k);};$('ov-storm').hidden=false;playSE('se_encounter');}
-function startTrip(p,rinko,wx){if(p.id===S.loc&&wx===undefined&&!isCourse(p,true)){const k=stayWx(S.forecast[p.id]);if(k){showStorm(p,rinko,k);return;}wx=null;}snap();{const i=new Image();i.src='img/late.webp';}{const i=new Image();i.src='img/sights/'+sightOf(p.id,S.visits[p.id]+1)[0]+'.webp';}const ti=travelInfo(p);const stay=p.id===S.loc;
+function startTrip(p,rinko,wx){if(p.id===S.loc&&wx===undefined&&!isCourse(p,true)){const k=stayWx(S.forecast[p.id]);if(k){showStorm(p,rinko,k);return;}wx=null;}snap();{const i=new Image();i.src='img/late.webp';}if(editorBonus(S.fame)>0){const i=new Image();i.src='img/editor.webp';}{const i=new Image();i.src='img/sights/'+sightOf(p.id,S.visits[p.id]+1)[0]+'.webp';}const ti=travelInfo(p);const stay=p.id===S.loc;
   if(rinko){S.money-=ti.rinko;log(`${p.name}へ輪行（${yen(ti.rinko)}）`);}
   const f=S.forecast[p.id];const enc=[];
   if(!stay){const pool=[];// 輪行でも、坂・悪路・天候・ツチノコは出る。生き物は出にくい（3割）。ヒグマ・ハブは下の「現地で3割」で別に判定する
@@ -1817,7 +1817,7 @@ addEventListener('pagehide',save);
 // 開きっぱなしのタブが古いコードのまま保存し直して、新しい保存項目を失うのを防ぐ。
 // 実行中のコードに埋め込んだ版の識別子 APP_V と、いま配信されている index.html の APP_V を比べる（最初に取れた配信内容を「実行中の版」の代わりにしない）。
 // ★ APP_V は index.html の内容から計算する。index.html を変えたら `node qa/stamp.cjs` で更新する（忘れると監査テストが失敗する）。
-const APP_V='e1b58ab62cfc';
+const APP_V='cc6a28acca54';
 // 旅・戦闘・結果画面（INTRIP）の間は、save() が保存を見送るので、再読み込みすると進行が巻き戻る。旅が終わったあとも trip / B には前回の値が残るため、これらは見ない
 const UPD={pending:'',busy:false,scheduled:false,last:0,every:600000,quiet:600000,timeout:15000,reloadedAt:0,note:null,timer:0,
  safe:()=>!INTRIP,
