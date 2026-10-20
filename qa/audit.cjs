@@ -339,7 +339,7 @@ test('character edit impact: all 88 illustration x name combos render; sponsor-c
 
 test('map walking sprites: 6 character sets exist with the original canvas sizes; the map follows the chosen illustration (hero and cat keep the original set)',c=>{const {q}=c;const fs=require('node:fs');
  const dim=f=>{const b=fs.readFileSync(path.join(path.dirname(filename),f));assert.equal(b.toString('latin1',0,4),'RIFF',f);const t=b.toString('latin1',12,16);if(t==='VP8X')return [1+b.readUIntLE(24,3),1+b.readUIntLE(27,3)];if(t==='VP8 ')return [b.readUInt16LE(26)&0x3fff,b.readUInt16LE(28)&0x3fff];if(t==='VP8L'){const v=b.readUInt32LE(21);return [1+(v&0x3fff),1+((v>>14)&0x3fff)];}throw new Error('webp '+t);};
- const D={w:[90,141],s:[96,132],z:[162,78]},FR=['w1','w2','w3','w4','s1','s2','z1','z2'];
+ const D={w:[90,141],s:[96,132],z:[162,78],r:[160,160]},FR=['r1','r2','w1','w2','w3','w4','s1','s2','z1','z2'];
  for(const k of FR)assert.deepEqual(dim('img/hero_'+k+'.webp'),D[k[0]],'original '+k);
  const withSp=q.AVS.filter(a=>a.sp);assert.equal(JSON.stringify(withSp.map(a=>a.id)),JSON.stringify(['av_gal','av_shades','av_glasses','av_traveler','av_ninja','av_hippie']));assert.equal(new Set(withSp.map(a=>a.sp)).size,6,'sp unique');
  for(const a of withSp)for(const k of FR){const f='img/hero_'+a.sp+'_'+k+'.webp';assert.deepEqual(dim(f),D[k[0]],f);}

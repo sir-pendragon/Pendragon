@@ -1157,7 +1157,7 @@ function renderMap(){const svg=$('map');const mk=JSON.stringify([S.loc,S.sel,S.v
    +put('bike_'+S.bike,344,406,.26)
    +(S.gear.fire&&S.gear.fire!=='fire4'?fireFx(S.gear.fire):'')+`</g>`
    +(S.parts.includes('drone')?`<g class="drone">${put('part_drone',300,392,.15)}</g>`:'');
-  s+=`<g id="hero" style="pointer-events:none"><ellipse id="hs" cy="0" ry="1.8" fill="#000" opacity=".28"/><g id="hf">${HFR.map(k=>`<image id="hi_${k}" href="${heroSrc(k)}" width="${HDIM[k[0]][0]*HK}" height="${HDIM[k[0]][1]*HK}" style="display:none"/>`).join('')}</g><text id="hz1" style="font-size:6px;fill:#fff;paint-order:stroke;stroke:#234;stroke-width:1.5px">z</text><text id="hz2" style="font-size:5px;fill:#fff;paint-order:stroke;stroke:#234;stroke-width:1.5px">z</text></g>`
+  s+=`<g id="hero" style="pointer-events:none"><ellipse id="hs" cy="0" ry="1.8" fill="#000" opacity=".28"/><g id="hf">${HFR.map(k=>`<image id="hi_${k}" href="${heroSrc(k)}" width="${HDIM[k[0]][0]*hk(k)}" height="${HDIM[k[0]][1]*hk(k)}" style="display:none"/>`).join('')}</g><text id="hz1" style="font-size:6px;fill:#fff;paint-order:stroke;stroke:#234;stroke-width:1.5px">z</text><text id="hz2" style="font-size:5px;fill:#fff;paint-order:stroke;stroke:#234;stroke-width:1.5px">z</text></g>`
    +(isHam(S.gear.shelter)?hamFront(sk[S.gear.shelter],S.gear.shelter):'')+(isHam(S.gear.shelter)&&S.gear.tarp==='tp2'?tp2Pole(252+(tf[2]||0),tf[1],tf[0],tf[3]||1):'')
    +(hasTent?zzzFx(tpos.by-SPR['shelter_'+S.gear.shelter][1]*tpos.k+(S.gear.shelter==='sh5'?10:1),tpos.x-252):'')
    +(chim?chim.smoke:'');svg.innerHTML=s;HLAST=null;drawHero();}
@@ -1188,20 +1188,21 @@ function hamBody(k,id){const d=[481,185],w=d[0]*k,hh=d[1]*k,x=252-w/2,y=408-hh;/
 function hamFront(k,id){const d=[481,185],w=d[0]*k,hh=d[1]*k,x=252-w/2,y=408-hh;
   return `<clipPath id="hamclip"><rect x="${(x+HAMF.x0*k).toFixed(1)}" y="${(y+HAMF.y0*k).toFixed(1)}" width="${((HAMF.x1-HAMF.x0)*k).toFixed(1)}" height="${(hh-HAMF.y0*k).toFixed(1)}"/></clipPath><image id="hamf" href="img/shelter_${id}.webp" x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${w.toFixed(1)}" height="${hh.toFixed(1)}" clip-path="url(#hamclip)" style="display:none;pointer-events:none"/>`;}
 // ---- ドット絵の主人公：歩く／座って焚き火／寝る ----
-const HDIM={w:[90,141],s:[96,132],z:[162,78]},HK=.26;
+const HDIM={w:[90,141],s:[96,132],z:[162,78],r:[160,160]},HK=.26,HKR=.23;// r=自転車に乗った絵（キャンプ地を走り回る）。歩きの絵(w)は今は使わず、読み込めない場合の予備として残す
+const hk=k=>k[0]==='r'?HKR:HK;
 const HERO={ph:36,mode:'sit',x:254,y:426,dir:1,t:20,f:0,goal:null,ham:false,tent:false};
 const HAM={x:252,y:399};// ハンモックで寝るときの位置（布のたるみの中央）
-function heroImg(){const f=HERO.f,m=HERO.mode;return m==='walk'?'w'+(1+f%4):m==='sit'?'s'+(f%10<6?1:2):'z'+(f%4<2?1:2);}
+function heroImg(){const f=HERO.f,m=HERO.mode;return m==='walk'?'r'+(1+f%2):m==='sit'?'s'+(f%10<6?1:2):'z'+(f%4<2?1:2);}
 function heroPick(){const r=Math.random();
   if(r<.4)HERO.goal={x:215+Math.random()*90,mode:'walk',y:426};
   else if(r<.7)HERO.goal={x:254,mode:'sit',y:426};
   else{const sh=S&&S.gear&&S.gear.shelter;
     HERO.goal=isHam(sh)?{x:HAM.x,mode:'sleep',y:HAM.y,ham:true}:(sh==='sh2'||sh==='sh3'||sh==='sh4'||sh==='sh5')?{x:252,mode:'sleep',y:416,tent:true}:{x:240,mode:'sleep',y:416};}
   HERO.mode='walk';HERO.y=426;HERO.ham=false;HERO.tent=false;}
-const HFR=['w1','w2','w3','w4','s1','s2','z1','z2'];
+const HFR=['r1','r2','w1','w2','w3','w4','s1','s2','z1','z2'];
 HFR.forEach(k=>{const i=new Image();i.src='img/hero_'+k+'.webp';});
 let HLAST=null;
-function drawHero(){if(!$('hero'))return;const k=heroImg(),d=HDIM[k[0]],w=d[0]*HK,hh=d[1]*HK;
+function drawHero(){if(!$('hero'))return;const k=heroImg(),d=HDIM[k[0]],w=d[0]*hk(k),hh=d[1]*hk(k);
   const flip=HERO.dir<0&&HERO.mode==='walk',tx=HERO.x-w/2,ty=HERO.y-hh;
   if(HLAST!==k){if(HLAST&&$('hi_'+HLAST))$('hi_'+HLAST).style.display='none';$('hi_'+k).style.display='';HLAST=k;}
   const im=$('hi_'+k);im.setAttribute('x',flip?-(tx+w):tx);im.setAttribute('y',ty);im.setAttribute('transform',flip?'scale(-1 1)':'');
@@ -1819,7 +1820,7 @@ addEventListener('pagehide',save);
 // 開きっぱなしのタブが古いコードのまま保存し直して、新しい保存項目を失うのを防ぐ。
 // 実行中のコードに埋め込んだ版の識別子 APP_V と、いま配信されている index.html の APP_V を比べる（最初に取れた配信内容を「実行中の版」の代わりにしない）。
 // ★ APP_V は index.html の内容から計算する。index.html を変えたら `node qa/stamp.cjs` で更新する（忘れると監査テストが失敗する）。
-const APP_V='7bef57f11624';
+const APP_V='25a7e3a961f2';
 // 旅・戦闘・結果画面（INTRIP）の間は、save() が保存を見送るので、再読み込みすると進行が巻き戻る。旅が終わったあとも trip / B には前回の値が残るため、これらは見ない
 const UPD={pending:'',busy:false,scheduled:false,last:0,every:600000,quiet:600000,timeout:15000,reloadedAt:0,note:null,timer:0,
  safe:()=>!INTRIP,
