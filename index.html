@@ -235,10 +235,10 @@ button:disabled{opacity:.45;cursor:not-allowed}
 #pop h3{margin:0 0 8px 36px;font-family:inherit;font-size:1.15rem;font-weight:700;color:#2e2415;border-bottom:2px solid #2e2415;padding-bottom:3px;width:max-content;max-width:calc(100% - 90px)}
 #ov-sp .row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 #ov-prof .avlist{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}#ov-prof .avlist button{padding:3px;min-height:0;aspect-ratio:1;border-radius:50%;display:flex;align-items:center;justify-content:center}#ov-prof .avlist img{width:100%;height:100%;border-radius:50%;object-fit:cover;display:block}
-#ov-prof .avlist button[aria-selected="true"]{background:linear-gradient(#f0c75a,#d9a734);border-color:#a87a1c;box-shadow:0 0 0 2px #f0c75a}
+#ov-prof .avlist button[aria-pressed="true"]{background:linear-gradient(#f0c75a,#d9a734);border-color:#a87a1c;box-shadow:0 0 0 2px #f0c75a}
 #ov-prof .penlist{display:flex;flex-wrap:wrap;gap:6px}#ov-prof .penlist button{flex:1 1 40%;min-height:40px;padding:4px 8px}
 @media (max-width:380px){#ov-prof .penlist button{font-size:var(--fs-s);padding:4px 2px;white-space:nowrap}}
-#ov-prof .penlist button[aria-selected="true"]{background:linear-gradient(#f0c75a,#d9a734);color:#3a2a10;border-color:#a87a1c;font-weight:700}
+#ov-prof .penlist button[aria-pressed="true"]{background:linear-gradient(#f0c75a,#d9a734);color:#3a2a10;border-color:#a87a1c;font-weight:700}
 #ov-sns .modal{background:#fff;color:#14171a;border:0;border-radius:14px;padding:0;gap:0;overflow:hidden;box-shadow:0 10px 40px rgba(0,0,0,.45)}
 #ov-sns .modal{max-height:calc(100vh - 32px);max-height:calc(100dvh - 32px)}
 #ov-sns .snshd{flex:none;position:sticky;top:0;z-index:1;display:flex;align-items:center;justify-content:space-between;background:linear-gradient(#2aa9ff,#129efd);padding:8px 12px}
@@ -357,7 +357,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .profile .res{flex:1;min-width:0;gap:1px 10px;font-size:var(--fs-s);line-height:1.35}
 .enemy .face img{display:block;width:100%;height:100%;object-fit:contain}
 .loghead{display:flex;justify-content:space-between;align-items:center;gap:8px}
-.pfname{display:flex;align-items:baseline;gap:8px;min-width:0}.pfname small{font-family:var(--body);font-size:var(--fs-s);color:var(--muted);white-space:nowrap;letter-spacing:0}.pfname span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;font-family:'Zen Old Mincho','Hiragino Mincho ProN','Yu Mincho',serif;font-weight:700;letter-spacing:.04em}
+.pfname{display:flex;align-items:baseline;gap:8px;min-width:0}.pfname small{font-family:var(--body);font-size:var(--fs-s);color:var(--muted);white-space:nowrap;letter-spacing:0}.pfname span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;max-width:100%;font-family:'Zen Old Mincho','Hiragino Mincho ProN','Yu Mincho',serif;font-weight:700;letter-spacing:.04em}
 .loghead .logbtns{flex:none}.loghead .logbtns button{white-space:nowrap}
 @media (max-width:400px){.pfname{flex-direction:column;align-items:flex-start;gap:0;line-height:1.15}.pfname small{font-size:var(--fs-xs)}}
 @media (max-width:340px){.pfname span{font-size:1.05rem}}
@@ -1455,7 +1455,7 @@ $('fs-t').onclick=()=>{FS.on=!FS.on;saveFS();renderSet();};
 $('fs-every').onchange=()=>{FS.every=+$('fs-every').value||13;saveFS();};
 // ブラウザが容量不足などでサイトデータを勝手に消さないよう頼む（手動削除は防げない）
 try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist().catch(()=>{});}catch(e){}
-function renderProf(){$('av-list').innerHTML=AVS.map(([f,n],i)=>`<button data-av="${i}" aria-selected="${avIx()===i}" aria-label="${esc(n)}" title="${esc(n)}"><img src="img/${i?f+'_s':f}.webp" width="64" height="64" alt=""></button>`).join('');$('pen-list').innerHTML=PEN.map((n,i)=>penOK(i,avIx())?`<button data-pen="${i}" aria-selected="${((S&&S.pen)|0)===i}">${esc(n)}</button>`:'').join('');}
+function renderProf(){$('av-list').innerHTML=AVS.map(([f,n],i)=>`<button data-av="${i}" aria-pressed="${avIx()===i}" aria-label="${esc(n)}" title="${esc(n)}"><img src="img/${i?f+'_s':f}.webp" width="64" height="64" alt=""></button>`).join('');$('pen-list').innerHTML=PEN.map((n,i)=>penOK(i,avIx())?`<button data-pen="${i}" aria-pressed="${((S&&S.pen)|0)===i}">${esc(n)}</button>`:'').join('');}
 $('btn-prof').onclick=()=>{if(!S)return;renderProf();$('ov-prof').hidden=false;};
 $('av-list').onclick=e=>{const b=e.target.closest('button[data-av]');if(!b||!S)return;S.av=+b.dataset.av;if(!penOK(S.pen|0,S.av))S.pen=0;save();renderProf();renderLog();};
 $('pen-list').onclick=e=>{const b=e.target.closest('button[data-pen]');if(!b||!S||!penOK(+b.dataset.pen,avIx()))return;S.pen=+b.dataset.pen;save();renderProf();renderLog();};
@@ -1463,7 +1463,7 @@ $('prof-close').onclick=()=>{$('ov-prof').hidden=true;};
 $('ov-prof').addEventListener('click',e=>{if(e.target===$('ov-prof'))$('ov-prof').hidden=true;});
 $('btn-set').onclick=()=>{renderSet();$('ov-set').hidden=false;};
 // 右上の「SNS」ボタン：自分のSNSをポップアップで読む
-$('btn-sns').onclick=()=>{if(!S)return;const it=feedItems();$('sns-list').innerHTML=it.length?it.map(i=>postHtml(i.p)).join(''):'<div class="hint" style="padding:10px 4px">まだ投稿はありません</div>';$('ov-sns').hidden=false;$('ov-sns').scrollTop=0;};
+$('btn-sns').onclick=()=>{if(!S)return;$('share-note').textContent='';const it=feedItems();$('sns-list').innerHTML=it.length?it.map(i=>postHtml(i.p)).join(''):'<div class="hint" style="padding:10px 4px">まだ投稿はありません</div>';$('ov-sns').hidden=false;$('ov-sns').scrollTop=0;};
 $('sns-close').onclick=()=>{$('ov-sns').hidden=true;};
 $('ov-sns').addEventListener('click',e=>{if(e.target===$('ov-sns'))$('ov-sns').hidden=true;});
 $('set-close').onclick=()=>{$('ov-set').hidden=true;$('sv-msg').hidden=true;};
