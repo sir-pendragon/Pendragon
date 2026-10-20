@@ -1324,7 +1324,7 @@ function feedItems(){const out=[],seen={};
     else if(mm=/^ライバルより先に撮影スポットへ着いた@(\w+)$/.exec(x)){const d=infD(mm[1]);out.push({t,r:2,p:{name:d.name,id:d.handle,av:d.av,when,text:d.win+' #映え勝負'}});}
     else if(mm=/^ライバルに先を越された@(\w+)$/.exec(x)){const d=infD(mm[1]);out.push({t,r:2,p:{name:d.name,id:d.handle,av:d.av,when,text:d.lose+' #映え勝負'}});}
     else if(mm=/^INFEV@(\w+)@(\d+)$/.exec(x)){const d=infD(mm[1]);out.push({t,r:2,p:{name:d.name,id:d.handle,av:d.av,when,text:d.turn[+mm[2]%d.turn.length]}});}
-    else if(mm=/^INFGIFT@(\w+)$/.exec(x)){const d=infD(mm[1]);out.push({t,r:1,p:{name:d.name,id:d.handle,av:d.av,when,text:d.gift+(d.dango?'\n🎁 文化祭の団子'+d.dango+'個が届きました（バトルで食べられます）':'\n🎁 パーツ欄に「'+(PARTS.find(z=>z.id===d.part)||{}).name+'」が届きました')}});}
+    else if(mm=/^INFGIFT@(\w+)$/.exec(x)){const d=infD(mm[1]);out.push({t,r:1,p:{name:d.name,id:d.handle,av:d.av,when,text:d.gift+(d.dango?'\n🎁 文化祭の団子'+d.dango+'個が届きました（バトルで食べられます）':d.part?'\n🎁 パーツ欄に「'+(PARTS.find(z=>z.id===d.part)||{}).name+'」が届きました':'')}});}
     else out.push({t,r:3,p:{name:penName(),id:'jitensha_tabi',av:avImg(),when,text:(/ツチノコ/.test(x)?'🐍✨ ':/購入/.test(x)?'🛒 ':/輪行/.test(x)?'🚃 ':/カスタム|付けた/.test(x)?'🔧 ':'')+snsText(x),th:(mm=/^(.+?)を購入/.exec(x))?itemArt(mm[1]):null}});});
   return engage(out.sort((a,b)=>b.t-a.t||a.r-b.r).slice(0,30));}
 // ペンネーム：自分のSNSの投稿に出る名前（一覧から選ぶ。0番が初期値）
@@ -1376,7 +1376,7 @@ function renderTrials(){let w=0,f=0;for(const k of TRIAL_KEYS){const v=S.stats.e
     if(k==='tsuchi'){const got=v[1]>0;return `<div class="n${got?'':' leg'}"><img loading="lazy" decoding="async" src="img/${got?'tsuchinoko':'tsuchinoko_unknown'}.webp" alt="">${got?'ツチノコ':'伝説の生き物'}</div>${cols}`;}
     if(NEWK.has(k)&&!v[0])return '';const e=ENEMY[k];return `<div class="n" data-en="${k}" style="cursor:pointer"><img loading="lazy" decoding="async" src="${e.img}" alt="" onerror="this.style.display='none'">${e.name.replace('インフルエンサー','').replace('迷惑キャンパー','迷惑')}</div>${cols}`;};
   $('tr-tabs').innerHTML=[['old','試練'],['rv','ライバル'],['4th','都道府県限定試練']].map(([g,t])=>`<button data-trs="${g}" aria-selected="${TRSUB===g}">${t}</button>`).join('');
-  if(TRSUB==='rv'){$('achlist').innerHTML=`<div class="rvh">映え勝負：撮影スポットで勝つと、${INF_WIN}勝で次の年末決算に贈り物が届きます</div>`+INF.map(d=>{const v=infSt(d.id),dots='●'.repeat(Math.min(v.w,INF_WIN))+'○'.repeat(Math.max(0,INF_WIN-v.w)),gift=d.dango?`文化祭の団子${d.dango}個`:(PARTS.find(x=>x.id===d.part)||{}).name,area=d.reg?d.reg+'地方':d.pref||'全国';return `<div class="rvc"><img src="${d.av}" width="48" height="48" alt=""><div class="rvm"><b>${esc(d.name)}</b><span>@${esc(d.handle)}</span><small>登場：${esc(area)}　<span class="nw">${v.w}勝／${v.e}戦</span></small><small>${INF_WIN}勝で：${esc(gift)}</small></div><div class="rvs"><span class="dots">${dots}</span><small>${v.g?'🎁受取済':v.w>=INF_WIN?'🎁次の年末':''}</small></div></div>`;}).join('');return;}
+  if(TRSUB==='rv'){$('achlist').innerHTML=`<div class="rvh">映え勝負：撮影スポットで勝つと、${INF_WIN}勝で次の年末決算に贈り物が届きます</div>`+INF.map(d=>{const v=infSt(d.id),dots='●'.repeat(Math.min(v.w,INF_WIN))+'○'.repeat(Math.max(0,INF_WIN-v.w)),gift=d.dango?`文化祭の団子${d.dango}個`:d.part?(PARTS.find(x=>x.id===d.part)||{}).name:'メッセージのみ',area=d.reg?d.reg+'地方':d.pref||'全国';return `<div class="rvc"><img src="${d.av}" width="48" height="48" alt=""><div class="rvm"><b>${esc(d.name)}</b><span>@${esc(d.handle)}</span><small>登場：${esc(area)}　<span class="nw">${v.w}勝／${v.e}戦</span></small><small>${INF_WIN}勝で：${esc(gift)}</small></div><div class="rvs"><span class="dots">${dots}</span><small>${v.g?'🎁受取済':v.w>=INF_WIN?'🎁次の年末':''}</small></div></div>`;}).join('');return;}
   const rows=TRIAL_KEYS.filter(k=>is4th(k)===(TRSUB==='4th')).map(row).join('');
   $('achlist').innerHTML='<div class="th">試練</div>'+(TRSUB==='4th'?'<div class="th">都道府県</div><div class="th">遭遇</div><div class="th">突破</div>':'<div class="th">遭遇</div><div class="th">突破</div><div class="th">失敗</div>')+(rows||'<div class="none">まだ出会っていません（その県の特別コースで出会うと載ります）</div>');}
 $('achlist').onclick=e=>{const n=e.target.closest('.n[data-en]');if(!n)return;const en=ENEMY[n.dataset.en];if(!en)return;$('sg-img').src=en.img;$('sg-img').alt=en.name;$('sg-name').textContent=en.name;$('sg-desc').textContent=en.hint||'';$('sg-desc').hidden=!en.hint;$('ov-sight').hidden=false;};
@@ -1534,7 +1534,12 @@ const INF=[
   intro:'こんにちは。同じ景色を狙っていたのですね。お手柔らかにお願いします',win:'負けました…。さすがです。勉強になります',lose:'やった、先に撮れました！ありがとうございました',
   turn:['今週は課題を終わらせてから出発します。安全第一で参ります','自転車も荷物も安物ですが、大事に使っています','服はモンベルで揃えてみました。軽くて、雨の日も安心です','文化祭の準備で忙しい週でした。団子の試作を重ねています','キャンプ場でお会いしたら、ご挨拶させてください。よろしくお願いします'],
   rep:{hi:['素晴らしい景色ですね。わたしも行ってみたいです','この一枚、保存させていただきました。ありがとうございます','すごいです。構図の勉強になります'],mid:['良い旅ですね。道中、お気をつけて','落ち着いた雰囲気で素敵です','次の投稿も楽しみにしています'],lo:['天気は仕方ないですよね。次を楽しみにしています','わたしも雨の日は苦戦します。お疲れさまでした','無理せず、ゆっくり行きましょう'],late:['暗い道は危ないので、気をつけてくださいね','ご無事で何よりです。ゆっくり休んでください']},
-  gift:'何度もお相手いただき、ありがとうございます。文化祭で作った団子です。3個、お納めください'}];
+  gift:'何度もお相手いただき、ありがとうございます。文化祭で作った団子です。3個、お納めください'},
+ {id:'cammy',name:'キャミィ',handle:'cammy_mtb',img:'img/inf_cammy.webp',av:'img/inf_cammy_s.webp',msgOnly:true,
+  intro:'ハーイ！　同じ景色を狙ってたデース！　負けないデース！',win:'ワオ！　負けたデース！　でも次は勝つデース！',lose:'イェーイ！　先に撮ったデース！　ごめんなさいデース！',
+  turn:['今週もマウンテンバイクで元気に走るデース！','荷物は多いけど、全部必要デース！','日本のキャンプ場、最高デース！','コーヒーを淹れて、ひと休みデース☕','タイヤが太いと、どこでも走れるデース！'],
+  rep:{hi:['ワオ！　すごい景色デース！！','この一枚、最高デース！　ワタシも行きたいデース！','カッコいいデース！　完敗デース！'],mid:['いい旅デース！　ワタシも負けないデース！','素敵な写真デース！','次の投稿も楽しみデース！'],lo:['雨でも楽しむのがコツデース！','ドンマイデース！　次があるデース！','元気を出すデース！'],late:['夜道は気をつけるデース！','無事でよかったデース！　ゆっくり休むデース！']},
+  gift:'何度も勝負してくれて、ありがとうデース！　日本の旅は最高デース！'}];
 const infHere=(d,p)=>!p||(!d.reg&&!d.pref)||d.reg===p.region||d.pref===p.name;// 登場できる場所（reg=地方、pref=県。どちらもなければ全国）
 const infPool=p=>INF.filter(d=>infHere(d,p));
 const infLocal=p=>INF.some(d=>(d.reg||d.pref)&&infHere(d,p));
@@ -1548,7 +1553,7 @@ const infSt=id=>{if(!S.inf||typeof S.inf!=='object')S.inf={};return S.inf[id]||(
 let INFEV=null;// 週の始めに登場した人（その週のポップアップに1回だけ出す）
 function rollInf(){if(!TS||Math.random()>=.25)return;const pl=infPool(PREF[S.loc]),d=pl[Math.floor(Math.random()*pl.length)],k=Math.floor(Math.random()*d.turn.length);INFEV={d,k};log(`INFEV@${d.id}@${k}`);}
 function infBlock(){if(!INFEV)return '';const {d,k}=INFEV;INFEV=null;return `<div class="infev"><img src="${d.av}" width="48" height="48" alt=""><div><b>${esc(d.name)}</b><span>@${d.handle}</span><p>「${esc(d.turn[k])}」</p></div></div>`;}
-function giftYear(){let h='';for(const d of INF){const st=infSt(d.id);if(st.w>=INF_WIN&&!st.g){st.g=1;log(`INFGIFT@${d.id}`);if(d.dango){S.dango=Math.min(DANGO.max,(S.dango||0)+d.dango);h+=`<p class="hint">🎁 ${esc(d.name)}から文化祭の団子${d.dango}個が届いた！（バトルで食べられます）</p>`;}else{if(!S.owned.parts.includes(d.part))S.owned.parts.push(d.part);h+=`<p class="hint">🎁 ${esc(d.name)}から「${esc(PARTS.find(x=>x.id===d.part).name)}」が届いた！（パーツ欄で装備できます）</p>`;}}}return h;}
+function giftYear(){let h='';for(const d of INF){const st=infSt(d.id);if(st.w>=INF_WIN&&!st.g){st.g=1;log(`INFGIFT@${d.id}`);if(d.dango){S.dango=Math.min(DANGO.max,(S.dango||0)+d.dango);h+=`<p class="hint">🎁 ${esc(d.name)}から文化祭の団子${d.dango}個が届いた！（バトルで食べられます）</p>`;}else if(d.part){if(!S.owned.parts.includes(d.part))S.owned.parts.push(d.part);h+=`<p class="hint">🎁 ${esc(d.name)}から「${esc(PARTS.find(x=>x.id===d.part).name)}」が届いた！（パーツ欄で装備できます）</p>`;}else{h+=`<p class="hint">💌 ${esc(d.name)}からメッセージが届いた！</p>`;}}}return h;}
 let B=null;
 function startBattle(kind){tstat(kind)[0]++;const e=ENEMY[kind],p=trip.p,c=calendar(S.turn);const scale=1+.4*(p.diff-1)+.2*(c.year-1);
   const hp=kind==='rival'?Math.round(40+FL()/3):Math.round(e.hp*scale);
@@ -1749,7 +1754,7 @@ addEventListener('pagehide',save);
 // 開きっぱなしのタブが古いコードのまま保存し直して、新しい保存項目を失うのを防ぐ。
 // 実行中のコードに埋め込んだ版の識別子 APP_V と、いま配信されている index.html の APP_V を比べる（最初に取れた配信内容を「実行中の版」の代わりにしない）。
 // ★ APP_V は index.html の内容から計算する。index.html を変えたら `node qa/stamp.cjs` で更新する（忘れると監査テストが失敗する）。
-const APP_V='ffb300832278';
+const APP_V='66cb9202bd9e';
 // 旅・戦闘・結果画面（INTRIP）の間は、save() が保存を見送るので、再読み込みすると進行が巻き戻る。旅が終わったあとも trip / B には前回の値が残るため、これらは見ない
 const UPD={pending:'',busy:false,scheduled:false,last:0,every:600000,quiet:600000,wait:1500,timeout:15000,reloadedAt:0,note:null,timer:0,
  safe:()=>!INTRIP,
