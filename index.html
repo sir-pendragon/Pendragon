@@ -952,7 +952,7 @@ const SEASON_J={spring:'<img class="wi" src="img/wx_spring.webp" width="96" heig
 const FL=()=>30*Math.log(1+S.fame/100);
 const floss=(min,pc)=>Math.max(min,Math.round(S.fame*pc));
 // 四半期（3・6・9・12月の月末）にヒヨッター編集長から届く特別賞与。称号ごと [必要フォロワー, 金額]（TITLES と同じ並び）
-const EDITOR=[[0,0],[2000,60000],[20000,150000],[200000,300000],[1000000,300000],[2000000,300000]];
+const EDITOR=[[0,0],[2000,15000],[20000,37500],[200000,75000],[1000000,75000],[2000000,75000]];
 function editorBonus(f){let r=0;for(const x of EDITOR)if(f>=x[0])r=x[1];return r;}
 function title(f){let t=TITLES[0][1];for(const [n,s] of TITLES) if(f>=n) t=s;return t;}
 
@@ -1781,7 +1781,7 @@ addEventListener('pagehide',save);
 // 開きっぱなしのタブが古いコードのまま保存し直して、新しい保存項目を失うのを防ぐ。
 // 実行中のコードに埋め込んだ版の識別子 APP_V と、いま配信されている index.html の APP_V を比べる（最初に取れた配信内容を「実行中の版」の代わりにしない）。
 // ★ APP_V は index.html の内容から計算する。index.html を変えたら `node qa/stamp.cjs` で更新する（忘れると監査テストが失敗する）。
-const APP_V='52e57826d744';
+const APP_V='492775d2bd7d';
 // 旅・戦闘・結果画面（INTRIP）の間は、save() が保存を見送るので、再読み込みすると進行が巻き戻る。旅が終わったあとも trip / B には前回の値が残るため、これらは見ない
 const UPD={pending:'',busy:false,scheduled:false,last:0,every:600000,quiet:600000,timeout:15000,reloadedAt:0,note:null,timer:0,
  safe:()=>!INTRIP,
