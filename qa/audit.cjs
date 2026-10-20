@@ -275,7 +275,7 @@ test('profile settings: pen name picked from a list (10 unique), shown on my pos
  assert.equal(q.PEN.length,11);assert.equal(new Set(q.PEN).size,11);assert.equal(q.S.pen,0);
  q.S.log.unshift('補給食を購入（¥800）');q.S.log.unshift('軽量山岳テントを購入（¥55,000）');const mine=()=>q.feedItems().filter(x=>x.p.id==='jitensha_tabi');assert.ok(mine().length>0&&mine().every(x=>x.p.name==='旅の自転車乗り'));
  c.$('btn-prof').click();assert.equal(c.$('ov-prof').hidden,false);const bs=[...c.$('pen-list').querySelectorAll('button')];assert.equal(bs.length,10,'cat-only name hidden');assert.equal(bs[0].getAttribute('aria-selected'),'true');
- bs[3].click();assert.equal(q.S.pen,3);assert.ok(mine().every(x=>x.p.name===q.PEN[3]));assert.equal(c.$('pen-list').querySelectorAll('button')[3].getAttribute('aria-selected'),'true');
+ assert.equal(c.$('pf-pen').textContent,'旅の自転車乗り');assert.ok(c.w.document.querySelector('.loghead .pfname small').textContent==='ペンネーム');bs[3].click();assert.equal(q.S.pen,3);assert.equal(c.$('pf-pen').textContent,q.PEN[3]);assert.ok(mine().every(x=>x.p.name===q.PEN[3]));assert.equal(c.$('pen-list').querySelectorAll('button')[3].getAttribute('aria-selected'),'true');
  q.save();assert.equal(q.load().pen,3);q.S.pen=99;q.save();assert.equal(q.load().pen,0);q.S.pen=-5;q.save();assert.equal(q.load().pen,0);
  c.$('prof-close').click();assert.equal(c.$('ov-prof').hidden,true);c.$('btn-sns').click();assert.ok(c.$('sns-list').textContent.length>0);});
 test('profile illustration: 8 choices (initial hero + 7), files exist, picking one changes the 旅の記録 portrait and my SNS avatar; saved/validated',c=>{const {q}=c;q.newGame(12);assert.equal(q.AVS.length,8);assert.equal(q.AVS[0][0],'hero');

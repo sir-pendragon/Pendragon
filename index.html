@@ -357,6 +357,10 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .profile .res{flex:1;min-width:0;gap:1px 10px;font-size:var(--fs-s);line-height:1.35}
 .enemy .face img{display:block;width:100%;height:100%;object-fit:contain}
 .loghead{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.pfname{display:flex;align-items:baseline;gap:8px;min-width:0}.pfname small{font-family:var(--body);font-size:var(--fs-s);color:var(--muted);white-space:nowrap;letter-spacing:0}.pfname span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.loghead .logbtns{flex:none}.loghead .logbtns button{white-space:nowrap}
+@media (max-width:400px){.pfname{flex-direction:column;align-items:flex-start;gap:0;line-height:1.15}.pfname small{font-size:var(--fs-xs)}}
+@media (max-width:340px){.pfname span{font-size:1.05rem}}
 .res{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-variant-numeric:tabular-nums}
 .res span:nth-child(odd){color:var(--muted)}
 @media (prefers-reduced-motion:no-preference){ .shake{animation:shake .35s} @keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}} }
@@ -445,7 +449,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
     <div id="sightbook"></div>
     </div>
     <div id="p-trip">
-    <div class="loghead"><h2>旅の記録</h2><span class="logbtns"><button id="btn-set" aria-label="システム">⚙ システム</button></span></div>
+    <div class="loghead"><h2 class="pfname"><small>ペンネーム</small><span id="pf-pen">旅の自転車乗り</span></h2><span class="logbtns"><button id="btn-set" aria-label="システム">⚙ システム</button></span></div>
     <div class="profile"><img id="pf-img" class="pfimg" loading="lazy" decoding="async" src="img/hero.webp" width="180" height="180" alt="主人公の自転車旅行者"><div class="res" id="summary"></div></div>
     <div class="subtabs" id="tl-tabs"><button data-v="tl" aria-selected="true">旅履歴</button><button id="btn-prof" aria-haspopup="dialog">プロフィール設定</button></div>
     <div class="tl" id="tl"></div>
@@ -1321,7 +1325,7 @@ const PEN=['旅の自転車乗り','ペダル旅人','風のサイクリスト',
 const PEN_AV={10:3};// 特定のイラストのときだけ選べるペンネーム（ペンネーム番号→イラスト番号）。猫超大好き＝サイベリアン
 const penOK=(i,a)=>i>=0&&i<PEN.length&&(PEN_AV[i]===undefined||PEN_AV[i]===a);
 const penName=()=>{const i=(S&&S.pen)|0;return penOK(i,avIx())?PEN[i]:PEN[0];};
-function renderLog(){if($('pf-img').getAttribute('src')!==pfImg())$('pf-img').src=pfImg();
+function renderLog(){$('pf-pen').textContent=penName();if($('pf-img').getAttribute('src')!==pfImg())$('pf-img').src=pfImg();
   $('tl').innerHTML=S.tl.length?`<div class="th">日付</div><div class="th">行き先</div><div class="th">写真</div><div class="th">遭遇</div>`+S.tl.map(([t,pid,q,k])=>`<div>${CAL_S(t)}</div><div>${PREF[pid].name}</div><div>${q<0?'<span class="bad">遅刻</span>':q+'点'}</div><div>${tlDec(k).length?tlDec(k).map(x=>(ENEMY[x]||{name:x==='tsuchi'?'ツチノコ':x}).name).join('・'):'なし'}</div>`).join(''):'<div class="hint" style="grid-column:1/-1">まだ旅に出ていません</div>';
   const sp=sponsor();$('summary').innerHTML=`<span>称号</span><span>${title(S.fame)}</span><span>スポンサー</span><span><img loading="lazy" class="spi" src="img/sponsor_${SPONSOR.indexOf(sp)}.webp" alt="" onerror="this.remove()">${sp[2]}<br><small>${yen(sp[1])}/週</small></span><span>投稿数</span><span>${S.stats.posts}</span><span>最高写真</span><span>${S.stats.bestQ}点</span><span>試練制覇</span><span>${S.stats.wins}回</span>`;}
 
