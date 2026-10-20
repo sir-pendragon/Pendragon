@@ -1749,7 +1749,7 @@ addEventListener('pagehide',save);
 // 開きっぱなしのタブが古いコードのまま保存し直して、新しい保存項目を失うのを防ぐ。
 // 実行中のコードに埋め込んだ版の識別子 APP_V と、いま配信されている index.html の APP_V を比べる（最初に取れた配信内容を「実行中の版」の代わりにしない）。
 // ★ APP_V は index.html の内容から計算する。index.html を変えたら `node qa/stamp.cjs` で更新する（忘れると監査テストが失敗する）。
-const APP_V='f15a3963f713';
+const APP_V='ffb300832278';
 // 旅・戦闘・結果画面（INTRIP）の間は、save() が保存を見送るので、再読み込みすると進行が巻き戻る。旅が終わったあとも trip / B には前回の値が残るため、これらは見ない
 const UPD={pending:'',busy:false,scheduled:false,last:0,every:600000,quiet:600000,wait:1500,timeout:15000,reloadedAt:0,note:null,timer:0,
  safe:()=>!INTRIP,
@@ -1840,9 +1840,12 @@ async function shareCard(){const W=1200,H=630,cv=document.createElement('canvas'
   pill('フォロワー '+fol(S.fame),40,H-76,32,'l');
   return new Promise(r=>cv.toBlob(r,'image/png'));}
 async function doShareImg(noteEl){const note=noteEl||$('share-note');note.textContent='画像を作っています…';
+  const cpP=(async()=>{try{await navigator.clipboard.writeText(shareText());return true;}catch(e){return false;}})();// 押した直後に済ませる（時間がたつとコピーが拒否されることがある）
   let blob;try{blob=await shareCard();}catch(e){blob=null;}
   const text=shareText();let file=null;if(blob){try{file=new File([blob],'nihon-meguru-jitensha-tabi.png',{type:'image/png'});}catch(e){}}
-  try{if(file&&navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],text});note.textContent='';return;}}catch(e){if(e&&e.name==='AbortError'){note.textContent='';return;}}
+  // Xのアプリは、画像付きの共有で文章を受け取らないことがある。先に文章をコピーしておき、貼り付けてもらう
+  const copied=await cpP;const CP='文章をコピーしました。Xの投稿欄が空のときは、長押しで貼り付けてください。';
+  try{if(file&&navigator.canShare&&navigator.canShare({files:[file]})){note.textContent=copied?CP:'';await navigator.share({files:[file],text});note.textContent=copied?CP:'';return;}}catch(e){if(e&&e.name==='AbortError'){note.textContent=copied?CP:'';return;}}
   if(blob){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='nihon-meguru-jitensha-tabi.png';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000);window.open('https://x.com/intent/post?text='+encodeURIComponent(text),'_blank','noopener');note.textContent='画像を保存しました。Xの投稿画面で、その画像を添付してください。';}else{window.open('https://x.com/intent/post?text='+encodeURIComponent(text),'_blank','noopener');note.textContent='Xの投稿画面を開きました。';}}
 $('btn-share').onclick=()=>doShareImg();
 $('result-box').addEventListener('click',e=>{if(e.target.closest('#res-share'))doShareImg($('res-note'));});
