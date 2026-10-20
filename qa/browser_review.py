@@ -34,7 +34,7 @@ def rec(name,result):
  elif name=='viewer_close_focus':assert result=='cammy'
  elif name=='viewer_all_click_and_enemy':assert result=={'rivals':6,'enemyOpened':True,'infHidden':True}
  elif name=='rivals_all_regions':assert result['regions']==47 and set(result['selected'])=={'tomy','lcc','takechan','mino','cammy','harold'}
- elif name=='rival_gifts_roundtrip':assert not result['twice'] and result['noItems'] and result['flags']==[1,1] and len(result['feed'])==2 and all('undefined' not in x and '🎁' not in x for x in result['feed'])
+ elif name=='rival_gifts_roundtrip':assert not result['twice'] and result['noItems'] and result['flags']==[1,1] and len(result['feed'])==2 and all('undefined' not in x and '🎁' in x for x in result['feed'])
  elif name.startswith('clipboard_'):assert result['shares']==1 and not result['unhandled'],result
  elif name=='double_click':assert result['shares']==1
  elif name=='share_snapshot':assert result['same']

@@ -778,6 +778,7 @@ const FOOD_PRICE=800,FOOD_MAX=5;
 const foodMax=()=>FOOD_MAX+(S&&S.parts?S.parts.reduce((a,x)=>a+((PARTS.find(p=>p.id===x)||{}).food||0),0):0);// リアラックで増える
 // 長野県の補給食（赤マムシドリンク風）：高価だが回復量が大きい
 const NAGANO={price:2000,max:3,hp:60,mp:30};
+const GUMMY={max:3,hp:NAGANO.hp,mp:NAGANO.mp};// 着色料いっぱいのグミ（キャミィからの贈り物。赤マムシドリンク風の長野県の補給食と同じ効果。買えない）
 const DANGO={max:3,hp:25,mp:10};// 文化祭の団子（ライバルからの贈り物。補給食と同じ効果。買えない）
 const BIKES=[
  {id:'mama',name:'ママチャリ',price:0,climb:2,rough:2,cruise:2,wx:3},
@@ -944,7 +945,7 @@ function title(f){let t=TITLES[0][1];for(const [n,s] of TITLES) if(f>=n) t=s;ret
 // ---------- state ----------
 let S=null;
 function newGame(HOME){INTRIP=false;LASTSAVE='';TS=null;trip=null;B=null;$('pop').hidden=true;S={turn:1,fame:0,stay:0,money:DEBUG?10000000:30000,hp:100,mp:100,home:HOME,loc:HOME,bike:'mama',cloth:'plain',parts:[],gear:{fire:null,shelter:null,tarp:null},owned:{bikes:['mama'],cloth:['plain'],parts:[],gear:[]},
-  visits:Array(47).fill(0),fam:Array(47).fill(false),log:[],tl:[],forecast:null,sel:HOME,food:0,food2:0,dango:0,penId:'pen_tabi',avId:'av_hero',inf:{},plus:{},stats:{wins:0,posts:0,bestQ:0,tph:0,ev:0,tc:0,en:{}}};
+  visits:Array(47).fill(0),fam:Array(47).fill(false),log:[],tl:[],forecast:null,sel:HOME,food:0,food2:0,dango:0,gummy:0,penId:'pen_tabi',avId:'av_hero',inf:{},plus:{},stats:{wins:0,posts:0,bestQ:0,tph:0,ev:0,tc:0,en:{}}};
   rollForecast();log(`春の週末。${PREF[HOME].name}の自宅から旅が始まる。`);save();}
 // ---------- セーブ ----------
 // 旅の最中（出発〜結果を閉じるまで）は保存しない。途中で閉じても旅の前の状態に戻るだけで、バトルや費用の食い逃げができない
@@ -990,7 +991,7 @@ function load(){try{const s=localStorage.getItem('charicamp');if(!s)return null;
   for(const k of TRIAL_KEYS){const v=st.en&&st.en[k];if(Array.isArray(v)&&v.length===3)o.stats.en[k]=v.map(x=>num(x,0,0,1e9));};
   {const iv=o.inf&&typeof o.inf==='object'?o.inf:{};o.inf={};for(const d of INF){const v=iv[d.id];if(v&&typeof v==='object')o.inf[d.id]={w:num(v.w,0,0,1e9),e:num(v.e,0,0,1e9),g:num(v.g,0,0,1)};}}
   // ID項目があれば（不正な値でも）旧番号より優先。ID項目が無いときだけ旧番号から1回移行
-  o.food=num(o.food,0,0,FOOD_MAX+RACK_TOP+((PARTS.find(p=>p.id==='framebag')||{}).food||0));o.food2=num(o.food2,0,0,NAGANO.max);o.dango=num(o.dango,0,0,DANGO.max);{const own=k=>Object.prototype.hasOwnProperty.call(o,k);if(!own('avId')&&Number.isInteger(o.av))o.avId=LEGACY_AV[o.av];if(!own('penId')&&Number.isInteger(o.pen))o.penId=LEGACY_PEN[o.pen];}delete o.av;delete o.pen;if(!AVS.some(a=>a.id===o.avId))o.avId=AV_DEF;if(!penOK(o.penId,o.avId))o.penId=PEN_DEF;
+  o.food=num(o.food,0,0,FOOD_MAX+RACK_TOP+((PARTS.find(p=>p.id==='framebag')||{}).food||0));o.food2=num(o.food2,0,0,NAGANO.max);o.dango=num(o.dango,0,0,DANGO.max);o.gummy=num(o.gummy,0,0,GUMMY.max);{const own=k=>Object.prototype.hasOwnProperty.call(o,k);if(!own('avId')&&Number.isInteger(o.av))o.avId=LEGACY_AV[o.av];if(!own('penId')&&Number.isInteger(o.pen))o.penId=LEGACY_PEN[o.pen];}delete o.av;delete o.pen;if(!AVS.some(a=>a.id===o.avId))o.avId=AV_DEF;if(!penOK(o.penId,o.avId))o.penId=PEN_DEF;
   delete o.ach;
   let f=o.forecast&&typeof o.forecast==='object'?o.forecast:{};o.forecast=null;
   if(Array.isArray(o.fc)&&o.fc.length===47&&o.fc.every(n=>Number.isInteger(n)&&n>=0&&n<7*100)){const M=(o.v||0)>=6?7:(o.v||0)>=5?6:5;f={};o.fc.forEach((n,i)=>f[i]={temp:Math.floor(n/M)-30,wx:WXL[n%M]});}
@@ -1327,7 +1328,7 @@ function feedItems(){const out=[],seen={};
     else if(mm=/^ライバルより先に撮影スポットへ着いた@(\w+)$/.exec(x)){const d=infD(mm[1]);out.push({t,r:2,p:{name:d.name,id:d.handle,av:d.av,when,text:d.win+' #映え勝負'}});}
     else if(mm=/^ライバルに先を越された@(\w+)$/.exec(x)){const d=infD(mm[1]);out.push({t,r:2,p:{name:d.name,id:d.handle,av:d.av,when,text:d.lose+' #映え勝負'}});}
     else if(mm=/^INFEV@(\w+)@(\d+)$/.exec(x)){const d=infD(mm[1]);out.push({t,r:2,p:{name:d.name,id:d.handle,av:d.av,when,text:d.turn[+mm[2]%d.turn.length]}});}
-    else if(mm=/^INFGIFT@(\w+)$/.exec(x)){const d=infD(mm[1]);out.push({t,r:1,p:{name:d.name,id:d.handle,av:d.av,when,text:d.gift+(d.dango?'\n🎁 文化祭の団子'+d.dango+'個が届きました（バトルで食べられます）':d.part?'\n🎁 パーツ欄に「'+(PARTS.find(z=>z.id===d.part)||{}).name+'」が届きました':'')}});}
+    else if(mm=/^INFGIFT@(\w+)$/.exec(x)){const d=infD(mm[1]);out.push({t,r:1,p:{name:d.name,id:d.handle,av:d.av,when,text:d.gift+(d.dango?'\n🎁 文化祭の団子'+d.dango+'個が届きました（バトルで食べられます）':d.gummy?'\n🎁 着色料いっぱいのグミ'+d.gummy+'個が届きました（バトルで食べられます）':d.gold?'\n🎁 お年玉'+yen(d.gold)+'が届きました':d.part?'\n🎁 パーツ欄に「'+(PARTS.find(z=>z.id===d.part)||{}).name+'」が届きました':'')}});}
     else out.push({t,r:3,p:{name:penName(),id:'jitensha_tabi',av:avImg(),when,text:(/ツチノコ/.test(x)?'🐍✨ ':/購入/.test(x)?'🛒 ':/輪行/.test(x)?'🚃 ':/カスタム|付けた/.test(x)?'🔧 ':'')+snsText(x),th:(mm=/^(.+?)を購入/.exec(x))?itemArt(mm[1]):null}});});
   return engage(out.sort((a,b)=>b.t-a.t||a.r-b.r).slice(0,30));}
 // ペンネーム：自分のSNSの投稿に出る名前（一覧から選ぶ。0番が初期値）
@@ -1368,7 +1369,7 @@ function askGo(p,rinko,skipSp){if(!skipSp&&isCourse(p,false))return askSpecial(p
   const gi=k=>S.gear[k]?nm(GEAR_ITEMS,S.gear[k]):'なし';
   $('go-sum').innerHTML=[['行き先',`${p.site}（${p.name}）`],['移動',how],['予報',`${WX_J[f.wx]} ${f.temp}℃`],
     ['自転車',nm(BIKES,S.bike)],['衣類',`${cl.name}（${cl.lo}〜${cl.hi}℃）`],['パーツ',S.parts.length?S.parts.map(x=>nm(PARTS,x)).join('、'):'なし'],
-    ['焚き火台',gi('fire')],['寝床',gi('shelter')],['タープ',gi('tarp')],['補給食',S.food+'個'+(S.food2?`＋長野${S.food2}個`:'')+(S.dango?`＋団子${S.dango}個`:'')]].map(r=>`<span>${r[0]}</span><span>${r[1]}</span>`).join('');
+    ['焚き火台',gi('fire')],['寝床',gi('shelter')],['タープ',gi('tarp')],['補給食',S.food+'個'+(S.food2?`＋長野${S.food2}個`:'')+(S.dango?`＋団子${S.dango}個`:'')+(S.gummy?`＋グミ${S.gummy}個`:'')]].map(r=>`<span>${r[0]}</span><span>${r[1]}</span>`).join('');
   $('go-yes').onclick=()=>{$('ov-go').hidden=true;startTrip(p,rinko);};$('ov-go').hidden=false;$('go-yes').focus();}
 let LOGSUB='trip';
 let TRSUB='old';// 試練欄のタブ：old=試練／4th=都道府県限定試練（各県のボス）
@@ -1379,7 +1380,7 @@ function renderTrials(){let w=0,f=0;for(const k of TRIAL_KEYS){const v=S.stats.e
     if(k==='tsuchi'){const got=v[1]>0;return `<div class="n${got?'':' leg'}"><img loading="lazy" decoding="async" src="img/${got?'tsuchinoko':'tsuchinoko_unknown'}.webp" alt="">${got?'ツチノコ':'伝説の生き物'}</div>${cols}`;}
     if(NEWK.has(k)&&!v[0])return '';const e=ENEMY[k];return `<div class="n" data-en="${k}" style="cursor:pointer"><img loading="lazy" decoding="async" src="${e.img}" alt="" onerror="this.style.display='none'">${e.name.replace('インフルエンサー','').replace('迷惑キャンパー','迷惑')}</div>${cols}`;};
   $('tr-tabs').innerHTML=[['old','試練'],['rv','ライバル'],['4th','都道府県限定試練']].map(([g,t])=>`<button data-trs="${g}" aria-selected="${TRSUB===g}">${t}</button>`).join('');
-  if(TRSUB==='rv'){$('achlist').innerHTML=`<div class="rvh">映え勝負：撮影スポットで勝つと、${INF_WIN}勝で次の年末決算に贈り物が届きます</div>`+INF.map(d=>{const v=infSt(d.id),dots='●'.repeat(Math.min(v.w,INF_WIN))+'○'.repeat(Math.max(0,INF_WIN-v.w)),gift=d.dango?`文化祭の団子${d.dango}個`:d.part?(PARTS.find(x=>x.id===d.part)||{}).name:'メッセージのみ',area=d.reg?d.reg+'地方':d.pref||'全国';return `<div class="rvc"><img src="${d.av}" width="48" height="48" alt="${esc(d.name)}の絵を大きく見る" data-inf="${d.id}" role="button" tabindex="0"><div class="rvm"><b>${esc(d.name)}</b><span>@${esc(d.handle)}</span><small>登場：${esc(area)}　<span class="nw">${v.w}勝／${v.e}戦</span></small><small>${INF_WIN}勝で：${esc(gift)}</small></div><div class="rvs"><span class="dots">${dots}</span><small>${v.g?'🎁受取済':v.w>=INF_WIN?'🎁次の年末':''}</small></div></div>`;}).join('');return;}
+  if(TRSUB==='rv'){$('achlist').innerHTML=`<div class="rvh">映え勝負：撮影スポットで勝つと、${INF_WIN}勝で次の年末決算に贈り物が届きます</div>`+INF.map(d=>{const v=infSt(d.id),dots='●'.repeat(Math.min(v.w,INF_WIN))+'○'.repeat(Math.max(0,INF_WIN-v.w)),gift=d.dango?`文化祭の団子${d.dango}個`:d.gummy?`着色料いっぱいのグミ${d.gummy}個`:d.gold?`お年玉${yen(d.gold)}`:d.part?(PARTS.find(x=>x.id===d.part)||{}).name:'メッセージのみ',area=d.reg?d.reg+'地方':d.pref||'全国';return `<div class="rvc"><img src="${d.av}" width="48" height="48" alt="${esc(d.name)}の絵を大きく見る" data-inf="${d.id}" role="button" tabindex="0"><div class="rvm"><b>${esc(d.name)}</b><span>@${esc(d.handle)}</span><small>登場：${esc(area)}　<span class="nw">${v.w}勝／${v.e}戦</span></small><small>${INF_WIN}勝で：${esc(gift)}</small></div><div class="rvs"><span class="dots">${dots}</span><small>${v.g?'🎁受取済':v.w>=INF_WIN?'🎁次の年末':''}</small></div></div>`;}).join('');return;}
   const rows=TRIAL_KEYS.filter(k=>is4th(k)===(TRSUB==='4th')).map(row).join('');
   $('achlist').innerHTML='<div class="th">試練</div>'+(TRSUB==='4th'?'<div class="th">都道府県</div><div class="th">遭遇</div><div class="th">突破</div>':'<div class="th">遭遇</div><div class="th">突破</div><div class="th">失敗</div>')+(rows||'<div class="none">まだ出会っていません（その県の特別コースで出会うと載ります）</div>');}
 $('achlist').onclick=e=>{const n=e.target.closest('.n[data-en]');if(!n)return;const en=ENEMY[n.dataset.en];if(!en)return;$('sg-img').src=en.img;$('sg-img').alt=en.name;$('sg-name').textContent=en.name;$('sg-desc').textContent=en.hint||'';$('sg-desc').hidden=!en.hint;$('ov-sight').hidden=false;};
@@ -1538,16 +1539,16 @@ const INF=[
   turn:['今週は課題を終わらせてから出発します。安全第一で参ります','自転車も荷物も安物ですが、大事に使っています','服はモンベルで揃えてみました。軽くて、雨の日も安心です','文化祭の準備で忙しい週でした。団子の試作を重ねています','キャンプ場でお会いしたら、ご挨拶させてください。よろしくお願いします'],
   rep:{hi:['素晴らしい景色ですね。わたしも行ってみたいです','この一枚、保存させていただきました。ありがとうございます','すごいです。構図の勉強になります'],mid:['良い旅ですね。道中、お気をつけて','落ち着いた雰囲気で素敵です','次の投稿も楽しみにしています'],lo:['天気は仕方ないですよね。次を楽しみにしています','わたしも雨の日は苦戦します。お疲れさまでした','無理せず、ゆっくり行きましょう'],late:['暗い道は危ないので、気をつけてくださいね','ご無事で何よりです。ゆっくり休んでください']},
   gift:'何度もお相手いただき、ありがとうございます。文化祭で作った団子です。3個、お納めください'},
- {id:'cammy',name:'キャミィ',handle:'cammy_mtb',img:'img/inf_cammy.webp',av:'img/inf_cammy_s.webp',msgOnly:true,
+ {id:'cammy',name:'キャミィ',handle:'cammy_mtb',img:'img/inf_cammy.webp',av:'img/inf_cammy_s.webp',gummy:3,
   intro:'ハーイ！　同じ景色を狙ってたデース！　負けないデース！',win:'ワオ！　負けたデース！　でも次は勝つデース！',lose:'イェーイ！　先に撮ったデース！　ごめんなさいデース！',
   turn:['今週もマウンテンバイクで元気に走るデース！','荷物は多いけど、全部必要デース！','日本のキャンプ場、最高デース！','コーヒーを淹れて、ひと休みデース☕','タイヤが太いと、どこでも走れるデース！'],
   rep:{hi:['ワオ！　すごい景色デース！！','この一枚、最高デース！　ワタシも行きたいデース！','カッコいいデース！　完敗デース！'],mid:['いい旅デース！　ワタシも負けないデース！','素敵な写真デース！','次の投稿も楽しみデース！'],lo:['雨でも楽しむのがコツデース！','ドンマイデース！　次があるデース！','元気を出すデース！'],late:['夜道は気をつけるデース！','無事でよかったデース！　ゆっくり休むデース！']},
-  gift:'何度も勝負してくれて、ありがとうデース！　日本の旅は最高デース！'},
- {id:'harold',name:'ハロルド卿',handle:'harold_minivelo',img:'img/inf_harold.webp',av:'img/inf_harold_s.webp',msgOnly:true,
+  gift:'何度も勝負してくれて、ありがとうデース！　日本のグミ、色がすごいデース！　3個あげるデース！'},
+ {id:'harold',name:'ハロルド卿',handle:'harold_minivelo',img:'img/inf_harold.webp',av:'img/inf_harold_s.webp',gold:100000,
   intro:'ごきげんよう。同じ景色を狙っておいででしたか',win:'お見事。紅茶を一杯、いかがです',lose:'この景色は、先にいただきましたよ。失礼',
   turn:['今週は小さな車輪で、ゆるりと参ります','紅茶を淹れて、ひと息つくのが旅の楽しみでしてね','ツイードは、走ると意外に暖かいのですよ','荷物は多いですが、すべて必要なものばかりです','旅の途中で見かけたら、ぜひお茶をご一緒に'],
   rep:{hi:['実に見事な景色ですな。一枚いただきたいほどです','この眺めには、帽子を取らねばなりますまい','素晴らしい。紅茶が進みます'],mid:['良い旅ですな。道中、ご無事で','趣のある一枚です','次の景色も楽しみにしておりますよ'],lo:['雨もまた、旅の趣というものです','焦らず、ゆるりと参りましょう','紅茶でも飲んで、気を取り直しなされ'],late:['日が暮れました。お気をつけて','ご無事で何より。ゆっくりお休みなさい']},
-  gift:'何度もお相手いただき、ありがとうございます。良い旅を、心よりお祈りしております'}];
+  gift:'何度もお相手いただき、ありがとうございます。些少ですが、お年玉をお受け取りください'}];
 const infHere=(d,p)=>!p||(!d.reg&&!d.pref)||d.reg===p.region||d.pref===p.name;// 登場できる場所（reg=地方、pref=県。どちらもなければ全国）
 const infPool=p=>INF.filter(d=>infHere(d,p));
 const infLocal=p=>INF.some(d=>(d.reg||d.pref)&&infHere(d,p));
@@ -1561,7 +1562,7 @@ const infSt=id=>{if(!S.inf||typeof S.inf!=='object')S.inf={};return S.inf[id]||(
 let INFEV=null;// 週の始めに登場した人（その週のポップアップに1回だけ出す）
 function rollInf(){if(!TS||Math.random()>=.25)return;const pl=infPool(PREF[S.loc]),d=pl[Math.floor(Math.random()*pl.length)],k=Math.floor(Math.random()*d.turn.length);INFEV={d,k};log(`INFEV@${d.id}@${k}`);}
 function infBlock(){if(!INFEV)return '';const {d,k}=INFEV;INFEV=null;return `<div class="infev"><img src="${d.av}" width="48" height="48" alt=""><div><b>${esc(d.name)}</b><span>@${d.handle}</span><p>「${esc(d.turn[k])}」</p></div></div>`;}
-function giftYear(){let h='';for(const d of INF){const st=infSt(d.id);if(st.w>=INF_WIN&&!st.g){st.g=1;log(`INFGIFT@${d.id}`);if(d.dango){S.dango=Math.min(DANGO.max,(S.dango||0)+d.dango);h+=`<p class="hint">🎁 ${esc(d.name)}から文化祭の団子${d.dango}個が届いた！（バトルで食べられます）</p>`;}else if(d.part){if(!S.owned.parts.includes(d.part))S.owned.parts.push(d.part);h+=`<p class="hint">🎁 ${esc(d.name)}から「${esc(PARTS.find(x=>x.id===d.part).name)}」が届いた！（パーツ欄で装備できます）</p>`;}else{h+=`<p class="hint">💌 ${esc(d.name)}からメッセージが届いた！</p>`;}}}return h;}
+function giftYear(){let h='';for(const d of INF){const st=infSt(d.id);if(st.w>=INF_WIN&&!st.g){st.g=1;log(`INFGIFT@${d.id}`);if(d.dango){S.dango=Math.min(DANGO.max,(S.dango||0)+d.dango);h+=`<p class="hint">🎁 ${esc(d.name)}から文化祭の団子${d.dango}個が届いた！（バトルで食べられます）</p>`;}else if(d.gummy){S.gummy=Math.min(GUMMY.max,(S.gummy||0)+d.gummy);h+=`<p class="hint">🎁 ${esc(d.name)}から着色料いっぱいのグミ${d.gummy}個が届いた！（バトルで食べられます）</p>`;}else if(d.gold){S.money+=d.gold;h+=`<p class="hint">🎁 ${esc(d.name)}からお年玉${yen(d.gold)}が届いた！</p>`;}else if(d.part){if(!S.owned.parts.includes(d.part))S.owned.parts.push(d.part);h+=`<p class="hint">🎁 ${esc(d.name)}から「${esc(PARTS.find(x=>x.id===d.part).name)}」が届いた！（パーツ欄で装備できます）</p>`;}else{h+=`<p class="hint">💌 ${esc(d.name)}からメッセージが届いた！</p>`;}}}return h;}
 let B=null;
 function startBattle(kind){tstat(kind)[0]++;const e=ENEMY[kind],p=trip.p,c=calendar(S.turn);const scale=1+.4*(p.diff-1)+.2*(c.year-1);
   const hp=kind==='rival'?Math.round(40+FL()/3):Math.round(e.hp*scale);
@@ -1582,14 +1583,14 @@ function playerPower(){const st=bikeStats();if(B.kind==='rival')return 8+FL()/8+
 function renderBattle(){const pr=Math.min(100,Math.max(0,(1-B.hp/B.max)*100));$('bt-hp').style.width=pr+'%';$('bt-bike').style.left=pr+'%';$('bt-bike').src=isRival()?'img/part_cam.webp':'img/icon_bike_'+S.bike+'.webp';$('bt-goal').src=isRival()?'img/part_tripod.webp':'img/icon_g_sh2.webp';
   $('bt-km').innerHTML=`<span class="bt-km">${B.hp<=0?(isRival()?'撮影スポットに到着！':'区間ゴール！'):LEFT()+' '+fmtD(B.hp)}</span><span class="bt-km">日没まで、あと${B.limit-B.turn+1}時間</span>`;
   $('bt-info').innerHTML=`<div class="bt-bar"><span>体力</span><div class="bar"><i style="width:${Math.max(0,S.hp)}%"></i></div><b>${S.hp}</b></div><div class="bt-bar"><span>気力</span><div class="bar mp"><i style="width:${Math.max(0,S.mp)}%"></i></div><b>${S.mp}</b></div>`;
-  $('bt-nx').innerHTML=`${isRival()?`<span>フォロワー ${fol(S.fame)}</span>`:''}<span>次の${isRival()?'ライバル':'敵'}の勢い：${B.next==='heavy'?`<b style="color:var(--bad)">${NEXT.heavy[0]}</b>`:NEXT[B.next][0]}</span><span>補給食 ${S.food}個${S.food2?`・長野 ${S.food2}個`:''}${S.dango?`・団子 ${S.dango}個`:''}</span>`;
+  $('bt-nx').innerHTML=`${isRival()?`<span>フォロワー ${fol(S.fame)}</span>`:''}<span>次の${isRival()?'ライバル':'敵'}の勢い：${B.next==='heavy'?`<b style="color:var(--bad)">${NEXT.heavy[0]}</b>`:NEXT[B.next][0]}</span><span>補給食 ${S.food}個${S.food2?`・長野 ${S.food2}個`:''}${S.dango?`・団子 ${S.dango}個`:''}${S.gummy?`・グミ ${S.gummy}個`:''}</span>`;
   const st=bikeStats(),ti={rinko:trip.rk};const pw=playerPower(),pd=v=>fmtD(v);
   const cmds=B.kind==='rival'?[
     ['post','映え投稿で挑む',`約${pd(pw+4)}詰める`],
     ['kiai','気合い','気力-20 次が3倍'],
     ['rest','休む','体力+20 人気減'],
     ['tactic',...TACT.rival],
-    ['food','補給食','体力+25 気力+10'],...(S.food2?[['food2','長野県の補給食',`体力+${NAGANO.hp} 気力+${NAGANO.mp}`]]:[]),...(S.dango?[['dango','団子',`体力+${DANGO.hp} 気力+${DANGO.mp}`]]:[]),
+    ['food','補給食','体力+25 気力+10'],...(S.food2?[['food2','長野県の補給食',`体力+${NAGANO.hp} 気力+${NAGANO.mp}`]]:[]),...(S.dango?[['dango','団子',`体力+${DANGO.hp} 気力+${DANGO.mp}`]]:[]),...(S.gummy?[['gummy','グミ',`体力+${GUMMY.hp} 気力+${GUMMY.mp}`]]:[]),
     ['escape','場所を譲る','失敗（遅刻扱い）']]:[
     ['push','全力で踏む',`体力-15 ${pd(pw+4)}進む`],
     ['walk','押し歩き',`体力-8 ${pd(10)}進む`],
@@ -1597,16 +1598,16 @@ function renderBattle(){const pr=Math.min(100,Math.max(0,(1-B.hp/B.max)*100));$(
     ['rest','休む','体力+20 気力+5'],
     ['guard','身構える','被害7割減'],
     ['tactic',...TACT[B.kind]],
-    ['food','補給食','体力+25 気力+10'],...(S.food2?[['food2','長野県の補給食',`体力+${NAGANO.hp} 気力+${NAGANO.mp}`]]:[]),...(S.dango?[['dango','団子',`体力+${DANGO.hp} 気力+${DANGO.mp}`]]:[]),
+    ['food','補給食','体力+25 気力+10'],...(S.food2?[['food2','長野県の補給食',`体力+${NAGANO.hp} 気力+${NAGANO.mp}`]]:[]),...(S.dango?[['dango','団子',`体力+${DANGO.hp} 気力+${DANGO.mp}`]]:[]),...(S.gummy?[['gummy','グミ',`体力+${GUMMY.hp} 気力+${GUMMY.mp}`]]:[]),
     ['rinko',`輪行 ${yen(ti.rinko)}`,trip.course?'特別コースは自走のみ':'電車で飛ばす']];
   // 作戦アイコンは tac_敵名.webp（ヒグマはツキノワグマと共用）
   const TACI={brownbear:'tac_bear',habu:'tac_deer',gas:'tac_heat',volcstorm:'tac_typhoon',curves:'tac_hill',gate:'tac_wind',boss_fukushima:'tac_collapse',boss_tokyo:'tac_collapse',boss_gifu:'tac_snow',boss_akita:'tac_collapse',boss_tokushima:'tac_collapse',boss_aomori:'tac_hill',boss_hyogo:'tac_wind',boss_osaka:'tac_hill',boss_tochigi:'tac_wind',boss_miyagi:'tac_snow',boss_hokkaido:'tac_wind',boss_tottori:'tac_hill',boss_okayama:'tac_hill',boss_miyazaki:'tac_wind',boss_yamanashi:'tac_snow',boss_nagano:'tac_collapse',boss_ibaraki:'tac_collapse',boss_kochi:'tac_rain',boss_toyama:'tac_wind',boss_niigata:'tac_collapse',boss_kagoshima:'tac_wind',boss_yamaguchi:'tac_collapse',boss_kumamoto:'tac_wind',boss_okinawa:'tac_wind'};
-  const RC={push:'atk',post:'atk',kiai:'gold',rest:'heal',food:'heal',food2:'heal',dango:'heal',guard:'def',tactic:'def',rinko:'sub',escape:'sub'};
-  const ic={tactic:TACI[B.kind]||'tac_'+B.kind,guard:'cmd_guard',food:'icon_food',food2:'icon_food_nagano',dango:'icon_dango'};
+  const RC={push:'atk',post:'atk',kiai:'gold',rest:'heal',food:'heal',food2:'heal',dango:'heal',gummy:'heal',guard:'def',tactic:'def',rinko:'sub',escape:'sub'};
+  const ic={tactic:TACI[B.kind]||'tac_'+B.kind,guard:'cmd_guard',food:'icon_food',food2:'icon_food_nagano',dango:'icon_dango',gummy:'icon_food_nagano'};
   $('bt-cmds').innerHTML=cmds.map(([k,l,s])=>`<button data-cmd="${k}" class="${ic[k]?'ic ':''}c-${RC[k]||'nrm'}" ${k==='kiai'&&S.mp<20||k==='rinko'&&(S.money<ti.rinko||trip.course)||k==='push'&&S.hp<=15||k==='walk'&&S.hp<=8||k==='food'&&S.food<=0||k==='tactic'&&!tacOK()?'disabled':''}>${ic[k]?`<img src="img/${ic[k]}.webp" width="30" height="30" alt="" onerror="this.onerror=null;this.src='img/icon_food.webp'"><span>${l}<small>${s}</small></span>`:`${l}<small>${s}</small>`}</button>`).join('');}
 $('bt-cmds').addEventListener('click',e=>{const b=e.target.closest('button[data-cmd]');if(b&&b.dataset.cmd!=='next')cmd(b.dataset.cmd);});// 'next'（区間クリア後の進むボタン）は専用のonclickで処理する。ここでも拾うと勝利や敵の攻撃が二重に数えられる
 function cmd(k){if(!B||!trip||$('ov-battle').hidden||B.hp<=0||trip.late)return;
-  const allowed=isRival()?['post','kiai','rest','tactic','food','food2','dango','escape']:['push','walk','kiai','rest','guard','tactic','food','food2','dango','rinko'];
+  const allowed=isRival()?['post','kiai','rest','tactic','food','food2','dango','gummy','escape']:['push','walk','kiai','rest','guard','tactic','food','food2','dango','gummy','rinko'];
   if(!allowed.includes(k)||k==='push'&&S.hp<=15||k==='walk'&&S.hp<=8||k==='kiai'&&S.mp<20||k==='rinko'&&(S.money<trip.rk||trip.course))return;
   let t='';let dmg=0;const mult=B.charge||1;B.cut=1;
   if(k==='push'||k==='post'){dmg=Math.round((playerPower()+rnd(0,8))*mult);if(k==='push')S.hp-=15;B.charge=false;t=`${k==='push'?'全力で踏んだ！':'渾身の映え投稿！'} ${fmtD(dmg)}${k==='push'?'進んだ':'詰めた'}`;}
@@ -1614,6 +1615,7 @@ function cmd(k){if(!B||!trip||$('ov-battle').hidden||B.hp<=0||trip.late)return;
   else if(k==='kiai'){S.mp-=20;B.charge=3;t='気合いを入れた！次の行動が3倍進む';}
   else if(k==='rest'){S.hp=Math.min(100,S.hp+20);S.mp=Math.min(100,S.mp+5);t='ひと休みした。体力+20';}
   else if(k==='food2'){if(S.food2<=0)return;S.food2--;S.hp=Math.min(100,S.hp+NAGANO.hp);S.mp=Math.min(100,S.mp+NAGANO.mp);t=`長野県の元気ドリンクを一気飲み！体力+${NAGANO.hp} 気力+${NAGANO.mp}（残り${S.food2}個）`;}
+  else if(k==='gummy'){if(!(S.gummy>0))return;S.gummy--;S.hp=Math.min(100,S.hp+GUMMY.hp);S.mp=Math.min(100,S.mp+GUMMY.mp);t=`着色料いっぱいのグミを食べた！体力+${GUMMY.hp} 気力+${GUMMY.mp}（残り${S.gummy}個）`;}
   else if(k==='dango'){if(!(S.dango>0))return;S.dango--;S.hp=Math.min(100,S.hp+DANGO.hp);S.mp=Math.min(100,S.mp+DANGO.mp);t=`文化祭の団子を食べた！体力+${DANGO.hp} 気力+${DANGO.mp}（残り${S.dango}個）`;}
   else if(k==='food'){if(S.food<=0)return;S.food--;S.hp=Math.min(100,S.hp+25);S.mp=Math.min(100,S.mp+10);t=`補給食を食べた！体力+25 気力+10（残り${S.food}個）`;}
   else if(k==='guard'){B.cut=.3;t='身構えて耐える。';}
@@ -1762,7 +1764,7 @@ addEventListener('pagehide',save);
 // 開きっぱなしのタブが古いコードのまま保存し直して、新しい保存項目を失うのを防ぐ。
 // 実行中のコードに埋め込んだ版の識別子 APP_V と、いま配信されている index.html の APP_V を比べる（最初に取れた配信内容を「実行中の版」の代わりにしない）。
 // ★ APP_V は index.html の内容から計算する。index.html を変えたら `node qa/stamp.cjs` で更新する（忘れると監査テストが失敗する）。
-const APP_V='db82f82e9c22';
+const APP_V='4cb78112478b';
 // 旅・戦闘・結果画面（INTRIP）の間は、save() が保存を見送るので、再読み込みすると進行が巻き戻る。旅が終わったあとも trip / B には前回の値が残るため、これらは見ない
 const UPD={pending:'',busy:false,scheduled:false,last:0,every:600000,quiet:600000,timeout:15000,reloadedAt:0,note:null,timer:0,
  safe:()=>!INTRIP,
