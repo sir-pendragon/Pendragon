@@ -562,7 +562,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
     <h3>イラスト</h3>
     <div class="avlist" id="av-list"></div>
     <h3>ペンネーム</h3>
-    <p class="hint">自分のSNSの投稿に表示される名前を、一覧から選びます。ID（@jitensha_tabi）は変わりません。</p>
+    <p class="hint">ヒヨッターの投稿に表示される名前を、一覧から選びます。ID（@jitensha_tabi）は変わりません。</p>
     <div class="penlist" id="pen-list"></div>
     <button class="primary" id="prof-close">閉じる</button>
   </div>
@@ -1282,7 +1282,7 @@ for(const tid of ['camp-tabs','gear-tabs'])$(tid).addEventListener('click',e=>{c
 for(const id of ['p-gear','p-camp','p-shop'])$(id).addEventListener('click',shopClick);
 
 const CAL_S=t=>{const c=calendar(t);return `${c.year}年${c.month}月${c.week}週`;};
-// ---------- 自分のSNS（できごと）----------
+// ---------- 自分のヒヨッター（できごと）----------
 const esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const hs=(a,b,c)=>{let h=Math.imul(a+1,73856093)^Math.imul(b+7,19349663)^Math.imul(c+13,83492791);h=Math.imul(h^(h>>>13),1274126177);return (h^(h>>>16))>>>0;};
 const FANS=[['ゆうた','yuta_ride'],['みなみ','minami_cmp'],['ペダル太郎','pedal_taro'],['ソロキャン好き','solo_cmp'],['ツーリング部','tour_club'],['はるか','haruka_88'],['峠の主','touge_nushi'],['のんびり旅人','nonbiri_trip']];
@@ -1433,7 +1433,7 @@ function tsuchinoko(then){trip.tc=1;tstat('tsuchi')[0]++;const has=S.parts.inclu
   const first=!S.stats.tc;
   const go=(via)=>{const rate=tcRate(via);S.mp=Math.max(0,S.mp-10);const ok=Math.random()<rate;$('tc-img').className='tc-img';$('tc-btns').innerHTML='';
     if(ok){const fg=first?200000:50000,inc=first?50000:10000;S.fame+=fg;S.money+=inc;S.stats.tc++;tstat('tsuchi')[1]++;playSE('se_win');log(`ツチノコの撮影に成功！フォロワー+${fol(fg)}`);
-      $('tc-h').textContent='🎉 ツチノコを撮影した！';$('tc-sum').innerHTML=`ブレずに撮れた。ネットが大騒ぎに！<br>フォロワー <b>+${fol(fg)}</b>　SNS収入 +${yen(inc)}${first?'<br>（初めての発見）':'<br>（2回目以降は、少し控えめな話題に）'}`;}
+      $('tc-h').textContent='🎉 ツチノコを撮影した！';$('tc-sum').innerHTML=`ブレずに撮れた。ネットが大騒ぎに！<br>フォロワー <b>+${fol(fg)}</b>　ヒヨッター収入 +${yen(inc)}${first?'<br>（初めての発見）':'<br>（2回目以降は、少し控えめな話題に）'}`;}
     else{tstat('tsuchi')[2]++;$('tc-h').textContent='逃げられた…';$('tc-sum').innerHTML='シャッターを切る前に、草むらの奥へ消えてしまった。<br>また会えるだろうか。';}
     const b=document.createElement('button');b.className='primary';b.textContent='旅を続ける';b.onclick=()=>{$('ov-tc').hidden=true;render();then();};$('tc-btns').appendChild(b);};
   const mk=(txt,sub,fn,dis)=>`<button ${dis?'disabled':''}>${txt}<small>${sub}</small></button>`;
@@ -1477,7 +1477,7 @@ $('pen-list').onclick=e=>{const b=e.target.closest('button[data-pen]');if(!b||!S
 $('prof-close').onclick=()=>{$('ov-prof').hidden=true;};
 $('ov-prof').addEventListener('click',e=>{if(e.target===$('ov-prof'))$('ov-prof').hidden=true;});
 $('btn-set').onclick=()=>{renderSet();$('ov-set').hidden=false;};
-// 右上の「SNS」ボタン：自分のSNSをポップアップで読む
+// ステータス欄の「ヒヨッター」ボタン：自分の投稿をポップアップで読む
 $('btn-sns').onclick=()=>{if(!S)return;SHARE_NOTE_EPOCH++;$('share-note').textContent='';const it=feedItems();$('sns-list').innerHTML=it.length?it.map(i=>postHtml(i.p)).join(''):'<div class="hint" style="padding:10px 4px">まだ投稿はありません</div>';$('ov-sns').hidden=false;$('ov-sns').scrollTop=0;};
 $('sns-close').onclick=()=>{$('ov-sns').hidden=true;};
 $('ov-sns').addEventListener('click',e=>{if(e.target===$('ov-sns'))$('ov-sns').hidden=true;});
@@ -1724,7 +1724,7 @@ function endTrip2(camp){const p=trip.p,f=S.forecast[p.id],st=bikeStats(),cl=CLOT
     const inc=300+q*25+Math.round(S.fame*.01);S.fame+=fg;S.money+=inc;if(TS){TS.inc=inc;TS.became=became?p.site:null;}S.stats.posts++;S.stats.bestQ=Math.max(S.stats.bestQ,q);
     html=`<h2>${became?'🏅 馴染み宿になった！':'今回の旅の結果'}</h2>${(()=>{const [sid,sn,sd]=sightOf(p.id,S.visits[p.id]),ev=trip.ev;// 催事の週は催事の絵を出す（名所は図鑑に登録される）
       return `<div class="photo pic"><img src="img/${ev?ev.img:'sights/'+sid}.webp" width="${ev?768:480}" height="${ev?512:320}" alt="${ev?ev.name:sn}"><div class="cap"><div>${ev?ev.name:sn}</div>${!ev&&sd?`<div class="sd">${sd}</div>`:''}<div class="q">📷 ${q}点</div><div>${WX_J[f.wx]} ${f.temp}℃ ・ ${p.site}</div></div></div>`;})()}
-    <div class="res"><span>フォロワー</span><span>+${fol(fg)}${became?'（馴染み宿ボーナス込）':''}</span><span>SNS収入</span><span>+${yen(inc)}</span><span>利用料</span><span>-${yen(fee)}</span>
+    <div class="res"><span>フォロワー</span><span>+${fol(fg)}${became?'（馴染み宿ボーナス込）':''}</span><span>ヒヨッター収入</span><span>+${yen(inc)}</span><span>利用料</span><span>-${yen(fee)}</span>
     <span>訪問</span><span>${Math.min(needV(p),S.visits[p.id])}/${needV(p)}</span>${trip.ev?`<span>催事</span><span>${EVI}${trip.ev.name}（写真+12・フォロワー×1.5）</span>`:''}<span>ギア効果</span><span>写真+${g.photo}${wet?`（雨ガード${Math.round(g.guard*100)}%）`:''}</span>${mpPen?`<span>気力不足</span><span>写真-${mpPen}</span>`:''}${cold?`<span>衣類不適</span><span>体力-${cold}</span>`:''}${campRows}</div>`;
     tlog(q);}
   // natural recovery + advance
@@ -1738,7 +1738,7 @@ function restHome(){const ti=travelInfo(PREF[S.home]);if(S.loc!==S.home){const f
 function showResult(html,then,share){$('result-box').innerHTML=html+(share?`<p class="hint" id="res-note" style="margin:0"></p>`:'')+`<div class="resbtns">${share?'<button id="res-share">SNSに投稿<small>（画像つき）</small></button>':''}<button class="primary" id="res-ok">次の週末へ</button></div>`;$('ov-result').hidden=false;$('res-ok').onclick=()=>{$('ov-result').hidden=true;then();};}
 function turnPopup(){const t=TS;TS=null;if(!t)return;const e=$('pop'),sg=n=>(n>0?'+':n<0?'-':'')+Math.abs(n);
   const spv=t.sp?t.sp[1]:0,dm=S.money-t.money,other=dm-(t.inc-t.fee)-spv,dh=S.hp-t.hp,dp=S.mp-t.mp,df=S.fame-t.fame,fc=S.fam.filter(Boolean).length;
-  const R=[];if(t.inc)R.push(['SNSからの収入','+'+yen(t.inc)]);if(spv)R.push([`スポンサー料（${t.sp[2]}）`,'+'+yen(spv)]);if(t.fee)R.push(['利用料','-'+yen(t.fee)]);if(other)R.push(['輪行費・治療費など',(other<0?'-':'+')+yen(Math.abs(other))]);
+  const R=[];if(t.inc)R.push(['ヒヨッターからの収入','+'+yen(t.inc)]);if(spv)R.push([`スポンサー料（${t.sp[2]}）`,'+'+yen(spv)]);if(t.fee)R.push(['利用料','-'+yen(t.fee)]);if(other)R.push(['輪行費・治療費など',(other<0?'-':'+')+yen(Math.abs(other))]);
   if(df)R.push(['フォロワー',`${sfol(df)}（${fol(S.fame)}）`]);if(dh)R.push(['体力',`${sg(dh)}（${S.hp}）`]);if(dp)R.push(['気力',`${sg(dp)}（${S.mp}）`]);
   if(t.became)R.push(['🏅 馴染み宿',t.became]);if(fc!==t.fam)R.push(['都道府県クリア数',`${fc} / 47`]);
   e.innerHTML=`<div class="doc-t">収支報告書</div><h3>${calLabel(S.turn)}</h3><div class="res">${R.map(r=>`<span>${r[0]}</span><span class="${/^[+＋]/.test(r[1])?'pos':/^[-－]/.test(r[1])?'neg':''}">${r[1]}</span>`).join('')}<span class="tot">残高</span><span class="tot"><b>${yen(S.money)}</b></span></div>${infBlock()}<button class="primary" id="pop-x">閉じる</button>`;
@@ -1762,7 +1762,7 @@ addEventListener('pagehide',save);
 // 開きっぱなしのタブが古いコードのまま保存し直して、新しい保存項目を失うのを防ぐ。
 // 実行中のコードに埋め込んだ版の識別子 APP_V と、いま配信されている index.html の APP_V を比べる（最初に取れた配信内容を「実行中の版」の代わりにしない）。
 // ★ APP_V は index.html の内容から計算する。index.html を変えたら `node qa/stamp.cjs` で更新する（忘れると監査テストが失敗する）。
-const APP_V='d22b973e7bce';
+const APP_V='db82f82e9c22';
 // 旅・戦闘・結果画面（INTRIP）の間は、save() が保存を見送るので、再読み込みすると進行が巻き戻る。旅が終わったあとも trip / B には前回の値が残るため、これらは見ない
 const UPD={pending:'',busy:false,scheduled:false,last:0,every:600000,quiet:600000,timeout:15000,reloadedAt:0,note:null,timer:0,
  safe:()=>!INTRIP,
