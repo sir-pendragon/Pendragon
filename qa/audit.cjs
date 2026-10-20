@@ -294,6 +294,11 @@ test('pen name 猫超大好き is offered only with the cat illustration; switch
 test('profile/SNS CSS debug: toggle buttons use aria-pressed (not aria-selected), the share note is cleared when the SNS popup reopens',c=>{const {q}=c;q.newGame(12);c.$('btn-prof').click();
  for(const id of ['av-list','pen-list']){const bs=[...c.$(id).querySelectorAll('button')];assert.ok(bs.length>0);assert.ok(bs.every(b=>!b.hasAttribute('aria-selected')&&/^(true|false)$/.test(b.getAttribute('aria-pressed'))),id);assert.equal(bs.filter(b=>b.getAttribute('aria-pressed')==='true').length,1,id);}
  c.$('prof-close').click();c.$('btn-sns').click();c.$('share-note').textContent='画像を保存しました。';c.$('sns-close').click();c.$('btn-sns').click();assert.equal(c.$('share-note').textContent,'');});
+test('character edit impact: every illustration x pen name renders without errors; the sponsor-contract post uses the pen name; portrait alt follows the illustration',c=>{const {q}=c;q.newGame(12);
+ q.S.log.unshift('1|スポンサー「自転車メーカー」がつきました（週¥5,000）');q.S.log.unshift('1|軽量山岳テントを購入（¥55,000）');q.S.tl.push([1,12,80,'']);
+ for(let a=0;a<q.AVS.length;a++)for(let p=0;p<q.PEN.length;p++){q.S.av=a;q.S.pen=p;q.render();const it=q.feedItems(),me=it.filter(x=>x.p.id==='jitensha_tabi'),sp=it.find(x=>/^sponsor_/.test(x.p.id));const nm=(p===10&&a!==3)?q.PEN[0]:q.PEN[p];
+  assert.ok(me.length>0&&me.every(x=>x.p.name===nm&&x.p.av===(a?'img/'+q.AVS[a][0]+'_s.webp':'img/hero.webp')),a+'/'+p);assert.ok(sp&&sp.p.text.startsWith(nm+'さん'),'sponsor '+a+'/'+p);assert.equal(c.$('pf-pen').textContent,nm);}
+ q.S.av=6;q.render();assert.ok(c.$('pf-img').alt.includes('忍者'));q.S.av=0;q.render();assert.ok(c.$('pf-img').alt.includes('旅人'));});
 const summary={file:filename,passed:results.filter(x=>x.ok).length,failed:results.filter(x=>!x.ok).length,results};
 if(process.argv[3])fs.writeFileSync(process.argv[3],JSON.stringify(summary,null,2));
 console.log(JSON.stringify({passed:summary.passed,failed:summary.failed}));process.exitCode=summary.failed?1:0;
