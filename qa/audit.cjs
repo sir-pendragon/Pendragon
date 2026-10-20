@@ -2,7 +2,7 @@ const fs=require('node:fs'),path=require('node:path'),assert=require('node:asser
 const {JSDOM,VirtualConsole}=require('jsdom');
 const filename=path.resolve(process.argv[2]||path.join(__dirname,'..','index.html'));
 const html=fs.readFileSync(filename,'utf8');
-const expose=`window.qa={PEN,AVS,penName:()=>penName(),pfImg:()=>pfImg(),avImg:()=>avImg(),SPC,itemArt,feedItems,INF,INF_WIN,infSt,infD,rollInf,infBlock,giftYear,get INFEV(){return INFEV},set INFEV(v){INFEV=v},getTS:()=>TS,setTS:v=>{TS=v},snsText,ICON_FB,foodMax,partSlots,dcfBonus,get sgPage(){return SGPG},set sgPage(v){SGPG=v},needV,isCourse,askGo,ENEMY,SPEC,SIGHTS,TACT,tlEnc,tlDec,newGame,render,renderMap,renderBattle,renderShop,renderForge,renderDetail,renderList,renderTrials,renderSights,load,save,pack,snap,advance,calendar,rollForecast,startTrip,stayWx,startBattle,cmd,endTrip,endTrip2,nextEncounter,tsuchinoko,tcRate,bikeStats,gearFx,travelInfo,restHome,yearEval,eventAt,stoveOn,plv,rkLv,PREF,ENEMY,GEAR_ITEMS,PARTS,BIKES,CLOTHES,WXL,TRIAL_KEYS,AUD,tcRate,playBGM,bgmApply,
+const expose=`window.qa={PENS,AVS,LEGACY_AV,LEGACY_PEN,penName:()=>penName(),pfImg:()=>pfImg(),avImg:()=>avImg(),SPC,itemArt,feedItems,INF,INF_WIN,infSt,infD,rollInf,infBlock,giftYear,get INFEV(){return INFEV},set INFEV(v){INFEV=v},getTS:()=>TS,setTS:v=>{TS=v},snsText,ICON_FB,foodMax,partSlots,dcfBonus,get sgPage(){return SGPG},set sgPage(v){SGPG=v},needV,isCourse,askGo,ENEMY,SPEC,SIGHTS,TACT,tlEnc,tlDec,newGame,render,renderMap,renderBattle,renderShop,renderForge,renderDetail,renderList,renderTrials,renderSights,load,save,pack,snap,advance,calendar,rollForecast,startTrip,stayWx,startBattle,cmd,endTrip,endTrip2,nextEncounter,tsuchinoko,tcRate,bikeStats,gearFx,travelInfo,restHome,yearEval,eventAt,stoveOn,plv,rkLv,PREF,ENEMY,GEAR_ITEMS,PARTS,BIKES,CLOTHES,WXL,TRIAL_KEYS,AUD,tcRate,playBGM,bgmApply,
 get S(){return S},set S(v){S=v},get B(){return B},get trip(){return trip},set trip(v){trip=v},get TS(){return TS},get inTrip(){return INTRIP},get lastSave(){return LASTSAVE},
 quiet(){render=()=>save();renderBattle=()=>{};playSE=()=>{};playBGM=()=>{};}};`;
 const js=[...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(m=>m[1]).sort((x,y)=>y.length-x.length)[0];// 先頭の短い移動スクリプトではなく、本体（最長）を読む
@@ -269,48 +269,47 @@ test('4th rival mino-kasago: nationwide, polite; 3 wins -> 3 dango once at the y
  q.infSt('mino').w=2;assert.equal(q.giftYear().includes('団子'),false);assert.equal(q.S.dango,0);q.infSt('mino').w=3;const h=q.giftYear();assert.ok(h.includes('団子3個'));assert.equal(q.S.dango,3);assert.equal(q.giftYear(),'');assert.equal(q.S.dango,3);
  assert.ok(q.feedItems().some(x=>x.p.id==='mino-kasago'&&x.p.text.includes('団子')));
  q.S.dango=2;q.S.hp=50;q.S.mp=50;clear(c);const b=batt(c,'rival');assert.ok(/団子/.test(c.$('bt-cmds').textContent));q.cmd('dango');assert.equal(q.S.dango,1);assert.ok(c.$('bt-log').textContent.includes('文化祭の団子を食べた'));q.cmd('dango');q.cmd('dango');assert.equal(q.S.dango,0);clear(c);q.S.dango=3;q.save();assert.equal(q.load().dango,3);q.S.dango=99;q.save();assert.ok(q.load().dango<=3);});
-test('profile settings: pen name picked from a list (10 unique), shown on my posts, saved/validated; top button renamed to システム; the old My SNS tab is gone',c=>{const {q}=c;q.newGame(12);
- assert.equal(c.$('btn-set').textContent.trim(),'⚙ システム');assert.ok(!/設定/.test(c.$('btn-set').textContent));assert.equal(c.$('ov-set').querySelector('h2').textContent,'システム');
- assert.equal(c.$('btn-prof').textContent,'プロフィール設定');assert.ok(!c.w.document.querySelector('#tl-tabs [data-v=log]'));assert.ok(!c.$('log'));
- assert.equal(q.PEN.length,11);assert.equal(new Set(q.PEN).size,11);assert.equal(q.S.pen,0);
- q.S.log.unshift('補給食を購入（¥800）');q.S.log.unshift('軽量山岳テントを購入（¥55,000）');const mine=()=>q.feedItems().filter(x=>x.p.id==='jitensha_tabi');assert.ok(mine().length>0&&mine().every(x=>x.p.name==='旅の自転車乗り'));
- c.$('btn-prof').click();assert.equal(c.$('ov-prof').hidden,false);const bs=[...c.$('pen-list').querySelectorAll('button')];assert.equal(bs.length,10,'cat-only name hidden');assert.equal(bs[0].getAttribute('aria-pressed'),'true');
- assert.equal(c.$('pf-pen').textContent,'旅の自転車乗り');assert.ok(c.w.document.querySelector('.loghead .pfname small').textContent==='ペンネーム');bs[3].click();assert.equal(q.S.pen,3);assert.equal(c.$('pf-pen').textContent,q.PEN[3]);assert.ok(mine().every(x=>x.p.name===q.PEN[3]));assert.equal(c.$('pen-list').querySelectorAll('button')[3].getAttribute('aria-pressed'),'true');
- q.save();assert.equal(q.load().pen,3);q.S.pen=99;q.save();assert.equal(q.load().pen,0);q.S.pen=-5;q.save();assert.equal(q.load().pen,0);
- c.$('prof-close').click();assert.equal(c.$('ov-prof').hidden,true);c.$('btn-sns').click();assert.ok(c.$('sns-list').textContent.length>0);});
-test('profile illustration: 8 choices (initial hero + 7), files exist, picking one changes the 旅の記録 portrait and my SNS avatar; saved/validated',c=>{const {q}=c;q.newGame(12);assert.equal(q.AVS.length,8);assert.equal(q.AVS[0][0],'hero');
- for(const [f] of q.AVS){assert.ok(fs.existsSync(path.join(__dirname,'..','img',f+'.webp')),f);if(f!=='hero')assert.ok(fs.existsSync(path.join(__dirname,'..','img',f+'_s.webp')),f+'_s');}
- assert.equal(q.S.av,0);assert.equal(c.$('pf-img').getAttribute('src'),'img/hero.webp');q.S.log.unshift('軽量山岳テントを購入（¥55,000）');const mine=()=>q.feedItems().filter(x=>x.p.id==='jitensha_tabi');assert.ok(mine().every(x=>x.p.av==='img/hero.webp'));
- c.$('btn-prof').click();const bs=[...c.$('av-list').querySelectorAll('button')];assert.equal(bs.length,8);assert.equal(bs[0].getAttribute('aria-pressed'),'true');
- bs[3].click();assert.equal(q.S.av,3);assert.equal(c.$('pf-img').getAttribute('src'),'img/av_cat.webp');assert.ok(mine().every(x=>x.p.av==='img/av_cat_s.webp'));assert.equal(c.$('av-list').querySelectorAll('button')[3].getAttribute('aria-pressed'),'true');
- q.save();assert.equal(q.load().av,3);q.S.av=42;q.save();assert.equal(q.load().av,0);q.S.av=1.5;q.save();assert.equal(q.load().av,0);});
-test('pen name 猫超大好き is offered only with the cat illustration; switching away resets it; share button sits in the SNS popup header',c=>{const {q}=c;q.newGame(12);const ci=q.PEN.indexOf('猫超大好き'),cat=q.AVS.findIndex(a=>a[0]==='av_cat');assert.ok(ci>=0&&cat>0);
+test('profile settings (ID-based): UI, システム rename, old My SNS tab gone, pen name/illustration change heading, posts, avatar, alt; saved as ids',c=>{const {q}=c;q.newGame(12);
+ assert.equal(c.$('btn-set').textContent.trim(),'⚙ システム');assert.equal(c.$('ov-set').querySelector('h2').textContent,'システム');assert.equal(c.$('btn-prof').textContent,'プロフィール設定');assert.ok(!c.w.document.querySelector('#tl-tabs [data-v=log]'));assert.ok(!c.$('log'));
+ assert.equal(q.S.penId,'pen_tabi');assert.equal(q.S.avId,'av_hero');assert.equal(c.$('pf-pen').textContent,'旅の自転車乗り');assert.equal(c.$('pf-img').getAttribute('src'),'img/hero.webp');
+ q.S.log.unshift('1|軽量山岳テントを購入（¥55,000）');q.S.tl.push([1,12,80,'']);const mine=()=>q.feedItems().filter(x=>x.p.id==='jitensha_tabi');assert.ok(mine().length>0&&mine().every(x=>x.p.name==='旅の自転車乗り'&&x.p.av==='img/hero.webp'));
+ c.$('btn-prof').click();assert.equal(c.$('ov-prof').hidden,false);assert.equal(c.$('av-list').querySelectorAll('button').length,8);assert.equal(c.$('pen-list').querySelectorAll('button').length,10,'cat-only name hidden');
+ c.$('pen-list').querySelector('[data-pen="pen_takibi"]').click();assert.equal(q.S.penId,'pen_takibi');assert.equal(c.$('pf-pen').textContent,'焚き火ライダー');assert.ok(mine().every(x=>x.p.name==='焚き火ライダー'));
+ c.$('av-list').querySelector('[data-av="av_ninja"]').click();assert.equal(q.S.avId,'av_ninja');assert.equal(c.$('pf-img').getAttribute('src'),'img/av_ninja.webp');assert.ok(c.$('pf-img').alt.includes('忍者'));assert.ok(mine().every(x=>x.p.av==='img/av_ninja_s.webp'));assert.equal(q.S.penId,'pen_takibi','normal names survive illustration changes');
+ for(const id of ['av-list','pen-list']){const bs=[...c.$(id).querySelectorAll('button')];assert.ok(bs.every(b=>!b.hasAttribute('aria-selected')));assert.equal(bs.filter(b=>b.getAttribute('aria-pressed')==='true').length,1,id);}
+ q.save();const raw=JSON.parse(c.w.localStorage.getItem('charicamp'));assert.equal(raw.penId,'pen_takibi');assert.equal(raw.avId,'av_ninja');assert.ok(!('pen' in raw)&&!('av' in raw),'no index fields saved');
+ const L=q.load();assert.equal(L.penId,'pen_takibi');assert.equal(L.avId,'av_ninja');
+ q.S.avId='av_nope';q.S.penId=42;q.save();const L2=q.load();assert.equal(L2.avId,'av_hero');assert.equal(L2.penId,'pen_tabi');
+ c.$('prof-close').click();assert.equal(c.$('ov-prof').hidden,true);c.$('btn-sns').click();c.$('share-note').textContent='画像を保存しました。';c.$('sns-close').click();c.$('btn-sns').click();assert.equal(c.$('share-note').textContent,'');
+ assert.ok(c.w.document.querySelector('#ov-sns .snshd #btn-share'));assert.ok(!c.w.document.querySelector('.profile #btn-share'));});
+test('ID registry guard: ids unique and never removed; every image file exists; legacy maps are frozen',c=>{const {q}=c;
+ const AV_IDS=['av_hero','av_gal','av_shades','av_cat','av_glasses','av_traveler','av_ninja','av_hippie'],PEN_IDS=['pen_tabi','pen_pedal','pen_kaze','pen_takibi','pen_solo','pen_rinko','pen_touge','pen_isshu','pen_yurutabi','pen_hoshizora','pen_neko'];
+ const a=q.AVS.map(x=>x.id),p=q.PENS.map(x=>x.id);assert.equal(new Set(a).size,a.length,'avatar ids unique');assert.equal(new Set(p).size,p.length,'pen ids unique');assert.equal(new Set(q.PENS.map(x=>x.n)).size,p.length,'pen names unique');
+ for(const id of AV_IDS)assert.ok(a.includes(id),'avatar id removed or renamed: '+id);for(const id of PEN_IDS)assert.ok(p.includes(id),'pen id removed or renamed: '+id);
+ assert.deepEqual([...q.LEGACY_AV],AV_IDS);assert.deepEqual([...q.LEGACY_PEN],PEN_IDS);
+ for(const x of q.AVS)for(const f of [x.f,x.s])assert.ok(fs.existsSync(path.join(__dirname,'..','img',f+'.webp')),f);
+ for(const x of q.PENS)if(x.av)assert.ok(a.includes(x.av),'rule points to a missing illustration: '+x.id);});
+test('legacy numeric saves migrate to ids exactly once (all 8 illustrations x 11 names), invalid numbers fall back',c=>{const {q}=c;q.newGame(12);q.save();const base=JSON.parse(c.w.localStorage.getItem('charicamp'));
+ const put=o=>{const b=Object.assign({},base,o);delete b.penId;delete b.avId;for(const k of Object.keys(o))b[k]=o[k];c.w.localStorage.setItem('charicamp',JSON.stringify(b));return q.load();};
+ for(let av=0;av<8;av++)for(let pen=0;pen<11;pen++){const L=put({av,pen});assert.equal(L.avId,q.LEGACY_AV[av]);const want=(q.LEGACY_PEN[pen]==='pen_neko'&&q.LEGACY_AV[av]!=='av_cat')?'pen_tabi':q.LEGACY_PEN[pen];assert.equal(L.penId,want,av+'/'+pen);assert.ok(!('av' in L)&&!('pen' in L));}
+ let L=put({av:99,pen:-1});assert.equal(L.avId,'av_hero');assert.equal(L.penId,'pen_tabi');L=put({av:1.5,pen:'x'});assert.equal(L.avId,'av_hero');assert.equal(L.penId,'pen_tabi');
+ L=put({});assert.equal(L.avId,'av_hero');assert.equal(L.penId,'pen_tabi','very old save without the fields');
+ const b=Object.assign({},base,{avId:'av_cat',penId:'pen_neko',av:0,pen:0});c.w.localStorage.setItem('charicamp',JSON.stringify(b));L=q.load();assert.equal(L.avId,'av_cat');assert.equal(L.penId,'pen_neko','ids win over stale numbers');});
+test('猫超大好き rule by ids: offered only with av_cat; 400-click fuzz keeps UI/state/save consistent; reordering both lists does not break saves or the rule',c=>{const {q}=c;q.newGame(12);
  c.$('btn-prof').click();const names=()=>[...c.$('pen-list').querySelectorAll('button')].map(b=>b.textContent);assert.ok(!names().includes('猫超大好き'));
- c.$('av-list').querySelectorAll('button')[cat].click();assert.ok(names().includes('猫超大好き'));c.$('pen-list').querySelector('button[data-pen="'+ci+'"]').click();assert.equal(q.S.pen,ci);
- q.S.log.unshift('軽量山岳テントを購入（¥55,000）');assert.ok(q.feedItems().filter(x=>x.p.id==='jitensha_tabi').every(x=>x.p.name==='猫超大好き'));
- q.save();assert.equal(q.load().pen,ci);c.$('av-list').querySelectorAll('button')[1].click();assert.equal(q.S.pen,0);assert.ok(!names().includes('猫超大好き'));
- q.S.pen=ci;q.S.av=1;q.save();assert.equal(q.load().pen,0,'invalid combo in a save is reset');q.S.pen=ci;assert.equal(q.feedItems().filter(x=>x.p.id==='jitensha_tabi')[0].p.name,q.PEN[0]);
- assert.ok(c.w.document.querySelector('#ov-sns .snshd #btn-share'));assert.ok(!c.w.document.querySelector('.profile #btn-share'));assert.ok(c.w.document.querySelector('#ov-sns #share-note'));});
-test('profile/SNS CSS debug: toggle buttons use aria-pressed (not aria-selected), the share note is cleared when the SNS popup reopens',c=>{const {q}=c;q.newGame(12);c.$('btn-prof').click();
- for(const id of ['av-list','pen-list']){const bs=[...c.$(id).querySelectorAll('button')];assert.ok(bs.length>0);assert.ok(bs.every(b=>!b.hasAttribute('aria-selected')&&/^(true|false)$/.test(b.getAttribute('aria-pressed'))),id);assert.equal(bs.filter(b=>b.getAttribute('aria-pressed')==='true').length,1,id);}
- c.$('prof-close').click();c.$('btn-sns').click();c.$('share-note').textContent='画像を保存しました。';c.$('sns-close').click();c.$('btn-sns').click();assert.equal(c.$('share-note').textContent,'');});
-test('character edit impact: every illustration x pen name renders without errors; the sponsor-contract post uses the pen name; portrait alt follows the illustration',c=>{const {q}=c;q.newGame(12);
+ c.$('av-list').querySelector('[data-av="av_cat"]').click();assert.ok(names().includes('猫超大好き'));c.$('pen-list').querySelector('[data-pen="pen_neko"]').click();assert.equal(q.S.penId,'pen_neko');assert.equal(c.$('pf-pen').textContent,'猫超大好き');
+ c.$('av-list').querySelector('[data-av="av_gal"]').click();assert.equal(q.S.penId,'pen_tabi');assert.ok(!names().includes('猫超大好き'));
+ let seed=7;const rnd=n=>{seed=(seed*1103515245+12345)%2147483648;return (seed>>>16)%n;};let seen=0,resets=0;
+ for(let k=0;k<400;k++){if(rnd(2)===0){const bs=c.$('av-list').querySelectorAll('button');const before=q.S.penId;bs[rnd(bs.length)].click();if(before==='pen_neko'&&q.S.penId!=='pen_neko')resets++;}else{const bs=c.$('pen-list').querySelectorAll('button');bs[rnd(bs.length)].click();}
+  const isCat=q.S.avId==='av_cat';assert.equal(names().includes('猫超大好き'),isCat,'step '+k);if(q.S.penId==='pen_neko'){assert.ok(isCat);seen++;}
+  assert.equal(c.$('pf-pen').textContent,q.PENS.find(x=>x.id===q.S.penId).n);assert.equal([...c.$('pen-list').querySelectorAll('[aria-pressed="true"]')].map(b=>b.dataset.pen).join(),q.S.penId);assert.equal([...c.$('av-list').querySelectorAll('[aria-pressed="true"]')].map(b=>b.dataset.av).join(),q.S.avId);
+  const L=q.load();assert.equal(L.penId,q.S.penId);assert.equal(L.avId,q.S.avId);}
+ assert.ok(seen>0&&resets>0,'fuzz reached both states '+seen+'/'+resets);
+ q.S.avId='av_cat';q.S.penId='pen_neko';q.save();q.AVS.reverse();q.PENS.reverse();q.PENS.unshift(q.PENS.pop());const L=q.load();assert.equal(L.avId,'av_cat');assert.equal(L.penId,'pen_neko');assert.equal(q.penName(),'猫超大好き');q.S.avId='av_shades';assert.equal(q.penName(),'旅の自転車乗り');});
+test('character edit impact: all 88 illustration x name combos render; sponsor-contract post uses the pen name',c=>{const {q}=c;q.newGame(12);
  q.S.log.unshift('1|スポンサー「自転車メーカー」がつきました（週¥5,000）');q.S.log.unshift('1|軽量山岳テントを購入（¥55,000）');q.S.tl.push([1,12,80,'']);
- for(let a=0;a<q.AVS.length;a++)for(let p=0;p<q.PEN.length;p++){q.S.av=a;q.S.pen=p;q.render();const it=q.feedItems(),me=it.filter(x=>x.p.id==='jitensha_tabi'),sp=it.find(x=>/^sponsor_/.test(x.p.id));const nm=(p===10&&a!==3)?q.PEN[0]:q.PEN[p];
-  assert.ok(me.length>0&&me.every(x=>x.p.name===nm&&x.p.av===(a?'img/'+q.AVS[a][0]+'_s.webp':'img/hero.webp')),a+'/'+p);assert.ok(sp&&sp.p.text.startsWith(nm+'さん'),'sponsor '+a+'/'+p);assert.equal(c.$('pf-pen').textContent,nm);}
- q.S.av=6;q.render();assert.ok(c.$('pf-img').alt.includes('忍者'));q.S.av=0;q.render();assert.ok(c.$('pf-img').alt.includes('旅人'));});
-test('猫超大好き special rule: bound by name/file (not index); random click fuzz keeps the invariant, UI and saved data consistent',c=>{const {q}=c;q.newGame(12);const ci=q.PEN.indexOf('猫超大好き'),cat=q.AVS.findIndex(a=>a[0]==='av_cat');
- c.$('btn-prof').click();let seed=7;const rnd=n=>{seed=(seed*1103515245+12345)%2147483648;return (seed>>>16)%n;};let catNameSeen=0,resets=0;
- for(let k=0;k<400;k++){const useAv=rnd(2)===0;if(useAv){const bs=c.$('av-list').querySelectorAll('button');const before=q.S.pen;bs[rnd(bs.length)].click();if(before===ci&&q.S.pen!==ci)resets++;}else{const bs=c.$('pen-list').querySelectorAll('button');bs[rnd(bs.length)].click();}
-  const isCat=q.S.av===cat,btns=[...c.$('pen-list').querySelectorAll('button')];
-  assert.equal(btns.length,isCat?q.PEN.length:q.PEN.length-1,'button count at step '+k);assert.equal(btns.some(b=>b.textContent==='猫超大好き'),isCat);
-  if(q.S.pen===ci){assert.ok(isCat,'cat name only with cat, step '+k);catNameSeen++;}
-  assert.equal(c.$('pf-pen').textContent,q.PEN[q.S.pen]);assert.equal([...c.$('pen-list').querySelectorAll('button[aria-pressed="true"]')].map(b=>+b.dataset.pen).join(),String(q.S.pen));
-  assert.equal([...c.$('av-list').querySelectorAll('button[aria-pressed="true"]')].map(b=>+b.dataset.av).join(),String(q.S.av));
-  const L=q.load();assert.equal(L.pen,q.S.pen);assert.equal(L.av,q.S.av);}
- assert.ok(catNameSeen>0&&resets>0,'fuzz reached both states '+catNameSeen+'/'+resets);
- // robustness: reorder the illustration list -> the rule follows the cat file, not the old index
- q.AVS.splice(1,0,q.AVS.splice(cat,1)[0]);const nc=q.AVS.findIndex(a=>a[0]==='av_cat');assert.equal(nc,1);q.S.av=nc;q.S.pen=ci;assert.equal(q.penName(),'猫超大好き');q.S.av=cat;assert.equal(q.penName(),q.PEN[0]);});
+ for(const a of q.AVS)for(const p of q.PENS){q.S.avId=a.id;q.S.penId=p.id;q.render();const it=q.feedItems(),me=it.filter(x=>x.p.id==='jitensha_tabi'),sp=it.find(x=>/^sponsor_/.test(x.p.id));const nm=(p.av&&p.av!==a.id)?'旅の自転車乗り':p.n;
+  assert.ok(me.length>0&&me.every(x=>x.p.name===nm&&x.p.av==='img/'+a.s+'.webp'),a.id+'/'+p.id);assert.ok(sp&&sp.p.text.startsWith(nm+'さん'),'sponsor '+a.id+'/'+p.id);assert.equal(c.$('pf-pen').textContent,nm);assert.equal(c.$('pf-img').getAttribute('src'),'img/'+a.f+'.webp');assert.ok(c.$('pf-img').alt.includes(a.n));}});
 const summary={file:filename,passed:results.filter(x=>x.ok).length,failed:results.filter(x=>!x.ok).length,results};
 if(process.argv[3])fs.writeFileSync(process.argv[3],JSON.stringify(summary,null,2));
 console.log(JSON.stringify({passed:summary.passed,failed:summary.failed}));process.exitCode=summary.failed?1:0;
