@@ -54,7 +54,7 @@ def bonus_reload(p):
                 assert p.evaluate('q.S.turn')==turn
                 before=p.evaluate('q.S.money')
                 p.evaluate("q.snap();q.advance()")
-                assert p.evaluate("q.S.log.filter(x=>x.includes('編集長から賞与')).length")==1
+                assert p.evaluate("q.S.log.filter(x=>x.includes('編集長からインセンティブ')).length")==1
                 assert p.evaluate('q.S.money')==before+45000
                 result={'sourceTurn':turn,'phase':phase,'initialPayments':0,'afterReplay':1,'creditSnapshot':r}
             elif phase=='after_credit_reload_request':
@@ -62,7 +62,7 @@ def bonus_reload(p):
                     p.evaluate("window.__afterBonus=()=>location.reload();q.advance()")
                 assert p.evaluate('q.S.turn')==turn+1
                 assert p.evaluate('q.S.money')==75000
-                assert p.evaluate("q.S.log.filter(x=>x.includes('編集長から賞与')).length")==1
+                assert p.evaluate("q.S.log.filter(x=>x.includes('編集長からインセンティブ')).length")==1
                 result={'sourceTurn':turn,'phase':phase,'paymentsAfterReload':1}
             else:
                 p.evaluate('q.advance()')
@@ -71,7 +71,7 @@ def bonus_reload(p):
                 if phase=='annual': assert p.locator('#ov-result').is_visible()
                 p.reload()
                 assert p.evaluate('({money:q.S.money,turn:q.S.turn})')==expected
-                assert p.evaluate("q.S.log.filter(x=>x.includes('編集長から賞与')).length")==1
+                assert p.evaluate("q.S.log.filter(x=>x.includes('編集長からインセンティブ')).length")==1
                 result={'sourceTurn':turn,'phase':phase,'paymentsAfterReload':1,**expected}
             results.append(result)
     return results
