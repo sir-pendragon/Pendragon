@@ -2,7 +2,7 @@ const fs=require('node:fs'),path=require('node:path'),assert=require('node:asser
 const {JSDOM,VirtualConsole}=require('jsdom');
 const filename=path.resolve(process.argv[2]||path.join(__dirname,'..','index.html'));
 const html=fs.readFileSync(filename,'utf8');
-const expose=`window.qa={SPC,itemArt,feedItems,INF,INF_WIN,infSt,infD,rollInf,infBlock,giftYear,get INFEV(){return INFEV},set INFEV(v){INFEV=v},getTS:()=>TS,setTS:v=>{TS=v},snsText,ICON_FB,foodMax,partSlots,dcfBonus,get sgPage(){return SGPG},set sgPage(v){SGPG=v},needV,isCourse,askGo,ENEMY,SPEC,SIGHTS,TACT,tlEnc,tlDec,newGame,render,renderMap,renderBattle,renderShop,renderForge,renderDetail,renderList,renderTrials,renderSights,load,save,pack,snap,advance,calendar,rollForecast,startTrip,stayWx,startBattle,cmd,endTrip,endTrip2,nextEncounter,tsuchinoko,tcRate,bikeStats,gearFx,travelInfo,restHome,yearEval,eventAt,stoveOn,plv,rkLv,PREF,ENEMY,GEAR_ITEMS,PARTS,BIKES,CLOTHES,WXL,TRIAL_KEYS,AUD,tcRate,playBGM,bgmApply,
+const expose=`window.qa={PEN,SPC,itemArt,feedItems,INF,INF_WIN,infSt,infD,rollInf,infBlock,giftYear,get INFEV(){return INFEV},set INFEV(v){INFEV=v},getTS:()=>TS,setTS:v=>{TS=v},snsText,ICON_FB,foodMax,partSlots,dcfBonus,get sgPage(){return SGPG},set sgPage(v){SGPG=v},needV,isCourse,askGo,ENEMY,SPEC,SIGHTS,TACT,tlEnc,tlDec,newGame,render,renderMap,renderBattle,renderShop,renderForge,renderDetail,renderList,renderTrials,renderSights,load,save,pack,snap,advance,calendar,rollForecast,startTrip,stayWx,startBattle,cmd,endTrip,endTrip2,nextEncounter,tsuchinoko,tcRate,bikeStats,gearFx,travelInfo,restHome,yearEval,eventAt,stoveOn,plv,rkLv,PREF,ENEMY,GEAR_ITEMS,PARTS,BIKES,CLOTHES,WXL,TRIAL_KEYS,AUD,tcRate,playBGM,bgmApply,
 get S(){return S},set S(v){S=v},get B(){return B},get trip(){return trip},set trip(v){trip=v},get TS(){return TS},get inTrip(){return INTRIP},get lastSave(){return LASTSAVE},
 quiet(){render=()=>save();renderBattle=()=>{};playSE=()=>{};playBGM=()=>{};}};`;
 const js=[...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(m=>m[1]).sort((x,y)=>y.length-x.length)[0];// 先頭の短い移動スクリプトではなく、本体（最長）を読む
@@ -269,6 +269,15 @@ test('4th rival mino-kasago: nationwide, polite; 3 wins -> 3 dango once at the y
  q.infSt('mino').w=2;assert.equal(q.giftYear().includes('団子'),false);assert.equal(q.S.dango,0);q.infSt('mino').w=3;const h=q.giftYear();assert.ok(h.includes('団子3個'));assert.equal(q.S.dango,3);assert.equal(q.giftYear(),'');assert.equal(q.S.dango,3);
  assert.ok(q.feedItems().some(x=>x.p.id==='mino-kasago'&&x.p.text.includes('団子')));
  q.S.dango=2;q.S.hp=50;q.S.mp=50;clear(c);const b=batt(c,'rival');assert.ok(/団子/.test(c.$('bt-cmds').textContent));q.cmd('dango');assert.equal(q.S.dango,1);assert.ok(c.$('bt-log').textContent.includes('文化祭の団子を食べた'));q.cmd('dango');q.cmd('dango');assert.equal(q.S.dango,0);clear(c);q.S.dango=3;q.save();assert.equal(q.load().dango,3);q.S.dango=99;q.save();assert.ok(q.load().dango<=3);});
+test('profile settings: pen name picked from a list (10 unique), shown on my posts, saved/validated; top button renamed to システム; the old My SNS tab is gone',c=>{const {q}=c;q.newGame(12);
+ assert.equal(c.$('btn-set').textContent.trim(),'⚙ システム');assert.ok(!/設定/.test(c.$('btn-set').textContent));assert.equal(c.$('ov-set').querySelector('h2').textContent,'システム');
+ assert.equal(c.$('btn-prof').textContent,'プロフィール設定');assert.ok(!c.w.document.querySelector('#tl-tabs [data-v=log]'));assert.ok(!c.$('log'));
+ assert.equal(q.PEN.length,10);assert.equal(new Set(q.PEN).size,10);assert.equal(q.S.pen,0);
+ q.S.log.unshift('補給食を購入（¥800）');q.S.log.unshift('軽量山岳テントを購入（¥55,000）');const mine=()=>q.feedItems().filter(x=>x.p.id==='jitensha_tabi');assert.ok(mine().length>0&&mine().every(x=>x.p.name==='旅の自転車乗り'));
+ c.$('btn-prof').click();assert.equal(c.$('ov-prof').hidden,false);const bs=[...c.$('pen-list').querySelectorAll('button')];assert.equal(bs.length,10);assert.equal(bs[0].getAttribute('aria-selected'),'true');
+ bs[3].click();assert.equal(q.S.pen,3);assert.ok(mine().every(x=>x.p.name===q.PEN[3]));assert.equal(c.$('pen-list').querySelectorAll('button')[3].getAttribute('aria-selected'),'true');
+ q.save();assert.equal(q.load().pen,3);q.S.pen=99;q.save();assert.equal(q.load().pen,0);q.S.pen=-5;q.save();assert.equal(q.load().pen,0);
+ c.$('prof-close').click();assert.equal(c.$('ov-prof').hidden,true);c.$('btn-sns').click();assert.ok(c.$('sns-list').textContent.length>0);});
 const summary={file:filename,passed:results.filter(x=>x.ok).length,failed:results.filter(x=>!x.ok).length,results};
 if(process.argv[3])fs.writeFileSync(process.argv[3],JSON.stringify(summary,null,2));
 console.log(JSON.stringify({passed:summary.passed,failed:summary.failed}));process.exitCode=summary.failed?1:0;
