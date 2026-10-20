@@ -340,6 +340,7 @@ const stamp=require('./stamp.cjs');
 const VER='aaaaaaaaaaaa',VER2='bbbbbbbbbbbb';
 const resp=(c,ver,o={})=>({ok:o.ok!==false,redirected:!!o.redirected,url:o.url||c.w.location.href,headers:{get:k=>/content-type/i.test(k)?(o.type||'text/html; charset=utf-8'):null},text:async()=>o.body!==undefined?o.body:`<script>const APP_V='${ver}';</script>`});
 const timers=c=>{const cbs=[];c.w.setTimeout=(f,ms)=>{cbs.push({f,ms});return cbs.length;};c.w.clearTimeout=()=>{};return cbs;};
+const press=c=>c.$('upd-ok').click();const pops=c=>c.w.document.querySelectorAll('#upd-pop').length;// 更新のポップアップの「閉じる」
 const runTimers=cbs=>{const a=cbs.splice(0);a.forEach(t=>t.f());};
 const finishSunTrip=c=>{const {q}=c;c.w.localStorage.setItem('cc_tutb','1');q.S.forecast[12]={temp:20,wx:'sun'};q.startTrip(q.PREF[12],false);assert.equal(q.inTrip,true,'trip running');assert.equal(c.$('ov-camp').hidden,false);c.$('camp-btns').querySelector('button:not([disabled])').click();assert.equal(q.inTrip,true,'result screen: still unsaved');c.$('res-ok').click();};
 test('stamp: APP_V in index.html matches its content (run node qa/stamp.cjs after any change)',c=>{assert.equal(stamp.current(html),stamp.compute(html),'APP_V is stale: run node qa/stamp.cjs');assert.equal(c.q.APP_V,stamp.current(html));assert.match(c.q.APP_V,/^[0-9a-f]{12}$/);
@@ -350,16 +351,16 @@ atest('share: the post text is copied to the clipboard when the button is presse
  assert.ok(copied&&/#日本巡る自転車旅/.test(copied)&&copied.includes('https://jitensha-tabi.com/'),'text copied: '+copied);assert.match(c.$('share-note').textContent,/画像を作っています/);});
 atest('auto-update 1: after a real finished trip (and a battle trip) the pending update runs; safe() follows INTRIP only',async c=>{const {q}=c,U=q.UPD;const cbs=timers(c);let rl=0;U.reload=()=>{rl++;};
  finishSunTrip(c);assert.equal(q.S.turn,2);assert.equal(q.inTrip,false);assert.ok(q.trip,'trip object is left over');assert.equal(U.safe(),true,'left-over trip/B must not block updates');
- U.pending=VER;U.plan();assert.equal(U.scheduled,true);runTimers(cbs);assert.equal(rl,1);assert.equal(JSON.parse(c.w.localStorage.getItem('charicamp')).turn,2,'saved turn 2 before reload');
+ U.pending=VER;U.plan();assert.equal(U.scheduled,true);assert.equal(rl,0,'no automatic reload: waits for the close button');assert.equal(pops(c),1);press(c);assert.equal(rl,1);assert.equal(JSON.parse(c.w.localStorage.getItem('charicamp')).turn,2,'saved turn 2 before reload');
  // 戦闘を経た旅でも同じ
- rl=0;U.scheduled=false;U.reloadedAt=0;c.w.sessionStorage.removeItem('cc_upd');batt(c,'hill');q.B.hp=1;q.cmd('push');c.$('bt-cmds').querySelector('button').click();c.$('camp-btns').querySelector('button:not([disabled])').click();q.inTrip=true;assert.equal(U.safe(),false,'during result');q.inTrip=false;c.$('res-ok').click();assert.ok(q.B,'B left over');assert.equal(U.safe(),true);U.plan();runTimers(cbs);assert.equal(rl,1);});
-atest('auto-update 2: a trip started during the notice postpones the reload; update stays pending and runs later; one timer only',async c=>{const {q}=c,U=q.UPD;const cbs=timers(c);let rl=0;U.reload=()=>{rl++;};
- U.pending=VER;U.plan();U.plan();assert.equal(cbs.filter(t=>t.ms===U.wait).length,1,'only one scheduled reload');const notes=()=>[...c.w.document.querySelectorAll('[role=status]')].filter(n=>/新しいバージョン/.test(n.textContent)).length;assert.equal(notes(),1,'notice shown');
- q.S.stay=0;q.inTrip=true;/* 通知中に旅を始めた */runTimers(cbs);assert.equal(rl,0,'postponed');assert.equal(U.scheduled,false);assert.equal(U.pending,VER,'still pending');assert.equal(notes(),0,'notice removed');
- q.inTrip=false;await U.check(true);assert.equal(cbs.filter(t=>t.ms===U.wait).length,1,'scheduled again after the trip');runTimers(cbs);assert.equal(rl,1);assert.equal(notes(),1,'one notice');});
-atest('auto-update 3: duplicate checks make one reservation; changes made just before the reload are saved too',async c=>{const {q}=c,U=q.UPD;const cbs=timers(c);let rl=0;U.reload=()=>{rl++;};
- U.get=async()=>resp(c,VER);await U.check(true);assert.equal(U.pending,VER);await U.check(true);await U.check(true);assert.equal(cbs.filter(t=>t.ms===U.wait).length,1,'one reservation');
- q.S.money=424242;runTimers(cbs);assert.equal(rl,1,'reload once');assert.equal(JSON.parse(c.w.localStorage.getItem('charicamp')).money,424242,'last-second change saved');});
+ rl=0;U.scheduled=false;U.notice(false);U.reloadedAt=0;c.w.sessionStorage.removeItem('cc_upd');batt(c,'hill');q.B.hp=1;q.cmd('push');c.$('bt-cmds').querySelector('button').click();c.$('camp-btns').querySelector('button:not([disabled])').click();q.inTrip=true;assert.equal(U.safe(),false,'during result');q.inTrip=false;c.$('res-ok').click();assert.ok(q.B,'B left over');assert.equal(U.safe(),true);U.plan();press(c);assert.equal(rl,1);});
+atest('auto-update 2: a trip started while the popup is open postpones the reload; update stays pending and runs later; one popup only',async c=>{const {q}=c,U=q.UPD;const cbs=timers(c);let rl=0;U.reload=()=>{rl++;};
+ U.pending=VER;U.plan();U.plan();assert.equal(pops(c),1,'only one popup');const notes=()=>pops(c);assert.equal(notes(),1,'notice shown');assert.match(c.$('upd-pop').textContent,/スタート画面に戻ります/);assert.equal(c.$('upd-ok').textContent,'閉じる');
+ q.S.stay=0;q.inTrip=true;/* 通知中に旅を始めた */press(c);assert.equal(rl,0,'postponed');assert.equal(U.scheduled,false);assert.equal(U.pending,VER,'still pending');assert.equal(notes(),0,'notice removed');
+ q.inTrip=false;await U.check(true);assert.equal(pops(c),1,'popup again after the trip');press(c);assert.equal(rl,1);assert.equal(notes(),1,'one notice');});
+atest('auto-update 3: duplicate checks make one popup; changes made just before the reload are saved too',async c=>{const {q}=c,U=q.UPD;const cbs=timers(c);let rl=0;U.reload=()=>{rl++;};
+ U.get=async()=>resp(c,VER);await U.check(true);assert.equal(U.pending,VER);await U.check(true);await U.check(true);assert.equal(pops(c),1,'one popup');
+ q.S.money=424242;press(c);assert.equal(rl,1,'reload once');assert.equal(JSON.parse(c.w.localStorage.getItem('charicamp')).money,424242,'last-second change saved');});
 atest('auto-update 4: a publish before the first check, or after a failed first check, is detected (running version comes from APP_V, not from the first fetch)',async c=>{const {q}=c,U=q.UPD;const cbs=timers(c);U.reload=()=>{};
  U.get=async()=>resp(c,VER);await U.check();assert.equal(U.pending,VER,'first fetch already newer');
  const d=boot();try{d.q.newGame(12);const V=d.q.UPD;V.reload=()=>{};let n=0;V.get=async()=>{n++;if(n===1)throw new Error('offline');return resp(d,VER2);};await V.check();assert.equal(V.pending,'','first check failed: nothing yet');await V.check(true);assert.equal(V.pending,VER2,'next check sees the newer version');}finally{d.dom.window.close();}
@@ -367,17 +368,17 @@ atest('auto-update 4: a publish before the first check, or after a failed first 
  const e=boot();try{e.q.newGame(12);const W=e.q.UPD;W.get=async()=>resp(e,e.q.APP_V);await W.check(true);assert.equal(W.pending,'');}finally{e.dom.window.close();}});
 atest('auto-update 5: no reload when saving fails; the cooldown time is recorded only after a successful save',async c=>{const {q}=c,U=q.UPD;const cbs=timers(c);let rl=0;U.reload=()=>{rl++;};
  q.S.money=30000;q.save();q.S.money=987654;const orig=c.w.Storage.prototype.setItem;c.w.Storage.prototype.setItem=function(){throw new Error('quota');};
- U.pending=VER;U.plan();assert.equal(cbs.length,0,'not scheduled when it cannot be saved');assert.equal(rl,0);assert.equal(JSON.parse(c.w.localStorage.getItem('charicamp')).money,30000);
+ U.pending=VER;U.plan();assert.equal(pops(c),0,'no popup when it cannot be saved');assert.equal(rl,0);assert.equal(JSON.parse(c.w.localStorage.getItem('charicamp')).money,30000);
  assert.equal(c.w.sessionStorage.getItem('cc_upd'),null,'no cooldown time recorded');
  // 予約後に保存できなくなった場合も、実行直前に中止する
- c.w.Storage.prototype.setItem=orig;U.plan();assert.equal(cbs.length,1);q.S.money=1;c.w.Storage.prototype.setItem=function(){throw new Error('quota');};runTimers(cbs);assert.equal(rl,0,'aborted at the last moment');assert.equal(U.scheduled,false);assert.equal(U.pending,VER);assert.equal(c.w.sessionStorage.getItem('cc_upd'),null);
+ c.w.Storage.prototype.setItem=orig;U.plan();assert.equal(pops(c),1);q.S.money=1;c.w.Storage.prototype.setItem=function(){throw new Error('quota');};press(c);assert.equal(rl,0,'aborted at the last moment');assert.equal(U.scheduled,false);assert.equal(U.pending,VER);assert.equal(c.w.sessionStorage.getItem('cc_upd'),null);
  // 保存できれば更新する
- c.w.Storage.prototype.setItem=orig;U.plan();runTimers(cbs);assert.equal(rl,1);assert.equal(JSON.parse(c.w.localStorage.getItem('charicamp')).money,1);assert.ok(+c.w.sessionStorage.getItem('cc_upd')>0);
+ assert.equal(pops(c),0,'popup removed when aborted');c.w.Storage.prototype.setItem=orig;U.plan();press(c);assert.equal(rl,1);assert.equal(JSON.parse(c.w.localStorage.getItem('charicamp')).money,1);assert.ok(+c.w.sessionStorage.getItem('cc_upd')>0);
  // save() の戻り値：成功 true／保存済みで不要 true／旅の途中 false／書けない false／タイトル(S=null) true
  assert.equal(q.save(),true);q.inTrip=true;assert.equal(q.save(),false);q.inTrip=false;q.S.money=2;c.w.Storage.prototype.setItem=function(){throw new Error('quota');};assert.equal(q.save(),false);c.w.Storage.prototype.setItem=orig;assert.equal(q.save(),true);
  const S0=q.S;q.S=null;assert.equal(q.save(),true,'title screen');q.S=S0;});
 atest('auto-update 6: with sessionStorage unusable, repeated checks still make one reload per page',async c=>{const {q}=c,U=q.UPD;const cbs=timers(c);let rl=0;U.reload=()=>{rl++;};
- Object.defineProperty(c.w,'sessionStorage',{get(){throw new Error('denied');}});U.pending=VER;await U.check(true);await U.check(true);runTimers(cbs);assert.equal(rl,1);U.scheduled=false;await U.check(true);assert.equal(cbs.length,0,'no second reservation within 10 minutes in the same page');assert.equal(rl,1);});
+ Object.defineProperty(c.w,'sessionStorage',{get(){throw new Error('denied');}});U.pending=VER;await U.check(true);await U.check(true);press(c);assert.equal(rl,1);U.scheduled=false;await U.check(true);assert.equal(pops(c),1,'no second popup within 10 minutes in the same page');assert.equal(rl,1);});
 atest('auto-update 7: a hanging fetch times out (including the body read) and busy is released; timer cleaned up',async c=>{const {q}=c,U=q.UPD;const cbs=timers(c);
  U.get=sig=>new Promise((_,rej)=>sig.addEventListener('abort',()=>rej(new Error('aborted'))));const p=U.check(true);await Promise.resolve();assert.equal(U.busy,true);assert.ok(cbs.some(t=>t.ms===U.timeout),'timeout timer set');
  runTimers(cbs);await p;assert.equal(U.busy,false);assert.equal(U.pending,'');

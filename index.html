@@ -1760,9 +1760,9 @@ addEventListener('pagehide',save);
 // 開きっぱなしのタブが古いコードのまま保存し直して、新しい保存項目を失うのを防ぐ。
 // 実行中のコードに埋め込んだ版の識別子 APP_V と、いま配信されている index.html の APP_V を比べる（最初に取れた配信内容を「実行中の版」の代わりにしない）。
 // ★ APP_V は index.html の内容から計算する。index.html を変えたら `node qa/stamp.cjs` で更新する（忘れると監査テストが失敗する）。
-const APP_V='d79ca0edcc57';
+const APP_V='d7056eb6803c';
 // 旅・戦闘・結果画面（INTRIP）の間は、save() が保存を見送るので、再読み込みすると進行が巻き戻る。旅が終わったあとも trip / B には前回の値が残るため、これらは見ない
-const UPD={pending:'',busy:false,scheduled:false,last:0,every:600000,quiet:600000,wait:1500,timeout:15000,reloadedAt:0,note:null,timer:0,
+const UPD={pending:'',busy:false,scheduled:false,last:0,every:600000,quiet:600000,timeout:15000,reloadedAt:0,note:null,timer:0,
  safe:()=>!INTRIP,
  get:sig=>fetch(location.pathname,{cache:'no-store',redirect:'error',signal:sig}),
  // 配信中の版の識別子。リダイレクト・別オリジン・HTML以外・識別子なしは「取れなかった」（''）。本文の取得までを含めてタイムアウトする
@@ -1776,12 +1776,18 @@ const UPD={pending:'',busy:false,scheduled:false,last:0,every:600000,quiet:60000
  persist(){if(!S)return true;if(INTRIP)return false;try{return save()===true&&localStorage.getItem('charicamp')===pack();}catch(e){return false;}},
  recent(){let t=0;try{t=+sessionStorage.getItem('cc_upd')||0;}catch(e){}return Date.now()-Math.max(t,this.reloadedAt)<this.quiet;},// 直前に更新したばかりなら繰り返さない
  reload:()=>location.reload(),
- notice(on){if(!on){if(this.note){this.note.remove();this.note=null;}return;}if(this.note)return;const n=document.createElement('div');n.setAttribute('role','status');n.textContent='新しいバージョンに更新します…';
-  n.style.cssText='position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:9999;background:#000;color:#fff;padding:8px 14px;border-radius:8px;font-size:13px';document.body.appendChild(n);this.note=n;},
+ // 更新のおしらせ（ポップアップ）。「閉じる」を押すと、保存して再読み込み（スタート画面に戻る）。自動では再読み込みしない
+ notice(on){if(!on){if(this.note){this.note.remove();this.note=null;}return;}if(this.note)return;
+  const o=document.createElement('div');o.id='upd-pop';o.setAttribute('role','dialog');o.setAttribute('aria-modal','true');o.setAttribute('aria-label','新しいバージョン');
+  o.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.62);display:flex;align-items:center;justify-content:center;padding:16px';
+  const bx=document.createElement('div');bx.style.cssText='max-width:320px;width:100%;box-sizing:border-box;background:#4a3a2b;color:#f4ead5;border:2px solid #e9c46a;border-radius:12px;padding:18px 16px;text-align:center;font-size:14px;line-height:1.7';
+  const t=document.createElement('div');t.innerHTML='<b style="font-size:16px">新しいバージョンが公開されました</b><br>「閉じる」を押すと、最新版でスタート画面に戻ります。<br><span style="font-size:12px;opacity:.8">進行は保存済みです。</span>';
+  const bt=document.createElement('button');bt.id='upd-ok';bt.type='button';bt.textContent='閉じる';bt.style.cssText='margin-top:14px;padding:10px 28px;border:0;border-radius:8px;background:#f08a3c;color:#14100a;font-size:15px;font-weight:700;cursor:pointer';
+  bt.onclick=()=>this.fire();bx.append(t,bt);o.appendChild(bx);document.body.appendChild(o);this.note=o;try{bt.focus();}catch(e){}},
  // 更新の予約（同期）。いま安全で、保存できたときだけ予約する。予約は1つだけ
  plan(){if(!this.pending||this.scheduled||!this.safe()||this.recent()||!this.persist())return;
-  this.scheduled=true;this.notice(true);this.timer=setTimeout(()=>this.fire(),this.wait);},
- // 予約の実行（同期）。直前にもう一度、安全か・保存できるかを確かめる。だめなら取り消して、更新待ちのまま次の確認に回す
+  this.scheduled=true;this.notice(true);},
+  // 「閉じる」を押したときの実行（同期）。直前にもう一度、安全か・保存できるかを確かめる。だめなら取り消して、更新待ちのまま次の確認に回す
  fire(){this.timer=0;if(!this.safe()||!this.persist()||this.recent()){this.scheduled=false;this.notice(false);return;}
   this.reloadedAt=Date.now();try{sessionStorage.setItem('cc_upd',String(this.reloadedAt));}catch(e){}this.reload();},
  async check(force){if(this.busy||this.scheduled)return;this.busy=true;
