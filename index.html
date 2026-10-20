@@ -1765,12 +1765,21 @@ function yearEval(y){const n=trialKindsCleared(),fc=famCount();
   const score=Math.round(S.fame/100+fc*300+n*200+Math.max(0,S.money)/1000+S.stats.wins*10),pace=score/y;
   return {score,rank:pace>=8000?'S':pace>=5000?'A':pace>=2500?'B':'C',goal:Math.min(47,10*y),n,fc};}
 let EDI=0;
+// 重なった画面を閉じたら、いま一番上に残っている画面へフォーカスを返す。
+function dialogFocusBack(previous){const views=[...document.querySelectorAll('.overlay:not([hidden]),#upd-pop')];
+  const top=views.reduce((a,b)=>!a||(+getComputedStyle(b).zIndex||0)>=(+getComputedStyle(a).zIndex||0)?b:a,null);
+  const usable=e=>e&&e.isConnected&&!e.disabled&&e.getClientRects().length;
+  const target=usable(previous)&&(!top||top.contains(previous))?previous:top&&[...top.querySelectorAll('button,[tabindex="0"]')].find(usable);
+  if(target)target.focus({preventScroll:true});}
+let EDI_RETURN=null;
+function focusEditor(){if($('ov-edi').hidden)return;EDI_RETURN=document.activeElement;$('edi-ok').focus({preventScroll:true});}
+function closeEditor(){$('ov-edi').hidden=true;dialogFocusBack(EDI_RETURN);EDI_RETURN=null;}
 function finishAdvance(){
   rollInf();
   if(EDI){$('edi-amt').textContent='+'+yen(EDI);$('edi-who').textContent=`称号「${title(S.fame)}」への四半期賞与`;$('ov-edi').hidden=false;playSE('se_win');EDI=0;}
   if(TS){const o=spOf(TS.fame),n=sponsor();if(n[0]>o[0])spCongrats(o,n);}
-  if((S.turn-1)%52===0){const y=calendar(S.turn-1).year;showResult(`<h2>${y}年目 決算</h2><div class="res"><span>都道府県クリア数</span><span>${famCount()} / 47</span><span>フォロワー</span><span>${fol(S.fame)}（${title(S.fame)}）</span><span>所持金</span><span>${yen(S.money)}</span><span>試練制覇</span><span>${S.stats.wins}回</span>${(()=>{const v=yearEval(y);return `<span>突破した試練の種類</span><span>${v.n} / ${TRIAL_KEYS.length}</span><span>年間目標</span><span>累計${v.goal}県制覇 ${v.fc>=v.goal?'✅ 達成':'❌ 未達'}</span><span>年間評価</span><span><img class="rank" src="img/rank_${v.rank.toLowerCase()}.webp" width="128" height="128" alt="${v.rank}"><b>${v.rank}</b>（${v.score.toLocaleString('ja-JP')}pt）</span>`;})()}</div>${giftYear()}<p class="hint">${y+1}年目は敵が少し強くなる。</p>`,()=>{render();turnPopup();autoExport();},true);render();return;}
-  const tt=TS?{df:S.fame-TS.fame,dm:S.money-TS.money,late:!TS.inc}:null;if(tt)LASTRES={place:(PREF[S.loc]||{}).name||'',df:tt.df,late:tt.late};render();turnPopup();if(S.turn===2&&TUTI===3&&!tutSeen())tutShow(4,tt);autoExport();}
+  if((S.turn-1)%52===0){const y=calendar(S.turn-1).year;showResult(`<h2>${y}年目 決算</h2><div class="res"><span>都道府県クリア数</span><span>${famCount()} / 47</span><span>フォロワー</span><span>${fol(S.fame)}（${title(S.fame)}）</span><span>所持金</span><span>${yen(S.money)}</span><span>試練制覇</span><span>${S.stats.wins}回</span>${(()=>{const v=yearEval(y);return `<span>突破した試練の種類</span><span>${v.n} / ${TRIAL_KEYS.length}</span><span>年間目標</span><span>累計${v.goal}県制覇 ${v.fc>=v.goal?'✅ 達成':'❌ 未達'}</span><span>年間評価</span><span><img class="rank" src="img/rank_${v.rank.toLowerCase()}.webp" width="128" height="128" alt="${v.rank}"><b>${v.rank}</b>（${v.score.toLocaleString('ja-JP')}pt）</span>`;})()}</div>${giftYear()}<p class="hint">${y+1}年目は敵が少し強くなる。</p>`,()=>{render();turnPopup();autoExport();},true);render();focusEditor();return;}
+  const tt=TS?{df:S.fame-TS.fame,dm:S.money-TS.money,late:!TS.inc}:null;if(tt)LASTRES={place:(PREF[S.loc]||{}).name||'',df:tt.df,late:tt.late};render();turnPopup();if(S.turn===2&&TUTI===3&&!tutSeen())tutShow(4,tt);autoExport();focusEditor();}
 function advance(){INTRIP=false;const sp=sponsor();S.money+=sp[1];if(TS)TS.sp=sp;EDI=0;{const c=calendar(S.turn),b=editorBonus(S.fame);if(c.month%3===0&&c.week===MONTH_W[c.mi]&&b>0){S.money+=b;EDI=b;if(TS)TS.bonus=b;log(`ヒヨッター編集長から賞与 ${yen(b)}`);}}S.turn++;rollForecast();S.sel=S.loc;
   if(famCount()===47&&TS&&TS.fam<47){showResult(`<h2>🎉 全国クリア！</h2><p>47か所すべてを馴染み宿にした。伝説の自転車インフルエンサー誕生。</p><div class="res"><span>達成</span><span>${calLabel(S.turn)}</span><span>フォロワー</span><span>${fol(S.fame)}</span><span>所持金</span><span>${yen(S.money)}</span></div>`,finishAdvance,true);render();return;}
   finishAdvance();}
@@ -1781,10 +1790,12 @@ addEventListener('pagehide',save);
 // 開きっぱなしのタブが古いコードのまま保存し直して、新しい保存項目を失うのを防ぐ。
 // 実行中のコードに埋め込んだ版の識別子 APP_V と、いま配信されている index.html の APP_V を比べる（最初に取れた配信内容を「実行中の版」の代わりにしない）。
 // ★ APP_V は index.html の内容から計算する。index.html を変えたら `node qa/stamp.cjs` で更新する（忘れると監査テストが失敗する）。
-const APP_V='2cc23278b8c9';
+const APP_V='a31a5c4adafb';
 // 旅・戦闘・結果画面（INTRIP）の間は、save() が保存を見送るので、再読み込みすると進行が巻き戻る。旅が終わったあとも trip / B には前回の値が残るため、これらは見ない
 const UPD={pending:'',busy:false,scheduled:false,last:0,every:600000,quiet:600000,timeout:15000,reloadedAt:0,note:null,timer:0,
  safe:()=>!INTRIP,
+ // 賞与・年末決算などの操作を終えてから更新のおしらせを出す（タイトル画面は対象外）。
+ blocked:()=>!!document.querySelector('.overlay:not([hidden]):not(#ov-title)'),
  get:sig=>fetch(location.pathname,{cache:'no-store',redirect:'error',signal:sig}),
  // 配信中の版の識別子。リダイレクト・別オリジン・HTML以外・識別子なしは「取れなかった」（''）。本文の取得までを含めてタイムアウトする
  async remote(){const ctl=new AbortController(),tm=setTimeout(()=>ctl.abort(),this.timeout);
@@ -1798,18 +1809,18 @@ const UPD={pending:'',busy:false,scheduled:false,last:0,every:600000,quiet:60000
  recent(){let t=0;try{t=+sessionStorage.getItem('cc_upd')||0;}catch(e){}return Date.now()-Math.max(t,this.reloadedAt)<this.quiet;},// 直前に更新したばかりなら繰り返さない
  reload:()=>location.reload(),
  // 更新のおしらせ（ポップアップ）。「閉じる」を押すと、保存して再読み込み（スタート画面に戻る）。自動では再読み込みしない
- notice(on){if(!on){if(this.note){this.note.remove();this.note=null;}return;}if(this.note)return;
+ notice(on){if(!on){if(this.note){this.note.remove();this.note=null;dialogFocusBack(this.previous);}return;}if(this.note)return;this.previous=document.activeElement;
   const o=document.createElement('div');o.id='upd-pop';o.setAttribute('role','dialog');o.setAttribute('aria-modal','true');o.setAttribute('aria-label','新しいバージョン');
-  o.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.62);display:flex;align-items:center;justify-content:center;padding:16px';
+  o.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.62);display:flex;align-items:center;justify-content:center;padding:16px;overflow:auto;overscroll-behavior:contain';
   const bx=document.createElement('div');bx.style.cssText='max-width:320px;width:100%;box-sizing:border-box;background:#4a3a2b;color:#f4ead5;border:2px solid #e9c46a;border-radius:12px;padding:18px 16px;text-align:center;font-size:14px;line-height:1.7';
   const t=document.createElement('div');t.innerHTML='<b style="font-size:16px">新しいバージョンが公開されました</b><br>「閉じる」を押すと、最新版でスタート画面に戻ります。<br><span style="font-size:12px;opacity:.8">進行は保存済みです。</span>';
   const bt=document.createElement('button');bt.id='upd-ok';bt.type='button';bt.textContent='閉じる';bt.style.cssText='margin-top:14px;padding:10px 28px;border:0;border-radius:8px;background:#f08a3c;color:#14100a;font-size:15px;font-weight:700;cursor:pointer';
-  bt.onclick=()=>this.fire();bx.append(t,bt);o.appendChild(bx);document.body.appendChild(o);this.note=o;try{bt.focus();}catch(e){}},
+  bt.onclick=()=>this.fire();const noChain=e=>{if(o.scrollHeight<=o.clientHeight)e.preventDefault();};o.addEventListener('wheel',noChain,{passive:false});o.addEventListener('touchmove',noChain,{passive:false});o.addEventListener('keydown',e=>{if(e.key==='Tab'){e.preventDefault();bt.focus();}else if(e.key==='Escape'){e.preventDefault();this.scheduled=false;this.notice(false);}});bx.append(t,bt);o.appendChild(bx);document.body.appendChild(o);this.note=o;try{bt.focus();}catch(e){}},
  // 更新の予約（同期）。いま安全で、保存できたときだけ予約する。予約は1つだけ
- plan(){if(!this.pending||this.scheduled||!this.safe()||this.recent()||!this.persist())return;
+ plan(){if(!this.pending||this.scheduled||!this.safe()||this.blocked()||this.recent()||!this.persist())return;
   this.scheduled=true;this.notice(true);},
   // 「閉じる」を押したときの実行（同期）。直前にもう一度、安全か・保存できるかを確かめる。だめなら取り消して、更新待ちのまま次の確認に回す
- fire(){this.timer=0;if(!this.safe()||!this.persist()||this.recent()){this.scheduled=false;this.notice(false);return;}
+ fire(){this.timer=0;if(!this.safe()||this.blocked()||!this.persist()||this.recent()){this.scheduled=false;this.notice(false);return;}
   this.reloadedAt=Date.now();try{sessionStorage.setItem('cc_upd',String(this.reloadedAt));}catch(e){}this.reload();},
  async check(force){if(this.busy||this.scheduled)return;this.busy=true;
   try{
@@ -1831,7 +1842,8 @@ const TUT=[
  ['出発','最初は地元のキャンプ場から。「地図」タブで自宅の県を選んで、「自転車旅に行く」を押します。\n道中で坂や動物などの試練が出ます。コマンドを選んで乗り越えましょう。'],
  ['帰ってきたら','疲れたら「自宅で休む」で回復。結果は「記録」タブで見られます。\n次の週末も、旅に出かけましょう。']];
 $('sp-ok').onclick=()=>{$('ov-spon').hidden=true;};
-$('edi-ok').onclick=()=>{$('ov-edi').hidden=true;};
+$('edi-ok').onclick=closeEditor;
+$('ov-edi').addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();closeEditor();}else if(e.key==='Tab'){e.preventDefault();$('edi-ok').focus();}});
 let TUTI=-1,TUTP=-1;
 function tutDone(){try{localStorage.setItem('cc_tut','1');}catch(e){}}
 function tutPos(){const bub=$('tut-bub');if(!bub||bub.hidden)return;const box=bub.parentElement,sv=$('map');if(!sv)return;
