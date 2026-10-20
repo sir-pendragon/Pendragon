@@ -540,6 +540,16 @@ button:disabled{opacity:.45;cursor:not-allowed}
     <button class="primary" id="sp-ok">閉じる</button>
   </div>
 </div>
+<div class="overlay" id="ov-edi" hidden style="z-index:30">
+  <div class="modal" role="dialog" aria-modal="true" aria-label="ヒヨッター編集長からの賞与" style="text-align:center">
+    <img src="img/logo_hiyotter.webp" width="119" height="26" alt="ヒヨッター" style="align-self:center;height:26px;width:auto">
+    <h2 style="margin:0">📬 編集長から賞与が届いた！</h2>
+    <p style="margin:0;font-size:1.5em"><b id="edi-amt"></b></p>
+    <p class="hint" id="edi-who" style="margin:0"></p>
+    <p style="margin:0;font-size:1.15em"><b>「<span style="white-space:nowrap">アナタノ、コレカラノ、</span><span style="white-space:nowrap">カツヤクニ、キタイシマス！</span>」</b></p>
+    <button class="primary" id="edi-ok">閉じる</button>
+  </div>
+</div>
 <div class="overlay" id="inf-view" hidden><div class="modal" role="dialog" aria-modal="true" aria-label="ライバルの絵"><img id="inf-img" alt=""><b id="inf-nm"></b><span class="hint" id="inf-hd"></span><div class="row"><button class="primary" id="inf-close">閉じる</button></div></div></div>
 <div class="overlay" id="ov-tut" hidden style="z-index:20">
   <div class="modal">
@@ -941,6 +951,9 @@ function season(mi){return [3,4,5].includes(mi+1)?'spring':[6,7,8].includes(mi+1
 const SEASON_J={spring:'<img class="wi" src="img/wx_spring.webp" width="96" height="96" alt="">春',summer:'<img class="wi" src="img/wx_summer.webp" width="96" height="96" alt="">夏',autumn:'<img class="wi" src="img/wx_autumn.webp" width="96" height="96" alt="">秋',winter:'<img class="wi" src="img/wx_winter.webp" width="96" height="96" alt="">冬'};
 const FL=()=>30*Math.log(1+S.fame/100);
 const floss=(min,pc)=>Math.max(min,Math.round(S.fame*pc));
+// 四半期（3・6・9・12月の月末）にヒヨッター編集長から届く特別賞与。称号ごと [必要フォロワー, 金額]（TITLES と同じ並び）
+const EDITOR=[[0,0],[2000,60000],[20000,150000],[200000,300000],[1000000,400000],[2000000,600000]];
+function editorBonus(f){let r=0;for(const x of EDITOR)if(f>=x[0])r=x[1];return r;}
 function title(f){let t=TITLES[0][1];for(const [n,s] of TITLES) if(f>=n) t=s;return t;}
 
 // ---------- state ----------
@@ -1741,8 +1754,8 @@ function restHome(){const ti=travelInfo(PREF[S.home]);if(S.loc!==S.home){const f
   log(forced2?`所持金が尽きて強制帰宅。フォロワー-${fol(pen)}`:`自宅で休養。フォロワー-${fol(pen)}`);S.sel=S.loc;render();showResult(`<h2>自宅で休養</h2><div class="photo pic"><img src="img/rest.webp" width="720" height="480" alt="自宅の和室で、布団を頭までかぶって昼寝する旅行者"><div class="cap"><div>${PREF[S.home].name}の自宅</div><div>💤 一日中ごろごろ</div></div></div><p>${forced2?`所持金が尽きて旅を続けられず、自宅へ連れ戻された…。体力・気力は全回復したが、フォロワー-${fol(pen)}。`:`体力・気力が全回復した。投稿がなく フォロワー-${fol(pen)}。`}</p>`,advance);}
 function showResult(html,then,share){$('result-box').innerHTML=html+(share?`<p class="hint" id="res-note" style="margin:0"></p>`:'')+`<div class="resbtns">${share?'<button id="res-share">SNSに投稿<small>（画像つき）</small></button>':''}<button class="primary" id="res-ok">次の週末へ</button></div>`;$('ov-result').hidden=false;$('res-ok').onclick=()=>{$('ov-result').hidden=true;then();};}
 function turnPopup(){const t=TS;TS=null;if(!t)return;const e=$('pop'),sg=n=>(n>0?'+':n<0?'-':'')+Math.abs(n);
-  const spv=t.sp?t.sp[1]:0,dm=S.money-t.money,other=dm-(t.inc-t.fee)-spv,dh=S.hp-t.hp,dp=S.mp-t.mp,df=S.fame-t.fame,fc=S.fam.filter(Boolean).length;
-  const R=[];if(t.inc)R.push(['ヒヨッターからの収入','+'+yen(t.inc)]);if(spv)R.push([`スポンサー料（${t.sp[2]}）`,'+'+yen(spv)]);if(t.fee)R.push(['利用料','-'+yen(t.fee)]);if(other)R.push(['輪行費・治療費など',(other<0?'-':'+')+yen(Math.abs(other))]);
+  const spv=t.sp?t.sp[1]:0,dm=S.money-t.money,other=dm-(t.inc-t.fee)-spv-(t.bonus||0),dh=S.hp-t.hp,dp=S.mp-t.mp,df=S.fame-t.fame,fc=S.fam.filter(Boolean).length;
+  const R=[];if(t.inc)R.push(['ヒヨッターからの収入','+'+yen(t.inc)]);if(t.bonus)R.push(['編集長からの賞与','+'+yen(t.bonus)]);if(spv)R.push([`スポンサー料（${t.sp[2]}）`,'+'+yen(spv)]);if(t.fee)R.push(['利用料','-'+yen(t.fee)]);if(other)R.push(['輪行費・治療費など',(other<0?'-':'+')+yen(Math.abs(other))]);
   if(df)R.push(['フォロワー',`${sfol(df)}（${fol(S.fame)}）`]);if(dh)R.push(['体力',`${sg(dh)}（${S.hp}）`]);if(dp)R.push(['気力',`${sg(dp)}（${S.mp}）`]);
   if(t.became)R.push(['🏅 馴染み宿',t.became]);if(fc!==t.fam)R.push(['都道府県クリア数',`${fc} / 47`]);
   e.innerHTML=`<div class="doc-t">収支報告書</div><h3>${calLabel(S.turn)}</h3><div class="res">${R.map(r=>`<span>${r[0]}</span><span class="${/^[+＋]/.test(r[1])?'pos':/^[-－]/.test(r[1])?'neg':''}">${r[1]}</span>`).join('')}<span class="tot">残高</span><span class="tot"><b>${yen(S.money)}</b></span></div>${infBlock()}<button class="primary" id="pop-x">閉じる</button>`;
@@ -1751,12 +1764,14 @@ $('pop').onclick=e=>{if(e.target.id==='pop-x')$('pop').hidden=true;};
 function yearEval(y){const n=trialKindsCleared(),fc=famCount();
   const score=Math.round(S.fame/100+fc*300+n*200+Math.max(0,S.money)/1000+S.stats.wins*10),pace=score/y;
   return {score,rank:pace>=8000?'S':pace>=5000?'A':pace>=2500?'B':'C',goal:Math.min(47,10*y),n,fc};}
+let EDI=0;
 function finishAdvance(){
   rollInf();
+  if(EDI){$('edi-amt').textContent='+'+yen(EDI);$('edi-who').textContent=`称号「${title(S.fame)}」への四半期賞与`;$('ov-edi').hidden=false;playSE('se_win');EDI=0;}
   if(TS){const o=spOf(TS.fame),n=sponsor();if(n[0]>o[0])spCongrats(o,n);}
   if((S.turn-1)%52===0){const y=calendar(S.turn-1).year;showResult(`<h2>${y}年目 決算</h2><div class="res"><span>都道府県クリア数</span><span>${famCount()} / 47</span><span>フォロワー</span><span>${fol(S.fame)}（${title(S.fame)}）</span><span>所持金</span><span>${yen(S.money)}</span><span>試練制覇</span><span>${S.stats.wins}回</span>${(()=>{const v=yearEval(y);return `<span>突破した試練の種類</span><span>${v.n} / ${TRIAL_KEYS.length}</span><span>年間目標</span><span>累計${v.goal}県制覇 ${v.fc>=v.goal?'✅ 達成':'❌ 未達'}</span><span>年間評価</span><span><img class="rank" src="img/rank_${v.rank.toLowerCase()}.webp" width="128" height="128" alt="${v.rank}"><b>${v.rank}</b>（${v.score.toLocaleString('ja-JP')}pt）</span>`;})()}</div>${giftYear()}<p class="hint">${y+1}年目は敵が少し強くなる。</p>`,()=>{render();turnPopup();autoExport();},true);render();return;}
   const tt=TS?{df:S.fame-TS.fame,dm:S.money-TS.money,late:!TS.inc}:null;if(tt)LASTRES={place:(PREF[S.loc]||{}).name||'',df:tt.df,late:tt.late};render();turnPopup();if(S.turn===2&&TUTI===3&&!tutSeen())tutShow(4,tt);autoExport();}
-function advance(){INTRIP=false;const sp=sponsor();S.money+=sp[1];if(TS)TS.sp=sp;S.turn++;rollForecast();S.sel=S.loc;
+function advance(){INTRIP=false;const sp=sponsor();S.money+=sp[1];if(TS)TS.sp=sp;EDI=0;{const c=calendar(S.turn),b=editorBonus(S.fame);if(c.month%3===0&&c.week===MONTH_W[c.mi]&&b>0){S.money+=b;EDI=b;if(TS)TS.bonus=b;log(`ヒヨッター編集長から賞与 ${yen(b)}`);}}S.turn++;rollForecast();S.sel=S.loc;
   if(famCount()===47&&TS&&TS.fam<47){showResult(`<h2>🎉 全国クリア！</h2><p>47か所すべてを馴染み宿にした。伝説の自転車インフルエンサー誕生。</p><div class="res"><span>達成</span><span>${calLabel(S.turn)}</span><span>フォロワー</span><span>${fol(S.fame)}</span><span>所持金</span><span>${yen(S.money)}</span></div>`,finishAdvance,true);render();return;}
   finishAdvance();}
 
@@ -1766,7 +1781,7 @@ addEventListener('pagehide',save);
 // 開きっぱなしのタブが古いコードのまま保存し直して、新しい保存項目を失うのを防ぐ。
 // 実行中のコードに埋め込んだ版の識別子 APP_V と、いま配信されている index.html の APP_V を比べる（最初に取れた配信内容を「実行中の版」の代わりにしない）。
 // ★ APP_V は index.html の内容から計算する。index.html を変えたら `node qa/stamp.cjs` で更新する（忘れると監査テストが失敗する）。
-const APP_V='097e3c4ba491';
+const APP_V='16696c097b83';
 // 旅・戦闘・結果画面（INTRIP）の間は、save() が保存を見送るので、再読み込みすると進行が巻き戻る。旅が終わったあとも trip / B には前回の値が残るため、これらは見ない
 const UPD={pending:'',busy:false,scheduled:false,last:0,every:600000,quiet:600000,timeout:15000,reloadedAt:0,note:null,timer:0,
  safe:()=>!INTRIP,
@@ -1816,6 +1831,7 @@ const TUT=[
  ['出発','最初は地元のキャンプ場から。「地図」タブで自宅の県を選んで、「自転車旅に行く」を押します。\n道中で坂や動物などの試練が出ます。コマンドを選んで乗り越えましょう。'],
  ['帰ってきたら','疲れたら「自宅で休む」で回復。結果は「記録」タブで見られます。\n次の週末も、旅に出かけましょう。']];
 $('sp-ok').onclick=()=>{$('ov-spon').hidden=true;};
+$('edi-ok').onclick=()=>{$('ov-edi').hidden=true;};
 let TUTI=-1,TUTP=-1;
 function tutDone(){try{localStorage.setItem('cc_tut','1');}catch(e){}}
 function tutPos(){const bub=$('tut-bub');if(!bub||bub.hidden)return;const box=bub.parentElement,sv=$('map');if(!sv)return;
