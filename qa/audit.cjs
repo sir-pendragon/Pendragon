@@ -64,10 +64,10 @@ test('weekly sponsor paid once and calendar advances once',c=>{const {q}=c;q.S.f
 test('editor quarterly bonus: paid only at quarter-end by title, none for 無名',c=>{const {q}=c;const qe=[],other=[];for(let t=1;t<=52;t++){const a=q.calendar(t),b=q.calendar(t+1);(a.month!==b.month&&a.month%3===0?qe:other).push(t);}
  assert.equal(qe.length,4);
  const run=(turn,fame)=>{q.S.turn=turn;q.S.fame=fame;q.snap();const m=q.S.money,sp=q.sponsor()[1];c.$('ov-edi').hidden=true;q.advance();return {d:q.S.money-m-sp,pop:!c.$('ov-edi').hidden};};
- const exp=[[0,0],[2000,15000],[20000,37500],[200000,75000],[1000000,75000],[2000000,75000]];
+ const exp=[[0,0],[2000,15000],[20000,40000],[200000,75000],[1000000,75000],[2000000,75000]];
  for(const [f,b] of exp){const r=run(qe[0],f);assert.equal(r.d,b,'fame '+f);assert.equal(r.pop,b>0);}
  for(const t of other.slice(0,6)){const r=run(t,200000);assert.equal(r.d,0);assert.equal(r.pop,false);}
- run(qe[1],20000);assert.ok(c.$('edi-amt').textContent.includes('37,500'));assert.ok(c.$('ov-edi').textContent.replace(/\s/g,'').includes('アナタノ、コレカラノ、カツヤクニ、キタイシマス！'));});
+ run(qe[1],20000);assert.ok(c.$('edi-amt').textContent.includes('40,000'));assert.ok(c.$('ov-edi').textContent.replace(/\s/g,'').includes('アナタノ、コレカラノ、カツヤクニ、キタイシマス！'));});
 test('completion refreshes forecast',c=>{c.q.S.fam.fill(true);c.q.snap();const f=c.q.S.forecast;c.q.advance();assert.notEqual(c.q.S.forecast,f);});
 test('completion is not shown again on following weeks',c=>{c.q.S.fam.fill(true);c.q.snap();c.q.advance();assert.equal(c.$('ov-result').hidden,true);});
 test('first completion and year-end can both be seen',c=>{const {q}=c;q.S.turn=52;q.S.fam.fill(true);q.S.fam[0]=false;q.snap();q.S.fam[0]=true;q.advance();assert.ok(c.$('result-box').textContent.includes('全国クリア'));c.$('res-ok').click();assert.ok(c.$('result-box').textContent.includes('決算'));assert.equal(c.$('ov-result').hidden,false);});
