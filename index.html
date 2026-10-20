@@ -1195,9 +1195,9 @@ const HAM={x:252,y:399};// ハンモックで寝るときの位置（布のた�
 // 雨・台風の日は歩き、それ以外の日は自転車に乗る
 const rainyDay=()=>{const w=S&&S.forecast&&S.forecast[S.loc]?S.forecast[S.loc].wx:'sun';return w==='rain'||w==='typhoon';};
 function heroImg(){const f=HERO.f,m=HERO.mode;return m==='walk'?(rainyDay()?'w'+(1+f%4):'r'+(1+f%2)):m==='sit'?'s'+(f%10<6?1:2):'z'+(f%4<2?1:2);}
-function heroPick(){const r=Math.random();
-  if(r<.4)HERO.goal={x:215+Math.random()*90,mode:'walk',y:426};
-  else if(r<.7)HERO.goal={x:254,mode:'sit',y:426};
+function heroPick(){const r=Math.random(),dry=!rainyDay();// 雨・台風以外の日は、ほとんど自転車で動き回り、座る・寝るのはたまに（雨の日は従来どおり）
+  if(r<(dry?.85:.4)){let gx=215+Math.random()*90;if(dry)for(let i=0;i<6&&Math.abs(gx-HERO.x)<40;i++)gx=215+Math.random()*90;HERO.goal={x:gx,mode:'walk',y:426};}
+  else if(r<(dry?.93:.7))HERO.goal={x:254,mode:'sit',y:426};
   else{const sh=S&&S.gear&&S.gear.shelter;
     HERO.goal=isHam(sh)?{x:HAM.x,mode:'sleep',y:HAM.y,ham:true}:(sh==='sh2'||sh==='sh3'||sh==='sh4'||sh==='sh5')?{x:252,mode:'sleep',y:416,tent:true}:{x:240,mode:'sleep',y:416};}
   HERO.mode='walk';HERO.y=426;HERO.ham=false;HERO.tent=false;}
@@ -1219,7 +1219,7 @@ function drawHero(){if(!$('hero'))return;const k=heroImg(),d=HDIM[k[0]],w=d[0]*h
 function heroTick(){if($('p-map').hidden||document.hidden)return;
   HERO.f++;
   if(HERO.mode==='walk'){const gx=HERO.goal?HERO.goal.x:HERO.x;const dx=gx-HERO.x;
-    if(Math.abs(dx)<=3){const G=HERO.goal;if(G&&G.mode!=='walk'){HERO.mode=G.mode;HERO.y=G.y;HERO.x=G.x;HERO.ham=!!G.ham;HERO.tent=!!G.tent;HERO.dir=1;HERO.goal=null;HERO.t=18+Math.floor(Math.random()*14);}else heroPick();}
+    if(Math.abs(dx)<=3){const G=HERO.goal;if(G&&G.mode!=='walk'){HERO.mode=G.mode;HERO.y=G.y;HERO.x=G.x;HERO.ham=!!G.ham;HERO.tent=!!G.tent;HERO.dir=1;HERO.goal=null;HERO.t=(rainyDay()?18:8)+Math.floor(Math.random()*(rainyDay()?14:6));}else heroPick();}
     else{HERO.dir=dx>0?1:-1;if(rainyDay())HERO.x+=HERO.dir*3;}}// 自転車は heroRide が細かく速く動かす
   else{HERO.t--;if(HERO.t<=0)heroPick();}
   drawHero();}
@@ -1828,7 +1828,7 @@ addEventListener('pagehide',save);
 // 開きっぱなしのタブが古いコードのまま保存し直して、新しい保存項目を失うのを防ぐ。
 // 実行中のコードに埋め込んだ版の識別子 APP_V と、いま配信されている index.html の APP_V を比べる（最初に取れた配信内容を「実行中の版」の代わりにしない）。
 // ★ APP_V は index.html の内容から計算する。index.html を変えたら `node qa/stamp.cjs` で更新する（忘れると監査テストが失敗する）。
-const APP_V='53e045f8d463';
+const APP_V='7cc59c04cc42';
 // 旅・戦闘・結果画面（INTRIP）の間は、save() が保存を見送るので、再読み込みすると進行が巻き戻る。旅が終わったあとも trip / B には前回の値が残るため、これらは見ない
 const UPD={pending:'',busy:false,scheduled:false,last:0,every:600000,quiet:600000,timeout:15000,reloadedAt:0,note:null,timer:0,
  safe:()=>!INTRIP,
