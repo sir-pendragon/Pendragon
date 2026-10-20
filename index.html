@@ -956,7 +956,8 @@ let INTRIP=false;const SAVE_V=6,LOG_MAX=80,TL_MAX=60,WXL=['sun','cloud','rain','
 // セーブ(v6)：馴染み宿(fam)は訪問回数3以上と同じなので保存しない／予報は(気温+30)*7+天気番号の数値に詰める／ログは「週の通し番号|本文」
 function pack(){const {sel,fam,forecast,...o}=S;o.v=SAVE_V;if(forecast)o.fc=PREF.map(p=>(Math.round(forecast[p.id].temp)+30)*7+WXL.indexOf(forecast[p.id].wx));return JSON.stringify(o);}
 let LASTSAVE='';// 直前に書いた内容。同じなら書き込まない（県をタップするだけの操作などでは何も変わらない）
-function save(){if(INTRIP||!S)return;try{let j=pack();if(j===LASTSAVE)return;try{localStorage.setItem('charicamp',j);}catch(e){S.log.length=Math.min(S.log.length,20);j=pack();localStorage.setItem('charicamp',j);}LASTSAVE=j;}catch(e){}}
+// 戻り値：保存できた（または保存済みで書き込み不要）なら true。旅の途中（INTRIP）と、書き込みに失敗したときは false。タイトル画面（S なし）は保存するものがないので true
+function save(){if(INTRIP)return false;if(!S)return true;try{let j=pack();if(j===LASTSAVE)return true;try{localStorage.setItem('charicamp',j);}catch(e){S.log.length=Math.min(S.log.length,20);j=pack();localStorage.setItem('charicamp',j);}LASTSAVE=j;return true;}catch(e){return false;}}
 function load(){try{const s=localStorage.getItem('charicamp');if(!s)return null;const o=JSON.parse(s);if(!o||typeof o!=='object')return null;
   const num=(v,d,lo,hi)=>Number.isFinite(+v)?Math.min(hi,Math.max(lo,Math.round(+v))):d;
   const has=(l,id)=>l.some(x=>x.id===id);
@@ -985,7 +986,8 @@ function load(){try{const s=localStorage.getItem('charicamp');if(!s)return null;
   const st=o.stats&&typeof o.stats==='object'?o.stats:{};o.stats={wins:num(st.wins,0,0,1e9),posts:num(st.posts,0,0,1e9),bestQ:num(st.bestQ,0,0,100),tph:num(st.tph,0,0,1e9),ev:num(st.ev,0,0,1e9),tc:num(st.tc,0,0,1e9),en:{}}
   for(const k of TRIAL_KEYS){const v=st.en&&st.en[k];if(Array.isArray(v)&&v.length===3)o.stats.en[k]=v.map(x=>num(x,0,0,1e9));};
   {const iv=o.inf&&typeof o.inf==='object'?o.inf:{};o.inf={};for(const d of INF){const v=iv[d.id];if(v&&typeof v==='object')o.inf[d.id]={w:num(v.w,0,0,1e9),e:num(v.e,0,0,1e9),g:num(v.g,0,0,1)};}}
-  o.food=num(o.food,0,0,FOOD_MAX+RACK_TOP+((PARTS.find(p=>p.id==='framebag')||{}).food||0));o.food2=num(o.food2,0,0,NAGANO.max);o.dango=num(o.dango,0,0,DANGO.max);if(typeof o.avId!=='string'&&Number.isInteger(o.av))o.avId=LEGACY_AV[o.av];if(typeof o.penId!=='string'&&Number.isInteger(o.pen))o.penId=LEGACY_PEN[o.pen];delete o.av;delete o.pen;if(!AVS.some(a=>a.id===o.avId))o.avId=AV_DEF;if(!penOK(o.penId,o.avId))o.penId=PEN_DEF;
+  // ID項目があれば（不正な値でも）旧番号より優先。ID項目が無いときだけ旧番号から1回移行
+  o.food=num(o.food,0,0,FOOD_MAX+RACK_TOP+((PARTS.find(p=>p.id==='framebag')||{}).food||0));o.food2=num(o.food2,0,0,NAGANO.max);o.dango=num(o.dango,0,0,DANGO.max);{const own=k=>Object.prototype.hasOwnProperty.call(o,k);if(!own('avId')&&Number.isInteger(o.av))o.avId=LEGACY_AV[o.av];if(!own('penId')&&Number.isInteger(o.pen))o.penId=LEGACY_PEN[o.pen];}delete o.av;delete o.pen;if(!AVS.some(a=>a.id===o.avId))o.avId=AV_DEF;if(!penOK(o.penId,o.avId))o.penId=PEN_DEF;
   delete o.ach;
   let f=o.forecast&&typeof o.forecast==='object'?o.forecast:{};o.forecast=null;
   if(Array.isArray(o.fc)&&o.fc.length===47&&o.fc.every(n=>Number.isInteger(n)&&n>=0&&n<7*100)){const M=(o.v||0)>=6?7:(o.v||0)>=5?6:5;f={};o.fc.forEach((n,i)=>f[i]={temp:Math.floor(n/M)-30,wx:WXL[n%M]});}
@@ -1742,27 +1744,39 @@ addEventListener('pagehide',save);
 
 // ---------- 新しいバージョンの自動更新 ----------
 // 開きっぱなしのタブが古いコードのまま保存し直して、新しい保存項目を失うのを防ぐ。
-// 起動時の index.html の内容(ハッシュ)を覚えておき、あとで取り直して変わっていたら、旅・戦闘の外で保存してから再読み込みする。
-// 取り直しを2回続けて同じ新しい内容になったときだけ動く（通信のたびに内容が変わるサーバーでも、再読み込みを繰り返さない）。
-const UPD={base:null,last:0,pending:false,busy:false,every:600000,
- text:async()=>{const r=await fetch(location.pathname,{cache:'no-store'});if(!r.ok)throw new Error('http');return r.text();},
- hash:t=>{let h=5381;for(let i=0;i<t.length;i++)h=(Math.imul(h,33)^t.charCodeAt(i))>>>0;return h;},
- safe:()=>!INTRIP&&!B&&!trip,
+// 実行中のコードに埋め込んだ版の識別子 APP_V と、いま配信されている index.html の APP_V を比べる（最初に取れた配信内容を「実行中の版」の代わりにしない）。
+// ★ APP_V は index.html の内容から計算する。index.html を変えたら `node qa/stamp.cjs` で更新する（忘れると監査テストが失敗する）。
+const APP_V='b66c76f08663';
+// 旅・戦闘・結果画面（INTRIP）の間は、save() が保存を見送るので、再読み込みすると進行が巻き戻る。旅が終わったあとも trip / B には前回の値が残るため、これらは見ない
+const UPD={pending:'',busy:false,scheduled:false,last:0,every:600000,quiet:600000,wait:1500,timeout:15000,reloadedAt:0,note:null,timer:0,
+ safe:()=>!INTRIP,
+ get:sig=>fetch(location.pathname,{cache:'no-store',redirect:'error',signal:sig}),
+ // 配信中の版の識別子。リダイレクト・別オリジン・HTML以外・識別子なしは「取れなかった」（''）。本文の取得までを含めてタイムアウトする
+ async remote(){const ctl=new AbortController(),tm=setTimeout(()=>ctl.abort(),this.timeout);
+  try{const r=await this.get(ctl.signal);if(!r||!r.ok||r.redirected)return '';
+   try{if(new URL(r.url,location.href).origin!==location.origin)return '';}catch(e){return '';}
+   if(!/text\/html/i.test((r.headers&&r.headers.get&&r.headers.get('content-type'))||''))return '';
+   const m=/const APP_V='([0-9a-f]{12})'/.exec(await r.text());return m?m[1]:'';
+  }catch(e){return '';}finally{clearTimeout(tm);}},
+ // 保存して、保存した内容が実際に読み戻せたときだけ true（保存に失敗したら再読み込みしない。タイトル画面は保存するものがない）
+ persist(){if(!S)return true;if(INTRIP)return false;try{return save()===true&&localStorage.getItem('charicamp')===pack();}catch(e){return false;}},
+ recent(){let t=0;try{t=+sessionStorage.getItem('cc_upd')||0;}catch(e){}return Date.now()-Math.max(t,this.reloadedAt)<this.quiet;},// 直前に更新したばかりなら繰り返さない
  reload:()=>location.reload(),
- async check(force){if(this.busy)return;this.busy=true;
+ notice(on){if(!on){if(this.note){this.note.remove();this.note=null;}return;}if(this.note)return;const n=document.createElement('div');n.setAttribute('role','status');n.textContent='新しいバージョンに更新します…';
+  n.style.cssText='position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:9999;background:#000;color:#fff;padding:8px 14px;border-radius:8px;font-size:13px';document.body.appendChild(n);this.note=n;},
+ // 更新の予約（同期）。いま安全で、保存できたときだけ予約する。予約は1つだけ
+ plan(){if(!this.pending||this.scheduled||!this.safe()||this.recent()||!this.persist())return;
+  this.scheduled=true;this.notice(true);this.timer=setTimeout(()=>this.fire(),this.wait);},
+ // 予約の実行（同期）。直前にもう一度、安全か・保存できるかを確かめる。だめなら取り消して、更新待ちのまま次の確認に回す
+ fire(){this.timer=0;if(!this.safe()||!this.persist()||this.recent()){this.scheduled=false;this.notice(false);return;}
+  this.reloadedAt=Date.now();try{sessionStorage.setItem('cc_upd',String(this.reloadedAt));}catch(e){}this.reload();},
+ async check(force){if(this.busy||this.scheduled)return;this.busy=true;
   try{
-   if(this.base===null){this.base=this.hash(await this.text());this.last=Date.now();return;}
    if(!this.pending){if(!force&&Date.now()-this.last<this.every)return;this.last=Date.now();
-    const h=this.hash(await this.text());if(h===this.base)return;
-    if(this.hash(await this.text())!==h)return;// 2回続けて同じ新しい内容のときだけ「更新あり」
-    this.pending=true;}
-   if(!this.safe())return;// 旅・戦闘のあとで（1分ごとに再確認）
-   let t=0;try{t=+sessionStorage.getItem('cc_upd')||0;}catch(e){}
-   if(Date.now()-t<600000)return;// 直前に更新したばかりなら繰り返さない
-   try{sessionStorage.setItem('cc_upd',String(Date.now()));}catch(e){}
-   save();const n=document.createElement('div');n.setAttribute('role','status');n.textContent='新しいバージョンに更新します…';
-   n.style.cssText='position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:9999;background:#000;color:#fff;padding:8px 14px;border-radius:8px;font-size:13px';
-   document.body.appendChild(n);setTimeout(()=>this.reload(),1500);
+    const v=await this.remote();if(!v||v===APP_V)return;
+    if(await this.remote()!==v)return;// 2回続けて同じ新しい版のときだけ「更新あり」
+    this.pending=v;}
+   this.plan();
   }catch(e){}finally{this.busy=false;}}};
 setTimeout(()=>UPD.check(),3000);
 setInterval(()=>{if(!document.hidden)UPD.check();},60000);

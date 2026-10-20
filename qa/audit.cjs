@@ -2,8 +2,8 @@ const fs=require('node:fs'),path=require('node:path'),assert=require('node:asser
 const {JSDOM,VirtualConsole}=require('jsdom');
 const filename=path.resolve(process.argv[2]||path.join(__dirname,'..','index.html'));
 const html=fs.readFileSync(filename,'utf8');
-const expose=`window.qa={UPD,PENS,AVS,LEGACY_AV,LEGACY_PEN,penName:()=>penName(),pfImg:()=>pfImg(),avImg:()=>avImg(),SPC,itemArt,feedItems,INF,INF_WIN,infSt,infD,rollInf,infBlock,giftYear,get INFEV(){return INFEV},set INFEV(v){INFEV=v},getTS:()=>TS,setTS:v=>{TS=v},snsText,ICON_FB,foodMax,partSlots,dcfBonus,get sgPage(){return SGPG},set sgPage(v){SGPG=v},needV,isCourse,askGo,ENEMY,SPEC,SIGHTS,TACT,tlEnc,tlDec,newGame,render,renderMap,renderBattle,renderShop,renderForge,renderDetail,renderList,renderTrials,renderSights,load,save,pack,snap,advance,calendar,rollForecast,startTrip,stayWx,startBattle,cmd,endTrip,endTrip2,nextEncounter,tsuchinoko,tcRate,bikeStats,gearFx,travelInfo,restHome,yearEval,eventAt,stoveOn,plv,rkLv,PREF,ENEMY,GEAR_ITEMS,PARTS,BIKES,CLOTHES,WXL,TRIAL_KEYS,AUD,tcRate,playBGM,bgmApply,
-get S(){return S},set S(v){S=v},get B(){return B},get trip(){return trip},set trip(v){trip=v},get TS(){return TS},get inTrip(){return INTRIP},get lastSave(){return LASTSAVE},
+const expose=`window.qa={exportSave,APP_V,UPD,PENS,AVS,LEGACY_AV,LEGACY_PEN,penName:()=>penName(),pfImg:()=>pfImg(),avImg:()=>avImg(),SPC,itemArt,feedItems,INF,INF_WIN,infSt,infD,rollInf,infBlock,giftYear,get INFEV(){return INFEV},set INFEV(v){INFEV=v},getTS:()=>TS,setTS:v=>{TS=v},snsText,ICON_FB,foodMax,partSlots,dcfBonus,get sgPage(){return SGPG},set sgPage(v){SGPG=v},needV,isCourse,askGo,ENEMY,SPEC,SIGHTS,TACT,tlEnc,tlDec,newGame,render,renderMap,renderBattle,renderShop,renderForge,renderDetail,renderList,renderTrials,renderSights,load,save,pack,snap,advance,calendar,rollForecast,startTrip,stayWx,startBattle,cmd,endTrip,endTrip2,nextEncounter,tsuchinoko,tcRate,bikeStats,gearFx,travelInfo,restHome,yearEval,eventAt,stoveOn,plv,rkLv,PREF,ENEMY,GEAR_ITEMS,PARTS,BIKES,CLOTHES,WXL,TRIAL_KEYS,AUD,tcRate,playBGM,bgmApply,
+get S(){return S},set S(v){S=v},get B(){return B},get trip(){return trip},set trip(v){trip=v},get TS(){return TS},get inTrip(){return INTRIP},set inTrip(v){INTRIP=v},get lastSave(){return LASTSAVE},
 quiet(){render=()=>save();renderBattle=()=>{};playSE=()=>{};playBGM=()=>{};}};`;
 const js=[...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(m=>m[1]).sort((x,y)=>y.length-x.length)[0];// 先頭の短い移動スクリプトではなく、本体（最長）を読む
 // テスト用HTMLだけに公開口を付ける。本番index.htmlには追加しない。
@@ -313,20 +313,72 @@ test('character edit impact: all 88 illustration x name combos render; sponsor-c
 
 const ASYNC=[];
 function atest(name,fn){ASYNC.push(async()=>{let c;try{c=boot();assert.ok(c.q,'script must boot');c.q.newGame(12);c.w.Math.random=()=>.99;await fn(c);assert.deepEqual(c.errors,[]);results.push({name,ok:true});console.log('PASS',name);}catch(e){results.push({name,ok:false,error:e.message});console.log('FAIL',name,'—',e.message.slice(0,500));}finally{c?.dom.window.close();}});}
-atest('auto-update: only reloads after two identical new fetches, never during trip/battle, saves first, no reload loop',async c=>{const {q}=c,U=q.UPD;
- c.w.setTimeout=f=>{f();return 1;};// ハーネスはタイマーを止めているので、即実行にする
- let reloads=0,texts=[];U.reload=()=>{reloads++;};U.text=async()=>texts.shift();
- texts=['A'];await U.check();assert.equal(U.base,U.hash('A'),'baseline recorded');
- texts=['A'];await U.check(true);assert.equal(reloads,0,'same content: no reload');
- texts=['B','C'];await U.check(true);assert.ok(!U.pending,'content that changes on every fetch is ignored');
- U.last=0;texts=['B','B'];q.S.penId='pen_kaze';const st=U.safe;U.safe=()=>false;await U.check(true);assert.ok(U.pending,'update found');assert.equal(reloads,0,'not reloaded while unsafe');
- U.safe=st;texts=[];await U.check(true);
- assert.equal(JSON.parse(c.w.localStorage.getItem('charicamp')).penId,'pen_kaze','saved before reload');
- assert.equal(reloads,1,'reloaded once');
- // 直後の再確認では再読み込みしない
- U.pending=true;await U.check(true);assert.equal(reloads,1,'no second reload within 10 minutes');
- // 旅の途中は安全でない
- q.newGame(12);assert.equal(U.safe(),true);q.trip={};assert.equal(U.safe(),false,'trip');q.trip=null;});
+// ---- 自動更新・固定ID（Codexレビュー反映）。タイマーは止められているので、必要なテストでは予約を自分で取り出して実行する ----
+const stamp=require('./stamp.cjs');
+const VER='aaaaaaaaaaaa',VER2='bbbbbbbbbbbb';
+const resp=(c,ver,o={})=>({ok:o.ok!==false,redirected:!!o.redirected,url:o.url||c.w.location.href,headers:{get:k=>/content-type/i.test(k)?(o.type||'text/html; charset=utf-8'):null},text:async()=>o.body!==undefined?o.body:`<script>const APP_V='${ver}';</script>`});
+const timers=c=>{const cbs=[];c.w.setTimeout=(f,ms)=>{cbs.push({f,ms});return cbs.length;};c.w.clearTimeout=()=>{};return cbs;};
+const runTimers=cbs=>{const a=cbs.splice(0);a.forEach(t=>t.f());};
+const finishSunTrip=c=>{const {q}=c;c.w.localStorage.setItem('cc_tutb','1');q.S.forecast[12]={temp:20,wx:'sun'};q.startTrip(q.PREF[12],false);assert.equal(q.inTrip,true,'trip running');assert.equal(c.$('ov-camp').hidden,false);c.$('camp-btns').querySelector('button:not([disabled])').click();assert.equal(q.inTrip,true,'result screen: still unsaved');c.$('res-ok').click();};
+test('stamp: APP_V in index.html matches its content (run node qa/stamp.cjs after any change)',c=>{assert.equal(stamp.current(html),stamp.compute(html),'APP_V is stale: run node qa/stamp.cjs');assert.equal(c.q.APP_V,stamp.current(html));assert.match(c.q.APP_V,/^[0-9a-f]{12}$/);
+ const changed=html.replace('const PEN_DEF','const PEN_DEF ');assert.notEqual(stamp.compute(changed),stamp.compute(html),'a content change changes the id');assert.equal(stamp.compute(html.replace(/const APP_V='[0-9a-f]{12}'/,"const APP_V='123456789abc'")),stamp.compute(html),'the id itself is not part of the hash');});
+atest('auto-update 1: after a real finished trip (and a battle trip) the pending update runs; safe() follows INTRIP only',async c=>{const {q}=c,U=q.UPD;const cbs=timers(c);let rl=0;U.reload=()=>{rl++;};
+ finishSunTrip(c);assert.equal(q.S.turn,2);assert.equal(q.inTrip,false);assert.ok(q.trip,'trip object is left over');assert.equal(U.safe(),true,'left-over trip/B must not block updates');
+ U.pending=VER;U.plan();assert.equal(U.scheduled,true);runTimers(cbs);assert.equal(rl,1);assert.equal(JSON.parse(c.w.localStorage.getItem('charicamp')).turn,2,'saved turn 2 before reload');
+ // 戦闘を経た旅でも同じ
+ rl=0;U.scheduled=false;U.reloadedAt=0;c.w.sessionStorage.removeItem('cc_upd');batt(c,'hill');q.B.hp=1;q.cmd('push');c.$('bt-cmds').querySelector('button').click();c.$('camp-btns').querySelector('button:not([disabled])').click();q.inTrip=true;assert.equal(U.safe(),false,'during result');q.inTrip=false;c.$('res-ok').click();assert.ok(q.B,'B left over');assert.equal(U.safe(),true);U.plan();runTimers(cbs);assert.equal(rl,1);});
+atest('auto-update 2: a trip started during the notice postpones the reload; update stays pending and runs later; one timer only',async c=>{const {q}=c,U=q.UPD;const cbs=timers(c);let rl=0;U.reload=()=>{rl++;};
+ U.pending=VER;U.plan();U.plan();assert.equal(cbs.filter(t=>t.ms===U.wait).length,1,'only one scheduled reload');const notes=()=>[...c.w.document.querySelectorAll('[role=status]')].filter(n=>/新しいバージョン/.test(n.textContent)).length;assert.equal(notes(),1,'notice shown');
+ q.S.stay=0;q.inTrip=true;/* 通知中に旅を始めた */runTimers(cbs);assert.equal(rl,0,'postponed');assert.equal(U.scheduled,false);assert.equal(U.pending,VER,'still pending');assert.equal(notes(),0,'notice removed');
+ q.inTrip=false;await U.check(true);assert.equal(cbs.filter(t=>t.ms===U.wait).length,1,'scheduled again after the trip');runTimers(cbs);assert.equal(rl,1);assert.equal(notes(),1,'one notice');});
+atest('auto-update 3: duplicate checks make one reservation; changes made just before the reload are saved too',async c=>{const {q}=c,U=q.UPD;const cbs=timers(c);let rl=0;U.reload=()=>{rl++;};
+ U.get=async()=>resp(c,VER);await U.check(true);assert.equal(U.pending,VER);await U.check(true);await U.check(true);assert.equal(cbs.filter(t=>t.ms===U.wait).length,1,'one reservation');
+ q.S.money=424242;runTimers(cbs);assert.equal(rl,1,'reload once');assert.equal(JSON.parse(c.w.localStorage.getItem('charicamp')).money,424242,'last-second change saved');});
+atest('auto-update 4: a publish before the first check, or after a failed first check, is detected (running version comes from APP_V, not from the first fetch)',async c=>{const {q}=c,U=q.UPD;const cbs=timers(c);U.reload=()=>{};
+ U.get=async()=>resp(c,VER);await U.check();assert.equal(U.pending,VER,'first fetch already newer');
+ const d=boot();try{d.q.newGame(12);const V=d.q.UPD;V.reload=()=>{};let n=0;V.get=async()=>{n++;if(n===1)throw new Error('offline');return resp(d,VER2);};await V.check();assert.equal(V.pending,'','first check failed: nothing yet');await V.check(true);assert.equal(V.pending,VER2,'next check sees the newer version');}finally{d.dom.window.close();}
+ // 同じ版なら更新なし
+ const e=boot();try{e.q.newGame(12);const W=e.q.UPD;W.get=async()=>resp(e,e.q.APP_V);await W.check(true);assert.equal(W.pending,'');}finally{e.dom.window.close();}});
+atest('auto-update 5: no reload when saving fails; the cooldown time is recorded only after a successful save',async c=>{const {q}=c,U=q.UPD;const cbs=timers(c);let rl=0;U.reload=()=>{rl++;};
+ q.S.money=30000;q.save();q.S.money=987654;const orig=c.w.Storage.prototype.setItem;c.w.Storage.prototype.setItem=function(){throw new Error('quota');};
+ U.pending=VER;U.plan();assert.equal(cbs.length,0,'not scheduled when it cannot be saved');assert.equal(rl,0);assert.equal(JSON.parse(c.w.localStorage.getItem('charicamp')).money,30000);
+ assert.equal(c.w.sessionStorage.getItem('cc_upd'),null,'no cooldown time recorded');
+ // 予約後に保存できなくなった場合も、実行直前に中止する
+ c.w.Storage.prototype.setItem=orig;U.plan();assert.equal(cbs.length,1);q.S.money=1;c.w.Storage.prototype.setItem=function(){throw new Error('quota');};runTimers(cbs);assert.equal(rl,0,'aborted at the last moment');assert.equal(U.scheduled,false);assert.equal(U.pending,VER);assert.equal(c.w.sessionStorage.getItem('cc_upd'),null);
+ // 保存できれば更新する
+ c.w.Storage.prototype.setItem=orig;U.plan();runTimers(cbs);assert.equal(rl,1);assert.equal(JSON.parse(c.w.localStorage.getItem('charicamp')).money,1);assert.ok(+c.w.sessionStorage.getItem('cc_upd')>0);
+ // save() の戻り値：成功 true／保存済みで不要 true／旅の途中 false／書けない false／タイトル(S=null) true
+ assert.equal(q.save(),true);q.inTrip=true;assert.equal(q.save(),false);q.inTrip=false;q.S.money=2;c.w.Storage.prototype.setItem=function(){throw new Error('quota');};assert.equal(q.save(),false);c.w.Storage.prototype.setItem=orig;assert.equal(q.save(),true);
+ const S0=q.S;q.S=null;assert.equal(q.save(),true,'title screen');q.S=S0;});
+atest('auto-update 6: with sessionStorage unusable, repeated checks still make one reload per page',async c=>{const {q}=c,U=q.UPD;const cbs=timers(c);let rl=0;U.reload=()=>{rl++;};
+ Object.defineProperty(c.w,'sessionStorage',{get(){throw new Error('denied');}});U.pending=VER;await U.check(true);await U.check(true);runTimers(cbs);assert.equal(rl,1);U.scheduled=false;await U.check(true);assert.equal(cbs.length,0,'no second reservation within 10 minutes in the same page');assert.equal(rl,1);});
+atest('auto-update 7: a hanging fetch times out (including the body read) and busy is released; timer cleaned up',async c=>{const {q}=c,U=q.UPD;const cbs=timers(c);
+ U.get=sig=>new Promise((_,rej)=>sig.addEventListener('abort',()=>rej(new Error('aborted'))));const p=U.check(true);await Promise.resolve();assert.equal(U.busy,true);assert.ok(cbs.some(t=>t.ms===U.timeout),'timeout timer set');
+ runTimers(cbs);await p;assert.equal(U.busy,false);assert.equal(U.pending,'');
+ // 本文の読み込みで止まった場合も
+ U.get=async sig=>({...resp(c,VER),text:()=>new Promise((_,rej)=>sig.addEventListener('abort',()=>rej(new Error('aborted'))))});const p2=U.check(true);for(let i=0;i<5;i++)await Promise.resolve();runTimers(cbs);await p2;assert.equal(U.busy,false);assert.equal(U.pending,'');
+ U.get=async()=>resp(c,VER);await U.check(true);assert.equal(U.pending,VER,'checks work again');});
+atest('auto-update 8: redirects, other origins, non-HTML, pages without an APP_V, and non-OK responses are rejected; two matching fetches are required',async c=>{const {q}=c,U=q.UPD;const cbs=timers(c);U.reload=()=>{};
+ const bad=[resp(c,VER,{redirected:true}),resp(c,VER,{url:'https://login.example.com/'}),resp(c,VER,{type:'text/plain'}),resp(c,VER,{body:'<html>ログイン</html>'}),resp(c,VER,{body:"const APP_V='xyz';"}),resp(c,VER,{ok:false})];
+ for(const r of bad){U.get=async()=>r;U.pending='';await U.check(true);assert.equal(U.pending,'');}
+ let n=0;U.get=async()=>resp(c,n++%2?VER2:VER);await U.check(true);assert.equal(U.pending,'','two different new versions in a row: not an update');
+ U.get=async()=>resp(c,VER);await U.check(true);assert.equal(U.pending,VER);
+ // 実際の取得は redirect:'error' ・ no-store で行う
+ let seen=null;c.w.fetch=(u,o)=>{seen=o;return Promise.reject(new Error('x'));};const U3=boot();try{U3.w.fetch=(u,o)=>{seen=o;return Promise.reject(new Error('x'));};U3.q.newGame(12);U3.q.UPD.get(null).catch(()=>{});assert.equal(seen.redirect,'error');assert.equal(seen.cache,'no-store');}finally{U3.dom.window.close();}});
+test('fixed ids: when an id field exists (even invalid: null/number/array/object/empty) the legacy number is ignored; only an absent id migrates from the number',c=>{const {q}=c;q.newGame(12);q.save();const base=JSON.parse(c.w.localStorage.getItem('charicamp'));delete base.avId;delete base.penId;
+ const put=o=>{c.w.localStorage.setItem('charicamp',JSON.stringify(Object.assign({},base,o)));return q.load();};
+ for(const bad of [null,0,3,1.5,true,[],['av_cat'],{},'',' ','av_nope']){const L=put({avId:bad,penId:bad,av:3,pen:10});assert.equal(L.avId,'av_hero',JSON.stringify(bad));assert.equal(L.penId,'pen_tabi',JSON.stringify(bad));assert.ok(!('av' in L)&&!('pen' in L));}
+ let L=put({avId:null,penId:{},av:3,pen:10});assert.equal(L.avId,'av_hero');assert.equal(L.penId,'pen_tabi');
+ L=put({avId:'av_cat',penId:null,av:0,pen:5});assert.equal(L.avId,'av_cat');assert.equal(L.penId,'pen_tabi','id present (invalid pen) wins over the number');
+ L=put({penId:'pen_kaze',av:3});assert.equal(L.avId,'av_cat','avId absent: migrates from av');assert.equal(L.penId,'pen_kaze');
+ L=put({avId:'av_gal',av:3,pen:10});assert.equal(L.avId,'av_gal');assert.equal(L.penId,'pen_tabi','penId absent: pen 10 = neko, but gal is not the cat -> default');});
+test('fixed ids: legacy -> migrate -> save -> reload round trip keeps the pair, and save has no legacy fields',c=>{const {q}=c;q.newGame(12);q.save();const base=JSON.parse(c.w.localStorage.getItem('charicamp'));delete base.avId;delete base.penId;
+ for(let av=0;av<8;av++)for(let pen=0;pen<11;pen++){c.w.localStorage.setItem('charicamp',JSON.stringify(Object.assign({},base,{av,pen})));const L=q.load();q.S=L;q.save();const raw=JSON.parse(c.w.localStorage.getItem('charicamp'));assert.ok(!('av' in raw)&&!('pen' in raw),'no legacy fields saved');assert.equal(raw.avId,L.avId);assert.equal(raw.penId,L.penId);const L2=q.load();assert.equal(L2.avId,L.avId);assert.equal(L2.penId,L.penId);}});
+atest('file in/out regression: export keeps ids; importing a legacy file migrates it and an invalid-id file normalizes it',async c=>{const {q}=c;const W=c.w;let blob=null;W.URL.createObjectURL=b=>{blob=b;return 'blob:x';};W.URL.revokeObjectURL=()=>{};W.HTMLAnchorElement.prototype.click=function(){};
+ q.S.avId='av_cat';q.S.penId='pen_neko';q.save();const name=c.q.exportSave?c.q.exportSave():null;assert.ok(name,'exported');const txt=await new Promise(r=>{const fr=new W.FileReader();fr.onload=()=>r(fr.result);fr.readAsText(blob);});const ex=JSON.parse(txt);assert.equal(ex.data.avId,'av_cat');assert.equal(ex.data.penId,'pen_neko');assert.ok(!('av' in ex.data));
+ const imp=async o=>{W.confirm=()=>true;const f=new W.File([JSON.stringify({app:'charicamp',data:o})],'s.json');Object.defineProperty(c.$('sv-file'),'files',{value:[f],configurable:true});c.$('sv-file').onchange();await new Promise(r=>setTimeout(r,60));};
+ const old=Object.assign({},ex.data);delete old.avId;delete old.penId;old.av=3;old.pen=10;await imp(old);assert.equal(q.S.avId,'av_cat');assert.equal(q.S.penId,'pen_neko');
+ const bad=Object.assign({},ex.data,{avId:null,penId:{},av:3,pen:10});await imp(bad);assert.equal(q.S.avId,'av_hero');assert.equal(q.S.penId,'pen_tabi');});
 (async()=>{for(const f of ASYNC)await f();
 const summary={file:filename,passed:results.filter(x=>x.ok).length,failed:results.filter(x=>!x.ok).length,results};
 if(process.argv[3])fs.writeFileSync(process.argv[3],JSON.stringify(summary,null,2));
