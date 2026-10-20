@@ -214,7 +214,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .post .pt{margin-top:1px;overflow-wrap:anywhere}
 .post .thw{overflow:hidden}.post .thm{float:right;width:64px;height:64px;object-fit:contain;margin:0 0 4px 8px;border-radius:10px;border:1px solid var(--line);background:rgba(255,255,255,.06)}
 .post .pimg{display:block;width:100%;height:auto;aspect-ratio:3/2;object-fit:cover;border-radius:10px;border:1px solid var(--line);margin-top:4px}
-.post .pshare{margin:4px 0 0;padding:3px 10px;font-size:var(--fs-xs);border-radius:14px;background:#fff;color:#129efd;border:1px solid #129efd;cursor:pointer}.post .pshare:disabled{opacity:.5}
+.post .pshare{margin:4px 0 0;padding:4px 14px;font-size:var(--fs-xs);font-weight:700;border-radius:14px;background:#000;color:#fff;border:1px solid #000;cursor:pointer}.post .pshare:disabled{opacity:.5}
 .post .pa{display:flex;justify-content:space-between;max-width:260px;color:var(--muted);font-size:var(--fs-xs);margin-top:3px}
 .post .rp{margin-top:3px;padding:2px 6px;border-left:3px solid var(--line);color:var(--muted);font-size:var(--fs-xs);line-height:1.3}.post .rp b{color:var(--fg)}
 .log{font-size:var(--fs-m);max-height:40vh;overflow:auto;display:flex;flex-direction:column;gap:4px;padding:0;margin:0;list-style:none}
@@ -1819,7 +1819,7 @@ addEventListener('pagehide',save);
 // 開きっぱなしのタブが古いコードのまま保存し直して、新しい保存項目を失うのを防ぐ。
 // 実行中のコードに埋め込んだ版の識別子 APP_V と、いま配信されている index.html の APP_V を比べる（最初に取れた配信内容を「実行中の版」の代わりにしない）。
 // ★ APP_V は index.html の内容から計算する。index.html を変えたら `node qa/stamp.cjs` で更新する（忘れると監査テストが失敗する）。
-const APP_V='7d76287144b9';
+const APP_V='7bef57f11624';
 // 旅・戦闘・結果画面（INTRIP）の間は、save() が保存を見送るので、再読み込みすると進行が巻き戻る。旅が終わったあとも trip / B には前回の値が残るため、これらは見ない
 const UPD={pending:'',busy:false,scheduled:false,last:0,every:600000,quiet:600000,timeout:15000,reloadedAt:0,note:null,timer:0,
  safe:()=>!INTRIP,
