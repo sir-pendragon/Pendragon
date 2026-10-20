@@ -365,8 +365,8 @@ test('map hero: on a typhoon day the hero sleeps all day, even if he was riding 
  let moved=false;for(let i=0;i<4000&&!moved;i++){q.heroTick();if(q.HERO.mode!=='sleep')moved=true;}assert.ok(moved,'leaves sleep when it is only rain');});
 test('sponsor contract popup: press-conference picture only for sponsors that have one; the logo uses its own element (no duplicate id)',c=>{const {q}=c;
  assert.equal(c.w.document.querySelectorAll('#sp-img').length,1);assert.equal(c.w.document.querySelectorAll('#sp-logo,#sp-press').length,2);
- for(const [i,has] of [[0,false],[3,true],[5,true]]){q.spCongrats(q.SPONSOR[Math.max(i-1,0)],q.SPONSOR[i]);const pr=c.$('sp-press');assert.equal(!!pr.getAttribute('src'),has,'press src '+i);if(has)assert.equal(pr.getAttribute('src'),'img/sponsor_press_'+i+'.webp');assert.equal(c.$('sp-logo').getAttribute('src'),'img/sponsor_'+i+'.webp');assert.equal(c.$('ov-spon').hidden,false);c.$('sp-ok').click();assert.equal(c.$('ov-spon').hidden,true);}
- for(const i of [3,5])assert.ok(require('fs').existsSync(__dirname+'/../img/sponsor_press_'+i+'.webp'));});
+ for(const [i,has] of [[0,false],[2,true],[3,true],[4,false],[5,true]]){q.spCongrats(q.SPONSOR[Math.max(i-1,0)],q.SPONSOR[i]);const pr=c.$('sp-press');assert.equal(!!pr.getAttribute('src'),has,'press src '+i);if(has)assert.equal(pr.getAttribute('src'),'img/sponsor_press_'+i+'.webp');assert.equal(c.$('sp-logo').getAttribute('src'),'img/sponsor_'+i+'.webp');assert.equal(c.$('ov-spon').hidden,false);c.$('sp-ok').click();assert.equal(c.$('ov-spon').hidden,true);}
+ for(const i of [2,3,5])assert.ok(require('fs').existsSync(__dirname+'/../img/sponsor_press_'+i+'.webp'));});
 const ASYNC=[];
 function atest(name,fn){ASYNC.push(async()=>{let c;try{c=boot();assert.ok(c.q,'script must boot');c.q.newGame(12);c.w.Math.random=()=>.99;await fn(c);assert.deepEqual(c.errors,[]);results.push({name,ok:true});console.log('PASS',name);}catch(e){results.push({name,ok:false,error:e.message});console.log('FAIL',name,'—',e.message.slice(0,500));}finally{c?.dom.window.close();}});}
 // ---- 自動更新・固定ID（Codexレビュー反映）。タイマーは止められているので、必要なテストでは予約を自分で取り出して実行する ----
