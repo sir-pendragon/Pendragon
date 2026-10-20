@@ -324,8 +324,9 @@ html:has(.overlay:not([hidden]):not(#ov-tut)),body:has(.overlay:not([hidden]):no
 .card .name .cnt{margin-left:auto;margin-right:6px;white-space:nowrap;font-size:var(--fs-s);font-weight:400;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:2px 9px;align-self:center}
 #shop-food .name .nm{white-space:nowrap;flex:none;font-size:.86rem;gap:4px}
 #shop-food .name .nm .ci{width:24px;height:24px}
-@media (max-width:380px){#shop-food .name .nm{white-space:normal;flex:1 1 0;min-width:0}#shop-food .name .cnt{margin-left:0}}
-#shop-food .name button{white-space:nowrap;padding:6px 8px;font-size:.85rem}
+@media (max-width:430px){#shop-food .name .nm{white-space:normal;flex:1 1 0;min-width:0}#shop-food .name .cnt{margin-left:0}}
+#shop-food .name button{white-space:nowrap;padding:6px 8px;font-size:.85rem;flex:none}
+#shop-food .name .nm{min-width:0}
 .card .name .cnt b{font-size:1.25rem;font-weight:700;margin:0 1px;color:var(--fg)}
 .card .name .cnt.has{border-color:#d9a734;background:rgba(217,167,52,.15)}
 .card .name .cnt.has b{color:#f0c75a}
@@ -791,6 +792,7 @@ const FOOD_PRICE=800,FOOD_MAX=5;
 const foodMax=()=>FOOD_MAX+(S&&S.parts?S.parts.reduce((a,x)=>a+((PARTS.find(p=>p.id===x)||{}).food||0),0):0);// リアラックで増える
 // 長野県の補給食（赤マムシドリンク風）：高価だが回復量が大きい
 const NAGANO={price:2000,max:3,hp:60,mp:30};
+const NAGANO_X={price:10000,max:1};// 長野県の補給食【極】（買える・1個まで・体力と気力が全回復）
 const GUMMY={max:3,hp:NAGANO.hp,mp:NAGANO.mp};// 着色料いっぱいのグミ（キャミィからの贈り物。赤マムシドリンク風の長野県の補給食と同じ効果。買えない）
 const TEA={max:3,hp:NAGANO.hp,mp:NAGANO.mp};// 英国産の紅茶（ハロルド卿からの贈り物。長野県の補給食と同じ効果。買えない）
 const DANGO={max:3,hp:25,mp:10};// 文化祭の団子（ライバルからの贈り物。補給食と同じ効果。買えない）
@@ -962,7 +964,7 @@ function title(f){let t=TITLES[0][1];for(const [n,s] of TITLES) if(f>=n) t=s;ret
 // ---------- state ----------
 let S=null;
 function newGame(HOME){INTRIP=false;LASTSAVE='';TS=null;trip=null;B=null;$('pop').hidden=true;S={turn:1,fame:0,stay:0,money:DEBUG?10000000:30000,hp:100,mp:100,home:HOME,loc:HOME,bike:'mama',cloth:'plain',parts:[],gear:{fire:null,shelter:null,tarp:null},owned:{bikes:['mama'],cloth:['plain'],parts:[],gear:[]},
-  visits:Array(47).fill(0),fam:Array(47).fill(false),log:[],tl:[],forecast:null,sel:HOME,food:0,food2:0,dango:0,gummy:0,tea:0,penId:'pen_tabi',avId:'av_hero',inf:{},plus:{},stats:{wins:0,posts:0,bestQ:0,tph:0,ev:0,tc:0,en:{}}};
+  visits:Array(47).fill(0),fam:Array(47).fill(false),log:[],tl:[],forecast:null,sel:HOME,food:0,food2:0,food3:0,dango:0,gummy:0,tea:0,penId:'pen_tabi',avId:'av_hero',inf:{},plus:{},stats:{wins:0,posts:0,bestQ:0,tph:0,ev:0,tc:0,en:{}}};
   rollForecast();log(`春の週末。${PREF[HOME].name}の自宅から旅が始まる。`);save();}
 // ---------- セーブ ----------
 // 旅の最中（出発〜結果を閉じるまで）は保存しない。途中で閉じても旅の前の状態に戻るだけで、バトルや費用の食い逃げができない
@@ -1008,7 +1010,7 @@ function load(){try{const s=localStorage.getItem('charicamp');if(!s)return null;
   for(const k of TRIAL_KEYS){const v=st.en&&st.en[k];if(Array.isArray(v)&&v.length===3)o.stats.en[k]=v.map(x=>num(x,0,0,1e9));};
   {const iv=o.inf&&typeof o.inf==='object'?o.inf:{};o.inf={};for(const d of INF){const v=iv[d.id];if(v&&typeof v==='object')o.inf[d.id]={w:num(v.w,0,0,1e9),e:num(v.e,0,0,1e9),g:num(v.g,0,0,1)};}}
   // ID項目があれば（不正な値でも）旧番号より優先。ID項目が無いときだけ旧番号から1回移行
-  o.food=num(o.food,0,0,FOOD_MAX+RACK_TOP+((PARTS.find(p=>p.id==='framebag')||{}).food||0));o.food2=num(o.food2,0,0,NAGANO.max);o.dango=num(o.dango,0,0,DANGO.max);o.gummy=num(o.gummy,0,0,GUMMY.max);o.tea=num(o.tea,0,0,TEA.max);{const own=k=>Object.prototype.hasOwnProperty.call(o,k);if(!own('avId')&&Number.isInteger(o.av))o.avId=LEGACY_AV[o.av];if(!own('penId')&&Number.isInteger(o.pen))o.penId=LEGACY_PEN[o.pen];}delete o.av;delete o.pen;if(!AVS.some(a=>a.id===o.avId))o.avId=AV_DEF;if(!penOK(o.penId,o.avId))o.penId=PEN_DEF;
+  o.food=num(o.food,0,0,FOOD_MAX+RACK_TOP+((PARTS.find(p=>p.id==='framebag')||{}).food||0));o.food2=num(o.food2,0,0,NAGANO.max);o.food3=num(o.food3,0,0,NAGANO_X.max);o.dango=num(o.dango,0,0,DANGO.max);o.gummy=num(o.gummy,0,0,GUMMY.max);o.tea=num(o.tea,0,0,TEA.max);{const own=k=>Object.prototype.hasOwnProperty.call(o,k);if(!own('avId')&&Number.isInteger(o.av))o.avId=LEGACY_AV[o.av];if(!own('penId')&&Number.isInteger(o.pen))o.penId=LEGACY_PEN[o.pen];}delete o.av;delete o.pen;if(!AVS.some(a=>a.id===o.avId))o.avId=AV_DEF;if(!penOK(o.penId,o.avId))o.penId=PEN_DEF;
   delete o.ach;
   let f=o.forecast&&typeof o.forecast==='object'?o.forecast:{};o.forecast=null;
   if(Array.isArray(o.fc)&&o.fc.length===47&&o.fc.every(n=>Number.isInteger(n)&&n>=0&&n<7*100)){const M=(o.v||0)>=6?7:(o.v||0)>=5?6:5;f={};o.fc.forEach((n,i)=>f[i]={temp:Math.floor(n/M)-30,wx:WXL[n%M]});}
@@ -1259,7 +1261,7 @@ function renderShop(){if(S.parts.length>partSlots(S.bike))S.parts=S.parts.slice(
     const own=l.filter(i=>owns(k,i.id));$('eq-'+k).innerHTML=tabs+(own.length?own.map(i=>card(i,k,'equip')).join(''):'<div class="hint">なし</div>');}
   for(const slot of Object.keys(GEAR)){const l=GEAR_ITEMS.filter(i=>i.slot===slot);$('shop-'+slot).innerHTML=l.map(i=>card(i,'gear','shop')).join('');
     const own=l.filter(i=>owns('gear',i.id));$('eq-'+slot).innerHTML=noneCard(slot)+own.map(i=>card(i,'gear','equip')).join('');}
-  $('shop-food').innerHTML=`<div class="card"><div class="name"><span class="nm"><img loading="lazy" class="ci" src="img/icon_food.webp" width="28" height="28" alt="">補給食</span><span class="cnt${S.food?' has':''}"><b>${S.food}</b>/${foodMax()}</span><button data-food="1" ${S.money>=FOOD_PRICE&&S.food<foodMax()?'':'disabled'}>購入 ${yen(FOOD_PRICE)}</button></div><div class="spec">試練の最中に食べると体力+25 気力+10。</div></div><div class="card"><div class="name"><span class="nm"><img loading="lazy" class="ci" src="img/icon_food_nagano.webp" width="28" height="28" alt="" onerror="this.onerror=null;this.src='img/icon_food.webp'">長野県の補給食</span><span class="cnt${S.food2?' has':''}"><b>${S.food2}</b>/${NAGANO.max}</span><button data-food2="1" ${S.money>=NAGANO.price&&S.food2<NAGANO.max?'':'disabled'}>購入 ${yen(NAGANO.price)}</button></div><div class="spec">赤マムシドリンク風の元気ドリンク。体力+${NAGANO.hp} 気力+${NAGANO.mp}。</div></div>`;renderForge();}
+  $('shop-food').innerHTML=`<div class="card"><div class="name"><span class="nm"><img loading="lazy" class="ci" src="img/icon_food.webp" width="28" height="28" alt="">補給食</span><span class="cnt${S.food?' has':''}"><b>${S.food}</b>/${foodMax()}</span><button data-food="1" ${S.money>=FOOD_PRICE&&S.food<foodMax()?'':'disabled'}>購入 ${yen(FOOD_PRICE)}</button></div><div class="spec">試練の最中に食べると体力+25 気力+10。</div></div><div class="card"><div class="name"><span class="nm"><img loading="lazy" class="ci" src="img/icon_food_nagano.webp" width="28" height="28" alt="" onerror="this.onerror=null;this.src='img/icon_food.webp'">長野県の補給食</span><span class="cnt${S.food2?' has':''}"><b>${S.food2}</b>/${NAGANO.max}</span><button data-food2="1" ${S.money>=NAGANO.price&&S.food2<NAGANO.max?'':'disabled'}>購入 ${yen(NAGANO.price)}</button></div><div class="spec">赤マムシドリンク風の元気ドリンク。体力+${NAGANO.hp} 気力+${NAGANO.mp}。</div></div><div class="card"><div class="name"><span class="nm"><img loading="lazy" class="ci" src="img/icon_food_nagano.webp" width="28" height="28" alt="" onerror="this.onerror=null;this.src='img/icon_food.webp'">長野県の補給食【極】</span><span class="cnt${S.food3?' has':''}"><b>${S.food3}</b>/${NAGANO_X.max}</span><button data-food3="1" ${S.money>=NAGANO_X.price&&S.food3<NAGANO_X.max?'':'disabled'}>購入 ${yen(NAGANO_X.price)}</button></div><div class="spec">長野県の元気ドリンクの極み。体力と気力が全回復。</div></div>`;renderForge();}
 const fxOf=(kind,item)=>(kind==='bike'?bikeBoost(item):['climb','rough','cruise','wx','photo','comfy'].filter(k=>item[k])).map(k=>STATJ[k]+(k==='comfy'?'-1':'+1')).join(' ');
 function renderForge(){
   // 段階（1〜3段階目）ごとに、その段階へ上げられる自転車／パーツを並べる。品物ごとに行を作らないので、持ち物が増えても縦に伸びない
@@ -1281,7 +1283,8 @@ $('shop-forge').addEventListener('click',e=>{const rb=e.target.closest('button[d
   const [kind,id]=b.dataset.forge.split(':'),item=(kind==='bike'?BIKES:PARTS).find(x=>x.id===id),nx=plv(id)+1;if(!item||nx>3||NOCUSTOM.has(id))return;
   const c=upCost(kind,item,nx);if(S.money<c)return;
   askPay(`「${item.name}」を${tierOf(kind,nx)}に上げますか？（${fxOf(kind,item)}）`,c,()=>{S.money-=c;S.plus[id]=nx;log(`${item.name}を${tierOf(kind,nx)}に（${yen(c)}）`);render();});});
-$('shop-food').addEventListener('click',e=>{if(e.target.closest('button[data-food2]')){if(S.money<NAGANO.price||S.food2>=NAGANO.max)return;askPay('長野県の補給食を買いますか？',NAGANO.price,()=>{S.money-=NAGANO.price;S.food2++;log(`長野県の補給食を購入（${yen(NAGANO.price)}）`);render();});return;}
+$('shop-food').addEventListener('click',e=>{if(e.target.closest('button[data-food3]')){if(S.money<NAGANO_X.price||S.food3>=NAGANO_X.max)return;askPay('長野県の補給食【極】を買いますか？',NAGANO_X.price,()=>{S.money-=NAGANO_X.price;S.food3++;log(`長野県の補給食【極】を購入（${yen(NAGANO_X.price)}）`);render();});return;}
+  if(e.target.closest('button[data-food2]')){if(S.money<NAGANO.price||S.food2>=NAGANO.max)return;askPay('長野県の補給食を買いますか？',NAGANO.price,()=>{S.money-=NAGANO.price;S.food2++;log(`長野県の補給食を購入（${yen(NAGANO.price)}）`);render();});return;}
   if(!e.target.closest('button[data-food]')||S.money<FOOD_PRICE||S.food>=foodMax())return;
   askPay('補給食を買いますか？',FOOD_PRICE,()=>{S.money-=FOOD_PRICE;S.food++;log(`補給食を購入（${yen(FOOD_PRICE)}）`);render();});});
 const NONE_TXT={fire:['焚き火なし','気力回復の上乗せなし'],shelter:['寝床なし（地面に直接寝る）','体力・気力の上乗せなし'],tarp:['タープなし','雨ガード0%']};
@@ -1387,7 +1390,7 @@ function askGo(p,rinko,skipSp){if(!skipSp&&isCourse(p,false))return askSpecial(p
   const gi=k=>S.gear[k]?nm(GEAR_ITEMS,S.gear[k]):'なし';
   $('go-sum').innerHTML=[['行き先',`${p.site}（${p.name}）`],['移動',how],['予報',`${WX_J[f.wx]} ${f.temp}℃`],
     ['自転車',nm(BIKES,S.bike)],['衣類',`${cl.name}（${cl.lo}〜${cl.hi}℃）`],['パーツ',S.parts.length?S.parts.map(x=>nm(PARTS,x)).join('、'):'なし'],
-    ['焚き火台',gi('fire')],['寝床',gi('shelter')],['タープ',gi('tarp')],['補給食',S.food+'個'+(S.food2?`＋長野${S.food2}個`:'')+(S.dango?`＋団子${S.dango}個`:'')+(S.gummy?`＋グミ${S.gummy}個`:'')+(S.tea?`＋紅茶${S.tea}個`:'')]].map(r=>`<span>${r[0]}</span><span>${r[1]}</span>`).join('');
+    ['焚き火台',gi('fire')],['寝床',gi('shelter')],['タープ',gi('tarp')],['補給食',S.food+'個'+(S.food2?`＋長野${S.food2}個`:'')+(S.food3?`＋長野【極】${S.food3}個`:'')+(S.dango?`＋団子${S.dango}個`:'')+(S.gummy?`＋グミ${S.gummy}個`:'')+(S.tea?`＋紅茶${S.tea}個`:'')]].map(r=>`<span>${r[0]}</span><span>${r[1]}</span>`).join('');
   $('go-yes').onclick=()=>{$('ov-go').hidden=true;startTrip(p,rinko);};$('ov-go').hidden=false;$('go-yes').focus();}
 let LOGSUB='trip';
 let TRSUB='old';// 試練欄のタブ：old=試練／4th=都道府県限定試練（各県のボス）
@@ -1601,14 +1604,14 @@ function playerPower(){const st=bikeStats();if(B.kind==='rival')return 8+FL()/8+
 function renderBattle(){const pr=Math.min(100,Math.max(0,(1-B.hp/B.max)*100));$('bt-hp').style.width=pr+'%';$('bt-bike').style.left=pr+'%';$('bt-bike').src=isRival()?'img/part_cam.webp':'img/icon_bike_'+S.bike+'.webp';$('bt-goal').src=isRival()?'img/part_tripod.webp':'img/icon_g_sh2.webp';
   $('bt-km').innerHTML=`<span class="bt-km">${B.hp<=0?(isRival()?'撮影スポットに到着！':'区間ゴール！'):LEFT()+' '+fmtD(B.hp)}</span><span class="bt-km">日没まで、あと${B.limit-B.turn+1}時間</span>`;
   $('bt-info').innerHTML=`<div class="bt-bar"><span>体力</span><div class="bar"><i style="width:${Math.max(0,S.hp)}%"></i></div><b>${S.hp}</b></div><div class="bt-bar"><span>気力</span><div class="bar mp"><i style="width:${Math.max(0,S.mp)}%"></i></div><b>${S.mp}</b></div>`;
-  $('bt-nx').innerHTML=`${isRival()?`<span>フォロワー ${fol(S.fame)}</span>`:''}<span>次の${isRival()?'ライバル':'敵'}の勢い：${B.next==='heavy'?`<b style="color:var(--bad)">${NEXT.heavy[0]}</b>`:NEXT[B.next][0]}</span><span>補給食 ${S.food}個${S.food2?`・長野 ${S.food2}個`:''}${S.dango?`・団子 ${S.dango}個`:''}${S.gummy?`・グミ ${S.gummy}個`:''}${S.tea?`・紅茶 ${S.tea}個`:''}</span>`;
+  $('bt-nx').innerHTML=`${isRival()?`<span>フォロワー ${fol(S.fame)}</span>`:''}<span>次の${isRival()?'ライバル':'敵'}の勢い：${B.next==='heavy'?`<b style="color:var(--bad)">${NEXT.heavy[0]}</b>`:NEXT[B.next][0]}</span><span>補給食 ${S.food}個${S.food2?`・長野 ${S.food2}個`:''}${S.food3?`・長野【極】 ${S.food3}個`:''}${S.dango?`・団子 ${S.dango}個`:''}${S.gummy?`・グミ ${S.gummy}個`:''}${S.tea?`・紅茶 ${S.tea}個`:''}</span>`;
   const st=bikeStats(),ti={rinko:trip.rk};const pw=playerPower(),pd=v=>fmtD(v);
   const cmds=B.kind==='rival'?[
     ['post','映え投稿で挑む',`約${pd(pw+4)}詰める`],
     ['kiai','気合い','気力-20 次が3倍'],
     ['rest','休む','体力+20 人気減'],
     ['tactic',...TACT.rival],
-    ['food','補給食','体力+25 気力+10'],...(S.food2?[['food2','長野県の補給食',`体力+${NAGANO.hp} 気力+${NAGANO.mp}`]]:[]),...(S.dango?[['dango','団子',`体力+${DANGO.hp} 気力+${DANGO.mp}`]]:[]),...(S.gummy?[['gummy','グミ',`体力+${GUMMY.hp} 気力+${GUMMY.mp}`]]:[]),...(S.tea?[['tea','紅茶',`体力+${TEA.hp} 気力+${TEA.mp}`]]:[]),
+    ['food','補給食','体力+25 気力+10'],...(S.food2?[['food2','長野県の補給食',`体力+${NAGANO.hp} 気力+${NAGANO.mp}`]]:[]),...(S.food3?[['food3','長野県の補給食【極】','体力・気力 全回復']]:[]),...(S.dango?[['dango','団子',`体力+${DANGO.hp} 気力+${DANGO.mp}`]]:[]),...(S.gummy?[['gummy','グミ',`体力+${GUMMY.hp} 気力+${GUMMY.mp}`]]:[]),...(S.tea?[['tea','紅茶',`体力+${TEA.hp} 気力+${TEA.mp}`]]:[]),
     ['escape','場所を譲る','失敗（遅刻扱い）']]:[
     ['push','全力で踏む',`体力-15 ${pd(pw+4)}進む`],
     ['walk','押し歩き',`体力-8 ${pd(10)}進む`],
@@ -1616,16 +1619,16 @@ function renderBattle(){const pr=Math.min(100,Math.max(0,(1-B.hp/B.max)*100));$(
     ['rest','休む','体力+20 気力+5'],
     ['guard','身構える','被害7割減'],
     ['tactic',...TACT[B.kind]],
-    ['food','補給食','体力+25 気力+10'],...(S.food2?[['food2','長野県の補給食',`体力+${NAGANO.hp} 気力+${NAGANO.mp}`]]:[]),...(S.dango?[['dango','団子',`体力+${DANGO.hp} 気力+${DANGO.mp}`]]:[]),...(S.gummy?[['gummy','グミ',`体力+${GUMMY.hp} 気力+${GUMMY.mp}`]]:[]),...(S.tea?[['tea','紅茶',`体力+${TEA.hp} 気力+${TEA.mp}`]]:[]),
+    ['food','補給食','体力+25 気力+10'],...(S.food2?[['food2','長野県の補給食',`体力+${NAGANO.hp} 気力+${NAGANO.mp}`]]:[]),...(S.food3?[['food3','長野県の補給食【極】','体力・気力 全回復']]:[]),...(S.dango?[['dango','団子',`体力+${DANGO.hp} 気力+${DANGO.mp}`]]:[]),...(S.gummy?[['gummy','グミ',`体力+${GUMMY.hp} 気力+${GUMMY.mp}`]]:[]),...(S.tea?[['tea','紅茶',`体力+${TEA.hp} 気力+${TEA.mp}`]]:[]),
     ['rinko',`輪行 ${yen(ti.rinko)}`,trip.course?'特別コースは自走のみ':'電車で飛ばす']];
   // 作戦アイコンは tac_敵名.webp（ヒグマはツキノワグマと共用）
   const TACI={brownbear:'tac_bear',habu:'tac_deer',gas:'tac_heat',volcstorm:'tac_typhoon',curves:'tac_hill',gate:'tac_wind',boss_fukushima:'tac_collapse',boss_tokyo:'tac_collapse',boss_gifu:'tac_snow',boss_akita:'tac_collapse',boss_tokushima:'tac_collapse',boss_aomori:'tac_hill',boss_hyogo:'tac_wind',boss_osaka:'tac_hill',boss_tochigi:'tac_wind',boss_miyagi:'tac_snow',boss_hokkaido:'tac_wind',boss_tottori:'tac_hill',boss_okayama:'tac_hill',boss_miyazaki:'tac_wind',boss_yamanashi:'tac_snow',boss_nagano:'tac_collapse',boss_ibaraki:'tac_collapse',boss_kochi:'tac_rain',boss_toyama:'tac_wind',boss_niigata:'tac_collapse',boss_kagoshima:'tac_wind',boss_yamaguchi:'tac_collapse',boss_kumamoto:'tac_wind',boss_okinawa:'tac_wind'};
-  const RC={push:'atk',post:'atk',kiai:'gold',rest:'heal',food:'heal',food2:'heal',dango:'heal',gummy:'heal',tea:'heal',guard:'def',tactic:'def',rinko:'sub',escape:'sub'};
-  const ic={tactic:TACI[B.kind]||'tac_'+B.kind,guard:'cmd_guard',food:'icon_food',food2:'icon_food_nagano',dango:'icon_dango',gummy:'icon_gummy',tea:'icon_tea'};
+  const RC={push:'atk',post:'atk',kiai:'gold',rest:'heal',food:'heal',food2:'heal',food3:'heal',dango:'heal',gummy:'heal',tea:'heal',guard:'def',tactic:'def',rinko:'sub',escape:'sub'};
+  const ic={tactic:TACI[B.kind]||'tac_'+B.kind,guard:'cmd_guard',food:'icon_food',food2:'icon_food_nagano',food3:'icon_food_nagano',dango:'icon_dango',gummy:'icon_gummy',tea:'icon_tea'};
   $('bt-cmds').innerHTML=cmds.map(([k,l,s])=>`<button data-cmd="${k}" class="${ic[k]?'ic ':''}c-${RC[k]||'nrm'}" ${k==='kiai'&&S.mp<20||k==='rinko'&&(S.money<ti.rinko||trip.course)||k==='push'&&S.hp<=15||k==='walk'&&S.hp<=8||k==='food'&&S.food<=0||k==='tactic'&&!tacOK()?'disabled':''}>${ic[k]?`<img src="img/${ic[k]}.webp" width="30" height="30" alt="" onerror="this.onerror=null;this.src='img/icon_food.webp'"><span>${l}<small>${s}</small></span>`:`${l}<small>${s}</small>`}</button>`).join('');}
 $('bt-cmds').addEventListener('click',e=>{const b=e.target.closest('button[data-cmd]');if(b&&b.dataset.cmd!=='next')cmd(b.dataset.cmd);});// 'next'（区間クリア後の進むボタン）は専用のonclickで処理する。ここでも拾うと勝利や敵の攻撃が二重に数えられる
 function cmd(k){if(!B||!trip||$('ov-battle').hidden||B.hp<=0||trip.late)return;
-  const allowed=isRival()?['post','kiai','rest','tactic','food','food2','dango','gummy','tea','escape']:['push','walk','kiai','rest','guard','tactic','food','food2','dango','gummy','tea','rinko'];
+  const allowed=isRival()?['post','kiai','rest','tactic','food','food2','food3','dango','gummy','tea','escape']:['push','walk','kiai','rest','guard','tactic','food','food2','food3','dango','gummy','tea','rinko'];
   if(!allowed.includes(k)||k==='push'&&S.hp<=15||k==='walk'&&S.hp<=8||k==='kiai'&&S.mp<20||k==='rinko'&&(S.money<trip.rk||trip.course))return;
   let t='';let dmg=0;const mult=B.charge||1;B.cut=1;
   if(k==='push'||k==='post'){dmg=Math.round((playerPower()+rnd(0,8))*mult);if(k==='push')S.hp-=15;B.charge=false;t=`${k==='push'?'全力で踏んだ！':'渾身の映え投稿！'} ${fmtD(dmg)}${k==='push'?'進んだ':'詰めた'}`;}
@@ -1633,6 +1636,7 @@ function cmd(k){if(!B||!trip||$('ov-battle').hidden||B.hp<=0||trip.late)return;
   else if(k==='kiai'){S.mp-=20;B.charge=3;t='気合いを入れた！次の行動が3倍進む';}
   else if(k==='rest'){S.hp=Math.min(100,S.hp+20);S.mp=Math.min(100,S.mp+5);t='ひと休みした。体力+20';}
   else if(k==='food2'){if(S.food2<=0)return;S.food2--;S.hp=Math.min(100,S.hp+NAGANO.hp);S.mp=Math.min(100,S.mp+NAGANO.mp);t=`長野県の元気ドリンクを一気飲み！体力+${NAGANO.hp} 気力+${NAGANO.mp}（残り${S.food2}個）`;}
+  else if(k==='food3'){if(!(S.food3>0))return;S.food3--;S.hp=100;S.mp=100;t=`長野県の補給食【極】を一気に平らげた！体力・気力が全回復（残り${S.food3}個）`;}
   else if(k==='gummy'){if(!(S.gummy>0))return;S.gummy--;S.hp=Math.min(100,S.hp+GUMMY.hp);S.mp=Math.min(100,S.mp+GUMMY.mp);t=`着色料いっぱいのグミを食べた！体力+${GUMMY.hp} 気力+${GUMMY.mp}（残り${S.gummy}個）`;}
   else if(k==='tea'){if(!(S.tea>0))return;S.tea--;S.hp=Math.min(100,S.hp+TEA.hp);S.mp=Math.min(100,S.mp+TEA.mp);t=`英国産の紅茶を飲んだ！体力+${TEA.hp} 気力+${TEA.mp}（残り${S.tea}個）`;}
   else if(k==='dango'){if(!(S.dango>0))return;S.dango--;S.hp=Math.min(100,S.hp+DANGO.hp);S.mp=Math.min(100,S.mp+DANGO.mp);t=`文化祭の団子を食べた！体力+${DANGO.hp} 気力+${DANGO.mp}（残り${S.dango}個）`;}
@@ -1794,7 +1798,7 @@ addEventListener('pagehide',save);
 // 開きっぱなしのタブが古いコードのまま保存し直して、新しい保存項目を失うのを防ぐ。
 // 実行中のコードに埋め込んだ版の識別子 APP_V と、いま配信されている index.html の APP_V を比べる（最初に取れた配信内容を「実行中の版」の代わりにしない）。
 // ★ APP_V は index.html の内容から計算する。index.html を変えたら `node qa/stamp.cjs` で更新する（忘れると監査テストが失敗する）。
-const APP_V='8ec84356f4ba';
+const APP_V='b3b3cb2f6f4e';
 // 旅・戦闘・結果画面（INTRIP）の間は、save() が保存を見送るので、再読み込みすると進行が巻き戻る。旅が終わったあとも trip / B には前回の値が残るため、これらは見ない
 const UPD={pending:'',busy:false,scheduled:false,last:0,every:600000,quiet:600000,timeout:15000,reloadedAt:0,note:null,timer:0,
  safe:()=>!INTRIP,
