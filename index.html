@@ -1740,6 +1740,34 @@ function advance(){INTRIP=false;const sp=sponsor();S.money+=sp[1];if(TS)TS.sp=sp
 
 addEventListener('pagehide',save);
 
+// ---------- 新しいバージョンの自動更新 ----------
+// 開きっぱなしのタブが古いコードのまま保存し直して、新しい保存項目を失うのを防ぐ。
+// 起動時の index.html の内容(ハッシュ)を覚えておき、あとで取り直して変わっていたら、旅・戦闘の外で保存してから再読み込みする。
+// 取り直しを2回続けて同じ新しい内容になったときだけ動く（通信のたびに内容が変わるサーバーでも、再読み込みを繰り返さない）。
+const UPD={base:null,last:0,pending:false,busy:false,every:600000,
+ text:async()=>{const r=await fetch(location.pathname,{cache:'no-store'});if(!r.ok)throw new Error('http');return r.text();},
+ hash:t=>{let h=5381;for(let i=0;i<t.length;i++)h=(Math.imul(h,33)^t.charCodeAt(i))>>>0;return h;},
+ safe:()=>!INTRIP&&!B&&!trip,
+ reload:()=>location.reload(),
+ async check(force){if(this.busy)return;this.busy=true;
+  try{
+   if(this.base===null){this.base=this.hash(await this.text());this.last=Date.now();return;}
+   if(!this.pending){if(!force&&Date.now()-this.last<this.every)return;this.last=Date.now();
+    const h=this.hash(await this.text());if(h===this.base)return;
+    if(this.hash(await this.text())!==h)return;// 2回続けて同じ新しい内容のときだけ「更新あり」
+    this.pending=true;}
+   if(!this.safe())return;// 旅・戦闘のあとで（1分ごとに再確認）
+   let t=0;try{t=+sessionStorage.getItem('cc_upd')||0;}catch(e){}
+   if(Date.now()-t<600000)return;// 直前に更新したばかりなら繰り返さない
+   try{sessionStorage.setItem('cc_upd',String(Date.now()));}catch(e){}
+   save();const n=document.createElement('div');n.setAttribute('role','status');n.textContent='新しいバージョンに更新します…';
+   n.style.cssText='position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:9999;background:#000;color:#fff;padding:8px 14px;border-radius:8px;font-size:13px';
+   document.body.appendChild(n);setTimeout(()=>this.reload(),1500);
+  }catch(e){}finally{this.busy=false;}}};
+setTimeout(()=>UPD.check(),3000);
+setInterval(()=>{if(!document.hidden)UPD.check();},60000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)UPD.check();});
+
 // ---------- チュートリアル ----------
 const TUT=[
  ['目標','47都道府県のキャンプ場を、それぞれ「馴染み宿」にすれば全国クリアです。旅は、そこで終わります。\n同じ場所に3回、無事に着いて撮影できると馴染み宿になります（一部の県には特別コースがあり、その県は4回）。1年は52週、毎週末が1ターンです。'],

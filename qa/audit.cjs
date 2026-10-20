@@ -2,7 +2,7 @@ const fs=require('node:fs'),path=require('node:path'),assert=require('node:asser
 const {JSDOM,VirtualConsole}=require('jsdom');
 const filename=path.resolve(process.argv[2]||path.join(__dirname,'..','index.html'));
 const html=fs.readFileSync(filename,'utf8');
-const expose=`window.qa={PENS,AVS,LEGACY_AV,LEGACY_PEN,penName:()=>penName(),pfImg:()=>pfImg(),avImg:()=>avImg(),SPC,itemArt,feedItems,INF,INF_WIN,infSt,infD,rollInf,infBlock,giftYear,get INFEV(){return INFEV},set INFEV(v){INFEV=v},getTS:()=>TS,setTS:v=>{TS=v},snsText,ICON_FB,foodMax,partSlots,dcfBonus,get sgPage(){return SGPG},set sgPage(v){SGPG=v},needV,isCourse,askGo,ENEMY,SPEC,SIGHTS,TACT,tlEnc,tlDec,newGame,render,renderMap,renderBattle,renderShop,renderForge,renderDetail,renderList,renderTrials,renderSights,load,save,pack,snap,advance,calendar,rollForecast,startTrip,stayWx,startBattle,cmd,endTrip,endTrip2,nextEncounter,tsuchinoko,tcRate,bikeStats,gearFx,travelInfo,restHome,yearEval,eventAt,stoveOn,plv,rkLv,PREF,ENEMY,GEAR_ITEMS,PARTS,BIKES,CLOTHES,WXL,TRIAL_KEYS,AUD,tcRate,playBGM,bgmApply,
+const expose=`window.qa={UPD,PENS,AVS,LEGACY_AV,LEGACY_PEN,penName:()=>penName(),pfImg:()=>pfImg(),avImg:()=>avImg(),SPC,itemArt,feedItems,INF,INF_WIN,infSt,infD,rollInf,infBlock,giftYear,get INFEV(){return INFEV},set INFEV(v){INFEV=v},getTS:()=>TS,setTS:v=>{TS=v},snsText,ICON_FB,foodMax,partSlots,dcfBonus,get sgPage(){return SGPG},set sgPage(v){SGPG=v},needV,isCourse,askGo,ENEMY,SPEC,SIGHTS,TACT,tlEnc,tlDec,newGame,render,renderMap,renderBattle,renderShop,renderForge,renderDetail,renderList,renderTrials,renderSights,load,save,pack,snap,advance,calendar,rollForecast,startTrip,stayWx,startBattle,cmd,endTrip,endTrip2,nextEncounter,tsuchinoko,tcRate,bikeStats,gearFx,travelInfo,restHome,yearEval,eventAt,stoveOn,plv,rkLv,PREF,ENEMY,GEAR_ITEMS,PARTS,BIKES,CLOTHES,WXL,TRIAL_KEYS,AUD,tcRate,playBGM,bgmApply,
 get S(){return S},set S(v){S=v},get B(){return B},get trip(){return trip},set trip(v){trip=v},get TS(){return TS},get inTrip(){return INTRIP},get lastSave(){return LASTSAVE},
 quiet(){render=()=>save();renderBattle=()=>{};playSE=()=>{};playBGM=()=>{};}};`;
 const js=[...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(m=>m[1]).sort((x,y)=>y.length-x.length)[0];// 先頭の短い移動スクリプトではなく、本体（最長）を読む
@@ -310,6 +310,24 @@ test('character edit impact: all 88 illustration x name combos render; sponsor-c
  q.S.log.unshift('1|スポンサー「自転車メーカー」がつきました（週¥5,000）');q.S.log.unshift('1|軽量山岳テントを購入（¥55,000）');q.S.tl.push([1,12,80,'']);
  for(const a of q.AVS)for(const p of q.PENS){q.S.avId=a.id;q.S.penId=p.id;q.render();const it=q.feedItems(),me=it.filter(x=>x.p.id==='jitensha_tabi'),sp=it.find(x=>/^sponsor_/.test(x.p.id));const nm=(p.av&&p.av!==a.id)?'旅の自転車乗り':p.n;
   assert.ok(me.length>0&&me.every(x=>x.p.name===nm&&x.p.av==='img/'+a.s+'.webp'),a.id+'/'+p.id);assert.ok(sp&&sp.p.text.startsWith(nm+'さん'),'sponsor '+a.id+'/'+p.id);assert.equal(c.$('pf-pen').textContent,nm);assert.equal(c.$('pf-img').getAttribute('src'),'img/'+a.f+'.webp');assert.ok(c.$('pf-img').alt.includes(a.n));}});
+
+const ASYNC=[];
+function atest(name,fn){ASYNC.push(async()=>{let c;try{c=boot();assert.ok(c.q,'script must boot');c.q.newGame(12);c.w.Math.random=()=>.99;await fn(c);assert.deepEqual(c.errors,[]);results.push({name,ok:true});console.log('PASS',name);}catch(e){results.push({name,ok:false,error:e.message});console.log('FAIL',name,'—',e.message.slice(0,500));}finally{c?.dom.window.close();}});}
+atest('auto-update: only reloads after two identical new fetches, never during trip/battle, saves first, no reload loop',async c=>{const {q}=c,U=q.UPD;
+ c.w.setTimeout=f=>{f();return 1;};// ハーネスはタイマーを止めているので、即実行にする
+ let reloads=0,texts=[];U.reload=()=>{reloads++;};U.text=async()=>texts.shift();
+ texts=['A'];await U.check();assert.equal(U.base,U.hash('A'),'baseline recorded');
+ texts=['A'];await U.check(true);assert.equal(reloads,0,'same content: no reload');
+ texts=['B','C'];await U.check(true);assert.ok(!U.pending,'content that changes on every fetch is ignored');
+ U.last=0;texts=['B','B'];q.S.penId='pen_kaze';const st=U.safe;U.safe=()=>false;await U.check(true);assert.ok(U.pending,'update found');assert.equal(reloads,0,'not reloaded while unsafe');
+ U.safe=st;texts=[];await U.check(true);
+ assert.equal(JSON.parse(c.w.localStorage.getItem('charicamp')).penId,'pen_kaze','saved before reload');
+ assert.equal(reloads,1,'reloaded once');
+ // 直後の再確認では再読み込みしない
+ U.pending=true;await U.check(true);assert.equal(reloads,1,'no second reload within 10 minutes');
+ // 旅の途中は安全でない
+ q.newGame(12);assert.equal(U.safe(),true);q.trip={};assert.equal(U.safe(),false,'trip');q.trip=null;});
+(async()=>{for(const f of ASYNC)await f();
 const summary={file:filename,passed:results.filter(x=>x.ok).length,failed:results.filter(x=>!x.ok).length,results};
 if(process.argv[3])fs.writeFileSync(process.argv[3],JSON.stringify(summary,null,2));
-console.log(JSON.stringify({passed:summary.passed,failed:summary.failed}));process.exitCode=summary.failed?1:0;
+console.log(JSON.stringify({passed:summary.passed,failed:summary.failed}));process.exitCode=summary.failed?1:0;})();
