@@ -360,7 +360,7 @@ html:has(.overlay:not([hidden]):not(#ov-tut)),body:has(.overlay:not([hidden]):no
 .row{display:flex;gap:8px;flex-wrap:wrap}
 .row>*{flex:1}
 .profile{display:flex;gap:10px;align-items:flex-start;margin:0}
-.resbtns{display:flex;gap:8px}.resbtns button{flex:1;margin:0}.resbtns small{display:block;font-size:10px}#res-note:empty{display:none}#share-note:empty{display:none}.profile>.pfimg{flex:none;width:clamp(110px,44%,180px);height:auto;aspect-ratio:1;object-fit:cover;border-radius:8px;border:1px solid var(--line);background:var(--bg)}
+.resbtns{display:flex;gap:8px}.resbtns button{flex:1;margin:0}.resbtns small{display:block;font-size:10px}#res-note:empty{display:none}#share-note:empty{display:none}.profile>.pfimg{cursor:zoom-in;flex:none;width:clamp(110px,44%,180px);height:auto;aspect-ratio:1;object-fit:cover;border-radius:8px;border:1px solid var(--line);background:var(--bg)}
 .profile .res{flex:1;min-width:0;gap:1px 10px;font-size:var(--fs-s);line-height:1.35}
 .enemy .face img{display:block;width:100%;height:100%;object-fit:contain}
 .loghead{display:flex;justify-content:space-between;align-items:center;gap:8px}
@@ -457,7 +457,7 @@ html:has(.overlay:not([hidden]):not(#ov-tut)),body:has(.overlay:not([hidden]):no
     </div>
     <div id="p-trip">
     <div class="loghead"><h2 class="pfname"><small>ペンネーム</small><span id="pf-pen">旅の自転車乗り</span></h2><span class="logbtns"><button id="btn-set" aria-label="システム">⚙ システム</button></span></div>
-    <div class="profile"><img id="pf-img" class="pfimg" loading="lazy" decoding="async" src="img/hero.webp" width="180" height="180" alt="主人公の自転車旅行者"><div class="res" id="summary"></div></div>
+    <div class="profile"><img id="pf-img" class="pfimg" tabindex="0" role="button" loading="lazy" decoding="async" src="img/hero.webp" width="180" height="180" alt="主人公の自転車旅行者"><div class="res" id="summary"></div></div>
     <div class="subtabs" id="tl-tabs"><button data-v="tl" aria-selected="true">旅履歴</button><button id="btn-prof" aria-haspopup="dialog">プロフィール設定</button></div>
     <div class="tl" id="tl"></div>
     </div>
@@ -1818,7 +1818,7 @@ addEventListener('pagehide',save);
 // 開きっぱなしのタブが古いコードのまま保存し直して、新しい保存項目を失うのを防ぐ。
 // 実行中のコードに埋め込んだ版の識別子 APP_V と、いま配信されている index.html の APP_V を比べる（最初に取れた配信内容を「実行中の版」の代わりにしない）。
 // ★ APP_V は index.html の内容から計算する。index.html を変えたら `node qa/stamp.cjs` で更新する（忘れると監査テストが失敗する）。
-const APP_V='6e93f64d0a59';
+const APP_V='32d94d957434';
 // 旅・戦闘・結果画面（INTRIP）の間は、save() が保存を見送るので、再読み込みすると進行が巻き戻る。旅が終わったあとも trip / B には前回の値が残るため、これらは見ない
 const UPD={pending:'',busy:false,scheduled:false,last:0,every:600000,quiet:600000,timeout:15000,reloadedAt:0,note:null,timer:0,
  safe:()=>!INTRIP,
@@ -1896,7 +1896,10 @@ function tutBattle(){let seen=true;try{seen=localStorage.getItem('cc_tutb')==='1
 $('set-tut').onclick=()=>{$('ov-set').hidden=true;try{localStorage.removeItem('cc_tut');localStorage.removeItem('cc_tutb');}catch(e){}$('tab-map').click();tutShow(0);};
 // ライバル一覧の丸い絵を押すと、大きい絵を見られる
 {const view=$('inf-view');let trigger=null;
- const open=(id,from)=>{const d=INF.find(x=>x.id===id);if(!d)return;trigger=from;$('inf-img').src=d.img;$('inf-img').alt=d.name;$('inf-nm').textContent=d.name;$('inf-hd').textContent='@'+d.handle;view.hidden=false;$('inf-close').focus();};
+ const show=(src,alt,nm,hd,lbl,from)=>{trigger=from;$('inf-img').src=src;$('inf-img').alt=alt;$('inf-nm').textContent=nm;$('inf-hd').textContent=hd;view.firstElementChild.setAttribute('aria-label',lbl);view.hidden=false;$('inf-close').focus();};
+ const open=(id,from)=>{const d=INF.find(x=>x.id===id);if(!d)return;show(d.img,d.name,d.name,'@'+d.handle,'ライバルの絵',from);};
+ const pf=$('pf-img'),openPf=()=>show(pf.getAttribute('src'),pf.alt,avCur().n,'','主人公のイラスト',pf);
+ pf.addEventListener('click',openPf);pf.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openPf();}});
  const close=()=>{view.hidden=true;if(trigger&&trigger.isConnected)trigger.focus();trigger=null;};
  const ach=$('achlist');ach.addEventListener('click',e=>{const i=e.target.closest('img[data-inf]');if(i)open(i.dataset.inf,i);});
  ach.addEventListener('keydown',e=>{const i=e.target.closest&&e.target.closest('img[data-inf]');if(i&&(e.key==='Enter'||e.key===' ')){e.preventDefault();open(i.dataset.inf,i);}});
