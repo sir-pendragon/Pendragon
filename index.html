@@ -1322,8 +1322,8 @@ function feedItems(){const out=[],seen={};
   return engage(out.sort((a,b)=>b.t-a.t||a.r-b.r).slice(0,30));}
 // ペンネーム：自分のSNSの投稿に出る名前（一覧から選ぶ。0番が初期値）
 const PEN=['旅の自転車乗り','ペダル旅人','風のサイクリスト','焚き火ライダー','ソロキャンパー','輪行の旅人','峠のランドヌール','日本一周ライダー','ゆる旅ライダー','星空キャンパー','猫超大好き'];
-const PEN_AV={10:3};// 特定のイラストのときだけ選べるペンネーム（ペンネーム番号→イラスト番号）。猫超大好き＝サイベリアン
-const penOK=(i,a)=>i>=0&&i<PEN.length&&(PEN_AV[i]===undefined||PEN_AV[i]===a);
+const PEN_AV={'猫超大好き':'av_cat'};// 特定のイラストのときだけ選べるペンネーム（ペンネーム→イラストのファイル名）。番号で結ぶと一覧の並び替え・追加でずれるため名前で結ぶ
+const penOK=(i,a)=>{if(!Number.isInteger(i)||i<0||i>=PEN.length)return false;const need=PEN_AV[PEN[i]];return !need||!!(AVS[a]&&AVS[a][0]===need);};
 const penName=()=>{const i=(S&&S.pen)|0;return penOK(i,avIx())?PEN[i]:PEN[0];};
 function renderLog(){$('pf-pen').textContent=penName();if($('pf-img').getAttribute('src')!==pfImg()){$('pf-img').src=pfImg();$('pf-img').alt='主人公のイラスト（'+AVS[avIx()][1]+'）';}
   $('tl').innerHTML=S.tl.length?`<div class="th">日付</div><div class="th">行き先</div><div class="th">写真</div><div class="th">遭遇</div>`+S.tl.map(([t,pid,q,k])=>`<div>${CAL_S(t)}</div><div>${PREF[pid].name}</div><div>${q<0?'<span class="bad">遅刻</span>':q+'点'}</div><div>${tlDec(k).length?tlDec(k).map(x=>(ENEMY[x]||{name:x==='tsuchi'?'ツチノコ':x}).name).join('・'):'なし'}</div>`).join(''):'<div class="hint" style="grid-column:1/-1">まだ旅に出ていません</div>';

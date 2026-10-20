@@ -2,7 +2,7 @@ const fs=require('node:fs'),path=require('node:path'),assert=require('node:asser
 const {JSDOM,VirtualConsole}=require('jsdom');
 const filename=path.resolve(process.argv[2]||path.join(__dirname,'..','index.html'));
 const html=fs.readFileSync(filename,'utf8');
-const expose=`window.qa={PEN,AVS,pfImg:()=>pfImg(),avImg:()=>avImg(),SPC,itemArt,feedItems,INF,INF_WIN,infSt,infD,rollInf,infBlock,giftYear,get INFEV(){return INFEV},set INFEV(v){INFEV=v},getTS:()=>TS,setTS:v=>{TS=v},snsText,ICON_FB,foodMax,partSlots,dcfBonus,get sgPage(){return SGPG},set sgPage(v){SGPG=v},needV,isCourse,askGo,ENEMY,SPEC,SIGHTS,TACT,tlEnc,tlDec,newGame,render,renderMap,renderBattle,renderShop,renderForge,renderDetail,renderList,renderTrials,renderSights,load,save,pack,snap,advance,calendar,rollForecast,startTrip,stayWx,startBattle,cmd,endTrip,endTrip2,nextEncounter,tsuchinoko,tcRate,bikeStats,gearFx,travelInfo,restHome,yearEval,eventAt,stoveOn,plv,rkLv,PREF,ENEMY,GEAR_ITEMS,PARTS,BIKES,CLOTHES,WXL,TRIAL_KEYS,AUD,tcRate,playBGM,bgmApply,
+const expose=`window.qa={PEN,AVS,penName:()=>penName(),pfImg:()=>pfImg(),avImg:()=>avImg(),SPC,itemArt,feedItems,INF,INF_WIN,infSt,infD,rollInf,infBlock,giftYear,get INFEV(){return INFEV},set INFEV(v){INFEV=v},getTS:()=>TS,setTS:v=>{TS=v},snsText,ICON_FB,foodMax,partSlots,dcfBonus,get sgPage(){return SGPG},set sgPage(v){SGPG=v},needV,isCourse,askGo,ENEMY,SPEC,SIGHTS,TACT,tlEnc,tlDec,newGame,render,renderMap,renderBattle,renderShop,renderForge,renderDetail,renderList,renderTrials,renderSights,load,save,pack,snap,advance,calendar,rollForecast,startTrip,stayWx,startBattle,cmd,endTrip,endTrip2,nextEncounter,tsuchinoko,tcRate,bikeStats,gearFx,travelInfo,restHome,yearEval,eventAt,stoveOn,plv,rkLv,PREF,ENEMY,GEAR_ITEMS,PARTS,BIKES,CLOTHES,WXL,TRIAL_KEYS,AUD,tcRate,playBGM,bgmApply,
 get S(){return S},set S(v){S=v},get B(){return B},get trip(){return trip},set trip(v){trip=v},get TS(){return TS},get inTrip(){return INTRIP},get lastSave(){return LASTSAVE},
 quiet(){render=()=>save();renderBattle=()=>{};playSE=()=>{};playBGM=()=>{};}};`;
 const js=[...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(m=>m[1]).sort((x,y)=>y.length-x.length)[0];// 先頭の短い移動スクリプトではなく、本体（最長）を読む
@@ -299,6 +299,18 @@ test('character edit impact: every illustration x pen name renders without error
  for(let a=0;a<q.AVS.length;a++)for(let p=0;p<q.PEN.length;p++){q.S.av=a;q.S.pen=p;q.render();const it=q.feedItems(),me=it.filter(x=>x.p.id==='jitensha_tabi'),sp=it.find(x=>/^sponsor_/.test(x.p.id));const nm=(p===10&&a!==3)?q.PEN[0]:q.PEN[p];
   assert.ok(me.length>0&&me.every(x=>x.p.name===nm&&x.p.av===(a?'img/'+q.AVS[a][0]+'_s.webp':'img/hero.webp')),a+'/'+p);assert.ok(sp&&sp.p.text.startsWith(nm+'さん'),'sponsor '+a+'/'+p);assert.equal(c.$('pf-pen').textContent,nm);}
  q.S.av=6;q.render();assert.ok(c.$('pf-img').alt.includes('忍者'));q.S.av=0;q.render();assert.ok(c.$('pf-img').alt.includes('旅人'));});
+test('猫超大好き special rule: bound by name/file (not index); random click fuzz keeps the invariant, UI and saved data consistent',c=>{const {q}=c;q.newGame(12);const ci=q.PEN.indexOf('猫超大好き'),cat=q.AVS.findIndex(a=>a[0]==='av_cat');
+ c.$('btn-prof').click();let seed=7;const rnd=n=>{seed=(seed*1103515245+12345)%2147483648;return (seed>>>16)%n;};let catNameSeen=0,resets=0;
+ for(let k=0;k<400;k++){const useAv=rnd(2)===0;if(useAv){const bs=c.$('av-list').querySelectorAll('button');const before=q.S.pen;bs[rnd(bs.length)].click();if(before===ci&&q.S.pen!==ci)resets++;}else{const bs=c.$('pen-list').querySelectorAll('button');bs[rnd(bs.length)].click();}
+  const isCat=q.S.av===cat,btns=[...c.$('pen-list').querySelectorAll('button')];
+  assert.equal(btns.length,isCat?q.PEN.length:q.PEN.length-1,'button count at step '+k);assert.equal(btns.some(b=>b.textContent==='猫超大好き'),isCat);
+  if(q.S.pen===ci){assert.ok(isCat,'cat name only with cat, step '+k);catNameSeen++;}
+  assert.equal(c.$('pf-pen').textContent,q.PEN[q.S.pen]);assert.equal([...c.$('pen-list').querySelectorAll('button[aria-pressed="true"]')].map(b=>+b.dataset.pen).join(),String(q.S.pen));
+  assert.equal([...c.$('av-list').querySelectorAll('button[aria-pressed="true"]')].map(b=>+b.dataset.av).join(),String(q.S.av));
+  const L=q.load();assert.equal(L.pen,q.S.pen);assert.equal(L.av,q.S.av);}
+ assert.ok(catNameSeen>0&&resets>0,'fuzz reached both states '+catNameSeen+'/'+resets);
+ // robustness: reorder the illustration list -> the rule follows the cat file, not the old index
+ q.AVS.splice(1,0,q.AVS.splice(cat,1)[0]);const nc=q.AVS.findIndex(a=>a[0]==='av_cat');assert.equal(nc,1);q.S.av=nc;q.S.pen=ci;assert.equal(q.penName(),'猫超大好き');q.S.av=cat;assert.equal(q.penName(),q.PEN[0]);});
 const summary={file:filename,passed:results.filter(x=>x.ok).length,failed:results.filter(x=>!x.ok).length,results};
 if(process.argv[3])fs.writeFileSync(process.argv[3],JSON.stringify(summary,null,2));
 console.log(JSON.stringify({passed:summary.passed,failed:summary.failed}));process.exitCode=summary.failed?1:0;
