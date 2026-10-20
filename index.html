@@ -234,6 +234,8 @@ button:disabled{opacity:.45;cursor:not-allowed}
 #pop .doc-t{font-size:.72rem;letter-spacing:.4em;color:#6b5a3a;margin:0 0 2px 36px}
 #pop h3{margin:0 0 8px 36px;font-family:inherit;font-size:1.15rem;font-weight:700;color:#2e2415;border-bottom:2px solid #2e2415;padding-bottom:3px;width:max-content;max-width:calc(100% - 90px)}
 #ov-sp .row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+#ov-prof .avlist{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}#ov-prof .avlist button{padding:3px;min-height:0;aspect-ratio:1;border-radius:50%;display:flex;align-items:center;justify-content:center}#ov-prof .avlist img{width:100%;height:100%;border-radius:50%;object-fit:cover;display:block}
+#ov-prof .avlist button[aria-selected="true"]{background:linear-gradient(#f0c75a,#d9a734);border-color:#a87a1c;box-shadow:0 0 0 2px #f0c75a}
 #ov-prof .penlist{display:flex;flex-wrap:wrap;gap:6px}#ov-prof .penlist button{flex:1 1 40%;min-height:40px;padding:4px 8px}
 @media (max-width:380px){#ov-prof .penlist button{font-size:var(--fs-s);padding:4px 2px;white-space:nowrap}}
 #ov-prof .penlist button[aria-selected="true"]{background:linear-gradient(#f0c75a,#d9a734);color:#3a2a10;border-color:#a87a1c;font-weight:700}
@@ -441,7 +443,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
     </div>
     <div id="p-trip">
     <div class="loghead"><h2>旅の記録</h2><span class="logbtns"><button id="btn-set" aria-label="システム">⚙ システム</button></span></div>
-    <div class="profile"><div class="pcol"><img loading="lazy" decoding="async" src="img/hero.webp" width="84" height="84" alt="主人公の自転車旅行者"><button id="btn-share" class="primary">SNSに投稿<small>（画像つき）</small></button></div><div class="res" id="summary"></div></div><p class="hint" id="share-note" style="margin:4px 0 0"></p>
+    <div class="profile"><div class="pcol"><img id="pf-img" loading="lazy" decoding="async" src="img/hero.webp" width="84" height="84" alt="主人公の自転車旅行者"><button id="btn-share" class="primary">SNSに投稿<small>（画像つき）</small></button></div><div class="res" id="summary"></div></div><p class="hint" id="share-note" style="margin:4px 0 0"></p>
     <div class="subtabs" id="tl-tabs"><button data-v="tl" aria-selected="true">旅履歴</button><button id="btn-prof" aria-haspopup="dialog">プロフィール設定</button></div>
     <div class="tl" id="tl"></div>
     </div>
@@ -546,6 +548,8 @@ button:disabled{opacity:.45;cursor:not-allowed}
 <div class="overlay" id="ov-prof" hidden>
   <div class="modal" role="dialog" aria-label="プロフィール設定">
     <h2>プロフィール設定</h2>
+    <h3>イラスト</h3>
+    <div class="avlist" id="av-list"></div>
     <h3>ペンネーム</h3>
     <p class="hint">自分のSNSの投稿に表示される名前を、一覧から選びます。ID（@jitensha_tabi）は変わりません。</p>
     <div class="penlist" id="pen-list"></div>
@@ -929,7 +933,7 @@ function title(f){let t=TITLES[0][1];for(const [n,s] of TITLES) if(f>=n) t=s;ret
 // ---------- state ----------
 let S=null;
 function newGame(HOME){INTRIP=false;LASTSAVE='';TS=null;trip=null;B=null;$('pop').hidden=true;S={turn:1,fame:0,stay:0,money:DEBUG?10000000:30000,hp:100,mp:100,home:HOME,loc:HOME,bike:'mama',cloth:'plain',parts:[],gear:{fire:null,shelter:null,tarp:null},owned:{bikes:['mama'],cloth:['plain'],parts:[],gear:[]},
-  visits:Array(47).fill(0),fam:Array(47).fill(false),log:[],tl:[],forecast:null,sel:HOME,food:0,food2:0,dango:0,pen:0,inf:{},plus:{},stats:{wins:0,posts:0,bestQ:0,tph:0,ev:0,tc:0,en:{}}};
+  visits:Array(47).fill(0),fam:Array(47).fill(false),log:[],tl:[],forecast:null,sel:HOME,food:0,food2:0,dango:0,pen:0,av:0,inf:{},plus:{},stats:{wins:0,posts:0,bestQ:0,tph:0,ev:0,tc:0,en:{}}};
   rollForecast();log(`春の週末。${PREF[HOME].name}の自宅から旅が始まる。`);save();}
 // ---------- セーブ ----------
 // 旅の最中（出発〜結果を閉じるまで）は保存しない。途中で閉じても旅の前の状態に戻るだけで、バトルや費用の食い逃げができない
@@ -973,7 +977,7 @@ function load(){try{const s=localStorage.getItem('charicamp');if(!s)return null;
   const st=o.stats&&typeof o.stats==='object'?o.stats:{};o.stats={wins:num(st.wins,0,0,1e9),posts:num(st.posts,0,0,1e9),bestQ:num(st.bestQ,0,0,100),tph:num(st.tph,0,0,1e9),ev:num(st.ev,0,0,1e9),tc:num(st.tc,0,0,1e9),en:{}}
   for(const k of TRIAL_KEYS){const v=st.en&&st.en[k];if(Array.isArray(v)&&v.length===3)o.stats.en[k]=v.map(x=>num(x,0,0,1e9));};
   {const iv=o.inf&&typeof o.inf==='object'?o.inf:{};o.inf={};for(const d of INF){const v=iv[d.id];if(v&&typeof v==='object')o.inf[d.id]={w:num(v.w,0,0,1e9),e:num(v.e,0,0,1e9),g:num(v.g,0,0,1)};}}
-  o.food=num(o.food,0,0,FOOD_MAX+RACK_TOP+((PARTS.find(p=>p.id==='framebag')||{}).food||0));o.food2=num(o.food2,0,0,NAGANO.max);o.dango=num(o.dango,0,0,DANGO.max);o.pen=Number.isInteger(o.pen)&&o.pen>=0&&o.pen<PEN.length?o.pen:0;
+  o.food=num(o.food,0,0,FOOD_MAX+RACK_TOP+((PARTS.find(p=>p.id==='framebag')||{}).food||0));o.food2=num(o.food2,0,0,NAGANO.max);o.dango=num(o.dango,0,0,DANGO.max);o.pen=Number.isInteger(o.pen)&&o.pen>=0&&o.pen<PEN.length?o.pen:0;o.av=Number.isInteger(o.av)&&o.av>=0&&o.av<AVS.length?o.av:0;
   delete o.ach;
   let f=o.forecast&&typeof o.forecast==='object'?o.forecast:{};o.forecast=null;
   if(Array.isArray(o.fc)&&o.fc.length===47&&o.fc.every(n=>Number.isInteger(n)&&n>=0&&n<7*100)){const M=(o.v||0)>=6?7:(o.v||0)>=5?6:5;f={};o.fc.forEach((n,i)=>f[i]={temp:Math.floor(n/M)-30,wx:WXL[n%M]});}
@@ -1270,7 +1274,11 @@ const esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',
 const hs=(a,b,c)=>{let h=Math.imul(a+1,73856093)^Math.imul(b+7,19349663)^Math.imul(c+13,83492791);h=Math.imul(h^(h>>>13),1274126177);return (h^(h>>>16))>>>0;};
 const FANS=[['ゆうた','yuta_ride'],['みなみ','minami_cmp'],['ペダル太郎','pedal_taro'],['ソロキャン好き','solo_cmp'],['ツーリング部','tour_club'],['はるか','haruka_88'],['峠の主','touge_nushi'],['のんびり旅人','nonbiri_trip']];
 const RPL=[[70,['これは神写真…！😭','保存しました。壁紙にします📱','構図が最高すぎる✨','ここ行きたくなった！','プロの撮影かと思った👏','いいねじゃ足りない…❤️']],[40,['いい景色ですね〜☺️','安全運転で！次も楽しみ🚴','コーヒー飲みたくなる写真☕','応援してます📣','この空気感好き','のんびりしてて癒される']],[0,['お疲れさま！👍','次はもっと撮れるはず💪','無事に着いてよかった😌','天気が惜しかったね…☁️','リベンジ待ってます🔥','ゆっくり休んでね🏕️']]];
-const TRIP_AV='img/hero.webp';
+// プロフィールのイラスト：0番＝初期の旅人。big＝旅の記録・投稿画像用（512角）、av＝SNSのアイコン（96角の顔まわり）
+const AVS=[['hero','旅人（初期）'],['av_gal','ギャル'],['av_shades','サングラスのライダー'],['av_cat','サイベリアン'],['av_glasses','メガネのライダー'],['av_traveler','旅する旅行者'],['av_ninja','忍者キャンパー'],['av_hippie','ヒッピーサイクリスト']];
+const avIx=()=>{const i=(S&&S.av)|0;return i>=0&&i<AVS.length?i:0;};
+const pfImg=()=>'img/'+AVS[avIx()][0]+'.webp';
+const avImg=()=>avIx()?'img/'+AVS[avIx()][0]+'_s.webp':'img/hero.webp';
 function postHtml(p){return `<article class="post"><div class="av">${p.av?`<img loading="lazy" src="${p.av}" width="40" height="40" alt="">`:`<span>${esc(p.ini||'？')}</span>`}</div><div class="pb"><div class="ph"><b>${esc(p.name)}</b><span>@${esc(p.id)}・${p.when}</span></div><div class="pt${p.th?' thw':''}">${p.th?`<img class="thm" loading="lazy" ${p.th[1]?`data-fb="${p.th[1]}" `:''}src="${p.th[0]}" width="64" height="64" alt="${esc(p.th[2])}">`:''}${esc(p.text).replace(/\n/g,'<br>')}</div>${p.img?`<img class="pimg" loading="lazy" src="${p.img}" width="480" height="320" alt="${esc(p.alt||'')}">`:''}${p.n?`<div class="pa"><span>💬 ${p.n[0]}</span><span>🔁 ${p.n[1]}</span><span>♥ ${p.n[2]}</span></div>`:''}${p.rp?`<div class="rp"><b>${esc(p.rp[0])}</b> <span>@${esc(p.rp[1])}</span><br>${esc(p.rp[2])}</div>`:''}</div></article>`;}
 // ゲーム内ログの文章を、SNSの投稿らしく整える（フォロワー増減などの数値は出さない）
 function snsText(x){if(/購入/.test(x))x=x.replace(/（[^）]*¥[^）]*）/g,'');if(/^自宅で休養/.test(x))return '今週は自宅でゆっくり休養🛌';if(/強制帰宅/.test(x))return 'お金が尽きて、家に帰ることに…💸';return x.replace(/[。！]?\s*フォロワー[+\-−][^\s。！]*/g,m=>/^！/.test(m)?'！':'');}
@@ -1289,10 +1297,10 @@ function feedItems(){const out=[],seen={};
   [...S.tl].reverse().forEach(e=>{const [t,pid,q]=e;if(q>=0){seen[pid]=(seen[pid]||0)+1;e.vn=seen[pid];}});
   const pick=(a,h)=>a[h%a.length];
   S.tl.forEach(e=>{const [t,pid,q,k]=e,p=PREF[pid],enc=tlDec(k).map(x=>(ENEMY[x]||{name:x==='tsuchi'?'ツチノコ':x}).name),h=hs(t,pid,q+2),en=enc.length?pick(enc,h>>>3):'';
-    if(q<0){out.push({t,r:1,p:{name:penName(),id:'jitensha_tabi',av:TRIP_AV,when:CAL_S(t),text:pick([`日没に間に合わず…😭 ${p.name}のキャンプ場は遅刻でした。次こそ！`,`暗くなっちゃった🌙 ${p.name}はまた今度…`,en?`${en}にやられて遅刻💦 ${p.name}、次はリベンジ！`:`ペース配分をミスった…💦 ${p.name}は遅刻でした`],h),n:[h%2,0,1+h%7],rp:infRp(h,'late',25)}});return;}
+    if(q<0){out.push({t,r:1,p:{name:penName(),id:'jitensha_tabi',av:avImg(),when:CAL_S(t),text:pick([`日没に間に合わず…😭 ${p.name}のキャンプ場は遅刻でした。次こそ！`,`暗くなっちゃった🌙 ${p.name}はまた今度…`,en?`${en}にやられて遅刻💦 ${p.name}、次はリベンジ！`:`ペース配分をミスった…💦 ${p.name}は遅刻でした`],h),n:[h%2,0,1+h%7],rp:infRp(h,'late',25)}});return;}
     const sg=sightOf(pid,e.vn||1),lk=Math.round(q*q/12+h%25+3),band=RPL.find(b=>q>=b[0]),fan=FANS[h%FANS.length],pl=`${p.name}の${p.site}`;
     const head=q>=70?pick([`${pl}に到着〜！🚴✨\n景色が最高すぎた…写真${q}点！`,`${pl}で絶景ゲット📷\n${q}点！これは自信作`,`ついに${pl}！🏕️\n写真${q}点、神回です`],h):q>=40?pick([`${pl}に到着！🏕️\n写真${q}点。いい旅だった〜`,`${pl}までなんとか走り切った🚴\n${q}点、まずまず！`],h):pick([`${pl}に着いたけど、写真は${q}点…😅\n次はリベンジ！`,`${pl}到着🏕️ 天気がいまいちで${q}点💦`],h);
-    out.push({t,r:1,p:{name:penName(),id:'jitensha_tabi',av:TRIP_AV,when:CAL_S(t),text:head+(en?`\n道中で${en}に遭遇💥`:'')+'\n#日本巡る自転車旅',img:'img/sights/'+sg[0]+'.webp',alt:sg[1],n:[Math.round(lk*.06)+1,Math.round(lk*.18),lk],rp:infRp(h,q>=70?'hi':q>=40?'mid':'lo')||spRp(h,15)||campRp(h,pid)||[fan[0],fan[1],pick(band[1],h>>>5)]}});});
+    out.push({t,r:1,p:{name:penName(),id:'jitensha_tabi',av:avImg(),when:CAL_S(t),text:head+(en?`\n道中で${en}に遭遇💥`:'')+'\n#日本巡る自転車旅',img:'img/sights/'+sg[0]+'.webp',alt:sg[1],n:[Math.round(lk*.06)+1,Math.round(lk*.18),lk],rp:infRp(h,q>=70?'hi':q>=40?'mid':'lo')||spRp(h,15)||campRp(h,pid)||[fan[0],fan[1],pick(band[1],h>>>5)]}});});
   S.log.forEach(l=>{const m=/^(\d+)\|(.*)$/s.exec(l);if(!m)return;const t=+m[1],x=m[2],when=CAL_S(t);let mm;
     if(/^(セーブデータ|(長野県の)?補給食を購入)/.test(x))return;// 保存・読み込みの記録は、旅の世界の投稿ではないのでSNSに出さない
     if(mm=/^スポンサー「(.+)」がつきました/.exec(x)){const i=SPONSOR.findIndex(z=>z[2]===mm[1]);out.push({t,r:0,p:{name:mm[1],id:'sponsor_'+Math.max(i,0),av:i>=0?'img/sponsor_'+i+'.webp':'',ini:'S',when,text:`旅の自転車乗りさん、いつも応援しています！今週から、旅を支援させてください。\n#日本巡る自転車旅`}});}
@@ -1302,12 +1310,12 @@ function feedItems(){const out=[],seen={};
     else if(mm=/^ライバルに先を越された@(\w+)$/.exec(x)){const d=infD(mm[1]);out.push({t,r:2,p:{name:d.name,id:d.handle,av:d.av,when,text:d.lose+' #映え勝負'}});}
     else if(mm=/^INFEV@(\w+)@(\d+)$/.exec(x)){const d=infD(mm[1]);out.push({t,r:2,p:{name:d.name,id:d.handle,av:d.av,when,text:d.turn[+mm[2]%d.turn.length]}});}
     else if(mm=/^INFGIFT@(\w+)$/.exec(x)){const d=infD(mm[1]);out.push({t,r:1,p:{name:d.name,id:d.handle,av:d.av,when,text:d.gift+(d.dango?'\n🎁 文化祭の団子'+d.dango+'個が届きました（バトルで食べられます）':'\n🎁 パーツ欄に「'+(PARTS.find(z=>z.id===d.part)||{}).name+'」が届きました')}});}
-    else out.push({t,r:3,p:{name:penName(),id:'jitensha_tabi',av:TRIP_AV,when,text:(/ツチノコ/.test(x)?'🐍✨ ':/購入/.test(x)?'🛒 ':/輪行/.test(x)?'🚃 ':/カスタム|付けた/.test(x)?'🔧 ':'')+snsText(x),th:(mm=/^(.+?)を購入/.exec(x))?itemArt(mm[1]):null}});});
+    else out.push({t,r:3,p:{name:penName(),id:'jitensha_tabi',av:avImg(),when,text:(/ツチノコ/.test(x)?'🐍✨ ':/購入/.test(x)?'🛒 ':/輪行/.test(x)?'🚃 ':/カスタム|付けた/.test(x)?'🔧 ':'')+snsText(x),th:(mm=/^(.+?)を購入/.exec(x))?itemArt(mm[1]):null}});});
   return engage(out.sort((a,b)=>b.t-a.t||a.r-b.r).slice(0,30));}
 // ペンネーム：自分のSNSの投稿に出る名前（一覧から選ぶ。0番が初期値）
 const PEN=['旅の自転車乗り','ペダル旅人','風のサイクリスト','焚き火ライダー','ソロキャンパー','輪行の旅人','峠のランドヌール','日本一周ライダー','ゆる旅ライダー','星空キャンパー'];
 const penName=()=>PEN[(S&&S.pen)|0]||PEN[0];
-function renderLog(){
+function renderLog(){if($('pf-img').getAttribute('src')!==pfImg())$('pf-img').src=pfImg();
   $('tl').innerHTML=S.tl.length?`<div class="th">日付</div><div class="th">行き先</div><div class="th">写真</div><div class="th">遭遇</div>`+S.tl.map(([t,pid,q,k])=>`<div>${CAL_S(t)}</div><div>${PREF[pid].name}</div><div>${q<0?'<span class="bad">遅刻</span>':q+'点'}</div><div>${tlDec(k).length?tlDec(k).map(x=>(ENEMY[x]||{name:x==='tsuchi'?'ツチノコ':x}).name).join('・'):'なし'}</div>`).join(''):'<div class="hint" style="grid-column:1/-1">まだ旅に出ていません</div>';
   const sp=sponsor();$('summary').innerHTML=`<span>称号</span><span>${title(S.fame)}</span><span>スポンサー</span><span><img loading="lazy" class="spi" src="img/sponsor_${SPONSOR.indexOf(sp)}.webp" alt="" onerror="this.remove()">${sp[2]}<br><small>${yen(sp[1])}/週</small></span><span>投稿数</span><span>${S.stats.posts}</span><span>最高写真</span><span>${S.stats.bestQ}点</span><span>試練制覇</span><span>${S.stats.wins}回</span>`;}
 
@@ -1437,8 +1445,9 @@ $('fs-t').onclick=()=>{FS.on=!FS.on;saveFS();renderSet();};
 $('fs-every').onchange=()=>{FS.every=+$('fs-every').value||13;saveFS();};
 // ブラウザが容量不足などでサイトデータを勝手に消さないよう頼む（手動削除は防げない）
 try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist().catch(()=>{});}catch(e){}
-function renderProf(){$('pen-list').innerHTML=PEN.map((n,i)=>`<button data-pen="${i}" aria-selected="${((S&&S.pen)|0)===i}">${esc(n)}</button>`).join('');}
+function renderProf(){$('av-list').innerHTML=AVS.map(([f,n],i)=>`<button data-av="${i}" aria-selected="${avIx()===i}" aria-label="${esc(n)}" title="${esc(n)}"><img src="img/${i?f+'_s':f}.webp" width="64" height="64" alt=""></button>`).join('');$('pen-list').innerHTML=PEN.map((n,i)=>`<button data-pen="${i}" aria-selected="${((S&&S.pen)|0)===i}">${esc(n)}</button>`).join('');}
 $('btn-prof').onclick=()=>{if(!S)return;renderProf();$('ov-prof').hidden=false;};
+$('av-list').onclick=e=>{const b=e.target.closest('button[data-av]');if(!b||!S)return;S.av=+b.dataset.av;save();renderProf();renderLog();};
 $('pen-list').onclick=e=>{const b=e.target.closest('button[data-pen]');if(!b||!S)return;S.pen=+b.dataset.pen;save();renderProf();renderLog();};
 $('prof-close').onclick=()=>{$('ov-prof').hidden=true;};
 $('ov-prof').addEventListener('click',e=>{if(e.target===$('ov-prof'))$('ov-prof').hidden=true;});
@@ -1755,7 +1764,7 @@ function shareText(){const L=[`日本巡る自転車旅 ${calLabel(S.turn)}`,`�
 function loadImg(src){return new Promise(r=>{const i=new Image();i.onload=()=>r(i);i.onerror=()=>r(null);i.src=src;});}
 async function shareCard(){const W=1200,H=630,cv=document.createElement('canvas');cv.width=W;cv.height=H;const g=cv.getContext('2d');
   try{await Promise.all([document.fonts.load('700 40px "Zen Kaku Gothic New"'),document.fonts.load('40px "DotGothic16"')]);}catch(e){}
-  const sp=sponsor(),sg=(S.visits[S.loc]||0)>=1?sightOf(S.loc,S.visits[S.loc]):null,[bg,hero,logo,spi]=await Promise.all([loadImg(sg?'img/sights/'+sg[0]+'.webp':'img/title.webp'),loadImg('img/hero.webp'),loadImg('img/logo.webp'),loadImg('img/sponsor_'+SPONSOR.indexOf(sp)+'.webp')]);
+  const sp=sponsor(),sg=(S.visits[S.loc]||0)>=1?sightOf(S.loc,S.visits[S.loc]):null,[bg,hero,logo,spi]=await Promise.all([loadImg(sg?'img/sights/'+sg[0]+'.webp':'img/title.webp'),loadImg(pfImg()),loadImg('img/logo.webp'),loadImg('img/sponsor_'+SPONSOR.indexOf(sp)+'.webp')]);
   g.fillStyle='#2a2118';g.fillRect(0,0,W,H);
   if(bg){const s=Math.max(W/bg.width,H/bg.height),w=bg.width*s,h=bg.height*s;g.drawImage(bg,(W-w)/2,(H-h)*0.55,w,h);}
   const gr=g.createLinearGradient(0,0,0,H);gr.addColorStop(0,'rgba(24,17,10,.35)');gr.addColorStop(.5,'rgba(24,17,10,0)');gr.addColorStop(1,'rgba(24,17,10,.55)');g.fillStyle=gr;g.fillRect(0,0,W,H);
