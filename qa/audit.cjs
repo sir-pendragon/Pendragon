@@ -2,7 +2,7 @@ const fs=require('node:fs'),path=require('node:path'),assert=require('node:asser
 const {JSDOM,VirtualConsole}=require('jsdom');
 const filename=path.resolve(process.argv[2]||path.join(__dirname,'..','index.html'));
 const html=fs.readFileSync(filename,'utf8');
-const expose=`window.qa={ACC,ACC_SLOTS,sponsor,editorBonus,exportSave,APP_V,UPD,PENS,AVS,LEGACY_AV,LEGACY_PEN,penName:()=>penName(),pfImg:()=>pfImg(),avImg:()=>avImg(),SPC,itemArt,feedItems,INF,INF_WIN,infSt,infD,rollInf,infBlock,giftYear,get INFEV(){return INFEV},set INFEV(v){INFEV=v},getTS:()=>TS,setTS:v=>{TS=v},snsText,ICON_FB,foodMax,partSlots,dcfBonus,get sgPage(){return SGPG},set sgPage(v){SGPG=v},needV,isCourse,askGo,ENEMY,SPEC,SIGHTS,TACT,tlEnc,tlDec,newGame,render,renderMap,renderBattle,renderShop,renderForge,renderDetail,renderList,renderTrials,renderSights,load,save,pack,snap,advance,calendar,rollForecast,startTrip,stayWx,startBattle,cmd,endTrip,endTrip2,nextEncounter,tsuchinoko,tcRate,bikeStats,gearFx,travelInfo,restHome,yearEval,eventAt,stoveOn,plv,rkLv,PREF,ENEMY,GEAR_ITEMS,PARTS,BIKES,CLOTHES,WXL,TRIAL_KEYS,AUD,tcRate,playBGM,bgmApply,
+const expose=`window.qa={HERO,drawHero,ACC,ACC_SLOTS,sponsor,editorBonus,exportSave,APP_V,UPD,PENS,AVS,LEGACY_AV,LEGACY_PEN,penName:()=>penName(),pfImg:()=>pfImg(),avImg:()=>avImg(),SPC,itemArt,feedItems,INF,INF_WIN,infSt,infD,rollInf,infBlock,giftYear,get INFEV(){return INFEV},set INFEV(v){INFEV=v},getTS:()=>TS,setTS:v=>{TS=v},snsText,ICON_FB,foodMax,partSlots,dcfBonus,get sgPage(){return SGPG},set sgPage(v){SGPG=v},needV,isCourse,askGo,ENEMY,SPEC,SIGHTS,TACT,tlEnc,tlDec,newGame,render,renderMap,renderBattle,renderShop,renderForge,renderDetail,renderList,renderTrials,renderSights,load,save,pack,snap,advance,calendar,rollForecast,startTrip,stayWx,startBattle,cmd,endTrip,endTrip2,nextEncounter,tsuchinoko,tcRate,bikeStats,gearFx,travelInfo,restHome,yearEval,eventAt,stoveOn,plv,rkLv,PREF,ENEMY,GEAR_ITEMS,PARTS,BIKES,CLOTHES,WXL,TRIAL_KEYS,AUD,tcRate,playBGM,bgmApply,
 get S(){return S},set S(v){S=v},get B(){return B},get trip(){return trip},set trip(v){trip=v},get TS(){return TS},get inTrip(){return INTRIP},set inTrip(v){INTRIP=v},get lastSave(){return LASTSAVE},
 quiet(){render=()=>save();renderBattle=()=>{};playSE=()=>{};playBGM=()=>{};}};`;
 const js=[...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(m=>m[1]).sort((x,y)=>y.length-x.length)[0];// 先頭の短い移動スクリプトではなく、本体（最長）を読む
@@ -349,6 +349,13 @@ test('map walking sprites: 6 character sets exist with the original canvas sizes
  for(const a of q.AVS){pick(a.id);for(const k of FR)assert.equal(href(k),'img/hero_'+(a.sp?a.sp+'_':'')+k+'.webp',a.id+' '+k);c.$('btn-prof').click();}
  // 保存から読み込んだ直後も、保存したイラストの絵になる
  q.S.avId='av_ninja';q.S.penId='pen_tabi';q.save();const L=q.load();q.S=L;q.render();showMap();assert.equal(href('z1'),'img/hero_ninja_z1.webp');});
+test('map hero: rides the bicycle on dry days and walks on rainy days; the parked bicycle is hidden only while riding',c=>{const {q}=c;q.render();c.$('tab-map').click();
+ const shown=()=>Array.from(c.$('hf').querySelectorAll('image')).filter(i=>i.style.display!=='none').map(i=>i.id);
+ const run=(wx,mode)=>{q.S.forecast[q.S.loc].wx=wx;Object.assign(q.HERO,{mode,f:0,x:254,y:426,dir:1,goal:null});q.drawHero();return {img:shown()[0],bike:c.$('pbike').style.display};};
+ for(const wx of ['sun','cloud','wind','heat','snow']){const r=run(wx,'walk');assert.equal(r.img,'hi_r1',wx);assert.equal(r.bike,'none',wx);}
+ for(const wx of ['rain','typhoon']){const r=run(wx,'walk');assert.equal(r.img,'hi_w1',wx);assert.equal(r.bike,'',wx);}
+ for(const mode of ['sit','sleep']){const r=run('sun',mode);assert.equal(r.bike,'',mode);}
+ q.S.forecast[q.S.loc].wx='sun';q.HERO.mode='walk';q.HERO.f=1;q.drawHero();assert.equal(shown()[0],'hi_r2');q.HERO.f=2;q.drawHero();assert.equal(shown()[0],'hi_r1');});
 const ASYNC=[];
 function atest(name,fn){ASYNC.push(async()=>{let c;try{c=boot();assert.ok(c.q,'script must boot');c.q.newGame(12);c.w.Math.random=()=>.99;await fn(c);assert.deepEqual(c.errors,[]);results.push({name,ok:true});console.log('PASS',name);}catch(e){results.push({name,ok:false,error:e.message});console.log('FAIL',name,'—',e.message.slice(0,500));}finally{c?.dom.window.close();}});}
 // ---- 自動更新・固定ID（Codexレビュー反映）。タイマーは止められているので、必要なテストでは予約を自分で取り出して実行する ----

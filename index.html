@@ -1154,7 +1154,7 @@ function renderMap(){const svg=$('map');const mk=JSON.stringify([S.loc,S.sel,S.v
    +(isHam(S.gear.shelter)?shS+(S.gear.tarp&&S.gear.tarp!=="tp3"?hamPosts(sk[S.gear.shelter],S.gear.shelter):'')+tarpS+(S.gear.tarp==='tp2'||S.gear.tarp==='tp3'?hamLeftPost(sk[S.gear.shelter],S.gear.shelter,S.gear.tarp==='tp3'):'')+hamBody(sk[S.gear.shelter],S.gear.shelter):tarpS+shS+(hasTent&&TARP_FRONT[S.gear.tarp]?tarpPart(S.gear.tarp,252+(tf[2]||0),tf[1],tf[0]):'')+(chim?chim.pipe:''))
    +(S.parts.includes('tripod')?put('part_tripod',222,424,.2)+(S.parts.includes('cam')?put('part_cam',222,402,.1):''):(S.parts.includes('cam')?put('part_cam',284,436,.1):''))
    +(S.parts.includes('comfy')?put('part_comfy',204,418,.2):'')
-   +put('bike_'+S.bike,344,406,.26)
+   +`<g id="pbike">${put('bike_'+S.bike,344,406,.26)}</g>`
    +(S.gear.fire&&S.gear.fire!=='fire4'?fireFx(S.gear.fire):'')+`</g>`
    +(S.parts.includes('drone')?`<g class="drone">${put('part_drone',300,392,.15)}</g>`:'');
   s+=`<g id="hero" style="pointer-events:none"><ellipse id="hs" cy="0" ry="1.8" fill="#000" opacity=".28"/><g id="hf">${HFR.map(k=>`<image id="hi_${k}" href="${heroSrc(k)}" width="${HDIM[k[0]][0]*hk(k)}" height="${HDIM[k[0]][1]*hk(k)}" style="display:none"/>`).join('')}</g><text id="hz1" style="font-size:6px;fill:#fff;paint-order:stroke;stroke:#234;stroke-width:1.5px">z</text><text id="hz2" style="font-size:5px;fill:#fff;paint-order:stroke;stroke:#234;stroke-width:1.5px">z</text></g>`
@@ -1192,7 +1192,9 @@ const HDIM={w:[90,141],s:[96,132],z:[162,78],r:[160,160]},HK=.26,HKR=.23;// r=�
 const hk=k=>k[0]==='r'?HKR:HK;
 const HERO={ph:36,mode:'sit',x:254,y:426,dir:1,t:20,f:0,goal:null,ham:false,tent:false};
 const HAM={x:252,y:399};// ハンモックで寝るときの位置（布のたるみの中央）
-function heroImg(){const f=HERO.f,m=HERO.mode;return m==='walk'?'r'+(1+f%2):m==='sit'?'s'+(f%10<6?1:2):'z'+(f%4<2?1:2);}
+// 雨・台風の日は歩き、それ以外の日は自転車に乗る
+const rainyDay=()=>{const w=S&&S.forecast&&S.forecast[S.loc]?S.forecast[S.loc].wx:'sun';return w==='rain'||w==='typhoon';};
+function heroImg(){const f=HERO.f,m=HERO.mode;return m==='walk'?(rainyDay()?'w'+(1+f%4):'r'+(1+f%2)):m==='sit'?'s'+(f%10<6?1:2):'z'+(f%4<2?1:2);}
 function heroPick(){const r=Math.random();
   if(r<.4)HERO.goal={x:215+Math.random()*90,mode:'walk',y:426};
   else if(r<.7)HERO.goal={x:254,mode:'sit',y:426};
@@ -1204,6 +1206,7 @@ HFR.forEach(k=>{const i=new Image();i.src='img/hero_'+k+'.webp';});
 let HLAST=null;
 function drawHero(){if(!$('hero'))return;const k=heroImg(),d=HDIM[k[0]],w=d[0]*hk(k),hh=d[1]*hk(k);
   const flip=HERO.dir<0&&HERO.mode==='walk',tx=HERO.x-w/2,ty=HERO.y-hh;
+  const pbk=$('pbike');if(pbk)pbk.style.display=HERO.mode==='walk'&&k[0]==='r'?'none':'';// 自転車に乗っている間は、飾ってある自転車を消す
   if(HLAST!==k){if(HLAST&&$('hi_'+HLAST))$('hi_'+HLAST).style.display='none';$('hi_'+k).style.display='';HLAST=k;}
   const im=$('hi_'+k);im.setAttribute('x',flip?-(tx+w):tx);im.setAttribute('y',ty);im.setAttribute('transform',flip?'scale(-1 1)':'');
   const hf=$('hamf');if(hf)hf.style.display=HERO.ham&&HERO.mode==='sleep'?'':'none';const tpp=$('tp2pole');if(tpp)tpp.style.display=HERO.ham&&HERO.mode==='sleep'?'':'none';
@@ -1820,7 +1823,7 @@ addEventListener('pagehide',save);
 // 開きっぱなしのタブが古いコードのまま保存し直して、新しい保存項目を失うのを防ぐ。
 // 実行中のコードに埋め込んだ版の識別子 APP_V と、いま配信されている index.html の APP_V を比べる（最初に取れた配信内容を「実行中の版」の代わりにしない）。
 // ★ APP_V は index.html の内容から計算する。index.html を変えたら `node qa/stamp.cjs` で更新する（忘れると監査テストが失敗する）。
-const APP_V='25a7e3a961f2';
+const APP_V='33bf7db2e45e';
 // 旅・戦闘・結果画面（INTRIP）の間は、save() が保存を見送るので、再読み込みすると進行が巻き戻る。旅が終わったあとも trip / B には前回の値が残るため、これらは見ない
 const UPD={pending:'',busy:false,scheduled:false,last:0,every:600000,quiet:600000,timeout:15000,reloadedAt:0,note:null,timer:0,
  safe:()=>!INTRIP,
