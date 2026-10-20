@@ -538,7 +538,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
     <button class="primary" id="sp-ok">閉じる</button>
   </div>
 </div>
-<div class="overlay" id="inf-view" hidden><div class="modal" role="dialog" aria-label="ライバルの絵"><img id="inf-img" alt=""><b id="inf-nm"></b><span class="hint" id="inf-hd"></span><div class="row"><button class="primary" id="inf-close">閉じる</button></div></div></div>
+<div class="overlay" id="inf-view" hidden><div class="modal" role="dialog" aria-modal="true" aria-label="ライバルの絵"><img id="inf-img" alt=""><b id="inf-nm"></b><span class="hint" id="inf-hd"></span><div class="row"><button class="primary" id="inf-close">閉じる</button></div></div></div>
 <div class="overlay" id="ov-tut" hidden style="z-index:20">
   <div class="modal">
     <span class="hint" id="tut-n"></span>
@@ -1470,13 +1470,13 @@ $('fs-every').onchange=()=>{FS.every=+$('fs-every').value||13;saveFS();};
 try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist().catch(()=>{});}catch(e){}
 function renderProf(){const a=avCur().id,p=penCur().id;$('av-list').innerHTML=AVS.map(x=>`<button data-av="${x.id}" aria-pressed="${x.id===a}" aria-label="${esc(x.n)}" title="${esc(x.n)}"><img src="img/${x.s}.webp" width="64" height="64" alt=""></button>`).join('');$('pen-list').innerHTML=PENS.filter(x=>penOK(x.id,a)).map(x=>`<button data-pen="${x.id}" aria-pressed="${x.id===p}">${esc(x.n)}</button>`).join('');}
 $('btn-prof').onclick=()=>{if(!S)return;renderProf();$('ov-prof').hidden=false;};
-$('av-list').onclick=e=>{const b=e.target.closest('button[data-av]');if(!b||!S)return;if(!AVS.some(a=>a.id===b.dataset.av))return;S.avId=b.dataset.av;if(!penOK(S.penId,S.avId))S.penId=PEN_DEF;heroPreload();save();renderProf();renderLog();};
+$('av-list').onclick=e=>{const b=e.target.closest('button[data-av]');if(!b||!S)return;if(!AVS.some(a=>a.id===b.dataset.av))return;S.avId=b.dataset.av;if(!penOK(S.penId,S.avId))S.penId=PEN_DEF;heroPreload();save();renderProf();renderLog();renderMap();};
 $('pen-list').onclick=e=>{const b=e.target.closest('button[data-pen]');if(!b||!S||!penOK(b.dataset.pen,avCur().id))return;S.penId=b.dataset.pen;save();renderProf();renderLog();};
 $('prof-close').onclick=()=>{$('ov-prof').hidden=true;};
 $('ov-prof').addEventListener('click',e=>{if(e.target===$('ov-prof'))$('ov-prof').hidden=true;});
 $('btn-set').onclick=()=>{renderSet();$('ov-set').hidden=false;};
 // 右上の「SNS」ボタン：自分のSNSをポップアップで読む
-$('btn-sns').onclick=()=>{if(!S)return;$('share-note').textContent='';const it=feedItems();$('sns-list').innerHTML=it.length?it.map(i=>postHtml(i.p)).join(''):'<div class="hint" style="padding:10px 4px">まだ投稿はありません</div>';$('ov-sns').hidden=false;$('ov-sns').scrollTop=0;};
+$('btn-sns').onclick=()=>{if(!S)return;SHARE_NOTE_EPOCH++;$('share-note').textContent='';const it=feedItems();$('sns-list').innerHTML=it.length?it.map(i=>postHtml(i.p)).join(''):'<div class="hint" style="padding:10px 4px">まだ投稿はありません</div>';$('ov-sns').hidden=false;$('ov-sns').scrollTop=0;};
 $('sns-close').onclick=()=>{$('ov-sns').hidden=true;};
 $('ov-sns').addEventListener('click',e=>{if(e.target===$('ov-sns'))$('ov-sns').hidden=true;});
 $('set-close').onclick=()=>{$('ov-set').hidden=true;$('sv-msg').hidden=true;};
@@ -1760,7 +1760,7 @@ addEventListener('pagehide',save);
 // 開きっぱなしのタブが古いコードのまま保存し直して、新しい保存項目を失うのを防ぐ。
 // 実行中のコードに埋め込んだ版の識別子 APP_V と、いま配信されている index.html の APP_V を比べる（最初に取れた配信内容を「実行中の版」の代わりにしない）。
 // ★ APP_V は index.html の内容から計算する。index.html を変えたら `node qa/stamp.cjs` で更新する（忘れると監査テストが失敗する）。
-const APP_V='d7056eb6803c';
+const APP_V='4f38d44ce1ae';
 // 旅・戦闘・結果画面（INTRIP）の間は、save() が保存を見送るので、再読み込みすると進行が巻き戻る。旅が終わったあとも trip / B には前回の値が残るため、これらは見ない
 const UPD={pending:'',busy:false,scheduled:false,last:0,every:600000,quiet:600000,timeout:15000,reloadedAt:0,note:null,timer:0,
  safe:()=>!INTRIP,
@@ -1833,10 +1833,13 @@ function tutBattle(){let seen=true;try{seen=localStorage.getItem('cc_tutb')==='1
   $('ov-tut').hidden=false;}
 $('set-tut').onclick=()=>{$('ov-set').hidden=true;try{localStorage.removeItem('cc_tut');localStorage.removeItem('cc_tutb');}catch(e){}$('tab-map').click();tutShow(0);};
 // ライバル一覧の丸い絵を押すと、大きい絵を見られる
-{const open=id=>{const d=INF.find(x=>x.id===id);if(!d)return;$('inf-img').src=d.img;$('inf-img').alt=d.name;$('inf-nm').textContent=d.name;$('inf-hd').textContent='@'+d.handle;$('inf-view').hidden=false;};
- const ach=$('achlist');ach.addEventListener('click',e=>{const i=e.target.closest('img[data-inf]');if(i)open(i.dataset.inf);});
- ach.addEventListener('keydown',e=>{const i=e.target.closest&&e.target.closest('img[data-inf]');if(i&&(e.key==='Enter'||e.key===' ')){e.preventDefault();open(i.dataset.inf);}});
- $('inf-close').onclick=()=>{$('inf-view').hidden=true;};$('inf-view').addEventListener('click',e=>{if(e.target.id==='inf-view')$('inf-view').hidden=true;});}
+{const view=$('inf-view');let trigger=null;
+ const open=(id,from)=>{const d=INF.find(x=>x.id===id);if(!d)return;trigger=from;$('inf-img').src=d.img;$('inf-img').alt=d.name;$('inf-nm').textContent=d.name;$('inf-hd').textContent='@'+d.handle;view.hidden=false;$('inf-close').focus();};
+ const close=()=>{view.hidden=true;if(trigger&&trigger.isConnected)trigger.focus();trigger=null;};
+ const ach=$('achlist');ach.addEventListener('click',e=>{const i=e.target.closest('img[data-inf]');if(i)open(i.dataset.inf,i);});
+ ach.addEventListener('keydown',e=>{const i=e.target.closest&&e.target.closest('img[data-inf]');if(i&&(e.key==='Enter'||e.key===' ')){e.preventDefault();open(i.dataset.inf,i);}});
+ $('inf-close').onclick=close;view.addEventListener('click',e=>{if(e.target===view)close();});
+ view.addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();close();}else if(e.key==='Tab'){e.preventDefault();$('inf-close').focus();}});}
 function tutSeen(){try{return localStorage.getItem('cc_tut')==='1';}catch(e){return true;}}
 
 // ---------- Xでシェア（旅の記録を、イラスト入りの画像と文章で投稿） ----------
@@ -1861,14 +1864,23 @@ async function shareCard(){const W=1200,H=630,cv=document.createElement('canvas'
   pill('称号：'+title(S.fame),40,H-146,32,'l');
   pill('フォロワー '+fol(S.fame),40,H-76,32,'l');
   return new Promise(r=>cv.toBlob(r,'image/png'));}
-async function doShareImg(noteEl){const note=noteEl||$('share-note');note.textContent='画像を作っています…';
-  const cpP=(async()=>{try{await navigator.clipboard.writeText(shareText());return true;}catch(e){return false;}})();// 押した直後に済ませる（時間がたつとコピーが拒否されることがある）
-  let blob;try{blob=await shareCard();}catch(e){blob=null;}
-  const text=shareText();let file=null;if(blob){try{file=new File([blob],'nihon-meguru-jitensha-tabi.png',{type:'image/png'});}catch(e){}}
-  // Xのアプリは、画像付きの共有で文章を受け取らないことがある。先に文章をコピーしておき、貼り付けてもらう
-  const copied=await cpP;const CP='文章をコピーしました。Xの投稿欄が空のときは、長押しで貼り付けてください。';
-  try{if(file&&navigator.canShare&&navigator.canShare({files:[file]})){note.textContent=copied?CP:'';await navigator.share({files:[file],text});note.textContent=copied?CP:'';return;}}catch(e){if(e&&e.name==='AbortError'){note.textContent=copied?CP:'';return;}}
-  if(blob){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='nihon-meguru-jitensha-tabi.png';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000);window.open('https://x.com/intent/post?text='+encodeURIComponent(text),'_blank','noopener');note.textContent='画像を保存しました。Xの投稿画面で、その画像を添付してください。';}else{window.open('https://x.com/intent/post?text='+encodeURIComponent(text),'_blank','noopener');note.textContent='Xの投稿画面を開きました。';}}
+let SHARE_BUSY=false,SHARE_NOTE_EPOCH=0;
+// コピーは押した直後に試みるが、応答が来なくても画像の共有を止めない。
+function copyShareText(text){return new Promise(resolve=>{let timer=setTimeout(()=>done(false),1000);
+  const done=ok=>{clearTimeout(timer);resolve(ok);};
+  try{Promise.resolve(navigator.clipboard.writeText(text)).then(()=>done(true),()=>done(false));}catch(e){done(false);}});}
+async function doShareImg(noteEl){if(SHARE_BUSY)return;SHARE_BUSY=true;
+  const note=noteEl||$('share-note'),epoch=SHARE_NOTE_EPOCH,buttons=[$('btn-share'),$('res-share')].filter(Boolean);
+  const say=t=>{if(note.isConnected&&(note!==$('share-note')||epoch===SHARE_NOTE_EPOCH))note.textContent=t;};
+  buttons.forEach(b=>b.disabled=true);
+  try{say('画像を作っています…');const text=shareText(),cpP=copyShareText(text);
+   let blob;try{blob=await shareCard();}catch(e){blob=null;}
+   let file=null;if(blob){try{file=new File([blob],'nihon-meguru-jitensha-tabi.png',{type:'image/png'});}catch(e){}}
+   // Xのアプリは画像付き共有で文章を受け取らないことがある。コピーと共有には、押した時点の同じ文章を使う。
+   const copied=await cpP,CP=copied?'文章をコピーしました。Xの投稿欄が空のときは、長押しで貼り付けてください。':'';
+   try{if(file&&navigator.canShare&&navigator.canShare({files:[file]})){say(CP);await navigator.share({files:[file],text});say(CP);return;}}catch(e){if(e&&e.name==='AbortError'){say(CP);return;}}
+   if(blob){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='nihon-meguru-jitensha-tabi.png';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000);window.open('https://x.com/intent/post?text='+encodeURIComponent(text),'_blank','noopener');say('画像を保存しました。Xの投稿画面で、その画像を添付してください。'+CP);}else{window.open('https://x.com/intent/post?text='+encodeURIComponent(text),'_blank','noopener');say('Xの投稿画面を開きました。'+CP);}
+  }catch(e){say('共有できませんでした。もう一度お試しください。');}finally{SHARE_BUSY=false;buttons.forEach(b=>b.disabled=false);}}
 $('btn-share').onclick=()=>doShareImg();
 $('result-box').addEventListener('click',e=>{if(e.target.closest('#res-share'))doShareImg($('res-note'));});
 // ---------- boot ----------
