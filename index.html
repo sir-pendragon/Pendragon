@@ -243,7 +243,8 @@ button:disabled{opacity:.45;cursor:not-allowed}
 #ov-sns .modal{max-height:calc(100vh - 32px);max-height:calc(100dvh - 32px)}
 #ov-sns .snshd{flex:none;position:sticky;top:0;z-index:1;display:flex;align-items:center;justify-content:space-between;background:linear-gradient(#2aa9ff,#129efd);padding:8px 12px}
 #ov-sns .snshd img{width:30px;height:30px;display:block}
-#ov-sns .snshd #btn-share{background:var(--accent);color:var(--accent-fg);border-color:var(--accent);padding:3px 14px;line-height:1.15;font-size:var(--fs-s)}#ov-sns .snshd #btn-share small{display:block;font-size:10px;font-weight:700}
+#ov-sns .snsact{display:flex;align-items:center;gap:8px}
+#ov-sns .snshd #btn-share{background:#000;color:#fff;border-color:#000;padding:3px 23px;line-height:1.15;font-size:var(--fs-s)}#ov-sns .snshd #btn-share small{display:block;font-size:10px;font-weight:700}
 #ov-sns #share-note{margin:0;padding:6px 12px;background:#f5f8fa;border-bottom:1px solid #e1e8ed}
 #ov-sns .snshd button{background:transparent;color:#fff;border:1px solid rgba(255,255,255,.75);border-radius:999px;min-height:0;padding:4px 14px;font-weight:700}
 #ov-sns .feed{margin:0;border-top:0;padding:0 12px 8px;background:#fff;flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
@@ -543,7 +544,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 </div>
 <div class="overlay" id="ov-sns" hidden>
   <div class="modal" role="dialog" aria-label="自分のSNS">
-    <div class="snshd"><img src="img/icon_sns_bird.webp" width="30" height="30" alt="My SNS"><button id="btn-share">SNSに投稿<small>（画像つき）</small></button><button id="sns-close">閉じる</button></div>
+    <div class="snshd"><img src="img/icon_sns_bird.webp" width="30" height="30" alt="My SNS"><span class="snsact"><button id="btn-share">SNSに投稿<small>（画像つき）</small></button><button id="sns-close">閉じる</button></span></div>
     <p class="hint" id="share-note"></p>
     <div class="feed" id="sns-list"></div>
   </div>
