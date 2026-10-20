@@ -1604,7 +1604,7 @@ function renderBattle(){const pr=Math.min(100,Math.max(0,(1-B.hp/B.max)*100));$(
   // 作戦アイコンは tac_敵名.webp（ヒグマはツキノワグマと共用）
   const TACI={brownbear:'tac_bear',habu:'tac_deer',gas:'tac_heat',volcstorm:'tac_typhoon',curves:'tac_hill',gate:'tac_wind',boss_fukushima:'tac_collapse',boss_tokyo:'tac_collapse',boss_gifu:'tac_snow',boss_akita:'tac_collapse',boss_tokushima:'tac_collapse',boss_aomori:'tac_hill',boss_hyogo:'tac_wind',boss_osaka:'tac_hill',boss_tochigi:'tac_wind',boss_miyagi:'tac_snow',boss_hokkaido:'tac_wind',boss_tottori:'tac_hill',boss_okayama:'tac_hill',boss_miyazaki:'tac_wind',boss_yamanashi:'tac_snow',boss_nagano:'tac_collapse',boss_ibaraki:'tac_collapse',boss_kochi:'tac_rain',boss_toyama:'tac_wind',boss_niigata:'tac_collapse',boss_kagoshima:'tac_wind',boss_yamaguchi:'tac_collapse',boss_kumamoto:'tac_wind',boss_okinawa:'tac_wind'};
   const RC={push:'atk',post:'atk',kiai:'gold',rest:'heal',food:'heal',food2:'heal',dango:'heal',gummy:'heal',tea:'heal',guard:'def',tactic:'def',rinko:'sub',escape:'sub'};
-  const ic={tactic:TACI[B.kind]||'tac_'+B.kind,guard:'cmd_guard',food:'icon_food',food2:'icon_food_nagano',dango:'icon_dango',gummy:'icon_food_nagano',tea:'icon_food_nagano'};
+  const ic={tactic:TACI[B.kind]||'tac_'+B.kind,guard:'cmd_guard',food:'icon_food',food2:'icon_food_nagano',dango:'icon_dango',gummy:'icon_gummy',tea:'icon_tea'};
   $('bt-cmds').innerHTML=cmds.map(([k,l,s])=>`<button data-cmd="${k}" class="${ic[k]?'ic ':''}c-${RC[k]||'nrm'}" ${k==='kiai'&&S.mp<20||k==='rinko'&&(S.money<ti.rinko||trip.course)||k==='push'&&S.hp<=15||k==='walk'&&S.hp<=8||k==='food'&&S.food<=0||k==='tactic'&&!tacOK()?'disabled':''}>${ic[k]?`<img src="img/${ic[k]}.webp" width="30" height="30" alt="" onerror="this.onerror=null;this.src='img/icon_food.webp'"><span>${l}<small>${s}</small></span>`:`${l}<small>${s}</small>`}</button>`).join('');}
 $('bt-cmds').addEventListener('click',e=>{const b=e.target.closest('button[data-cmd]');if(b&&b.dataset.cmd!=='next')cmd(b.dataset.cmd);});// 'next'（区間クリア後の進むボタン）は専用のonclickで処理する。ここでも拾うと勝利や敵の攻撃が二重に数えられる
 function cmd(k){if(!B||!trip||$('ov-battle').hidden||B.hp<=0||trip.late)return;
@@ -1766,7 +1766,7 @@ addEventListener('pagehide',save);
 // 開きっぱなしのタブが古いコードのまま保存し直して、新しい保存項目を失うのを防ぐ。
 // 実行中のコードに埋め込んだ版の識別子 APP_V と、いま配信されている index.html の APP_V を比べる（最初に取れた配信内容を「実行中の版」の代わりにしない）。
 // ★ APP_V は index.html の内容から計算する。index.html を変えたら `node qa/stamp.cjs` で更新する（忘れると監査テストが失敗する）。
-const APP_V='91b310582cda';
+const APP_V='097e3c4ba491';
 // 旅・戦闘・結果画面（INTRIP）の間は、save() が保存を見送るので、再読み込みすると進行が巻き戻る。旅が終わったあとも trip / B には前回の値が残るため、これらは見ない
 const UPD={pending:'',busy:false,scheduled:false,last:0,every:600000,quiet:600000,timeout:15000,reloadedAt:0,note:null,timer:0,
  safe:()=>!INTRIP,
