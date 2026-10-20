@@ -1732,7 +1732,7 @@ function endTrip2(camp){const p=trip.p,f=S.forecast[p.id],st=bikeStats(),cl=CLOT
   if(S.money<0)html+=`<p class="hint">所持金がマイナス。次の投稿収入で返済される。</p>`;
   S.sel=S.loc;render();showResult(html,advance);}
 function restHome(){const ti=travelInfo(PREF[S.home]);if(S.loc!==S.home){const forced=S.money<ti.rinko;if(!forced&&!$('ov-pay').dataset.ok){askPay('輪行で自宅に帰って休みますか？',ti.rinko,()=>{$('ov-pay').dataset.ok='1';restHome();});return;}delete $('ov-pay').dataset.ok;}S.stay=0;const forced2=S.loc!==S.home&&S.money<ti.rinko,pen=forced2?floss(30,.04):floss(10,.015);snap();if(S.loc!==S.home&&!forced2)S.money-=ti.rinko;INTRIP=true;S.loc=S.home;S.hp=100;S.mp=100;S.fame=Math.max(0,S.fame-pen);
-  log(forced2?`所持金が尽きて強制帰宅。フォロワー-${fol(pen)}`:`自宅で休養。フォロワー-${fol(pen)}`);S.sel=S.loc;render();showResult(`<h2>自宅で休養</h2><div class="photo pic"><img src="img/rest.webp" width="720" height="480" alt="自宅の和室で大の字になって昼寝する旅行者"><div class="cap"><div>${PREF[S.home].name}の自宅</div><div>💤 一日中ごろごろ</div></div></div><p>${forced2?`所持金が尽きて旅を続けられず、自宅へ連れ戻された…。体力・気力は全回復したが、フォロワー-${fol(pen)}。`:`体力・気力が全回復した。投稿がなく フォロワー-${fol(pen)}。`}</p>`,advance);}
+  log(forced2?`所持金が尽きて強制帰宅。フォロワー-${fol(pen)}`:`自宅で休養。フォロワー-${fol(pen)}`);S.sel=S.loc;render();showResult(`<h2>自宅で休養</h2><div class="photo pic"><img src="img/rest.webp" width="720" height="480" alt="自宅の和室で、布団を頭までかぶって昼寝する旅行者"><div class="cap"><div>${PREF[S.home].name}の自宅</div><div>💤 一日中ごろごろ</div></div></div><p>${forced2?`所持金が尽きて旅を続けられず、自宅へ連れ戻された…。体力・気力は全回復したが、フォロワー-${fol(pen)}。`:`体力・気力が全回復した。投稿がなく フォロワー-${fol(pen)}。`}</p>`,advance);}
 function showResult(html,then,share){$('result-box').innerHTML=html+(share?`<p class="hint" id="res-note" style="margin:0"></p>`:'')+`<div class="resbtns">${share?'<button id="res-share">SNSに投稿<small>（画像つき）</small></button>':''}<button class="primary" id="res-ok">次の週末へ</button></div>`;$('ov-result').hidden=false;$('res-ok').onclick=()=>{$('ov-result').hidden=true;then();};}
 function turnPopup(){const t=TS;TS=null;if(!t)return;const e=$('pop'),sg=n=>(n>0?'+':n<0?'-':'')+Math.abs(n);
   const spv=t.sp?t.sp[1]:0,dm=S.money-t.money,other=dm-(t.inc-t.fee)-spv,dh=S.hp-t.hp,dp=S.mp-t.mp,df=S.fame-t.fame,fc=S.fam.filter(Boolean).length;
@@ -1760,7 +1760,7 @@ addEventListener('pagehide',save);
 // 開きっぱなしのタブが古いコードのまま保存し直して、新しい保存項目を失うのを防ぐ。
 // 実行中のコードに埋め込んだ版の識別子 APP_V と、いま配信されている index.html の APP_V を比べる（最初に取れた配信内容を「実行中の版」の代わりにしない）。
 // ★ APP_V は index.html の内容から計算する。index.html を変えたら `node qa/stamp.cjs` で更新する（忘れると監査テストが失敗する）。
-const APP_V='4f38d44ce1ae';
+const APP_V='20a1461b5c7c';
 // 旅・戦闘・結果画面（INTRIP）の間は、save() が保存を見送るので、再読み込みすると進行が巻き戻る。旅が終わったあとも trip / B には前回の値が残るため、これらは見ない
 const UPD={pending:'',busy:false,scheduled:false,last:0,every:600000,quiet:600000,timeout:15000,reloadedAt:0,note:null,timer:0,
  safe:()=>!INTRIP,
