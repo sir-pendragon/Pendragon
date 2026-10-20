@@ -243,6 +243,8 @@ button:disabled{opacity:.45;cursor:not-allowed}
 #ov-sns .modal{max-height:calc(100vh - 32px);max-height:calc(100dvh - 32px)}
 #ov-sns .snshd{flex:none;position:sticky;top:0;z-index:1;display:flex;align-items:center;justify-content:space-between;background:linear-gradient(#2aa9ff,#129efd);padding:8px 12px}
 #ov-sns .snshd img{width:30px;height:30px;display:block}
+#ov-sns .snshd #btn-share{background:var(--accent);color:var(--accent-fg);border-color:var(--accent);padding:3px 14px;line-height:1.15;font-size:var(--fs-s)}#ov-sns .snshd #btn-share small{display:block;font-size:10px;font-weight:700}
+#ov-sns #share-note{margin:0;padding:6px 12px;background:#f5f8fa;border-bottom:1px solid #e1e8ed}
 #ov-sns .snshd button{background:transparent;color:#fff;border:1px solid rgba(255,255,255,.75);border-radius:999px;min-height:0;padding:4px 14px;font-weight:700}
 #ov-sns .feed{margin:0;border-top:0;padding:0 12px 8px;background:#fff;flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
 #ov-sns .post{border-bottom:1px solid #e1e8ed;padding:9px 0;color:#14171a}
@@ -350,7 +352,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .row{display:flex;gap:8px;flex-wrap:wrap}
 .row>*{flex:1}
 .profile{display:flex;gap:10px;align-items:flex-start;margin:0}
-.resbtns{display:flex;gap:8px}.resbtns button{flex:1;margin:0}.resbtns small{display:block;font-size:10px}#res-note:empty{display:none}.profile .pcol{flex:none;width:84px;display:flex;flex-direction:column;gap:6px}.profile .pcol button{width:84px;padding:5px 2px;font-size:12px;line-height:1.25}.profile .pcol button small{display:block;font-size:10px}#share-note:empty{display:none}.profile img{flex:none;width:84px;height:84px;object-fit:cover;border-radius:8px;border:1px solid var(--line);background:var(--bg)}
+.resbtns{display:flex;gap:8px}.resbtns button{flex:1;margin:0}.resbtns small{display:block;font-size:10px}#res-note:empty{display:none}#share-note:empty{display:none}.profile>.pfimg{flex:none;width:clamp(110px,44%,180px);height:auto;aspect-ratio:1;object-fit:cover;border-radius:8px;border:1px solid var(--line);background:var(--bg)}
 .profile .res{flex:1;min-width:0;gap:1px 10px;font-size:var(--fs-s);line-height:1.35}
 .enemy .face img{display:block;width:100%;height:100%;object-fit:contain}
 .loghead{display:flex;justify-content:space-between;align-items:center;gap:8px}
@@ -443,7 +445,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
     </div>
     <div id="p-trip">
     <div class="loghead"><h2>旅の記録</h2><span class="logbtns"><button id="btn-set" aria-label="システム">⚙ システム</button></span></div>
-    <div class="profile"><div class="pcol"><img id="pf-img" loading="lazy" decoding="async" src="img/hero.webp" width="84" height="84" alt="主人公の自転車旅行者"><button id="btn-share" class="primary">SNSに投稿<small>（画像つき）</small></button></div><div class="res" id="summary"></div></div><p class="hint" id="share-note" style="margin:4px 0 0"></p>
+    <div class="profile"><img id="pf-img" class="pfimg" loading="lazy" decoding="async" src="img/hero.webp" width="180" height="180" alt="主人公の自転車旅行者"><div class="res" id="summary"></div></div>
     <div class="subtabs" id="tl-tabs"><button data-v="tl" aria-selected="true">旅履歴</button><button id="btn-prof" aria-haspopup="dialog">プロフィール設定</button></div>
     <div class="tl" id="tl"></div>
     </div>
@@ -541,7 +543,8 @@ button:disabled{opacity:.45;cursor:not-allowed}
 </div>
 <div class="overlay" id="ov-sns" hidden>
   <div class="modal" role="dialog" aria-label="自分のSNS">
-    <div class="snshd"><img src="img/icon_sns_bird.webp" width="30" height="30" alt="My SNS"><button id="sns-close">閉じる</button></div>
+    <div class="snshd"><img src="img/icon_sns_bird.webp" width="30" height="30" alt="My SNS"><button id="btn-share">SNSに投稿<small>（画像つき）</small></button><button id="sns-close">閉じる</button></div>
+    <p class="hint" id="share-note"></p>
     <div class="feed" id="sns-list"></div>
   </div>
 </div>
@@ -977,7 +980,7 @@ function load(){try{const s=localStorage.getItem('charicamp');if(!s)return null;
   const st=o.stats&&typeof o.stats==='object'?o.stats:{};o.stats={wins:num(st.wins,0,0,1e9),posts:num(st.posts,0,0,1e9),bestQ:num(st.bestQ,0,0,100),tph:num(st.tph,0,0,1e9),ev:num(st.ev,0,0,1e9),tc:num(st.tc,0,0,1e9),en:{}}
   for(const k of TRIAL_KEYS){const v=st.en&&st.en[k];if(Array.isArray(v)&&v.length===3)o.stats.en[k]=v.map(x=>num(x,0,0,1e9));};
   {const iv=o.inf&&typeof o.inf==='object'?o.inf:{};o.inf={};for(const d of INF){const v=iv[d.id];if(v&&typeof v==='object')o.inf[d.id]={w:num(v.w,0,0,1e9),e:num(v.e,0,0,1e9),g:num(v.g,0,0,1)};}}
-  o.food=num(o.food,0,0,FOOD_MAX+RACK_TOP+((PARTS.find(p=>p.id==='framebag')||{}).food||0));o.food2=num(o.food2,0,0,NAGANO.max);o.dango=num(o.dango,0,0,DANGO.max);o.pen=Number.isInteger(o.pen)&&o.pen>=0&&o.pen<PEN.length?o.pen:0;o.av=Number.isInteger(o.av)&&o.av>=0&&o.av<AVS.length?o.av:0;
+  o.food=num(o.food,0,0,FOOD_MAX+RACK_TOP+((PARTS.find(p=>p.id==='framebag')||{}).food||0));o.food2=num(o.food2,0,0,NAGANO.max);o.dango=num(o.dango,0,0,DANGO.max);o.pen=Number.isInteger(o.pen)&&o.pen>=0&&o.pen<PEN.length?o.pen:0;o.av=Number.isInteger(o.av)&&o.av>=0&&o.av<AVS.length?o.av:0;if(!penOK(o.pen,o.av))o.pen=0;
   delete o.ach;
   let f=o.forecast&&typeof o.forecast==='object'?o.forecast:{};o.forecast=null;
   if(Array.isArray(o.fc)&&o.fc.length===47&&o.fc.every(n=>Number.isInteger(n)&&n>=0&&n<7*100)){const M=(o.v||0)>=6?7:(o.v||0)>=5?6:5;f={};o.fc.forEach((n,i)=>f[i]={temp:Math.floor(n/M)-30,wx:WXL[n%M]});}
@@ -1313,8 +1316,10 @@ function feedItems(){const out=[],seen={};
     else out.push({t,r:3,p:{name:penName(),id:'jitensha_tabi',av:avImg(),when,text:(/ツチノコ/.test(x)?'🐍✨ ':/購入/.test(x)?'🛒 ':/輪行/.test(x)?'🚃 ':/カスタム|付けた/.test(x)?'🔧 ':'')+snsText(x),th:(mm=/^(.+?)を購入/.exec(x))?itemArt(mm[1]):null}});});
   return engage(out.sort((a,b)=>b.t-a.t||a.r-b.r).slice(0,30));}
 // ペンネーム：自分のSNSの投稿に出る名前（一覧から選ぶ。0番が初期値）
-const PEN=['旅の自転車乗り','ペダル旅人','風のサイクリスト','焚き火ライダー','ソロキャンパー','輪行の旅人','峠のランドヌール','日本一周ライダー','ゆる旅ライダー','星空キャンパー'];
-const penName=()=>PEN[(S&&S.pen)|0]||PEN[0];
+const PEN=['旅の自転車乗り','ペダル旅人','風のサイクリスト','焚き火ライダー','ソロキャンパー','輪行の旅人','峠のランドヌール','日本一周ライダー','ゆる旅ライダー','星空キャンパー','猫超大好き'];
+const PEN_AV={10:3};// 特定のイラストのときだけ選べるペンネーム（ペンネーム番号→イラスト番号）。猫超大好き＝サイベリアン
+const penOK=(i,a)=>i>=0&&i<PEN.length&&(PEN_AV[i]===undefined||PEN_AV[i]===a);
+const penName=()=>{const i=(S&&S.pen)|0;return penOK(i,avIx())?PEN[i]:PEN[0];};
 function renderLog(){if($('pf-img').getAttribute('src')!==pfImg())$('pf-img').src=pfImg();
   $('tl').innerHTML=S.tl.length?`<div class="th">日付</div><div class="th">行き先</div><div class="th">写真</div><div class="th">遭遇</div>`+S.tl.map(([t,pid,q,k])=>`<div>${CAL_S(t)}</div><div>${PREF[pid].name}</div><div>${q<0?'<span class="bad">遅刻</span>':q+'点'}</div><div>${tlDec(k).length?tlDec(k).map(x=>(ENEMY[x]||{name:x==='tsuchi'?'ツチノコ':x}).name).join('・'):'なし'}</div>`).join(''):'<div class="hint" style="grid-column:1/-1">まだ旅に出ていません</div>';
   const sp=sponsor();$('summary').innerHTML=`<span>称号</span><span>${title(S.fame)}</span><span>スポンサー</span><span><img loading="lazy" class="spi" src="img/sponsor_${SPONSOR.indexOf(sp)}.webp" alt="" onerror="this.remove()">${sp[2]}<br><small>${yen(sp[1])}/週</small></span><span>投稿数</span><span>${S.stats.posts}</span><span>最高写真</span><span>${S.stats.bestQ}点</span><span>試練制覇</span><span>${S.stats.wins}回</span>`;}
@@ -1445,10 +1450,10 @@ $('fs-t').onclick=()=>{FS.on=!FS.on;saveFS();renderSet();};
 $('fs-every').onchange=()=>{FS.every=+$('fs-every').value||13;saveFS();};
 // ブラウザが容量不足などでサイトデータを勝手に消さないよう頼む（手動削除は防げない）
 try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist().catch(()=>{});}catch(e){}
-function renderProf(){$('av-list').innerHTML=AVS.map(([f,n],i)=>`<button data-av="${i}" aria-selected="${avIx()===i}" aria-label="${esc(n)}" title="${esc(n)}"><img src="img/${i?f+'_s':f}.webp" width="64" height="64" alt=""></button>`).join('');$('pen-list').innerHTML=PEN.map((n,i)=>`<button data-pen="${i}" aria-selected="${((S&&S.pen)|0)===i}">${esc(n)}</button>`).join('');}
+function renderProf(){$('av-list').innerHTML=AVS.map(([f,n],i)=>`<button data-av="${i}" aria-selected="${avIx()===i}" aria-label="${esc(n)}" title="${esc(n)}"><img src="img/${i?f+'_s':f}.webp" width="64" height="64" alt=""></button>`).join('');$('pen-list').innerHTML=PEN.map((n,i)=>penOK(i,avIx())?`<button data-pen="${i}" aria-selected="${((S&&S.pen)|0)===i}">${esc(n)}</button>`:'').join('');}
 $('btn-prof').onclick=()=>{if(!S)return;renderProf();$('ov-prof').hidden=false;};
-$('av-list').onclick=e=>{const b=e.target.closest('button[data-av]');if(!b||!S)return;S.av=+b.dataset.av;save();renderProf();renderLog();};
-$('pen-list').onclick=e=>{const b=e.target.closest('button[data-pen]');if(!b||!S)return;S.pen=+b.dataset.pen;save();renderProf();renderLog();};
+$('av-list').onclick=e=>{const b=e.target.closest('button[data-av]');if(!b||!S)return;S.av=+b.dataset.av;if(!penOK(S.pen|0,S.av))S.pen=0;save();renderProf();renderLog();};
+$('pen-list').onclick=e=>{const b=e.target.closest('button[data-pen]');if(!b||!S||!penOK(+b.dataset.pen,avIx()))return;S.pen=+b.dataset.pen;save();renderProf();renderLog();};
 $('prof-close').onclick=()=>{$('ov-prof').hidden=true;};
 $('ov-prof').addEventListener('click',e=>{if(e.target===$('ov-prof'))$('ov-prof').hidden=true;});
 $('btn-set').onclick=()=>{renderSet();$('ov-set').hidden=false;};

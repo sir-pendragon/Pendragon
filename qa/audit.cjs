@@ -272,9 +272,9 @@ test('4th rival mino-kasago: nationwide, polite; 3 wins -> 3 dango once at the y
 test('profile settings: pen name picked from a list (10 unique), shown on my posts, saved/validated; top button renamed to システム; the old My SNS tab is gone',c=>{const {q}=c;q.newGame(12);
  assert.equal(c.$('btn-set').textContent.trim(),'⚙ システム');assert.ok(!/設定/.test(c.$('btn-set').textContent));assert.equal(c.$('ov-set').querySelector('h2').textContent,'システム');
  assert.equal(c.$('btn-prof').textContent,'プロフィール設定');assert.ok(!c.w.document.querySelector('#tl-tabs [data-v=log]'));assert.ok(!c.$('log'));
- assert.equal(q.PEN.length,10);assert.equal(new Set(q.PEN).size,10);assert.equal(q.S.pen,0);
+ assert.equal(q.PEN.length,11);assert.equal(new Set(q.PEN).size,11);assert.equal(q.S.pen,0);
  q.S.log.unshift('補給食を購入（¥800）');q.S.log.unshift('軽量山岳テントを購入（¥55,000）');const mine=()=>q.feedItems().filter(x=>x.p.id==='jitensha_tabi');assert.ok(mine().length>0&&mine().every(x=>x.p.name==='旅の自転車乗り'));
- c.$('btn-prof').click();assert.equal(c.$('ov-prof').hidden,false);const bs=[...c.$('pen-list').querySelectorAll('button')];assert.equal(bs.length,10);assert.equal(bs[0].getAttribute('aria-selected'),'true');
+ c.$('btn-prof').click();assert.equal(c.$('ov-prof').hidden,false);const bs=[...c.$('pen-list').querySelectorAll('button')];assert.equal(bs.length,10,'cat-only name hidden');assert.equal(bs[0].getAttribute('aria-selected'),'true');
  bs[3].click();assert.equal(q.S.pen,3);assert.ok(mine().every(x=>x.p.name===q.PEN[3]));assert.equal(c.$('pen-list').querySelectorAll('button')[3].getAttribute('aria-selected'),'true');
  q.save();assert.equal(q.load().pen,3);q.S.pen=99;q.save();assert.equal(q.load().pen,0);q.S.pen=-5;q.save();assert.equal(q.load().pen,0);
  c.$('prof-close').click();assert.equal(c.$('ov-prof').hidden,true);c.$('btn-sns').click();assert.ok(c.$('sns-list').textContent.length>0);});
@@ -284,6 +284,13 @@ test('profile illustration: 8 choices (initial hero + 7), files exist, picking o
  c.$('btn-prof').click();const bs=[...c.$('av-list').querySelectorAll('button')];assert.equal(bs.length,8);assert.equal(bs[0].getAttribute('aria-selected'),'true');
  bs[3].click();assert.equal(q.S.av,3);assert.equal(c.$('pf-img').getAttribute('src'),'img/av_cat.webp');assert.ok(mine().every(x=>x.p.av==='img/av_cat_s.webp'));assert.equal(c.$('av-list').querySelectorAll('button')[3].getAttribute('aria-selected'),'true');
  q.save();assert.equal(q.load().av,3);q.S.av=42;q.save();assert.equal(q.load().av,0);q.S.av=1.5;q.save();assert.equal(q.load().av,0);});
+test('pen name 猫超大好き is offered only with the cat illustration; switching away resets it; share button sits in the SNS popup header',c=>{const {q}=c;q.newGame(12);const ci=q.PEN.indexOf('猫超大好き'),cat=q.AVS.findIndex(a=>a[0]==='av_cat');assert.ok(ci>=0&&cat>0);
+ c.$('btn-prof').click();const names=()=>[...c.$('pen-list').querySelectorAll('button')].map(b=>b.textContent);assert.ok(!names().includes('猫超大好き'));
+ c.$('av-list').querySelectorAll('button')[cat].click();assert.ok(names().includes('猫超大好き'));c.$('pen-list').querySelector('button[data-pen="'+ci+'"]').click();assert.equal(q.S.pen,ci);
+ q.S.log.unshift('軽量山岳テントを購入（¥55,000）');assert.ok(q.feedItems().filter(x=>x.p.id==='jitensha_tabi').every(x=>x.p.name==='猫超大好き'));
+ q.save();assert.equal(q.load().pen,ci);c.$('av-list').querySelectorAll('button')[1].click();assert.equal(q.S.pen,0);assert.ok(!names().includes('猫超大好き'));
+ q.S.pen=ci;q.S.av=1;q.save();assert.equal(q.load().pen,0,'invalid combo in a save is reset');q.S.pen=ci;assert.equal(q.feedItems().filter(x=>x.p.id==='jitensha_tabi')[0].p.name,q.PEN[0]);
+ assert.ok(c.w.document.querySelector('#ov-sns .snshd #btn-share'));assert.ok(!c.w.document.querySelector('.profile #btn-share'));assert.ok(c.w.document.querySelector('#ov-sns #share-note'));});
 const summary={file:filename,passed:results.filter(x=>x.ok).length,failed:results.filter(x=>!x.ok).length,results};
 if(process.argv[3])fs.writeFileSync(process.argv[3],JSON.stringify(summary,null,2));
 console.log(JSON.stringify({passed:summary.passed,failed:summary.failed}));process.exitCode=summary.failed?1:0;
