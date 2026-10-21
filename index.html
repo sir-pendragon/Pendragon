@@ -828,7 +828,15 @@ const ACC=[
  {id:'hel2',name:'軽量ヘルメット',price:45000,t:'head',hit:1,climb:1},
  {id:'rain1',name:'雨ガッパ',price:3000,t:'outer',rain:2},// 雨・台風の日だけ耐候+rain（大雨・台風の戦闘と被ダメージ軽減に効く）
  {id:'rain2',name:'レインウェア',price:30000,t:'outer',rain:4},
+ // 上着の天候別効果: wind=強風、snow=大雪、heat=猛暑、car=暴走車（それぞれの戦闘だけ）。lo/hi=衣類の快適温度の下限を下げる／上限を上げる（負なら逆）
+ {id:'vest1',name:'ベスト',price:2000,t:'outer',comfy:1,lo:2},
+ {id:'wind1',name:'ウィンドブレーカー',price:5000,t:'outer',wind:3,lo:3},
+ {id:'uv1',name:'UVパーカー',price:4000,t:'outer',heat:3,hi:3},
+ {id:'refl1',name:'反射ベスト',price:3000,t:'outer',car:2},
+ {id:'pon1',name:'防寒ポンチョ',price:8000,t:'outer',rain:1,lo:4},
+ {id:'winter1',name:'ウインタージャケット',price:20000,t:'outer',snow:4,lo:8,hi:-3},
 ];
+const clRange=cl=>{const on=accOn();return{lo:cl.lo-on.reduce((n,a)=>n+(a.lo||0),0),hi:cl.hi+on.reduce((n,a)=>n+(a.hi||0),0)};};// 上着で衣類の快適温度の範囲がずれる
 const ACC_T={eye:'目',foot:'足',head:'頭',outer:'上着'},ACC_SLOTS=5;// ウェア1＋小物4＝5枠
 const accOn=()=>(S.acc||[]).map(i=>ACC.find(a=>a.id===i)).filter(Boolean);
 const PARTS=[
@@ -1049,7 +1057,7 @@ function bikeStats(wxk){const b=BIKES.find(x=>x.id===S.bike);const st={climb:b.c
   const bl=plv(b.id);if(bl)for(const k of bikeBoost(b))st[k]+=bl;// カスタム：得意な上位2能力が+段数
   const gx=gearFx();st.climb+=gx.climb;st.cruise+=gx.cruise;// DCF（超軽量）のギア
   for(const pid of S.parts){const p=PARTS.find(x=>x.id===pid);for(const k of ['climb','rough','cruise','wx','photo','comfy']) if(p[k]) st[k]+=p[k]+plv(pid);}
-  for(const a of accOn()){for(const k of ['climb','rough','cruise','wx','comfy'])if(a[k])st[k]+=a[k];if(a.rain&&(wxk==='rain'||wxk==='typhoon'))st.wx+=a.rain;}return st;}// wxk: 戦闘の敵の種類。雨・台風の戦闘のときだけ、上着の rain が耐候に加わる
+  for(const a of accOn()){for(const k of ['climb','rough','cruise','wx','comfy'])if(a[k])st[k]+=a[k];if(a.rain&&(wxk==='rain'||wxk==='typhoon'))st.wx+=a.rain;if(a.snow&&wxk==='snow')st.wx+=a.snow;if(a.heat&&wxk==='heat')st.wx+=a.heat;if(a.wind&&wxk==='wind')st.cruise+=a.wind;}return st;}// wxk: 戦闘の敵の種類。雨・台風の戦闘のときだけ、上着の rain が耐候に加わる
 // ---------- カスタム（自転車・パーツを+1〜+3に改造） ----------
 const STATJ={climb:'登坂',rough:'悪路',cruise:'巡航',wx:'耐候',photo:'写真',comfy:'気力消費'};
 // 折りたたみ（チタン製折りたたみ自転車・分割式チタン製グラベルロード）専用の「輪行カスタム」：輪行費の割合が段階的に下がる（素は半額）
@@ -1258,7 +1266,7 @@ function fitInfo(){const i=$('info');if(!i||!i.parentElement)return;i.classList.
     let sz=parseFloat(getComputedStyle(i).fontSize)||12;while(i.offsetHeight>lim&&sz>9){sz-=.5;i.style.fontSize=sz+'px';if(h3)h3.style.fontSize=(sz*1.15)+'px';}}}}
 function renderDetail(){const p=PREF[S.sel],f=S.forecast[p.id],ti=travelInfo(p),cl=CLOTHES.find(c=>c.id===S.cloth);
   const stay=S.sel===S.loc;const badge=S.fam[p.id]?'<span class="pill fam">馴染み宿</span>':`<span class="pill">訪問 ${Math.min(needV(p),S.visits[p.id])}/${needV(p)}</span>`;
-  const fit=f.temp<cl.lo?`❄️ この衣類では寒い（${cl.lo-f.temp}℃不足）`:f.temp>cl.hi?`🔥 この衣類では暑い（${f.temp-cl.hi}℃超過）`:'👕 衣類OK';
+  const cr=clRange(cl);const fit=f.temp<cr.lo?`❄️ この衣類では寒い（${cr.lo-f.temp}℃不足）`:f.temp>cr.hi?`🔥 この衣類では暑い（${f.temp-cr.hi}℃超過）`:'👕 衣類OK';
   const ev=eventAt(S.turn,p.id),fee=S.fam[p.id]?Math.round(p.fee/2):p.fee;
   const enemies=[];if(p.terrain==='hill')enemies.push('激坂','峠');if(p.terrain==='rough'){enemies.push('ダート','廃道');}if(hasBoar(p))enemies.push('いのしし');
   if(HABU.has(p.name)&&PREF[S.home].name!=='沖縄')enemies.push('ハブ');if(DEER.has(p.name))enemies.push('牡鹿');if(calendar(S.turn).year>=2&&bearSeason(calendar(S.turn).month)){if(BROWNBEAR.has(p.name)&&PREF[S.home].name!=='北海道')enemies.push('ヒグマ');if(BLACKBEAR.has(p.name))enemies.push(RAREBEAR.has(p.name)?'ツキノワグマ（まれ）':'ツキノワグマ');}if(calendar(S.turn).year>=2&&URBAN.has(p.name))enemies.push(ENEMY[urbanEnemy()].name);
@@ -1287,7 +1295,7 @@ addEventListener('error',e=>{const i=e.target;if(i&&i.tagName==='IMG'&&i.dataset
 function card(item,kind,mode){const eq=isEq(kind,item),own=owns(kind,item.id);
   const spec=kind==='bike'?`登坂${bv(item,'climb')} 悪路${bv(item,'rough')} 巡航${bv(item,'cruise')} 耐候${bv(item,'wx')}${item.fold?` 輪行費×${RK_RATE[rkLv(item.id)]}`:''}`:
    kind==='cloth'?`快適 ${item.lo}℃〜${item.hi}℃`:
-   kind==='acc'?`【${ACC_T[item.t]}】`+['climb','rough','cruise','wx','comfy'].filter(k=>item[k]).map(k=>STATJ[k]+(k==='comfy'?'-':'+')+item[k]).concat(item.hit?[`被ダメージ-${item.hit}`]:[],item.rain?[`雨・台風のとき耐候+${item.rain}`]:[]).join(' ')+`（${ACC_T[item.t]}は1つだけ装備）`:
+   kind==='acc'?`【${ACC_T[item.t]}】`+['climb','rough','cruise','wx','comfy'].filter(k=>item[k]).map(k=>STATJ[k]+(k==='comfy'?'-':'+')+item[k]).concat(item.hit?[`被ダメージ-${item.hit}`]:[],item.rain?[`雨・台風のとき耐候+${item.rain}`]:[],item.snow?[`大雪のとき耐候+${item.snow}`]:[],item.heat?[`猛暑のとき耐候+${item.heat}`]:[],item.wind?[`強風のとき巡航+${item.wind}`]:[],item.car?[`暴走車の被ダメージ-${item.car}`]:[],item.lo?[`快適下限${item.lo>0?'-':'+'}${Math.abs(item.lo)}℃`]:[],item.hi?[`快適上限${item.hi>0?'+':'-'}${Math.abs(item.hi)}℃`]:[]).join(' ')+`（${ACC_T[item.t]}は1つだけ装備）`:
    kind==='gear'?[item.mp?`気力+${item.mp}`:'',item.hp?`体力+${item.hp}`:'',item.photo?`写真+${item.photo}`:'',item.guard?`雨ガード${Math.round(item.guard*100)}%`:'',item.climb?`登坂+${item.climb}`:'',item.cruise?`巡航+${item.cruise}`:'',item.winter?'冬のみ有効':'',item.req?`要：${(GEAR_ITEMS.find(x=>x.id===item.req)||{}).name}`:''].filter(Boolean).join(' '):
    (item.comp?'コンポ（1つだけ装備） ':'')+(item.wh?'ホイール（1つだけ装備） ':'')+(item.rack?`ラック（1つだけ装備） 補給食の上限+${item.food}`:'')+(item.front?'フロントキャリア（1つだけ装備） ':'')+(item.gift?'インフルエンサーからの贈り物 ':'')+(item.gift&&item.food?`補給食の上限+${item.food} `:'')+(item.anti?(item.anti==='bear'?'クマから受ける被害が半分':'暴走車・暴走バイクから受ける被害が半分'):Object.entries(item).filter(([k])=>['climb','rough','cruise','wx','photo','comfy'].includes(k)).map(([k,v])=>({climb:'登坂',rough:'悪路',cruise:'巡航',wx:'耐候',photo:'写真',comfy:'気力消費'}[k]+(k==='comfy'?'-':'+')+v)).join(' '));
   let act='';
@@ -1435,7 +1443,7 @@ function askGo(p,rinko,skipSp){if(!skipSp&&isCourse(p,false))return askSpecial(p
   const how=p.id===S.loc?(isCourse(p,true)?'同じ場所から出発（'+SPEC[p.name].kind+'）':'同じ場所（気力-15）'):rinko?`輪行 ${yen(ti.rinko)}`:`自走 ${ti.d}km（遭遇${ti.enc}回）`;
   const gi=k=>S.gear[k]?nm(GEAR_ITEMS,S.gear[k]):'なし';
   $('go-sum').innerHTML=[['行き先',`${p.site}（${p.name}）`],['移動',how],['予報',`${WX_J[f.wx]} ${f.temp}℃`],
-    ['自転車',nm(BIKES,S.bike)],['衣類',`${cl.name}（${cl.lo}〜${cl.hi}℃）`],['小物',accOn().length?accOn().map(x=>x.name).join('、'):'なし'],['パーツ',S.parts.length?S.parts.map(x=>nm(PARTS,x)).join('、'):'なし'],
+    ['自転車',nm(BIKES,S.bike)],['衣類',`${cl.name}（${clRange(cl).lo}〜${clRange(cl).hi}℃）`],['小物',accOn().length?accOn().map(x=>x.name).join('、'):'なし'],['パーツ',S.parts.length?S.parts.map(x=>nm(PARTS,x)).join('、'):'なし'],
     ['焚き火台',gi('fire')],['寝床',gi('shelter')],['タープ',gi('tarp')],['補給食',S.food+'個'+(S.food2?`＋長野${S.food2}個`:'')+(S.food3?`＋長野【極】${S.food3}個`:'')+(S.dango?`＋団子${S.dango}個`:'')+(S.gummy?`＋グミ${S.gummy}個`:'')+(S.tea?`＋紅茶${S.tea}個`:'')]].map(r=>`<span>${r[0]}</span><span>${r[1]}</span>`).join('');
   $('go-yes').onclick=()=>{$('ov-go').hidden=true;startTrip(p,rinko);};$('ov-go').hidden=false;$('go-yes').focus();}
 let LOGSUB='trip';
@@ -1748,7 +1756,7 @@ function cmd(k){if(!B||!trip||$('ov-battle').hidden||B.hp<=0||trip.late)return;
   const tm=NEXT[B.next][1]*B.cut;
   let et='';if(B.kind==='rival'){if(tm<=0)et='ライバルの投稿は伸びなかった。';else{const l=Math.max(1,Math.round(floss(20,.03)*tm));S.fame=Math.max(0,S.fame-l);et=`ライバルの投稿がバズった。フォロワー-${fol(l)}`;}}
   else if(tm<=0)et=`${B.e.name}をうまくやり過ごした。`;
-  else{const st=bikeStats(B.kind);const red=(['rain','snow','typhoon','heat'].includes(B.kind)?Math.min(4,Math.floor(st.wx/2)):0)+accOn().reduce((n,a)=>n+(a.hit||0),0);const d=Math.max(1,Math.round((B.atk+rnd(-2,2)-red)*tm));S.hp-=d;et=`${HIT[B.kind]||B.e.name}…体力-${d}`;
+  else{const st=bikeStats(B.kind);const red=(['rain','snow','typhoon','heat'].includes(B.kind)?Math.min(4,Math.floor(st.wx/2)):0)+accOn().reduce((n,a)=>n+(a.hit||0)+(B.kind==='car'?a.car||0:0),0);const d=Math.max(1,Math.round((B.atk+rnd(-2,2)-red)*tm));S.hp-=d;et=`${HIT[B.kind]||B.e.name}…体力-${d}`;
     if(B.e.mp){const m=Math.max(1,Math.round(B.e.mp*Math.min(1,tm)));S.mp-=m;et+=` 気力-${m}`;}}
   $('battle-box').classList.remove('shake');void $('battle-box').offsetWidth;$('battle-box').classList.add('shake');
   if(tm>0)setTimeout(()=>playSE('se_damage'),180);B.turn++;B.next=rollNext();
@@ -1779,7 +1787,7 @@ function endTrip2(camp){const p=trip.p,f=S.forecast[p.id],st=bikeStats(),cl=CLOT
   const cc=Math.min(camp.cost||0,Math.max(0,S.money));S.money-=cc;
   const mpPen=S.mp<25?20:S.mp<50?10:0;// 気力が低いまま撮ると写真の点数が下がる
   // clothing check
-  let cold=0;if(f.temp<cl.lo)cold=Math.min(40,(cl.lo-f.temp)*3);if(f.temp>cl.hi)cold=Math.min(40,(f.temp-cl.hi)*3);
+  const cr=clRange(cl);let cold=0;if(f.temp<cr.lo)cold=Math.min(40,(cr.lo-f.temp)*3);if(f.temp>cr.hi)cold=Math.min(40,(f.temp-cr.hi)*3);
   if(cold){S.hp-=cold;}
   const g=gearFx(),wet=['rain','snow','typhoon'].includes(f.wx),harsh=wet||season(calendar(S.turn).mi)==='winter';
   const heat=f.wx==='heat',harshMp=heat?Math.round(Math.max(0,8-st.comfy)*(1-g.guard)):harsh&&!(stoveOn()&&!wet)?Math.round(Math.max(0,10-st.comfy)*(1-(wet?g.guard:0))):0;S.mp-=harshMp;
@@ -1844,7 +1852,7 @@ addEventListener('pagehide',save);
 // 開きっぱなしのタブが古いコードのまま保存し直して、新しい保存項目を失うのを防ぐ。
 // 実行中のコードに埋め込んだ版の識別子 APP_V と、いま配信されている index.html の APP_V を比べる（最初に取れた配信内容を「実行中の版」の代わりにしない）。
 // ★ APP_V は index.html の内容から計算する。index.html を変えたら `node qa/stamp.cjs` で更新する（忘れると監査テストが失敗する）。
-const APP_V='f9a70d2bebb3';
+const APP_V='37fe3ae4aeff';
 // 旅・戦闘・結果画面（INTRIP）の間は、save() が保存を見送るので、再読み込みすると進行が巻き戻る。旅が終わったあとも trip / B には前回の値が残るため、これらは見ない
 const UPD={pending:'',busy:false,scheduled:false,last:0,every:600000,quiet:600000,timeout:15000,reloadedAt:0,note:null,timer:0,
  safe:()=>!INTRIP,
