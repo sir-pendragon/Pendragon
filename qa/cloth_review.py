@@ -34,13 +34,13 @@ with sync_playwright() as p:
     # 1. 表示：幅ごとに横はみ出し・枠はみ出しがない（全部装備、最長の名前）
     for w in (320, 360, 390, 430, 600):
         pg, errs = fresh(w)
-        pg.evaluate("q.S.owned.acc=q.ACC.map(x=>x.id);q.S.owned.cloth=q.CLOTHES.map(x=>x.id);q.S.cloth='all';q.S.acc=['sg2','shoe1','hel2'];q.renderShop()")
+        pg.evaluate("q.S.owned.acc=q.ACC.map(x=>x.id);q.S.owned.cloth=q.CLOTHES.map(x=>x.id);q.S.cloth='all';q.S.acc=['sg2','shoe1','hel2','rain2'];q.renderShop()")
         open_eq(pg)
         r = pg.evaluate("""()=>{const g=document.querySelector('#eq-cloth .slots4'),sl=[...g.querySelectorAll('.slot')],gr=g.getBoundingClientRect();
           const bad=sl.filter(s=>{const r=s.getBoundingClientRect();return r.left<gr.left-1||r.right>gr.right+1||s.scrollWidth>s.clientWidth+1}).length;
           const cards=[...document.querySelectorAll('#eq-cloth .card, #shop-cloth .card')],cb=cards.filter(c=>{const n=c.querySelector('.name'),bt=c.querySelector('button,.pill');if(!bt)return false;const a=c.getBoundingClientRect(),b2=bt.getBoundingClientRect();return b2.right>a.right+1||n.scrollWidth>n.clientWidth+1}).length;
           return {slots:sl.length,on:g.querySelectorAll('.slot.on').length,bad,cb,hs:document.documentElement.scrollWidth>innerWidth+1}}""")
-        ok(f'layout {w}px', r['slots'] == 4 and r['on'] == 4 and r['bad'] == 0 and r['cb'] == 0 and not r['hs'] and not errs, (r, errs))
+        ok(f'layout {w}px', r['slots'] == 5 and r['on'] == 5 and r['bad'] == 0 and r['cb'] == 0 and not r['hs'] and not errs, (r, errs))
         pg.close()
     # 2. 購入→確認→所持・自動装備、同種は入れ替わり、外す、ウェアを変えても小物は残る、枠は常に4以内
     pg, errs = fresh(); open_eq(pg)
@@ -51,12 +51,14 @@ with sync_playwright() as p:
     s = pg.evaluate("[q.S.money,q.S.owned.acc,q.S.acc]"); ok('buy sg1 pays & equips', s == [m0 - 4000, ['sg1'], ['sg1']], s)
     buy('sg2'); s = pg.evaluate("[q.S.owned.acc,q.S.acc]"); ok('sg2 replaces sg1 (same type)', s == [['sg1', 'sg2'], ['sg2']], s)
     for i in ('shoe1', 'shoe3', 'hel1', 'hel2'): buy(i)
-    s = pg.evaluate("q.S.acc"); ok('one per type; max 3 accessories', s == ['sg2', 'shoe3', 'hel2'], s)
+    s = pg.evaluate("q.S.acc"); ok('one per type; max 4 accessories', s == ['sg2', 'shoe3', 'hel2'], s)
+    buy('rain1'); buy('rain2'); s = pg.evaluate("q.S.acc"); ok('outer: rain2 replaces rain1; 4 accessories + wear = 5 slots', s == ['sg2', 'shoe3', 'hel2', 'rain2'], s)
+    pg.evaluate("document.querySelector('#eq-cloth .card[data-id=rain2] button[data-act=unequip]').click()")
     pg.evaluate("q.S.owned.cloth.push('winter');q.renderShop()"); open_eq(pg)
     pg.evaluate("document.querySelector('#eq-cloth .card[data-id=winter] button[data-act=equip]').click()")
     s = pg.evaluate("[q.S.cloth,q.S.acc,document.querySelectorAll('#eq-cloth .slot.on').length]"); ok('wear change keeps accessories; 4 slots on', s == ['winter', ['sg2', 'shoe3', 'hel2'], 4], s)
     pg.evaluate("document.querySelector('#eq-cloth .card[data-id=shoe3] button[data-act=unequip]').click()")
-    s = pg.evaluate("[q.S.acc,document.querySelectorAll('#eq-cloth .slot.on').length,document.querySelectorAll('#eq-cloth .slot:not(.on)').length]"); ok('unequip empties slot', s == [['sg2', 'hel2'], 3, 1], s)
+    s = pg.evaluate("[q.S.acc,document.querySelectorAll('#eq-cloth .slot.on').length,document.querySelectorAll('#eq-cloth .slot:not(.on)').length]"); ok('unequip empties slot', s == [['sg2', 'hel2'], 3, 2], s)
     ok('no page errors (flow)', not errs, errs)
     # 3. 効果：加算と、ヘルメットでダメージ減（同じ条件の戦闘で比較）
     st0 = pg.evaluate("(()=>{q.S.acc=[];return q.bikeStats()})()"); st1 = pg.evaluate("(()=>{q.S.acc=['sg2','shoe3','hel2'];return q.bikeStats()})()")
