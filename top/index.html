@@ -117,8 +117,17 @@
   .album-pop .x{position:absolute;top:10px;right:14px;width:44px;height:44px;border:0;border-radius:50%;background:rgba(255,255,255,.15);color:#fff;font-size:26px;line-height:1;cursor:pointer}
 
   /* ---------- note: 公式埋め込み(iframe) ---------- */
-  .note-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:0 var(--gap);align-items:start}
-  .note-grid iframe.note-embed{width:100% !important;max-width:100% !important}
+  /* 1行のカルーセル: 横スワイプ、または左右の ＜ ＞ で1ページずつ。スマホは1件、PC(700px以上)は2件ずつ見える */
+  .note-carousel{position:relative}
+  .note-track{display:flex;gap:var(--gap);overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x mandatory;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+  .note-track::-webkit-scrollbar{display:none}
+  .note-track:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .note-slide{flex:0 0 100%;min-width:0;scroll-snap-align:start}
+  .note-slide iframe.note-embed{width:100% !important;max-width:100% !important}
+  .note-nav{position:absolute;top:50%;transform:translateY(-50%);z-index:2;width:44px;height:44px;border:1px solid var(--line);border-radius:50%;background:rgba(42,31,23,.88);color:var(--text);font-size:20px;line-height:1;cursor:pointer;padding:0}
+  .note-nav.prev{left:4px}
+  .note-nav.next{right:4px}
+  .note-nav[hidden]{display:none}
 
   /* ---------- フッター ---------- */
   footer{
@@ -130,6 +139,8 @@
   .settings-link[hidden]{display:none}
   .settings-link:hover{color:var(--text);border-color:var(--accent)}
 
+  @media (min-width:700px){ .note-slide{flex-basis:calc((100% - var(--gap)) / 2)} }
+
   /* ---------- PC(1024px以上) ---------- */
   @media (min-width:1024px){
     /* YouTube: 横1列に5枚。小さい4枚は4:3のサムネ+3行ぶんの本文で高さが決まり、
@@ -140,8 +151,8 @@
     .grid.feature .card:not(.main) .body{flex:1;min-height:calc(3 * 1.5 * 12px + 20px)}
     .grid.feature .card.main .thumb{aspect-ratio:auto;flex:1 1 0;min-height:0}
     .grid.feature .card.main .body{flex:none}
-    /* note: 2列 */
-    .note-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+    
+
   }
 </style>
 </head>
@@ -265,24 +276,54 @@ function loadNotes(){
     .then(a => { NOTE_IDS = Array.isArray(a) ? a.filter(i => typeof i === "string" && /^n[a-z0-9]{6,30}$/.test(i)) : []; })
     .catch(() => { NOTE_IDS = []; });
 }
-const noteGrid = document.createElement("div");
-noteGrid.className = "note-grid";
+const noteGrid = document.createElement("div");   // カルーセル全体(横1列)
+noteGrid.className = "note-carousel";
+const noteTrack = document.createElement("div");
+noteTrack.className = "note-track"; noteTrack.tabIndex = 0;
+noteTrack.setAttribute("role","region"); noteTrack.setAttribute("aria-label","noteの記事(左右にスワイプ、または矢印キー)");
+const notePrev = el("button","note-nav prev","＜"), noteNext = el("button","note-nav next","＞");
+notePrev.type = noteNext.type = "button";
+notePrev.setAttribute("aria-label","前の記事"); noteNext.setAttribute("aria-label","次の記事");
+function noteStep(dir){
+  const s = noteTrack.querySelector(".note-slide"); if(!s) return;
+  const gap = parseFloat(getComputedStyle(noteTrack).columnGap) || 0;
+  const per = Math.max(1, Math.round((noteTrack.clientWidth + gap) / (s.offsetWidth + gap)));   // 1ページ = 見えている件数
+  noteTrack.scrollBy({ left: dir * per * (s.offsetWidth + gap), behavior: "smooth" });
+}
+function noteNavUpdate(){
+  const max = noteTrack.scrollWidth - noteTrack.clientWidth;
+  notePrev.hidden = noteTrack.scrollLeft <= 2;
+  noteNext.hidden = noteTrack.scrollLeft >= max - 2;
+}
+notePrev.addEventListener("click",()=> noteStep(-1));
+noteNext.addEventListener("click",()=> noteStep(1));
+noteTrack.addEventListener("scroll",noteNavUpdate,{passive:true});
+noteTrack.addEventListener("keydown",e=>{
+  if(e.key === "ArrowLeft"){ e.preventDefault(); noteStep(-1); }
+  else if(e.key === "ArrowRight"){ e.preventDefault(); noteStep(1); }
+});
+window.addEventListener("resize",noteNavUpdate);
+noteGrid.append(noteTrack, notePrev, noteNext);
 function fillNoteGrid(){
   NOTE_IDS.forEach(id=>{
+    const slide = el("div","note-slide");
     const f = document.createElement("iframe");
     f.className = "note-embed"; f.loading = "lazy";
     f.src = "https://note.com/embed/notes/" + id;
     f.setAttribute("height","400");
     f.setAttribute("title","noteの記事");
     f.style.cssText = "border:0;display:block;max-width:99%;width:494px;padding:0;margin:10px 0;position:static;visibility:visible;";
-    noteGrid.appendChild(f);
+    slide.appendChild(f);
+    noteTrack.appendChild(slide);
   });
 }
 function buildNote(){
-  return noteGrid.children.length ? noteGrid : el("p","empty","まだ記事がありません。");
+  if(!noteTrack.children.length) return el("p","empty","まだ記事がありません。");
+  requestAnimationFrame(noteNavUpdate);
+  return noteGrid;
 }
 function loadNoteScript(){
-  if(!noteGrid.children.length || document.getElementById("note-embed-js")) return;
+  if(!noteTrack.children.length || document.getElementById("note-embed-js")) return;
   const sc = document.createElement("script");
   sc.id = "note-embed-js"; sc.async = true; sc.charset = "utf-8";
   sc.src = "https://note.com/scripts/embed.js";
