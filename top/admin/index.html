@@ -37,7 +37,7 @@
   .msg.ok{background:rgba(79,184,160,.18);border:1px solid var(--ok)}
   .msg.err{background:rgba(229,72,63,.18);border:1px solid var(--danger)}
   .confirm{margin-top:12px;padding:12px;border:1px solid var(--danger);border-radius:10px;background:rgba(229,72,63,.12)}
-  .confirm[hidden],.msg[hidden]{display:none}
+  .confirm[hidden],.msg[hidden],section[hidden]{display:none}
   details{margin-top:10px;color:var(--muted);font-size:13px}
   details ol{margin:6px 0 0;padding-left:20px}
   code{background:#1d150f;padding:1px 5px;border-radius:4px}
@@ -69,7 +69,7 @@
     </details>
   </section>
 
-  <section>
+  <section id="albumSec" hidden>
     <h2>掲載済みの写真 <span id="count" class="note" style="margin:0"></span></h2>
     <p class="note">削除したい写真を押して選び(赤くなります)、「選んだ写真を削除」を押してください。</p>
     <div class="grid" id="grid"></div>
@@ -94,6 +94,7 @@ const BRANCH = "main";
 const DIR = "top/album/";            // リポジトリ内の場所
 const LIST = DIR + "album.json";
 const KEY = "ura-note-gh-token";
+const FLAG = "ura-note-admin";       // 「設定」ボタンをこの端末で表示するための印
 const OK_NAME = /^album\/[A-Za-z0-9_-]+\.jpg$/;
 
 const $ = id => document.getElementById(id);
@@ -104,7 +105,8 @@ const selected = new Set();
 const store = {
   get(){ try{ return localStorage.getItem(KEY) || ""; }catch(e){ return ""; } },
   set(v){ try{ localStorage.setItem(KEY,v); return true; }catch(e){ return false; } },
-  del(){ try{ localStorage.removeItem(KEY); }catch(e){} }
+  del(){ try{ localStorage.removeItem(KEY); localStorage.removeItem(FLAG); }catch(e){} },
+  flag(){ try{ localStorage.setItem(FLAG,"1"); }catch(e){} }
 };
 let memToken = "";                   // 保存できないときは、このページを開いている間だけ保持
 const getToken = () => store.get() || memToken;
@@ -192,10 +194,12 @@ $("tokSave").addEventListener("click",()=>{
   const v = $("token").value.trim();
   if(!v){ $("tokState").textContent = "入力してください"; return; }
   memToken = v;
-  $("tokState").textContent = store.set(v) ? "保存しました" : "このページを開いている間だけ使います(保存できない設定です)";
+  if(store.set(v)) store.flag();
+  showAlbum();
+  $("tokState").textContent = store.get() ? "保存しました(この端末の「設定」ボタンが表示されます)" : "このページを開いている間だけ使います(保存できない設定です)";
   $("token").value = "";
 });
-$("tokClear").addEventListener("click",()=>{ store.del(); memToken = ""; $("token").value = ""; $("tokState").textContent = "消しました"; });
+$("tokClear").addEventListener("click",()=>{ store.del(); memToken = ""; $("token").value = ""; $("tokState").textContent = "消しました(この端末の「設定」ボタンも消えます)"; showAlbum(); });
 $("clearSel").addEventListener("click",()=>{ selected.clear(); $("confirm").hidden = true; render(); });
 $("delBtn").addEventListener("click",()=>{
   if(!getToken()){ showMsg("先にトークンを保存してください。", "err"); return; }
@@ -219,6 +223,8 @@ $("doDel").addEventListener("click", async ()=>{
   }
 });
 
+function showAlbum(){ $("albumSec").hidden = !getToken(); }
+showAlbum();
 $("tokState").textContent = store.get() ? "保存済みのトークンがあります" : "";
 loadList();
 </script>

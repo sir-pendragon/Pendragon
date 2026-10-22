@@ -126,6 +126,7 @@
   }
 
   .settings-link{display:inline-block;margin-bottom:10px;padding:6px 14px;border:1px solid var(--line);border-radius:999px;color:var(--muted);text-decoration:none;font-size:13px}
+  .settings-link[hidden]{display:none}
   .settings-link:hover{color:var(--text);border-color:var(--accent)}
 
   /* ---------- PC(1024px以上) ---------- */
@@ -162,7 +163,7 @@
   <main id="main"></main>
 
   <footer>
-    <a class="settings-link" href="admin/">⚙ 設定</a>
+    <a class="settings-link" href="admin/" hidden>⚙ 設定</a>
     <div>(c) キャメロット王国自転車旅推進室</div>
   </footer>
 </div>
@@ -389,6 +390,9 @@ function renderMain(){
     main.appendChild(sec);
   });
 }
+
+/* 「設定」ボタンは、設定画面でトークンを保存した端末(ブラウザ)にだけ表示する */
+try{ if(localStorage.getItem("ura-note-admin") === "1") document.querySelector(".settings-link").hidden = false; }catch(e){}
 
 /* 写真の一覧を読み込んでから表示する(note の埋め込みを何度も読み直さないため) */
 loadAlbum().then(()=>{ renderTabs(); renderMain(); loadNoteScript(); });
