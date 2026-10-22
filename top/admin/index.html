@@ -31,8 +31,14 @@
   .item img{width:100%;height:100%;object-fit:cover;display:block}
   .item .mark{position:absolute;top:6px;right:6px;width:26px;height:26px;border-radius:50%;background:rgba(0,0,0,.55);border:2px solid #fff;display:flex;align-items:center;justify-content:center;font-size:16px;line-height:1;color:#fff}
   .item.sel{border-color:var(--danger)}
+  .item.sel-add{border-color:var(--ok)}
   .item.sel img{opacity:.45}
   .item.sel .mark{background:var(--danger);border-color:var(--danger)}
+  .item .tag{position:absolute;left:0;right:0;bottom:0;padding:2px 4px;font-size:11px;line-height:1.3;background:rgba(0,0,0,.7);text-align:center}
+  .item.off{border-color:var(--line)}
+  .item.off img{opacity:.35}
+  .item.bad{border-color:var(--danger)}
+  input[type=file]{max-width:100%;color:var(--muted)}
   .msg{margin-top:10px;padding:10px 12px;border-radius:8px;font-size:14px}
   .msg.ok{background:rgba(79,184,160,.18);border:1px solid var(--ok)}
   .msg.err{background:rgba(229,72,63,.18);border:1px solid var(--danger)}
@@ -48,6 +54,19 @@
   <p><a href="../">← 「裏」ノートにもどる</a></p>
   <h1>設定</h1>
   <p class="note">この画面は、Cloudflare Access で守られた自分専用の画面です。</p>
+
+  <section id="addSec">
+    <h2>写真を追加</h2>
+    <p class="note">写真を選ぶと、ブラウザの中で縮小します(公開用 長辺1600px・一覧用 480px)。このとき撮影場所(GPS)などの情報は取り除かれます。1回に10枚までです。JPG・PNG・WebP が使えます(iPhone の HEIC は、多くのパソコンのブラウザで開けないため、JPG に変換してください)。</p>
+    <input type="file" id="files" accept="image/jpeg,image/png,image/webp" multiple>
+    <p class="note" id="addHint" hidden>追加前に、人の顔・表札・ナンバーなどの個人情報が写っていないか確認してください。同じ写真は自動で外れます(押すと入れ替えられます)。</p>
+    <div class="grid" id="addGrid"></div>
+    <div class="row">
+      <button class="btn" id="addBtn" type="button" disabled>選んだ写真を追加</button>
+      <button class="btn" id="addClear" type="button" disabled>選び直す</button>
+    </div>
+    <div class="msg" id="addMsg" hidden role="status"></div>
+  </section>
 
   <section id="albumSec">
     <h2>掲載済みの写真 <span id="count" class="note" style="margin:0"></span></h2>
@@ -126,6 +145,112 @@ function explain(e){
   if(e.status === 403 || e.status === 401) return "ログインが切れたか、サーバー側の設定(ACCESS_AUD)が合っていません。ページを読み込み直して、もう一度お試しください。";
   if(e.code === "github") return "GitHub への書き込みに失敗しました。トークンの権限(Contents: Read and write)と期限を確認してください。(" + (e.gh || "?") + ")";
   return "削除できませんでした。通信を確認して、もう一度お試しください。(" + (e.status || e.message) + ")";
+}
+
+/* ---------- 写真の追加 ---------- */
+const MAX_ADD = 10, FULL_LONG = 1600, THUMB = 480, DUP_SIM = 0.95;
+let addItems = [];
+const hashCache = new Map();         // 既存の写真の「見た目の指紋」(同じ写真の検出用)
+
+function showAddMsg(text, kind){ const m = $("addMsg"); m.textContent = text; m.className = "msg " + kind; m.hidden = false; }
+
+async function loadBitmap(file){
+  try{ return await createImageBitmap(file, { imageOrientation:"from-image" }); }
+  catch(e){
+    return await new Promise((ok, ng)=>{ const u = URL.createObjectURL(file), im = new Image();
+      im.onload = ()=>{ URL.revokeObjectURL(u); ok(im); }; im.onerror = ()=>{ URL.revokeObjectURL(u); ng(new Error("decode")); }; im.src = u; });
+  }
+}
+const canvasOf = (w, h) => { const c = document.createElement("canvas"); c.width = w; c.height = h; return c; };
+const toJpeg = (c, q) => new Promise(r => c.toBlob(r, "image/jpeg", q));
+function blobToB64(b){ return new Promise((ok, ng)=>{ const f = new FileReader(); f.onload = ()=> ok(String(f.result).split(",")[1]); f.onerror = ()=> ng(new Error("read")); f.readAsDataURL(b); }); }
+
+// 見た目の指紋: 16x16 に縮小した色の並び。2枚の相関が 0.95 以上なら「同じ写真」とみなす
+// (手元の写真26枚で測定: 同じ写真どうし 0.9998、別の写真どうしの最大 0.61)
+function dhash(src){
+  const c = canvasOf(16, 16), x = c.getContext("2d"); x.drawImage(src, 0, 0, 16, 16);
+  const d = x.getImageData(0, 0, 16, 16).data, v = [];
+  for(let i = 0; i < d.length; i += 4) v.push(d[i], d[i+1], d[i+2]);
+  const m = v.reduce((a, b) => a + b, 0) / v.length;
+  return v.map(a => a - m);
+}
+function similar(a, b){
+  let ab = 0, aa = 0, bb = 0;
+  for(let i = 0; i < a.length; i++){ ab += a[i]*b[i]; aa += a[i]*a[i]; bb += b[i]*b[i]; }
+  return aa > 0 && bb > 0 && ab / Math.sqrt(aa * bb);
+}
+async function existingHash(f){
+  if(hashCache.has(f)) return hashCache.get(f);
+  const h = await new Promise(ok => { const im = new Image(); im.onload = ()=> ok(dhash(im)); im.onerror = ()=> ok(null); im.src = thumbOf(f); });
+  hashCache.set(f, h); return h;
+}
+
+async function prepare(file){
+  const bmp = await loadBitmap(file);
+  const w = bmp.width, h = bmp.height, k = Math.min(1, FULL_LONG / Math.max(w, h));
+  const full = canvasOf(Math.round(w*k), Math.round(h*k)); full.getContext("2d").drawImage(bmp, 0, 0, full.width, full.height);
+  let fb = await toJpeg(full, 0.85); if(fb.size > 2400000) fb = await toJpeg(full, 0.7);
+  const s = Math.min(w, h), th = canvasOf(THUMB, THUMB);
+  th.getContext("2d").drawImage(bmp, (w-s)/2, (h-s)/2, s, s, 0, 0, THUMB, THUMB);
+  const tb = await toJpeg(th, 0.8);
+  return { fullB64: await blobToB64(fb), thumbB64: await blobToB64(tb), url: th.toDataURL("image/jpeg", 0.6), hash: dhash(th) };
+}
+
+function renderAdd(){
+  const g = $("addGrid"); g.textContent = "";
+  addItems.forEach(it=>{
+    const b = document.createElement("button"); b.type = "button";
+    b.className = "item" + (it.err ? " bad" : it.include ? " sel-add" : " off");
+    const im = new Image(); im.alt = ""; if(it.url) im.src = it.url;
+    const tg = document.createElement("span"); tg.className = "tag";
+    tg.textContent = it.err ? it.err : it.dup ? (it.include ? "同じ写真あり(追加する)" : "同じ写真あり(外しました)") : it.include ? "追加する" : "追加しない";
+    b.append(im, tg);
+    if(!it.err) b.addEventListener("click", ()=>{ it.include = !it.include; renderAdd(); });
+    g.appendChild(b);
+  });
+  const n = addItems.filter(i => i.include && !i.err).length;
+  $("addBtn").disabled = n === 0; $("addBtn").textContent = n ? ("選んだ写真を追加(" + n + "枚)") : "選んだ写真を追加";
+  $("addClear").disabled = addItems.length === 0; $("addHint").hidden = addItems.length === 0;
+}
+
+$("files").addEventListener("change", async e=>{
+  let list = Array.from(e.target.files || []); $("addMsg").hidden = true;
+  if(list.length > MAX_ADD){ list = list.slice(0, MAX_ADD); showAddMsg("1回に追加できるのは" + MAX_ADD + "枚までなので、先頭の" + MAX_ADD + "枚だけ読み込みました。", "err"); }
+  addItems = list.map(f => ({ name: f.name, include: false, err: "読み込み中…" })); renderAdd();
+  const known = [];                                     // すでに載っている写真の指紋
+  for(const f of photos){ const h = await existingHash(f); if(h) known.push(h); }
+  for(let i = 0; i < list.length; i++){
+    try{
+      const r = await prepare(list[i]);
+      const dup = known.some(h => similar(h, r.hash) >= DUP_SIM);
+      known.push(r.hash);
+      addItems[i] = { name: list[i].name, ...r, dup, include: !dup, err: "" };
+    }catch(err){ addItems[i] = { name: list[i].name, include: false, err: "読み込めません(HEICは未対応)" }; }
+    renderAdd();
+  }
+});
+$("addClear").addEventListener("click", ()=>{ addItems = []; $("files").value = ""; $("addMsg").hidden = true; renderAdd(); });
+$("addBtn").addEventListener("click", async ()=>{
+  const use = addItems.filter(i => i.include && !i.err); if(!use.length) return;
+  $("addBtn").disabled = true; $("addClear").disabled = true; showAddMsg("追加しています…", "ok");
+  try{
+    const r = await fetch("api/add", { method:"POST", credentials:"same-origin", headers:{ "Content-Type":"application/json" }, body: JSON.stringify({ photos: use.map(i => ({ full: i.fullB64, thumb: i.thumbB64 })) }) });
+    const j = await r.json().catch(()=> ({}));
+    if(!r.ok){ const e = new Error(j.error || ("http " + r.status)); e.status = r.status; e.code = j.error; e.gh = j.status; throw e; }
+    photos = j.list.filter(f => OK_NAME.test(f)); selected.clear(); render();
+    addItems = []; $("files").value = ""; renderAdd();
+    showAddMsg(j.added.length + "枚を追加しました。公開サイトへの反映には1〜2分ほどかかります。", "ok");
+  }catch(e){
+    showAddMsg(explainAdd(e), "err"); renderAdd();
+  }
+});
+function explainAdd(e){
+  if(e.code === "not_configured") return "サーバー側の設定(GITHUB_TOKEN)がまだ入っていません。";
+  if(e.status === 403 || e.status === 401) return "ログインが切れたか、サーバー側の設定(ACCESS_AUD)が合っていません。ページを読み込み直して、もう一度お試しください。";
+  if(e.code === "too_large" || e.status === 413) return "写真のサイズが大きすぎます。枚数を減らして、もう一度お試しください。";
+  if(e.code === "has_exif" || e.code === "not_jpeg") return "写真の形式を確認できませんでした。別の写真でお試しください。(" + e.code + ")";
+  if(e.code === "github") return "GitHub への書き込みに失敗しました。トークンの権限(Contents: Read and write)と期限を確認してください。(" + (e.gh || "?") + ")";
+  return "追加できませんでした。通信を確認して、もう一度お試しください。(" + (e.status || e.message) + ")";
 }
 
 /* ---------- 操作 ---------- */
