@@ -129,6 +129,14 @@
   .note-nav.next{right:4px}
   .note-nav[hidden]{display:none}
 
+  /* ---------- 3Dビューア(iframe) ---------- */
+  .viewer-box{max-width:100%}
+  .viewer-frame{display:block;width:100%;max-width:100%;height:700px;border:0;border-radius:12px;background:#1f1610}
+  .viewer-link{margin:10px 0 0;font-size:14px}
+  .viewer-link a{color:var(--accent)}
+  @media (max-width:699px){ .viewer-frame{height:clamp(460px,78vh,640px)} }
+  @supports (height:1svh){ @media (max-width:699px){ .viewer-frame{height:clamp(460px,78svh,640px)} } }
+
   /* ---------- フッター ---------- */
   footer{
     margin-top:40px;padding-top:16px;border-top:1px solid var(--line);
@@ -204,8 +212,11 @@ const ITEMS = [
 const KINDS = [
   { id:"youtube",   label:"YouTube" },
   { id:"album",     label:"マイアルバム" },
-  { id:"note",      label:"note" }
+  { id:"note",      label:"note" },
+  { id:"viewer",    label:"3Dビューア", heading:"PENDRAGON Titanium Coupler Project" }
 ];
+const VIEWER_URL = "https://pendragon-3-viewer.vercel.app/viewers/titaniumgr-bicycle/bike";
+const VIEWER_NAME = "PENDRAGON Titanium Coupler Project";
 
 
 /* ============================================================
@@ -317,6 +328,21 @@ function fillNoteGrid(){
     noteTrack.appendChild(slide);
   });
 }
+/* 3Dビューア: 公開ページをそのまま iframe で読み込む(コピー・再実装はしない。「分割」「走行」はビューア内のボタンを使う) */
+function buildViewer(){
+  const box = el("div","viewer-box");
+  const f = document.createElement("iframe");
+  f.className = "viewer-frame";
+  f.src = VIEWER_URL; f.title = VIEWER_NAME; f.loading = "lazy";
+  f.setAttribute("allow","fullscreen"); f.setAttribute("allowfullscreen","");
+  box.appendChild(f);
+  const p = el("p","viewer-link");
+  const a = el("a",null,"3Dビューアを別画面で開く");
+  a.href = VIEWER_URL; a.target = "_blank"; a.rel = "noopener";
+  p.appendChild(a);
+  box.appendChild(p);
+  return box;
+}
 function buildNote(){
   if(!noteTrack.children.length) return el("p","empty","まだ記事がありません。");
   requestAnimationFrame(noteNavUpdate);
@@ -414,9 +440,11 @@ function renderMain(){
       head.appendChild(sh);
       sec.appendChild(head);
     }else{
-      sec.appendChild(el("h2",null,k.label));
+      sec.appendChild(el("h2",null,k.heading || k.label));
     }
-    if(k.id === "album"){
+    if(k.id === "viewer"){
+      sec.appendChild(buildViewer());
+    }else if(k.id === "album"){
       sec.appendChild(buildAlbum());
     }else if(k.id === "note"){
       sec.appendChild(buildNote());
