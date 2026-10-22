@@ -375,7 +375,7 @@ html:has(.overlay:not([hidden]):not(#ov-tut)),body:has(.overlay:not([hidden]):no
 .rules-box{position:relative;text-align:left;border:1px solid #b89a5e;background:#e6d3a0;color:#000;border-radius:8px;padding:5px 9px;margin:0}
 .rules-box .rules-h{margin:0 0 1px;font-size:12px;text-align:left;color:#000}
 #ov-title .row button{white-space:nowrap;padding-left:6px;padding-right:6px}
-#ov-title .row #btn-video{flex:1.1;white-space:normal;font-size:11px;line-height:1.25}
+#ov-title .row .ura-btn{flex:2.2;display:flex;align-items:center;justify-content:center;border:1px solid var(--line);background:var(--panel);border-radius:6px;padding:4px 6px;text-decoration:none;-webkit-tap-highlight-color:transparent}#ov-title .row .ura-btn img{display:block;width:100%;max-width:230px;height:auto}#ov-title .row .ura-btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}@media(max-width:520px){#ov-title .row .ura-btn{flex:1 1 100%;padding:6px}#ov-title .row .ura-btn img{max-width:170px}}
 .rules-box .hint{margin:0;font-size:var(--fs-xs);line-height:1.35;color:#000}
 .copy{text-align:center;margin:1em 0 0;font-size:11px}
 #ov-title label[for=start-pref]{display:block;text-align:left;margin:2px 0 0;line-height:1.2}
@@ -475,7 +475,7 @@ html:has(.overlay:not([hidden]):not(#ov-tut)),body:has(.overlay:not([hidden]):no
     <p class="hint">毎週末が1ターン。1年＝52ターン。<br>坂・動物・強風・大雨・台風・ライバルがあなたの自転車旅を阻む！</p>
     </div>
     <label class="hint" for="start-pref">出発地（自宅）を選ぶ</label><select id="start-pref"></select>
-    <div class="row"><button class="primary" id="btn-new">スタート</button><button id="btn-cont" hidden>再開する</button><button id="btn-load">セーブデータを<br>読み込む</button><button id="btn-video" aria-haspopup="dialog">▶ 酔狂な作者の<br>YouTube動画</button></div>
+    <div class="row"><button class="primary" id="btn-new">スタート</button><button id="btn-cont" hidden>再開する</button><button id="btn-load">セーブデータを<br>読み込む</button><a id="btn-ura" class="ura-btn" href="top/"><img src="img/ura-note-logo.webp" width="420" height="151" alt="デザイナーズ『裏』ノート" decoding="async"></a></div>
     <p class="hint copy">(c) キャメロット王国自転車旅推進室</p>
   </div>
 </div>
@@ -1467,7 +1467,6 @@ $('sightbook').onclick=e=>{const nb=e.target.closest('[data-pg]');if(nb){SGPG+=+
 $('sg-x').onclick=()=>{$('ov-sight').hidden=true;};
 // タイトル画面の動画：押したときだけ YouTube を読み込む（プライバシー強化モード）。閉じると iframe ごと消して再生を止める
 const VIDEO_ID='32V6wl-Hv6k';
-$('btn-video').onclick=()=>{const f=document.createElement('iframe');f.src='https://www.youtube-nocookie.com/embed/'+VIDEO_ID+'?autoplay=1&rel=0&playsinline=1';f.title='酔狂な作者のYouTube動画';f.allow='autoplay; encrypted-media; picture-in-picture; fullscreen';f.allowFullscreen=true;f.referrerPolicy='strict-origin-when-cross-origin';$('vid-box').replaceChildren(f);$('ov-video').hidden=false;try{const a=AUD.cur&&AUD.cache[AUD.cur];if(a)a.pause();}catch(e){}};
 $('vid-x').onclick=()=>{$('vid-box').replaceChildren();$('ov-video').hidden=true;bgmApply();};
 $('go-no').onclick=()=>{$('ov-go').hidden=true;};
 $('go-eq').onclick=()=>{$('ov-go').hidden=true;$('tab-gear').click();};
