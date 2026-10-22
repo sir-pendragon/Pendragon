@@ -39,8 +39,11 @@
   .crest path{stroke:var(--accent)}
 
   /* ---------- ヘッダー・タブ ---------- */
-  .back{display:inline-block;padding:8px 0;color:var(--accent);font-size:14px;text-decoration:none}
-  .back:hover{text-decoration:underline}
+  .back{display:inline-flex;align-items:center;gap:8px;margin:4px 0;padding:4px 12px 4px 10px;border:1px solid var(--line);border-radius:10px;background:var(--bg-2);color:var(--accent);text-decoration:none;-webkit-tap-highlight-color:transparent}
+  .back .arrow{font-size:18px;line-height:1}
+  .back img{display:block;height:44px;width:auto}
+  .back:hover{border-color:var(--accent);background:var(--card)}
+  .back:focus-visible,.tab-x:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
   header{text-align:center;padding:16px 0 24px}
   header h1{margin:0}
   .title-logo{display:block;width:min(560px,86%);height:auto;margin:0 auto}
@@ -50,6 +53,9 @@
     padding:8px 16px;border:1px solid var(--line);border-radius:999px;
     background:var(--bg-2);color:var(--text);font-size:14px;cursor:pointer;
   }
+  .tab-x{display:inline-flex;align-items:center;justify-content:center;min-height:36px;padding:0 14px;border:1px solid var(--line);border-radius:999px;background:#000;text-decoration:none;-webkit-tap-highlight-color:transparent}
+  .tab-x img{display:block;width:16px;height:auto}
+  .tab-x:hover{border-color:var(--accent)}
   .tab[aria-pressed="true"]{border-color:var(--accent);background:var(--accent);color:var(--bg);font-weight:700}
 
   /* ---------- セクション見出し(--c で種類ごとの色) ---------- */
@@ -173,7 +179,7 @@
   </svg>
 </div>
 <div class="wrap">
-  <a class="back" href="../">← 日本巡る自転車旅（ゲーム）にもどる</a>
+  <a class="back" href="../" aria-label="日本巡る自転車旅(ゲーム)にもどる"><span class="arrow" aria-hidden="true">←</span><img src="../img/logo_btn.webp" width="280" height="143" alt="日本巡る自転車旅" decoding="async"></a>
   <header>
     <h1><img class="title-logo" src="title-logo.webp" width="1000" height="360" fetchpriority="high" decoding="async" alt="日本巡る自転車旅 デザイナーズ『裏』ノート"></h1>
     <p>開発の裏側や旅の記録へのリンクです</p>
@@ -418,6 +424,13 @@ function renderTabs(){
     b.addEventListener("click",()=>{ state.filter = k.id; renderTabs(); renderMain(); });
     nav.appendChild(b);
   });
+  /* Xで共有する(押すと X の投稿画面が開く。投稿するかどうかはその画面で決める) */
+  const x = el("a","tab-x");
+  x.href = "https://x.com/intent/post?text=" + encodeURIComponent("デザイナーズ『裏』ノート | 日本巡る自転車旅") + "&url=" + encodeURIComponent("https://jitensha-tabi.com/top/");
+  x.target = "_blank"; x.rel = "noopener noreferrer"; x.setAttribute("aria-label","Xで共有する");
+  const xi = new Image(); xi.src = "../img/x-icon.webp"; xi.width = 64; xi.height = 65; xi.alt = "";
+  x.appendChild(xi);
+  nav.appendChild(x);
 }
 
 function renderMain(){
