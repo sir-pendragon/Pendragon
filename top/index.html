@@ -430,7 +430,8 @@ function buildCard(it){
    ・使えない端末(多くのPC): GIF を保存して X の投稿画面を開く → 画面で GIF を添付
    のどちらかになります。GIF(約3.5MB)は、ボタンに触れたときに初めて読み込みます。 */
 const SHARE_URL = "https://jitensha-tabi.com/top/";
-const SHARE_TEXT = "デザイナーズ裏ノート\n\n作者の動画や画像や記事をまとめました\nオリジナル分割チタングラベルも開発中！\n3Dビューア公開してます\n\n" + SHARE_URL + "\n\n#自転車旅\n#輪行";
+/* 空行を入れない: X のタイムラインは行数が多いと「さらに表示」で折りたたみ、末尾のハッシュタグが隠れるため(7行以内に収める) */
+const SHARE_TEXT = "デザイナーズ裏ノート\n作者の動画や画像や記事をまとめました\nオリジナル分割チタングラベルも開発中！\n3Dビューア公開してます\n" + SHARE_URL + "\n#自転車旅 #輪行";
 const SHARE_FILE = "jitensha-tabi-3d.gif";
 const X_INTENT = "https://x.com/intent/post?text=" + encodeURIComponent(SHARE_TEXT);
 let shareGifP = null, shareBusy = false;
