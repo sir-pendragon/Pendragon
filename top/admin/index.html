@@ -61,7 +61,7 @@
 
   <section id="addSec">
     <h2>写真を追加</h2>
-    <p class="note">写真を選ぶと、ブラウザの中で縮小します(公開用 長辺1600px・一覧用 480px)。このとき撮影場所(GPS)などの情報は取り除かれます。1回に10枚までです。JPG・PNG・WebP が使えます(iPhone の HEIC は、多くのパソコンのブラウザで開けないため、JPG に変換してください)。</p>
+    <p class="note">写真を選ぶと、ブラウザの中で縮小します(公開用 長辺1600px・一覧用 360px)。このとき撮影場所(GPS)などの情報は取り除かれます。1回に10枚までです。JPG・PNG・WebP が使えます(iPhone の HEIC は、多くのパソコンのブラウザで開けないため、JPG に変換してください)。</p>
     <input type="file" id="files" accept="image/jpeg,image/png,image/webp" multiple>
     <p class="note" id="addHint" hidden>追加前に、人の顔・表札・ナンバーなどの個人情報が写っていないか確認してください。同じ写真は自動で外れます。写真を押すと「追加する/しない」が切り替わり、左上の「×」で一覧から取り除けます。</p>
     <div class="grid" id="addGrid"></div>
@@ -152,7 +152,7 @@ function explain(e){
 }
 
 /* ---------- 写真の追加 ---------- */
-const MAX_ADD = 10, FULL_LONG = 1600, THUMB = 480, DUP_SIM = 0.95;
+const MAX_ADD = 10, FULL_LONG = 1600, THUMB = 360, DUP_SIM = 0.95;
 let addItems = [];
 const hashCache = new Map();         // 既存の写真の「見た目の指紋」(同じ写真の検出用)
 

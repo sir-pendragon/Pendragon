@@ -227,7 +227,7 @@ function buildAlbum(){
     const b = el("button","album-item");
     b.type = "button"; b.setAttribute("aria-label","写真を大きく表示");
     const im = new Image();
-    im.src = src.replace("album/","album/t/"); im.loading = "lazy"; im.decoding = "async"; im.width = 480; im.height = 480; im.alt = "";
+    im.src = src.replace("album/","album/t/"); im.loading = "lazy"; im.decoding = "async"; im.width = 360; im.height = 360; im.alt = "";
     im.onerror = ()=> b.remove();
     b.appendChild(im);
     b.addEventListener("click",()=> openAlbum(src));

@@ -1,5 +1,5 @@
 // POST /top/admin/api/add  { "photos": [ { "full": "<base64 JPEG>", "thumb": "<base64 JPEG>" }, ... ] }  … マイアルバムに写真を追加する(Access 配下)
-// 画像の縮小(長辺1600px / 一覧用480px)と位置情報の除去は、管理画面(ブラウザ)側で済んでいる。ここでは形式と大きさを確認して保存する。
+// 画像の縮小(長辺1600px / 一覧用360px)と位置情報の除去は、管理画面(ブラウザ)側で済んでいる。ここでは形式と大きさを確認して保存する。
 // 必要な環境変数: GITHUB_TOKEN(シークレット) / ACCESS_AUD
 import { gh, json, guard, readHead, commitAll } from "../../../_lib/admin.js";
 
