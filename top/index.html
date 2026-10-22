@@ -58,6 +58,8 @@
     background:var(--bg-2);color:var(--text);font-size:14px;cursor:pointer;
   }
   .tab-x{display:inline-flex;align-items:center;justify-content:center;min-height:36px;padding:0 14px;border:1px solid var(--line);border-radius:999px;background:#000;text-decoration:none;-webkit-tap-highlight-color:transparent}
+  .share-msg{margin:-12px 0 20px;text-align:center;color:var(--muted);font-size:13px;line-height:1.5}
+  .share-msg[hidden]{display:none}
   .tab-x img{display:block;width:16px;height:auto}
   .tab-x:hover{border-color:var(--accent)}
   .tab[aria-pressed="true"]{border-color:var(--accent);background:var(--accent);color:var(--bg);font-weight:700}
@@ -190,6 +192,7 @@
   </header>
 
   <nav class="tabs" id="tabs" aria-label="絞り込み"></nav>
+  <p class="share-msg" id="share-msg" role="status" hidden></p>
   <main id="main"></main>
 
   <footer>
@@ -418,6 +421,50 @@ function buildCard(it){
   return card;
 }
 
+/* ---------- Xで共有(GIFつき) ----------
+   X の投稿画面を開くリンクには、画像や GIF を付ける仕組みがありません。そのため、
+   ・スマホなど共有機能(Web Share)が使える端末: GIF と文章をまとめて共有 → 共有先に X を選ぶ
+   ・使えない端末(多くのPC): GIF を保存して X の投稿画面を開く → 画面で GIF を添付
+   のどちらかになります。GIF(約3.5MB)は、ボタンに触れたときに初めて読み込みます。 */
+const SHARE_TEXT = "デザイナーズ『裏』ノート | 日本巡る自転車旅";
+const SHARE_URL = "https://jitensha-tabi.com/top/";
+const SHARE_FILE = "jitensha-tabi-3d.gif";
+const X_INTENT = "https://x.com/intent/post?text=" + encodeURIComponent(SHARE_TEXT) + "&url=" + encodeURIComponent(SHARE_URL);
+let shareGifP = null, shareBusy = false;
+function loadShareGif(){
+  if(!shareGifP) shareGifP = fetch("share/3d-viewer.gif").then(r => r.ok ? r.blob() : Promise.reject(new Error("gif"))).catch(e => { shareGifP = null; throw e; });
+  return shareGifP;
+}
+function shareSay(t){ const m = document.getElementById("share-msg"); if(!m) return; m.textContent = t; m.hidden = !t; }
+async function shareX(){
+  if(shareBusy) return; shareBusy = true;
+  const text = SHARE_TEXT + "\n" + SHARE_URL;
+  let copied = false;
+  try{ await navigator.clipboard.writeText(text); copied = true; }catch(e){}
+  const CP = copied ? "文章をコピーしました。Xの投稿欄が空のときは、長押しで貼り付けてください。" : "";
+  try{
+    shareSay("GIFを準備しています…");
+    let blob = null;
+    try{ blob = await loadShareGif(); }catch(e){}
+    if(!blob){ shareSay("GIFを読み込めませんでした。通信を確認して、もう一度押してください。"); return; }
+    const file = new File([blob], SHARE_FILE, { type:"image/gif" });
+    if(navigator.canShare && navigator.canShare({ files:[file] })){
+      try{ await navigator.share({ files:[file], text }); shareSay(CP); return; }
+      catch(e){
+        if(e && e.name === "AbortError"){ shareSay(CP); return; }
+        if(e && e.name === "NotAllowedError"){ shareSay("準備ができました。もう一度ボタンを押してください。"); return; }
+      }
+    }
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob); a.download = SHARE_FILE;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=> URL.revokeObjectURL(a.href), 4000);
+    window.open(X_INTENT, "_blank", "noopener");
+    shareSay("GIFを保存しました。Xの投稿画面で、そのGIFを添付してください。" + CP);
+  }catch(e){ shareSay("共有できませんでした。もう一度お試しください。"); }
+  finally{ shareBusy = false; }
+}
+
 function renderTabs(){
   const nav = document.getElementById("tabs");
   nav.textContent = "";
@@ -430,8 +477,10 @@ function renderTabs(){
   });
   /* Xで共有する(押すと X の投稿画面が開く。投稿するかどうかはその画面で決める) */
   const x = el("a","tab-x");
-  x.href = "https://x.com/intent/post?text=" + encodeURIComponent("デザイナーズ『裏』ノート | 日本巡る自転車旅") + "&url=" + encodeURIComponent("https://jitensha-tabi.com/top/");
-  x.target = "_blank"; x.rel = "noopener noreferrer"; x.setAttribute("aria-label","Xで共有する");
+  x.href = X_INTENT;   /* JS が動かないときの予備(文章とリンクだけの投稿画面)。通常は下の shareX() が GIF つきで共有する */
+  x.target = "_blank"; x.rel = "noopener noreferrer"; x.setAttribute("aria-label","Xで共有する(GIFつき)");
+  x.addEventListener("click", e=>{ e.preventDefault(); shareX(); });
+  ["pointerdown","focus","mouseenter"].forEach(ev => x.addEventListener(ev, loadShareGif, {passive:true, once:true}));
   const xi = new Image(); xi.src = "../img/x-icon.webp"; xi.width = 64; xi.height = 65; xi.alt = "";
   x.appendChild(xi);
   nav.appendChild(x);
