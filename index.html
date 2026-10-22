@@ -229,6 +229,11 @@ button:disabled{opacity:.45;cursor:not-allowed}
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:16px;z-index:10;overflow:auto;overscroll-behavior:contain}
 .setrow{display:grid;grid-template-columns:4.5em 4.5em 1fr;gap:8px;align-items:center}
 .setrow input[type=range]{width:100%;accent-color:var(--accent)}
+#ov-set .modal{gap:6px;padding:12px 16px}
+#ov-set h3{margin:6px 0 0;line-height:1.2}
+#ov-set .hint{margin:0;line-height:1.35}
+#ov-set .row{margin-top:2px;gap:8px}
+#ov-set .row button,#ov-set #set-tut,#ov-set #set-close{padding:6px 12px}
 #pop{position:fixed;left:50%;transform:translateX(-50%) rotate(-.5deg);width:min(calc(100vw - 32px),420px);z-index:9;color:#2e2415;font-family:'Zen Old Mincho','Hiragino Mincho ProN','Yu Mincho',serif;border:2px solid #000;border-radius:3px;padding:14px 16px 12px;box-shadow:0 0 0 1px rgba(0,0,0,.6),6px 8px 0 rgba(0,0,0,.75),0 14px 34px rgba(0,0,0,.65);
   background:linear-gradient(90deg,transparent 0 30px,rgba(190,70,60,.35) 30px 31px,transparent 31px),repeating-linear-gradient(transparent 0 26px,rgba(90,120,160,.22) 26px 27px),#f6efdc}
 #pop::before{content:"";position:absolute;left:0;right:0;top:-1px;height:8px;background:radial-gradient(circle at 6px 0,transparent 4px,#f6efdc 4.5px) 0 0/12px 8px repeat-x;filter:drop-shadow(0 -2px 0 #000)}
@@ -592,7 +597,7 @@ html:has(.overlay:not([hidden]):not(#ov-tut)),body:has(.overlay:not([hidden]):no
     <h3>セーブデータ</h3>
     <div class="setrow"><span>ファイル保存</span><button id="fs-t"></button><select id="fs-every" aria-label="ファイル保存をするタイミング"><option value="1">毎ターン（毎週）</option><option value="4">4ターンごと（約1か月）</option><option value="13">13ターンごと（季節）おすすめ</option><option value="52">52ターンごと（1年）</option></select></div>
     <p class="hint">ブラウザの閲覧データを消すとゲームデータが消えます。その保険にファイル保存を選べます。オンにすると、選んだタイミングで週末が進むたびにセーブデータのファイルがダウンロードされます。古いセーブデータは手動で削除してください。</p>
-    <div class="row" style="margin-top:10px"><button id="sv-out">今すぐ保存する</button><button id="sv-in">データを読み込む</button></div>
+    <div class="row"><button id="sv-out">今すぐ保存する</button><button id="sv-in">データを読み込む</button></div>
     <input type="file" id="sv-file" accept=".json,application/json" hidden>
     <p class="hint" id="sv-msg" hidden></p>
     <h3>出典</h3>
