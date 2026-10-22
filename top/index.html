@@ -6,14 +6,14 @@
 <!-- 下書き: 公開前に noindex を削除すること -->
 <meta name="robots" content="noindex, nofollow">
 <title>デザイナーズ『裏』ノート | 日本巡る自転車旅</title>
-<meta name="description" content="日本巡る自転車旅の「デザイナーズ『裏』ノート」。YouTube・Instagram・noteへのリンクをまとめています。">
+<meta name="description" content="日本巡る自転車旅の「デザイナーズ『裏』ノート」。YouTube・マイアルバム・noteへのリンクをまとめています。">
 <style>
   /* ---------- 基本 ---------- */
   :root{
     --bg:#2a1f17; --bg-2:#34271d;
     --card:#43331f; --card-hover:#523f27; --line:#6b5236;
     --text:#f3e8d4; --muted:#bfae92; --accent:#e0b25a;
-    --yt:#e5483f; --ig:#c9488a; --note:#4fb8a0;
+    --yt:#e5483f; --album:#c9488a; --note:#4fb8a0;
     --gap:14px; --radius:10px;
   }
   *{box-sizing:border-box}
@@ -54,7 +54,7 @@
   /* ---------- セクション見出し(--c で種類ごとの色) ---------- */
   section{--c:var(--accent);margin:0 0 32px}
   section[data-kind="youtube"]{--c:var(--yt)}
-  section[data-kind="instagram"]{--c:var(--ig)}
+  section[data-kind="album"]{--c:var(--album)}
   section[data-kind="note"]{--c:var(--note)}
   section h2{margin:0 0 12px;padding-left:12px;border-left:4px solid var(--c);font-size:18px}
   .empty{color:var(--muted);font-size:14px}
@@ -74,7 +74,6 @@
     aspect-ratio:16/9;background:#1f1610 center/cover no-repeat;
   }
   .thumb.noimg.youtube{background:linear-gradient(135deg,#5a2a25,#2a1f17)}
-  .thumb.noimg.instagram{background:linear-gradient(135deg,#6a2a50,#2a1f17)}
   .thumb.noimg.note{background:linear-gradient(135deg,#1f4a40,#2a1f17)}
   .thumb .ph{color:var(--muted);font-size:13px}
   .badge{
@@ -82,7 +81,6 @@
     color:#fff;font-size:10px;font-weight:700;
   }
   .badge.youtube{background:var(--yt)}
-  .badge.instagram{background:var(--ig)}
   .badge.note{background:var(--note);color:#12312a}
   .play{
     display:flex;align-items:center;justify-content:center;
@@ -104,10 +102,14 @@
   .grid.feature .card.main .body h3{font-size:15px}
   .grid.feature .card:not(.main) .body{padding:10px 12px}
 
-  /* ---------- Instagram: 写真カード(先頭4枚。スマホは2×2) ---------- */
-  .ig-grid{display:grid;gap:var(--gap);grid-template-columns:repeat(2,minmax(0,1fr))}
-  .ig-card .thumb{aspect-ratio:4/5}
-  .ig-grid .ig-card:nth-child(n+5){display:none}
+  /* マイアルバム: 2行×4枚（スマホもPCも4列）。押すと大きく表示 */
+  .album-grid{display:grid;gap:var(--gap);grid-template-columns:repeat(4,minmax(0,1fr))}
+  .album-item{display:block;padding:0;border:0;border-radius:8px;overflow:hidden;aspect-ratio:1;background:#2a1f17;cursor:zoom-in}
+  .album-item img{width:100%;height:100%;object-fit:cover;display:block}
+  .album-pop{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.88);padding:16px;cursor:zoom-out}
+  .album-pop[hidden]{display:none}
+  .album-pop img{max-width:100%;max-height:100%;object-fit:contain;border-radius:6px}
+  .album-pop .x{position:absolute;top:10px;right:14px;width:44px;height:44px;border:0;border-radius:50%;background:rgba(255,255,255,.15);color:#fff;font-size:26px;line-height:1;cursor:pointer}
 
   /* ---------- note: 公式埋め込み(iframe) ---------- */
   .note-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:0 var(--gap);align-items:start}
@@ -129,8 +131,7 @@
     .grid.feature .card:not(.main) .body{flex:1;min-height:calc(3 * 1.5 * 12px + 20px)}
     .grid.feature .card.main .thumb{aspect-ratio:auto;flex:1 1 0;min-height:0}
     .grid.feature .card.main .body{flex:none}
-    /* Instagram: 1行に4枚 / note: 2列 */
-    .ig-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+    /* note: 2列 */
     .note-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
   }
 </style>
@@ -159,14 +160,14 @@
 <script>
 /* ============================================================
    リンクの追加方法: ITEMS に1行ずつ足すだけです。
-   kind   : "youtube" | "instagram" | "note"
+   kind   : "youtube" | "note"
    title  : カードの見出し
    desc   : 短い説明(省略可)
    url    : リンク先(https:// で始まるもの)。空欄なら「準備中」表示
    ytId   : YouTube動画ID(kind が youtube のとき。サムネイルを自動表示)
    main   : true を付けた1件は、YouTube欄で大きく表示(YouTubeのみ)
-   thumb  : 画像のURLまたはパス(instagram / note で画像を出したいとき。省略可)
-   ※ Instagram は下の INSTAGRAM に、投稿URLと写真のファイル名を書きます。
+   thumb  : 画像のURLまたはパス(note で画像を出したいとき。省略可)
+   ※ マイアルバムは下の ALBUM に、写真のファイル名(top/album/ に置く)を書きます。
    ※ note は下の NOTE_EMBEDS に、公式埋め込みコードの記事ID(n から始まる文字列)を書きます。
    ============================================================ */
 const ITEMS = [
@@ -179,27 +180,19 @@ const ITEMS = [
 
 const KINDS = [
   { id:"youtube",   label:"YouTube" },
-  /* Instagram は写真の準備ができるまで非表示。再表示するには次の行の // を外す */
-  // { id:"instagram", label:"Instagram" },
+  { id:"album",     label:"マイアルバム" },
   { id:"note",      label:"note" }
 ];
 
 
 /* ============================================================
-   Instagram: 写真つきのカードで表示します(埋め込みは使いません)。
-   url : 投稿のURL(クリックで開く)
-   img : 写真ファイル(index.html と同じ場所の img フォルダに置く)。
-         ファイルがまだ無いときは「写真準備中」のカードになります。
-   表示のたびに順番をランダムに入れ替えます。
-   先頭の4枚を表示します(5件のうち1件はそのたび非表示)。スマホは2列×2段、PCは1行に4枚。
+   マイアルバム: 写真はこのページの album フォルダ(top/album/)に置きます。
+   写真を追加したら下の ALBUM にファイル名を足してください(長辺1600px程度のJPG/WebP推奨)。
+   ページを開くたびにランダムで8枚(2行×4枚)を選びます。ALBUM が空の間は項目ごと表示されません。
+   例: ALBUM = ["album/01.jpg", "album/02.jpg"];
    ============================================================ */
-const INSTAGRAM = [
-  { url:"https://www.instagram.com/reel/Dd_S0gby0G8/", img:"img/ig-Dd_S0gby0G8.jpg" },
-  { url:"https://www.instagram.com/p/DdubLK3k2TZ/", img:"img/ig-DdubLK3k2TZ.jpg" },
-  { url:"https://www.instagram.com/p/DdZpb6oySxZ/", img:"img/ig-DdZpb6oySxZ.jpg" },
-  { url:"https://www.instagram.com/p/DcYGvO2Roeo/", img:"img/ig-DcYGvO2Roeo.jpg" },
-  { url:"https://www.instagram.com/reel/DcKXcr4SXWv/", img:"img/ig-DcKXcr4SXWv.jpg" }
-];
+const ALBUM = [];
+const ALBUM_SHOW = 8;
 function shuffled(arr){
   const a = arr.slice();
   for(let i=a.length-1;i>0;i--){
@@ -208,32 +201,40 @@ function shuffled(arr){
   }
   return a;
 }
-const igOrder = shuffled(INSTAGRAM);   /* ページを開いたときに1回だけ決める */
+function activeKinds(){ return KINDS.filter(k => k.id !== "album" || ALBUM.length > 0); }
 
-function buildInstagram(){
-  const grid = el("div","ig-grid");
-  igOrder.forEach(it=>{
-    const href = safeUrl(it.url);
-    if(!href) return;
-    const card = el("a","card ig-card");
-    card.href = href; card.target = "_blank"; card.rel = "noopener noreferrer";
-    card.setAttribute("aria-label","Instagramの投稿を開く");
-    const thumb = el("div","thumb instagram noimg");
-    thumb.appendChild(el("span","ph","写真準備中"));
-    const probe = new Image();
-    probe.onload = ()=>{
-      thumb.classList.remove("noimg");
-      thumb.textContent = "";
-      thumb.style.backgroundImage = "url('" + it.img.replace(/'/g,"%27") + "')";
-      thumb.appendChild(el("span","badge instagram","Instagram"));
-    };
-    probe.src = it.img;
-    thumb.appendChild(el("span","badge instagram","Instagram"));
-    card.appendChild(thumb);
-    grid.appendChild(card);
+function buildAlbum(){
+  const grid = el("div","album-grid");
+  shuffled(ALBUM).slice(0, ALBUM_SHOW).forEach(src=>{
+    const b = el("button","album-item");
+    b.type = "button"; b.setAttribute("aria-label","写真を大きく表示");
+    const im = new Image();
+    im.src = src; im.loading = "lazy"; im.alt = "";
+    im.onerror = ()=> b.remove();
+    b.appendChild(im);
+    b.addEventListener("click",()=> openAlbum(src));
+    grid.appendChild(b);
   });
   return grid;
 }
+
+let albumPop = null;
+function openAlbum(src){
+  if(!albumPop){
+    albumPop = el("div","album-pop");
+    albumPop.hidden = true;
+    albumPop.setAttribute("role","dialog"); albumPop.setAttribute("aria-label","写真");
+    albumPop.appendChild(document.createElement("img"));
+    const x = el("button","x","×"); x.type = "button"; x.setAttribute("aria-label","閉じる");
+    albumPop.appendChild(x);
+    albumPop.addEventListener("click",closeAlbum);
+    document.addEventListener("keydown",e=>{ if(e.key === "Escape") closeAlbum(); });
+    document.body.appendChild(albumPop);
+  }
+  albumPop.firstChild.src = src;
+  albumPop.hidden = false;
+}
+function closeAlbum(){ if(albumPop) albumPop.hidden = true; }
 
 /* ============================================================
    note: 公式の埋め込みを使います。
@@ -326,7 +327,7 @@ function buildCard(it){
 function renderTabs(){
   const nav = document.getElementById("tabs");
   nav.textContent = "";
-  [{id:"all",label:"すべて"}].concat(KINDS).forEach(k=>{
+  [{id:"all",label:"すべて"}].concat(activeKinds()).forEach(k=>{
     const b = el("button","tab",k.label);
     b.type = "button";
     b.setAttribute("aria-pressed", String(state.filter === k.id));
@@ -338,14 +339,14 @@ function renderTabs(){
 function renderMain(){
   const main = document.getElementById("main");
   main.textContent = "";
-  KINDS.forEach(k=>{
+  activeKinds().forEach(k=>{
     if(state.filter !== "all" && state.filter !== k.id) return;
     const items = ITEMS.filter(i => i.kind === k.id);
     const sec = el("section");
     sec.dataset.kind = k.id;
     sec.appendChild(el("h2",null,k.label));
-    if(k.id === "instagram"){
-      sec.appendChild(buildInstagram());
+    if(k.id === "album"){
+      sec.appendChild(buildAlbum());
     }else if(k.id === "note"){
       sec.appendChild(buildNote());
     }else if(items.length === 0){
