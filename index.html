@@ -227,6 +227,8 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .hint{font-size:var(--fs-m);color:var(--muted)}
 .overlay{position:fixed;inset:0;background:color-mix(in srgb,var(--bg) 88%,transparent);display:flex;
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:16px;z-index:10;overflow:auto;overscroll-behavior:contain}
+#go-sum .bad{color:var(--bad);font-weight:700}
+button.primary.warn{color:#8f0000}
 .setrow{display:grid;grid-template-columns:4.5em 4.5em 1fr;gap:8px;align-items:center}
 .setrow input[type=range]{width:100%;accent-color:var(--accent)}
 #ov-set .modal{gap:6px;padding:12px 16px}
@@ -1447,9 +1449,11 @@ function askSpecial(p,rinko){const sp=SPEC[p.name],K=ENEMY;
 function askGo(p,rinko,skipSp){if(!skipSp&&isCourse(p,false))return askSpecial(p,rinko);const ti=travelInfo(p),f=S.forecast[p.id],nm=(l,id)=>(l.find(x=>x.id===id)||{}).name,cl=CLOTHES.find(c=>c.id===S.cloth);
   const how=p.id===S.loc?(isCourse(p,true)?'同じ場所から出発（'+SPEC[p.name].kind+'）':'同じ場所（気力-15）'):rinko?`輪行 ${yen(ti.rinko)}`:`自走 ${ti.d}km（遭遇${ti.enc}回）`;
   const gi=k=>S.gear[k]?nm(GEAR_ITEMS,S.gear[k]):'なし';
+  const cr=clRange(cl),clBad=f.temp<cr.lo||f.temp>cr.hi;// 衣類の快適温度から外れる＝噛み合っていない（詳細画面の「寒い/暑い」判定と同じ）
+  $('go-yes').classList.toggle('warn',clBad);
   $('go-sum').innerHTML=[['行き先',`${p.site}（${p.name}）`],['移動',how],['予報',`${WX_J[f.wx]} ${f.temp}℃`],
-    ['自転車',nm(BIKES,S.bike)],['衣類',`${cl.name}（${clRange(cl).lo}〜${clRange(cl).hi}℃）`],['小物',accOn().length?accOn().map(x=>x.name).join('、'):'なし'],['パーツ',S.parts.length?S.parts.map(x=>nm(PARTS,x)).join('、'):'なし'],
-    ['焚き火台',gi('fire')],['寝床',gi('shelter')],['タープ',gi('tarp')],['補給食',S.food+'個'+(S.food2?`＋長野${S.food2}個`:'')+(S.food3?`＋長野【極】${S.food3}個`:'')+(S.dango?`＋団子${S.dango}個`:'')+(S.gummy?`＋グミ${S.gummy}個`:'')+(S.tea?`＋紅茶${S.tea}個`:'')]].map(r=>`<span>${r[0]}</span><span>${r[1]}</span>`).join('');
+    ['自転車',nm(BIKES,S.bike)],['衣類',`${cl.name}（${clRange(cl).lo}〜${clRange(cl).hi}℃）`,clBad],['小物',accOn().length?accOn().map(x=>x.name).join('、'):'なし'],['パーツ',S.parts.length?S.parts.map(x=>nm(PARTS,x)).join('、'):'なし'],
+    ['焚き火台',gi('fire')],['寝床',gi('shelter')],['タープ',gi('tarp')],['補給食',S.food+'個'+(S.food2?`＋長野${S.food2}個`:'')+(S.food3?`＋長野【極】${S.food3}個`:'')+(S.dango?`＋団子${S.dango}個`:'')+(S.gummy?`＋グミ${S.gummy}個`:'')+(S.tea?`＋紅茶${S.tea}個`:'')]].map(r=>`<span${r[2]?' class="bad"':''}>${r[0]}</span><span${r[2]?' class="bad"':''}>${r[1]}</span>`).join('');
   $('go-yes').onclick=()=>{$('ov-go').hidden=true;startTrip(p,rinko);};$('ov-go').hidden=false;$('go-yes').focus();}
 let LOGSUB='trip';
 let TRSUB='old';// 試練欄のタブ：old=試練／4th=都道府県限定試練（各県のボス）
