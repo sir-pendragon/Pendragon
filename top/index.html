@@ -189,9 +189,23 @@ const KINDS = [
    マイアルバム: 写真はこのページの album フォルダ(top/album/)に置きます。
    写真を追加したら下の ALBUM にファイル名を足してください(長辺1600px程度のJPG/WebP推奨)。
    ページを開くたびにランダムで8枚(2行×4枚)を選びます。ALBUM が空の間は項目ごと表示されません。
+   一覧には album/t/ の同名の小さい正方形(480px)を使い、拡大時に album/ の大きい写真を表示します。
    例: ALBUM = ["album/01.jpg", "album/02.jpg"];
    ============================================================ */
-const ALBUM = [];
+const ALBUM = [
+  "album/01.jpg",
+  "album/02.jpg",
+  "album/03.jpg",
+  "album/04.jpg",
+  "album/05.jpg",
+  "album/06.jpg",
+  "album/07.jpg",
+  "album/08.jpg",
+  "album/09.jpg",
+  "album/10.jpg",
+  "album/11.jpg",
+  "album/12.jpg"
+];
 const ALBUM_SHOW = 8;
 function shuffled(arr){
   const a = arr.slice();
@@ -209,7 +223,7 @@ function buildAlbum(){
     const b = el("button","album-item");
     b.type = "button"; b.setAttribute("aria-label","写真を大きく表示");
     const im = new Image();
-    im.src = src; im.loading = "lazy"; im.alt = "";
+    im.src = src.replace("album/","album/t/"); im.loading = "lazy"; im.alt = "";
     im.onerror = ()=> b.remove();
     b.appendChild(im);
     b.addEventListener("click",()=> openAlbum(src));
