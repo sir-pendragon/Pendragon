@@ -56,6 +56,10 @@
   section[data-kind="youtube"]{--c:var(--yt)}
   section[data-kind="album"]{--c:var(--album)}
   section[data-kind="note"]{--c:var(--note)}
+  .sec-head{display:flex;align-items:center;gap:12px;margin:0 0 12px}
+  .sec-head h2{margin:0}
+  .shuffle-btn{padding:6px 12px;border:1px solid var(--c);border-radius:999px;background:transparent;color:inherit;font:inherit;font-size:13px;cursor:pointer;white-space:nowrap}
+  .shuffle-btn:active{background:rgba(255,255,255,.12)}
   section h2{margin:0 0 12px;padding-left:12px;border-left:4px solid var(--c);font-size:18px}
   .empty{color:var(--muted);font-size:14px}
 
@@ -373,7 +377,20 @@ function renderMain(){
     const items = ITEMS.filter(i => i.kind === k.id);
     const sec = el("section");
     sec.dataset.kind = k.id;
-    sec.appendChild(el("h2",null,k.label));
+    if(k.id === "album"){
+      const head = el("div","sec-head");
+      head.appendChild(el("h2",null,k.label));
+      const sh = el("button","shuffle-btn","写真をシャッフルする");
+      sh.type = "button";
+      sh.addEventListener("click",()=>{
+        const old = sec.querySelector(".album-grid");
+        if(old) old.replaceWith(buildAlbum());
+      });
+      head.appendChild(sh);
+      sec.appendChild(head);
+    }else{
+      sec.appendChild(el("h2",null,k.label));
+    }
     if(k.id === "album"){
       sec.appendChild(buildAlbum());
     }else if(k.id === "note"){
