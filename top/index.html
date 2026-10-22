@@ -59,7 +59,9 @@
   }
   .tab-x{display:inline-flex;align-items:center;justify-content:center;min-height:36px;padding:0 14px;border:1px solid var(--line);border-radius:999px;background:#000;text-decoration:none;-webkit-tap-highlight-color:transparent}
   .share-msg{margin:-12px 0 20px;text-align:center;color:var(--muted);font-size:13px;line-height:1.5}
-  .share-msg[hidden]{display:none}
+  .share-msg[hidden],.share-prev[hidden]{display:none}
+  .share-prev{margin:-10px 0 20px;text-align:center}
+  .share-prev img{display:inline-block;width:160px;height:auto;border-radius:8px;border:1px solid var(--line);cursor:grab}
   .tab-x img{display:block;width:16px;height:auto}
   .tab-x:hover{border-color:var(--accent)}
   .tab[aria-pressed="true"]{border-color:var(--accent);background:var(--accent);color:var(--bg);font-weight:700}
@@ -193,6 +195,7 @@
 
   <nav class="tabs" id="tabs" aria-label="絞り込み"></nav>
   <p class="share-msg" id="share-msg" role="status" hidden></p>
+  <div class="share-prev" id="share-prev" hidden></div>
   <main id="main"></main>
 
   <footer>
@@ -435,7 +438,7 @@ function loadShareGif(){
   if(!shareGifP) shareGifP = fetch("share/3d-viewer.gif").then(r => r.ok ? r.blob() : Promise.reject(new Error("gif"))).catch(e => { shareGifP = null; throw e; });
   return shareGifP;
 }
-function shareSay(t){ const m = document.getElementById("share-msg"); if(!m) return; m.textContent = t; m.hidden = !t; }
+function shareSay(t){ const m = document.getElementById("share-msg"); if(!m) return; m.textContent = t; m.hidden = !t; if(!t || !/保存しました/.test(t)){ const p = document.getElementById("share-prev"); if(p) p.hidden = true; } }
 async function shareX(){
   if(shareBusy) return; shareBusy = true;
   const text = SHARE_TEXT;
@@ -455,12 +458,19 @@ async function shareX(){
         if(e && e.name === "NotAllowedError"){ shareSay("準備ができました。もう一度ボタンを押してください。"); return; }
       }
     }
+    const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob); a.download = SHARE_FILE;
+    a.href = url; a.download = SHARE_FILE;
     document.body.appendChild(a); a.click(); a.remove();
-    setTimeout(()=> URL.revokeObjectURL(a.href), 4000);
-    window.open(X_INTENT, "_blank", "noopener");
-    shareSay("GIFを保存しました。Xの投稿画面で、そのGIFを添付してください。" + CP);
+    /* 別ウィンドウで開く: こちらの画面のGIFを、投稿画面へドラッグしやすくするため */
+    window.open(X_INTENT, "x-share", "popup=yes,width=620,height=760,noopener");
+    const prev = document.getElementById("share-prev");
+    if(prev){
+      if(prev.dataset.url) URL.revokeObjectURL(prev.dataset.url);
+      const im = new Image(); im.src = url; im.width = 160; im.alt = "共有用のGIF(投稿欄へドラッグできます)"; im.draggable = true;
+      prev.dataset.url = url; prev.replaceChildren(im); prev.hidden = false;
+    }
+    shareSay("Xの投稿画面は、GIFが自動では付きません。GIFを保存しました(ダウンロードフォルダ)。投稿画面の画像アイコンから保存したGIFを選ぶか、下のGIFを投稿欄へドラッグしてください。");
   }catch(e){ shareSay("共有できませんでした。もう一度お試しください。"); }
   finally{ shareBusy = false; }
 }
