@@ -125,6 +125,9 @@
     color:var(--muted);font-size:12px;text-align:center;
   }
 
+  .settings-link{display:inline-block;margin-bottom:10px;padding:6px 14px;border:1px solid var(--line);border-radius:999px;color:var(--muted);text-decoration:none;font-size:13px}
+  .settings-link:hover{color:var(--text);border-color:var(--accent)}
+
   /* ---------- PC(1024px以上) ---------- */
   @media (min-width:1024px){
     /* YouTube: 横1列に5枚。小さい4枚は4:3のサムネ+3行ぶんの本文で高さが決まり、
@@ -158,7 +161,10 @@
   <nav class="tabs" id="tabs" aria-label="絞り込み"></nav>
   <main id="main"></main>
 
-  <footer>(c) キャメロット王国自転車旅推進室</footer>
+  <footer>
+    <a class="settings-link" href="admin/">⚙ 設定</a>
+    <div>(c) キャメロット王国自転車旅推進室</div>
+  </footer>
 </div>
 
 <script>
@@ -190,41 +196,18 @@ const KINDS = [
 
 
 /* ============================================================
-   マイアルバム: 写真はこのページの album フォルダ(top/album/)に置きます。
-   写真を追加したら下の ALBUM にファイル名を足してください(長辺1600px程度のJPG/WebP推奨)。
-   ページを開くたびにランダムで8枚(2行×4枚)を選びます。ALBUM が空の間は項目ごと表示されません。
-   一覧には album/t/ の同名の小さい正方形(480px)を使い、拡大時に album/ の大きい写真を表示します。
-   例: ALBUM = ["album/01.jpg", "album/02.jpg"];
+   マイアルバム: 写真の一覧は top/album/album.json(ファイル名の配列)にあります。
+   写真本体は top/album/NN.jpg(長辺1600px程度)、一覧用の小さい正方形(480px)は top/album/t/NN.jpg です。
+   追加・削除は設定画面(admin/)から行えます。手で足すときは album.json にファイル名を足してください。
+   ページを開くたびにランダムで8枚(2行×4枚)を選びます。一覧が空の間は項目ごと表示されません。
    ============================================================ */
-const ALBUM = [
-  "album/01.jpg",
-  "album/02.jpg",
-  "album/03.jpg",
-  "album/04.jpg",
-  "album/05.jpg",
-  "album/06.jpg",
-  "album/07.jpg",
-  "album/08.jpg",
-  "album/09.jpg",
-  "album/10.jpg",
-  "album/11.jpg",
-  "album/12.jpg",
-  "album/13.jpg",
-  "album/14.jpg",
-  "album/15.jpg",
-  "album/16.jpg",
-  "album/17.jpg",
-  "album/18.jpg",
-  "album/19.jpg",
-  "album/20.jpg",
-  "album/21.jpg",
-  "album/22.jpg",
-  "album/23.jpg",
-  "album/24.jpg",
-  "album/25.jpg",
-  "album/26.jpg",
-  "album/27.jpg"
-];
+let ALBUM = [];
+function loadAlbum(){
+  return fetch("album/album.json",{cache:"no-cache"})
+    .then(r => r.ok ? r.json() : [])
+    .then(a => { ALBUM = Array.isArray(a) ? a.filter(f => typeof f === "string" && /^album\/[A-Za-z0-9_-]+\.jpg$/.test(f)) : []; })
+    .catch(() => { ALBUM = []; });
+}
 const ALBUM_SHOW = 8;
 function shuffled(arr){
   const a = arr.slice();
@@ -407,9 +390,8 @@ function renderMain(){
   });
 }
 
-renderTabs();
-renderMain();
-loadNoteScript();
+/* 写真の一覧を読み込んでから表示する(note の埋め込みを何度も読み直さないため) */
+loadAlbum().then(()=>{ renderTabs(); renderMain(); loadNoteScript(); });
 </script>
 </body>
 </html>

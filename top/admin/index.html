@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>設定 | デザイナーズ『裏』ノート</title>
+<style>
+  :root{
+    --bg:#2a1f17; --card:#43331f; --line:#6b5236;
+    --text:#f3e8d4; --muted:#bfae92; --accent:#e0b25a; --danger:#e5483f; --ok:#4fb8a0;
+    --gap:10px;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font:15px/1.6 system-ui,-apple-system,"Hiragino Sans","Noto Sans JP",sans-serif}
+  .wrap{max-width:960px;margin:0 auto;padding:16px}
+  a{color:var(--accent)}
+  h1{font-size:20px;margin:12px 0 4px}
+  h2{font-size:17px;margin:0 0 10px;padding-left:12px;border-left:4px solid #c9488a}
+  p.note{color:var(--muted);font-size:13px;margin:4px 0 12px}
+  section{margin:22px 0;padding:14px;background:rgba(0,0,0,.18);border:1px solid var(--line);border-radius:10px}
+  button{font:inherit;color:inherit;cursor:pointer}
+  .btn{padding:8px 16px;border:1px solid var(--line);border-radius:8px;background:var(--card)}
+  .btn.danger{background:var(--danger);border-color:var(--danger);color:#fff;font-weight:700}
+  .btn:disabled{opacity:.45;cursor:not-allowed}
+  input[type=password],input[type=text]{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:#1d150f;color:var(--text);font:inherit}
+  .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
+  .grid{display:grid;gap:var(--gap);grid-template-columns:repeat(3,minmax(0,1fr))}
+  @media (min-width:700px){.grid{grid-template-columns:repeat(5,minmax(0,1fr))}}
+  .item{position:relative;display:block;padding:0;border:3px solid transparent;border-radius:10px;overflow:hidden;aspect-ratio:1;background:#1d150f}
+  .item img{width:100%;height:100%;object-fit:cover;display:block}
+  .item .mark{position:absolute;top:6px;right:6px;width:26px;height:26px;border-radius:50%;background:rgba(0,0,0,.55);border:2px solid #fff;display:flex;align-items:center;justify-content:center;font-size:16px;line-height:1;color:#fff}
+  .item.sel{border-color:var(--danger)}
+  .item.sel img{opacity:.45}
+  .item.sel .mark{background:var(--danger);border-color:var(--danger)}
+  .msg{margin-top:10px;padding:10px 12px;border-radius:8px;font-size:14px}
+  .msg.ok{background:rgba(79,184,160,.18);border:1px solid var(--ok)}
+  .msg.err{background:rgba(229,72,63,.18);border:1px solid var(--danger)}
+  .confirm{margin-top:12px;padding:12px;border:1px solid var(--danger);border-radius:10px;background:rgba(229,72,63,.12)}
+  .confirm[hidden],.msg[hidden]{display:none}
+  details{margin-top:10px;color:var(--muted);font-size:13px}
+  details ol{margin:6px 0 0;padding-left:20px}
+  code{background:#1d150f;padding:1px 5px;border-radius:4px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p><a href="../">← 「裏」ノートにもどる</a></p>
+  <h1>設定</h1>
+  <p class="note">この画面は自分専用です。写真を削除するには、下の「GitHubの合言葉(トークン)」が必要です。トークンが無ければ、一覧を見るだけで何も変更できません。</p>
+
+  <section>
+    <h2>GitHubの合言葉(トークン)</h2>
+    <p class="note">このブラウザの中にだけ保存します(サイトの公開ファイルには入りません)。共用のパソコンでは保存しないでください。</p>
+    <input type="password" id="token" autocomplete="off" placeholder="github_pat_ から始まる文字列" aria-label="GitHubのトークン">
+    <div class="row">
+      <button class="btn" id="tokSave" type="button">保存する</button>
+      <button class="btn" id="tokClear" type="button">このブラウザから消す</button>
+      <span id="tokState" class="note" style="margin:0"></span>
+    </div>
+    <details>
+      <summary>トークンの作り方</summary>
+      <ol>
+        <li>GitHub の Settings → Developer settings → Personal access tokens → <b>Fine-grained tokens</b> → Generate new token</li>
+        <li>Repository access は「Only select repositories」で <code>Pendragon</code> だけを選ぶ</li>
+        <li>Permissions → Repository permissions → <b>Contents</b> を「Read and write」にする(他は不要)</li>
+        <li>有効期限は短めに設定し、作った文字列をここに貼り付ける</li>
+      </ol>
+    </details>
+  </section>
+
+  <section>
+    <h2>掲載済みの写真 <span id="count" class="note" style="margin:0"></span></h2>
+    <p class="note">削除したい写真を押して選び(赤くなります)、「選んだ写真を削除」を押してください。</p>
+    <div class="grid" id="grid"></div>
+    <div class="row">
+      <button class="btn danger" id="delBtn" type="button" disabled>選んだ写真を削除</button>
+      <button class="btn" id="clearSel" type="button" disabled>選択を解除</button>
+    </div>
+    <div class="confirm" id="confirm" hidden>
+      <div id="confirmText"></div>
+      <div class="row">
+        <button class="btn danger" id="doDel" type="button">削除する</button>
+        <button class="btn" id="cancelDel" type="button">やめる</button>
+      </div>
+    </div>
+    <div class="msg" id="msg" hidden role="status"></div>
+  </section>
+</div>
+
+<script>
+const REPO = "sir-pendragon/Pendragon";
+const BRANCH = "main";
+const DIR = "top/album/";            // リポジトリ内の場所
+const LIST = DIR + "album.json";
+const KEY = "ura-note-gh-token";
+const OK_NAME = /^album\/[A-Za-z0-9_-]+\.jpg$/;
+
+const $ = id => document.getElementById(id);
+let photos = [];                     // 表示中の一覧
+const selected = new Set();
+
+/* ---------- ブラウザ保存(使えない環境でも動くように try/catch) ---------- */
+const store = {
+  get(){ try{ return localStorage.getItem(KEY) || ""; }catch(e){ return ""; } },
+  set(v){ try{ localStorage.setItem(KEY,v); return true; }catch(e){ return false; } },
+  del(){ try{ localStorage.removeItem(KEY); }catch(e){} }
+};
+let memToken = "";                   // 保存できないときは、このページを開いている間だけ保持
+const getToken = () => store.get() || memToken;
+
+function showMsg(text, kind){
+  const m = $("msg"); m.textContent = text; m.className = "msg " + kind; m.hidden = false;
+}
+function thumbOf(f){ return "../" + f.replace("album/","album/t/"); }
+
+/* ---------- 一覧の表示 ---------- */
+function render(){
+  const g = $("grid"); g.textContent = "";
+  photos.forEach(f=>{
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "item" + (selected.has(f) ? " sel" : "");
+    b.setAttribute("aria-pressed", selected.has(f) ? "true" : "false");
+    b.setAttribute("aria-label", f + (selected.has(f) ? "(削除に選択中)" : ""));
+    const im = new Image(); im.src = thumbOf(f); im.alt = ""; im.loading = "lazy";
+    const mk = document.createElement("span"); mk.className = "mark"; mk.textContent = selected.has(f) ? "✓" : "";
+    b.append(im, mk);
+    b.addEventListener("click",()=>{ selected.has(f) ? selected.delete(f) : selected.add(f); $("confirm").hidden = true; render(); });
+    g.appendChild(b);
+  });
+  $("count").textContent = "(" + photos.length + "枚)";
+  $("delBtn").disabled = selected.size === 0;
+  $("clearSel").disabled = selected.size === 0;
+}
+
+function loadList(){
+  return fetch("../album/album.json?t=" + Date.now(),{cache:"no-store"})
+    .then(r => r.ok ? r.json() : Promise.reject(new Error("一覧を読み込めませんでした")))
+    .then(a => { photos = a.filter(f => typeof f === "string" && OK_NAME.test(f)); selected.clear(); render(); })
+    .catch(e => showMsg(e.message, "err"));
+}
+
+/* ---------- GitHub API(1回のコミットで写真・小さい版・一覧をまとめて更新) ---------- */
+async function gh(path, opt){
+  const r = await fetch("https://api.github.com/repos/" + REPO + path, Object.assign({
+    headers:{ "Authorization":"Bearer " + getToken(), "Accept":"application/vnd.github+json", "X-GitHub-Api-Version":"2022-11-28" }
+  }, opt));
+  if(!r.ok){
+    const t = await r.text().catch(()=> "");
+    const e = new Error("GitHub " + r.status); e.status = r.status; e.body = t; throw e;
+  }
+  return r.json();
+}
+const jsonOpt = (method, body) => ({ method, body: JSON.stringify(body), headers:{
+  "Authorization":"Bearer " + getToken(), "Accept":"application/vnd.github+json",
+  "X-GitHub-Api-Version":"2022-11-28", "Content-Type":"application/json" } });
+
+function b64utf8(b64){ const bin = atob(b64.replace(/\n/g,"")); const u = Uint8Array.from(bin, c => c.charCodeAt(0)); return new TextDecoder().decode(u); }
+
+async function deleteOnGithub(names){
+  const ref = await gh("/git/ref/heads/" + BRANCH);
+  const headSha = ref.object.sha;
+  const head = await gh("/git/commits/" + headSha);
+  // 最新の一覧を GitHub から読み直す(古い表示で上書きしないため)
+  const file = await gh("/contents/" + LIST + "?ref=" + BRANCH);
+  const current = JSON.parse(b64utf8(file.content));
+  const remain = current.filter(f => !names.includes(f));
+  const gone = current.filter(f => names.includes(f));
+  if(gone.length === 0) throw Object.assign(new Error("none"), {none:true});
+  const blob = await gh("/git/blobs", jsonOpt("POST",{ content: JSON.stringify(remain,null,1) + "\n", encoding:"utf-8" }));
+  const tree = [{ path: LIST, mode:"100644", type:"blob", sha: blob.sha }];
+  gone.forEach(f=>{
+    tree.push({ path: "top/" + f, mode:"100644", type:"blob", sha: null });
+    tree.push({ path: "top/" + f.replace("album/","album/t/"), mode:"100644", type:"blob", sha: null });
+  });
+  const nt = await gh("/git/trees", jsonOpt("POST",{ base_tree: head.tree.sha, tree }));
+  const nc = await gh("/git/commits", jsonOpt("POST",{ message: "マイアルバム: 写真" + gone.length + "枚を設定画面から削除", tree: nt.sha, parents:[headSha] }));
+  await gh("/git/refs/heads/" + BRANCH, jsonOpt("PATCH",{ sha: nc.sha, force:false }));
+  return { gone, remain };
+}
+
+function explain(e){
+  if(e.none) return "選んだ写真は、すでに一覧から消えていました。一覧を読み込み直します。";
+  if(e.status === 401) return "トークンが正しくないか、期限切れです。作り直して貼り付けてください。";
+  if(e.status === 403 || e.status === 404) return "このトークンには、Pendragon リポジトリの Contents(Read and write)の権限が無いようです。トークンの設定を確認してください。(" + e.status + ")";
+  if(e.status === 422 || e.status === 409) return "同じ時間に別の変更が入ったようです。もう一度やり直してください。(" + e.status + ")";
+  return "削除できませんでした。通信を確認して、もう一度お試しください。(" + (e.status || e.message) + ")";
+}
+
+/* ---------- 操作 ---------- */
+$("tokSave").addEventListener("click",()=>{
+  const v = $("token").value.trim();
+  if(!v){ $("tokState").textContent = "入力してください"; return; }
+  memToken = v;
+  $("tokState").textContent = store.set(v) ? "保存しました" : "このページを開いている間だけ使います(保存できない設定です)";
+  $("token").value = "";
+});
+$("tokClear").addEventListener("click",()=>{ store.del(); memToken = ""; $("token").value = ""; $("tokState").textContent = "消しました"; });
+$("clearSel").addEventListener("click",()=>{ selected.clear(); $("confirm").hidden = true; render(); });
+$("delBtn").addEventListener("click",()=>{
+  if(!getToken()){ showMsg("先にトークンを保存してください。", "err"); return; }
+  $("confirmText").textContent = selected.size + "枚の写真を削除します。公開中のアルバムからも消えます(GitHubの履歴からは復元できます)。よろしいですか?";
+  $("confirm").hidden = false; $("msg").hidden = true;
+});
+$("cancelDel").addEventListener("click",()=>{ $("confirm").hidden = true; });
+$("doDel").addEventListener("click", async ()=>{
+  const names = Array.from(selected);
+  $("doDel").disabled = true; $("cancelDel").disabled = true;
+  showMsg("削除しています…", "ok");
+  try{
+    const r = await deleteOnGithub(names);
+    photos = r.remain; selected.clear(); $("confirm").hidden = true; render();
+    showMsg(r.gone.length + "枚を削除しました。公開サイトへの反映には1〜2分ほどかかります。", "ok");
+  }catch(e){
+    showMsg(explain(e), "err");
+    if(e.none) loadList();
+  }finally{
+    $("doDel").disabled = false; $("cancelDel").disabled = false;
+  }
+});
+
+$("tokState").textContent = store.get() ? "保存済みのトークンがあります" : "";
+loadList();
+</script>
+</body>
+</html>
