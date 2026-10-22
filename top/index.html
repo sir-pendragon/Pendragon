@@ -180,7 +180,7 @@
    main   : true を付けた1件は、YouTube欄で大きく表示(YouTubeのみ)
    thumb  : 画像のURLまたはパス(note で画像を出したいとき。省略可)
    ※ マイアルバムは下の ALBUM に、写真のファイル名(top/album/ に置く)を書きます。
-   ※ note は下の NOTE_EMBEDS に、公式埋め込みコードの記事ID(n から始まる文字列)を書きます。
+   ※ note の記事は top/note/notes.json(記事IDの配列)にあります。追加・削除・並べ替えは設定画面(admin/)から行えます。
    ============================================================ */
 const ITEMS = [
   { kind:"youtube",   title:"チタン製14インチで本格ロードバイクを目指す！ 【前編】", url:"https://youtu.be/6Kh9uR2zCIg", ytId:"6Kh9uR2zCIg", main:true },
@@ -199,7 +199,7 @@ const KINDS = [
 
 /* ============================================================
    マイアルバム: 写真の一覧は top/album/album.json(ファイル名の配列)にあります。
-   写真本体は top/album/NN.jpg(長辺1600px程度)、一覧用の小さい正方形(480px)は top/album/t/NN.jpg です。
+   写真本体は top/album/NN.jpg(長辺1600px程度)、一覧用の小さい正方形(360px)は top/album/t/NN.jpg です。
    追加・削除は設定画面(admin/)から行えます。手で足すときは album.json にファイル名を足してください。
    ページを開くたびにランダムで8枚(2行×4枚)を選びます。一覧が空の間は項目ごと表示されません。
    ============================================================ */
@@ -258,27 +258,26 @@ function closeAlbum(){ if(albumPop) albumPop.hidden = true; }
    note: 公式の埋め込みを使います。
    記事ID は、埋め込みコードの src="https://note.com/embed/notes/【ここ】" の部分です。
    ============================================================ */
-const NOTE_EMBEDS = [
-  "n7aab1f246c8b",
-  "n20c7ddf452c6",
-  "na80165d9adda",
-  "n061b3b8ae9bd"
-];
-const noteGrid = (function(){
-  const g = document.createElement("div");
-  g.className = "note-grid";
-  NOTE_EMBEDS.forEach(id=>{
-    if(!/^n[a-z0-9]{6,30}$/.test(id)) return;
+let NOTE_IDS = [];
+function loadNotes(){
+  return fetch("note/notes.json",{cache:"no-cache"})
+    .then(r => r.ok ? r.json() : [])
+    .then(a => { NOTE_IDS = Array.isArray(a) ? a.filter(i => typeof i === "string" && /^n[a-z0-9]{6,30}$/.test(i)) : []; })
+    .catch(() => { NOTE_IDS = []; });
+}
+const noteGrid = document.createElement("div");
+noteGrid.className = "note-grid";
+function fillNoteGrid(){
+  NOTE_IDS.forEach(id=>{
     const f = document.createElement("iframe");
     f.className = "note-embed"; f.loading = "lazy";
     f.src = "https://note.com/embed/notes/" + id;
     f.setAttribute("height","400");
     f.setAttribute("title","noteの記事");
     f.style.cssText = "border:0;display:block;max-width:99%;width:494px;padding:0;margin:10px 0;position:static;visibility:visible;";
-    g.appendChild(f);
+    noteGrid.appendChild(f);
   });
-  return g;
-})();
+}
 function buildNote(){
   return noteGrid.children.length ? noteGrid : el("p","empty","まだ記事がありません。");
 }
@@ -396,7 +395,7 @@ function renderMain(){
 try{ if(localStorage.getItem("ura-note-admin") === "1") document.querySelector(".settings-link").hidden = false; }catch(e){}
 
 /* 写真の一覧を読み込んでから表示する(note の埋め込みを何度も読み直さないため) */
-loadAlbum().then(()=>{ renderTabs(); renderMain(); (window.requestIdleCallback || (f=>setTimeout(f,1200)))(loadNoteScript); });
+Promise.all([loadAlbum(), loadNotes()]).then(()=>{ fillNoteGrid(); renderTabs(); renderMain(); (window.requestIdleCallback || (f=>setTimeout(f,1200)))(loadNoteScript); });
 </script>
 </body>
 </html>

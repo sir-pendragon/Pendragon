@@ -3,6 +3,8 @@ export const TEAM_DOMAIN = "dry-moon-298d.cloudflareaccess.com";
 export const REPO = "sir-pendragon/Pendragon";
 export const BRANCH = "main";
 export const LIST = "top/album/album.json";
+export const NOTE_LIST = "top/note/notes.json";
+export const OK_NOTE = /^n[a-z0-9]{6,30}$/;
 export const OK_NAME = /^album\/[A-Za-z0-9_-]+\.jpg$/;
 
 let certCache = { at: 0, keys: [] };
@@ -67,6 +69,26 @@ export async function readHead(env){
 export async function commitAll(env, { headSha, baseTree }, newList, entries, message){
   const blob = await gh(env, "/git/blobs", "POST", { content: JSON.stringify(newList, null, 1) + "\n", encoding: "utf-8" });
   const tree = [{ path: LIST, mode: "100644", type: "blob", sha: blob.sha }, ...entries.map(e => ({ path: e.path, mode: "100644", type: "blob", sha: e.sha }))];
+  const nt = await gh(env, "/git/trees", "POST", { base_tree: baseTree, tree });
+  const nc = await gh(env, "/git/commits", "POST", { message, tree: nt.sha, parents: [headSha] });
+  await gh(env, `/git/refs/heads/${BRANCH}`, "PATCH", { sha: nc.sha, force: false });
+}
+
+// 写真一覧を使わない更新用: main の先頭コミットだけを読む
+export async function readRef(env){
+  const ref = await gh(env, `/git/ref/heads/${BRANCH}`);
+  const headSha = ref.object.sha;
+  const head = await gh(env, `/git/commits/${headSha}`);
+  return { headSha, baseTree: head.tree.sha };
+}
+
+// 文字のファイルを1回のコミットで書き込む  files: [{ path, content }]
+export async function commitText(env, { headSha, baseTree }, files, message){
+  const tree = [];
+  for (const f of files) {
+    const blob = await gh(env, "/git/blobs", "POST", { content: f.content, encoding: "utf-8" });
+    tree.push({ path: f.path, mode: "100644", type: "blob", sha: blob.sha });
+  }
   const nt = await gh(env, "/git/trees", "POST", { base_tree: baseTree, tree });
   const nc = await gh(env, "/git/commits", "POST", { message, tree: nt.sha, parents: [headSha] });
   await gh(env, `/git/refs/heads/${BRANCH}`, "PATCH", { sha: nc.sha, force: false });

@@ -48,6 +48,14 @@
   .msg.err{background:rgba(229,72,63,.18);border:1px solid var(--danger)}
   .confirm{margin-top:12px;padding:12px;border:1px solid var(--danger);border-radius:10px;background:rgba(229,72,63,.12)}
   .confirm[hidden],.msg[hidden],section[hidden]{display:none}
+  .nrow{display:flex;gap:8px;align-items:center;padding:8px 10px;margin-top:8px;border:1px solid var(--line);border-radius:8px;background:rgba(0,0,0,.2)}
+  .nrow.new{border-color:var(--ok)}
+  .nrow .nid{flex:1;min-width:0;overflow-wrap:anywhere;font-size:13px}
+  .nrow a{color:var(--accent);font-size:13px;white-space:nowrap}
+  .nrow button{min-width:36px;padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:var(--card)}
+  .nrow button:disabled{opacity:.35;cursor:not-allowed}
+  .npreview{width:100%;height:190px;border:0;border-radius:8px;margin-top:8px;background:#fff}
+  textarea{width:100%;min-height:70px;padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:#1d150f;color:var(--text);font:inherit}
   details{margin-top:10px;color:var(--muted);font-size:13px}
   details ol{margin:6px 0 0;padding-left:20px}
   code{background:#1d150f;padding:1px 5px;border-radius:4px}
@@ -88,6 +96,20 @@
       </div>
     </div>
     <div class="msg" id="msg" hidden role="status"></div>
+  </section>
+
+  <section id="noteSec">
+    <h2>noteの記事 <span id="noteCount" class="note" style="margin:0"></span></h2>
+    <p class="note">note の記事のURL(例: <code>https://note.com/ユーザー名/n/nxxxxxxxxxxxx</code>)か、埋め込みコードの記事ID(<code>n</code>から始まる文字列)を貼ってください。複数は1行に1つずつ。</p>
+    <textarea id="noteInput" placeholder="https://note.com/..." aria-label="noteの記事のURLまたは記事ID"></textarea>
+    <div class="row"><button class="btn" id="noteAddBtn" type="button">一覧に加える</button></div>
+    <div id="noteList"></div>
+    <div class="row">
+      <button class="btn danger" id="noteSave" type="button" disabled>この内容で保存する</button>
+      <button class="btn" id="noteReset" type="button" disabled>変更を取り消す</button>
+    </div>
+    <p class="note">「↑」「↓」で並べ替え、「×」で一覧から外せます。変更は「保存する」を押すまで公開されません。緑の枠は、まだ保存していない記事です。</p>
+    <div class="msg" id="noteMsg" hidden role="status"></div>
   </section>
 
   <p class="note"><button class="btn" id="hideBtn" type="button">この端末の「設定」ボタンを消す</button></p>
@@ -288,7 +310,81 @@ $("doDel").addEventListener("click", async ()=>{
   }
 });
 
+/* ---------- noteの記事(一覧は note/notes.json。表示順もここで決める) ---------- */
+const OK_NOTE = /^n[a-z0-9]{6,30}$/, MAX_NOTES = 30;
+let noteSaved = [], noteIds = [];
+const noteDirty = () => noteIds.length !== noteSaved.length || noteIds.some((v, i) => v !== noteSaved[i]);
+function showNoteMsg(text, kind){ const m = $("noteMsg"); m.textContent = text; m.className = "msg " + kind; m.hidden = false; }
+function parseNote(t){
+  t = t.trim(); if(!t) return "";
+  if(OK_NOTE.test(t)) return t;
+  try{
+    const u = new URL(t); if(!/^(www\.)?note\.com$/.test(u.hostname)) return "";
+    const seg = u.pathname.split("/").filter(Boolean);
+    const k = seg.findIndex((x, i) => (x === "n" || x === "notes") && i === seg.length - 2);
+    return k >= 0 && OK_NOTE.test(seg[k + 1]) ? seg[k + 1] : "";
+  }catch(e){ return ""; }
+}
+function renderNotes(){
+  const L = $("noteList"); L.textContent = "";
+  noteIds.forEach((id, i)=>{
+    const isNew = !noteSaved.includes(id);
+    const wrap = document.createElement("div");
+    const row = document.createElement("div"); row.className = "nrow" + (isNew ? " new" : "");
+    const t = document.createElement("span"); t.className = "nid"; t.textContent = id + (isNew ? "(未保存)" : "");
+    const a = document.createElement("a"); a.href = "https://note.com/embed/notes/" + id; a.target = "_blank"; a.rel = "noopener"; a.textContent = "確認";
+    const mk = (label, aria, dis, fn)=>{ const b = document.createElement("button"); b.type = "button"; b.textContent = label; b.setAttribute("aria-label", id + " を" + aria); b.disabled = dis; b.addEventListener("click", fn); return b; };
+    const mv = d => ()=>{ const j = i + d; [noteIds[i], noteIds[j]] = [noteIds[j], noteIds[i]]; renderNotes(); };
+    row.append(t, a, mk("↑", "上へ", i === 0, mv(-1)), mk("↓", "下へ", i === noteIds.length - 1, mv(1)), mk("×", "一覧から外す", false, ()=>{ noteIds.splice(i, 1); renderNotes(); }));
+    wrap.appendChild(row);
+    if(isNew){ const f = document.createElement("iframe"); f.className = "npreview"; f.loading = "lazy"; f.title = "noteの記事の確認"; f.src = "https://note.com/embed/notes/" + id; wrap.appendChild(f); }
+    L.appendChild(wrap);
+  });
+  $("noteCount").textContent = "(" + noteIds.length + "件)";
+  $("noteSave").disabled = !noteDirty(); $("noteReset").disabled = !noteDirty();
+}
+function loadNotesAdmin(){
+  return fetch("../note/notes.json?t=" + Date.now(), { cache:"no-store" })
+    .then(r => r.ok ? r.json() : Promise.reject(new Error("noteの一覧を読み込めませんでした")))
+    .then(a => { noteSaved = a.filter(x => typeof x === "string" && OK_NOTE.test(x)); noteIds = noteSaved.slice(); renderNotes(); })
+    .catch(e => showNoteMsg(e.message, "err"));
+}
+$("noteAddBtn").addEventListener("click", ()=>{
+  const lines = $("noteInput").value.split(/\s+/).filter(Boolean);
+  const bad = [], dup = []; let added = 0;
+  lines.forEach(l=>{
+    const id = parseNote(l);
+    if(!id) bad.push(l); else if(noteIds.includes(id)) dup.push(id);
+    else if(noteIds.length >= MAX_NOTES) bad.push(l); else { noteIds.push(id); added++; }
+  });
+  $("noteInput").value = bad.join("\n");
+  renderNotes();
+  const parts = [];
+  if(added) parts.push(added + "件を一覧に加えました(まだ保存していません)。下の確認枠で記事が表示されるか見てから、保存してください。");
+  if(dup.length) parts.push("すでにある記事は加えませんでした: " + dup.length + "件");
+  if(bad.length) parts.push("読み取れなかったものは入力欄に残しています(note の記事のURLか記事IDだけ使えます。最大" + MAX_NOTES + "件)。");
+  if(parts.length) showNoteMsg(parts.join(" "), bad.length && !added ? "err" : "ok"); else showNoteMsg("URLか記事IDを入力してください。", "err");
+});
+$("noteReset").addEventListener("click", ()=>{ noteIds = noteSaved.slice(); $("noteMsg").hidden = true; renderNotes(); });
+$("noteSave").addEventListener("click", async ()=>{
+  $("noteSave").disabled = true; showNoteMsg("保存しています…", "ok");
+  try{
+    const r = await fetch("api/notes", { method:"POST", credentials:"same-origin", headers:{ "Content-Type":"application/json" }, body: JSON.stringify({ ids: noteIds }) });
+    const j = await r.json().catch(()=> ({}));
+    if(!r.ok){ const e = new Error(j.error || ("http " + r.status)); e.status = r.status; e.code = j.error; e.gh = j.status; throw e; }
+    noteSaved = j.ids.slice(); noteIds = j.ids.slice(); renderNotes();
+    showNoteMsg("保存しました。公開サイトへの反映には1〜2分ほどかかります。", "ok");
+  }catch(e){
+    showNoteMsg(e.code === "not_configured" ? "サーバー側の設定(GITHUB_TOKEN)がまだ入っていません。"
+      : (e.status === 403 || e.status === 401) ? "ログインが切れたか、サーバー側の設定(ACCESS_AUD)が合っていません。ページを読み込み直して、もう一度お試しください。"
+      : e.code === "github" ? "GitHub への書き込みに失敗しました。トークンの権限(Contents: Read and write)と期限を確認してください。(" + (e.gh || "?") + ")"
+      : "保存できませんでした。通信を確認して、もう一度お試しください。(" + (e.status || e.message) + ")", "err");
+    renderNotes();
+  }
+});
+
 loadList();
+loadNotesAdmin();
 </script>
 </body>
 </html>
