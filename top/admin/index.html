@@ -47,29 +47,9 @@
 <div class="wrap">
   <p><a href="../">← 「裏」ノートにもどる</a></p>
   <h1>設定</h1>
-  <p class="note">この画面は自分専用です。写真を削除するには、下の「GitHubの合言葉(トークン)」が必要です。トークンが無ければ、一覧を見るだけで何も変更できません。</p>
+  <p class="note">この画面は、Cloudflare Access で守られた自分専用の画面です。</p>
 
-  <section>
-    <h2>GitHubの合言葉(トークン)</h2>
-    <p class="note">このブラウザの中にだけ保存します(サイトの公開ファイルには入りません)。共用のパソコンでは保存しないでください。</p>
-    <input type="password" id="token" autocomplete="off" placeholder="github_pat_ から始まる文字列" aria-label="GitHubのトークン">
-    <div class="row">
-      <button class="btn" id="tokSave" type="button">保存する</button>
-      <button class="btn" id="tokClear" type="button">このブラウザから消す</button>
-      <span id="tokState" class="note" style="margin:0"></span>
-    </div>
-    <details>
-      <summary>トークンの作り方</summary>
-      <ol>
-        <li>GitHub の Settings → Developer settings → Personal access tokens → <b>Fine-grained tokens</b> → Generate new token</li>
-        <li>Repository access は「Only select repositories」で <code>Pendragon</code> だけを選ぶ</li>
-        <li>Permissions → Repository permissions → <b>Contents</b> を「Read and write」にする(他は不要)</li>
-        <li>有効期限は短めに設定し、作った文字列をここに貼り付ける</li>
-      </ol>
-    </details>
-  </section>
-
-  <section id="albumSec" hidden>
+  <section id="albumSec">
     <h2>掲載済みの写真 <span id="count" class="note" style="margin:0"></span></h2>
     <p class="note">削除したい写真を押して選び(赤くなります)、「選んだ写真を削除」を押してください。</p>
     <div class="grid" id="grid"></div>
@@ -86,30 +66,20 @@
     </div>
     <div class="msg" id="msg" hidden role="status"></div>
   </section>
+
+  <p class="note"><button class="btn" id="hideBtn" type="button">この端末の「設定」ボタンを消す</button></p>
 </div>
 
 <script>
-const REPO = "sir-pendragon/Pendragon";
-const BRANCH = "main";
-const DIR = "top/album/";            // リポジトリ内の場所
-const LIST = DIR + "album.json";
-const KEY = "ura-note-gh-token";
-const FLAG = "ura-note-admin";       // 「設定」ボタンをこの端末で表示するための印
+const FLAG = "ura-note-admin";       // この端末の TOP に「設定」ボタンを出すための印
 const OK_NAME = /^album\/[A-Za-z0-9_-]+\.jpg$/;
 
 const $ = id => document.getElementById(id);
 let photos = [];                     // 表示中の一覧
 const selected = new Set();
 
-/* ---------- ブラウザ保存(使えない環境でも動くように try/catch) ---------- */
-const store = {
-  get(){ try{ return localStorage.getItem(KEY) || ""; }catch(e){ return ""; } },
-  set(v){ try{ localStorage.setItem(KEY,v); return true; }catch(e){ return false; } },
-  del(){ try{ localStorage.removeItem(KEY); localStorage.removeItem(FLAG); }catch(e){} },
-  flag(){ try{ localStorage.setItem(FLAG,"1"); }catch(e){} }
-};
-let memToken = "";                   // 保存できないときは、このページを開いている間だけ保持
-const getToken = () => store.get() || memToken;
+/* 管理画面を開けた(= Access のログインを通った)端末にだけ、TOP の「設定」ボタンを出す */
+try{ localStorage.setItem(FLAG,"1"); }catch(e){}
 
 function showMsg(text, kind){
   const m = $("msg"); m.textContent = text; m.className = "msg " + kind; m.hidden = false;
@@ -142,67 +112,26 @@ function loadList(){
     .catch(e => showMsg(e.message, "err"));
 }
 
-/* ---------- GitHub API(1回のコミットで写真・小さい版・一覧をまとめて更新) ---------- */
-async function gh(path, opt){
-  const r = await fetch("https://api.github.com/repos/" + REPO + path, Object.assign({
-    headers:{ "Authorization":"Bearer " + getToken(), "Accept":"application/vnd.github+json", "X-GitHub-Api-Version":"2022-11-28" }
-  }, opt));
-  if(!r.ok){
-    const t = await r.text().catch(()=> "");
-    const e = new Error("GitHub " + r.status); e.status = r.status; e.body = t; throw e;
-  }
-  return r.json();
-}
-const jsonOpt = (method, body) => ({ method, body: JSON.stringify(body), headers:{
-  "Authorization":"Bearer " + getToken(), "Accept":"application/vnd.github+json",
-  "X-GitHub-Api-Version":"2022-11-28", "Content-Type":"application/json" } });
-
-function b64utf8(b64){ const bin = atob(b64.replace(/\n/g,"")); const u = Uint8Array.from(bin, c => c.charCodeAt(0)); return new TextDecoder().decode(u); }
-
-async function deleteOnGithub(names){
-  const ref = await gh("/git/ref/heads/" + BRANCH);
-  const headSha = ref.object.sha;
-  const head = await gh("/git/commits/" + headSha);
-  // 最新の一覧を GitHub から読み直す(古い表示で上書きしないため)
-  const file = await gh("/contents/" + LIST + "?ref=" + BRANCH);
-  const current = JSON.parse(b64utf8(file.content));
-  const remain = current.filter(f => !names.includes(f));
-  const gone = current.filter(f => names.includes(f));
-  if(gone.length === 0) throw Object.assign(new Error("none"), {none:true});
-  const blob = await gh("/git/blobs", jsonOpt("POST",{ content: JSON.stringify(remain,null,1) + "\n", encoding:"utf-8" }));
-  const tree = [{ path: LIST, mode:"100644", type:"blob", sha: blob.sha }];
-  gone.forEach(f=>{
-    tree.push({ path: "top/" + f, mode:"100644", type:"blob", sha: null });
-    tree.push({ path: "top/" + f.replace("album/","album/t/"), mode:"100644", type:"blob", sha: null });
-  });
-  const nt = await gh("/git/trees", jsonOpt("POST",{ base_tree: head.tree.sha, tree }));
-  const nc = await gh("/git/commits", jsonOpt("POST",{ message: "マイアルバム: 写真" + gone.length + "枚を設定画面から削除", tree: nt.sha, parents:[headSha] }));
-  await gh("/git/refs/heads/" + BRANCH, jsonOpt("PATCH",{ sha: nc.sha, force:false }));
-  return { gone, remain };
+/* ---------- 削除(Access で守られた API を呼ぶ。GitHub への書き込みはサーバー側) ---------- */
+async function deleteOnServer(names){
+  const r = await fetch("api/delete",{ method:"POST", credentials:"same-origin", headers:{ "Content-Type":"application/json" }, body: JSON.stringify({ names }) });
+  const j = await r.json().catch(()=> ({}));
+  if(!r.ok){ const e = new Error(j.error || ("http " + r.status)); e.status = r.status; e.code = j.error; e.gh = j.status; e.remain = j.remain; throw e; }
+  return j;
 }
 
 function explain(e){
-  if(e.none) return "選んだ写真は、すでに一覧から消えていました。一覧を読み込み直します。";
-  if(e.status === 401) return "トークンが正しくないか、期限切れです。作り直して貼り付けてください。";
-  if(e.status === 403 || e.status === 404) return "このトークンには、Pendragon リポジトリの Contents(Read and write)の権限が無いようです。トークンの設定を確認してください。(" + e.status + ")";
-  if(e.status === 422 || e.status === 409) return "同じ時間に別の変更が入ったようです。もう一度やり直してください。(" + e.status + ")";
+  if(e.code === "none") return "選んだ写真は、すでに一覧から消えていました。一覧を読み込み直します。";
+  if(e.code === "not_configured") return "サーバー側の設定(GITHUB_TOKEN)がまだ入っていません。Cloudflare Pages の環境変数に登録してください。";
+  if(e.status === 403 || e.status === 401) return "ログインが切れたか、サーバー側の設定(ACCESS_AUD)が合っていません。ページを読み込み直して、もう一度お試しください。";
+  if(e.code === "github") return "GitHub への書き込みに失敗しました。トークンの権限(Contents: Read and write)と期限を確認してください。(" + (e.gh || "?") + ")";
   return "削除できませんでした。通信を確認して、もう一度お試しください。(" + (e.status || e.message) + ")";
 }
 
 /* ---------- 操作 ---------- */
-$("tokSave").addEventListener("click",()=>{
-  const v = $("token").value.trim();
-  if(!v){ $("tokState").textContent = "入力してください"; return; }
-  memToken = v;
-  if(store.set(v)) store.flag();
-  showAlbum();
-  $("tokState").textContent = store.get() ? "保存しました(この端末の「設定」ボタンが表示されます)" : "このページを開いている間だけ使います(保存できない設定です)";
-  $("token").value = "";
-});
-$("tokClear").addEventListener("click",()=>{ store.del(); memToken = ""; $("token").value = ""; $("tokState").textContent = "消しました(この端末の「設定」ボタンも消えます)"; showAlbum(); });
 $("clearSel").addEventListener("click",()=>{ selected.clear(); $("confirm").hidden = true; render(); });
+$("hideBtn").addEventListener("click",()=>{ try{ localStorage.removeItem(FLAG); }catch(e){} showMsg("この端末の TOP から「設定」ボタンを消しました。この画面を開くと、また表示されます。", "ok"); });
 $("delBtn").addEventListener("click",()=>{
-  if(!getToken()){ showMsg("先にトークンを保存してください。", "err"); return; }
   $("confirmText").textContent = selected.size + "枚の写真を削除します。公開中のアルバムからも消えます(GitHubの履歴からは復元できます)。よろしいですか?";
   $("confirm").hidden = false; $("msg").hidden = true;
 });
@@ -212,20 +141,17 @@ $("doDel").addEventListener("click", async ()=>{
   $("doDel").disabled = true; $("cancelDel").disabled = true;
   showMsg("削除しています…", "ok");
   try{
-    const r = await deleteOnGithub(names);
+    const r = await deleteOnServer(names);
     photos = r.remain; selected.clear(); $("confirm").hidden = true; render();
-    showMsg(r.gone.length + "枚を削除しました。公開サイトへの反映には1〜2分ほどかかります。", "ok");
+    showMsg(r.deleted.length + "枚を削除しました。公開サイトへの反映には1〜2分ほどかかります。", "ok");
   }catch(e){
     showMsg(explain(e), "err");
-    if(e.none) loadList();
+    if(e.code === "none"){ selected.clear(); $("confirm").hidden = true; loadList(); }
   }finally{
     $("doDel").disabled = false; $("cancelDel").disabled = false;
   }
 });
 
-function showAlbum(){ $("albumSec").hidden = !getToken(); }
-showAlbum();
-$("tokState").textContent = store.get() ? "保存済みのトークンがあります" : "";
 loadList();
 </script>
 </body>
