@@ -426,10 +426,10 @@ function buildCard(it){
    ・スマホなど共有機能(Web Share)が使える端末: GIF と文章をまとめて共有 → 共有先に X を選ぶ
    ・使えない端末(多くのPC): GIF を保存して X の投稿画面を開く → 画面で GIF を添付
    のどちらかになります。GIF(約3.5MB)は、ボタンに触れたときに初めて読み込みます。 */
-const SHARE_TEXT = "デザイナーズ『裏』ノート | 日本巡る自転車旅";
 const SHARE_URL = "https://jitensha-tabi.com/top/";
+const SHARE_TEXT = "デザイナーズ裏ノート\n\n作者の動画や画像や記事をまとめました\nオリジナル分割チタングラベルも開発中！\n3Dビューア公開してます\n\n" + SHARE_URL + "\n\n#自転車旅\n#輪行";
 const SHARE_FILE = "jitensha-tabi-3d.gif";
-const X_INTENT = "https://x.com/intent/post?text=" + encodeURIComponent(SHARE_TEXT) + "&url=" + encodeURIComponent(SHARE_URL);
+const X_INTENT = "https://x.com/intent/post?text=" + encodeURIComponent(SHARE_TEXT);
 let shareGifP = null, shareBusy = false;
 function loadShareGif(){
   if(!shareGifP) shareGifP = fetch("share/3d-viewer.gif").then(r => r.ok ? r.blob() : Promise.reject(new Error("gif"))).catch(e => { shareGifP = null; throw e; });
@@ -438,7 +438,7 @@ function loadShareGif(){
 function shareSay(t){ const m = document.getElementById("share-msg"); if(!m) return; m.textContent = t; m.hidden = !t; }
 async function shareX(){
   if(shareBusy) return; shareBusy = true;
-  const text = SHARE_TEXT + "\n" + SHARE_URL;
+  const text = SHARE_TEXT;
   let copied = false;
   try{ await navigator.clipboard.writeText(text); copied = true; }catch(e){}
   const CP = copied ? "文章をコピーしました。Xの投稿欄が空のときは、長押しで貼り付けてください。" : "";
