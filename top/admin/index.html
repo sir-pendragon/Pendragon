@@ -38,6 +38,10 @@
   .item.off{border-color:var(--line)}
   .item.off img{opacity:.35}
   .item.bad{border-color:var(--danger)}
+  .item .tog{position:absolute;inset:0;width:100%;height:100%;padding:0;border:0;background:none;cursor:pointer}
+  .item .tag,.item .mark{pointer-events:none}
+  .item .rm{position:absolute;top:6px;left:6px;width:28px;height:28px;border-radius:50%;border:2px solid #fff;background:rgba(0,0,0,.65);color:#fff;font-size:16px;line-height:1;cursor:pointer;z-index:2}
+  .item.sel-add .mark{background:var(--ok);border-color:var(--ok)}
   input[type=file]{max-width:100%;color:var(--muted)}
   .msg{margin-top:10px;padding:10px 12px;border-radius:8px;font-size:14px}
   .msg.ok{background:rgba(79,184,160,.18);border:1px solid var(--ok)}
@@ -59,7 +63,7 @@
     <h2>写真を追加</h2>
     <p class="note">写真を選ぶと、ブラウザの中で縮小します(公開用 長辺1600px・一覧用 480px)。このとき撮影場所(GPS)などの情報は取り除かれます。1回に10枚までです。JPG・PNG・WebP が使えます(iPhone の HEIC は、多くのパソコンのブラウザで開けないため、JPG に変換してください)。</p>
     <input type="file" id="files" accept="image/jpeg,image/png,image/webp" multiple>
-    <p class="note" id="addHint" hidden>追加前に、人の顔・表札・ナンバーなどの個人情報が写っていないか確認してください。同じ写真は自動で外れます(押すと入れ替えられます)。</p>
+    <p class="note" id="addHint" hidden>追加前に、人の顔・表札・ナンバーなどの個人情報が写っていないか確認してください。同じ写真は自動で外れます。写真を押すと「追加する/しない」が切り替わり、左上の「×」で一覧から取り除けます。</p>
     <div class="grid" id="addGrid"></div>
     <div class="row">
       <button class="btn" id="addBtn" type="button" disabled>選んだ写真を追加</button>
@@ -198,15 +202,22 @@ async function prepare(file){
 
 function renderAdd(){
   const g = $("addGrid"); g.textContent = "";
-  addItems.forEach(it=>{
-    const b = document.createElement("button"); b.type = "button";
-    b.className = "item" + (it.err ? " bad" : it.include ? " sel-add" : " off");
+  addItems.forEach((it, idx)=>{
+    const box = document.createElement("div");
+    box.className = "item" + (it.err ? " bad" : it.include ? " sel-add" : " off");
+    const tog = document.createElement("button"); tog.type = "button"; tog.className = "tog";
+    tog.setAttribute("aria-label", it.name + (it.include ? "(追加する。押すと外します)" : "(追加しない。押すと追加に戻します)"));
     const im = new Image(); im.alt = ""; if(it.url) im.src = it.url;
+    tog.appendChild(im);
+    if(!it.err) tog.addEventListener("click", ()=>{ it.include = !it.include; renderAdd(); });
+    const mk = document.createElement("span"); mk.className = "mark"; mk.textContent = (!it.err && it.include) ? "✓" : "";
     const tg = document.createElement("span"); tg.className = "tag";
     tg.textContent = it.err ? it.err : it.dup ? (it.include ? "同じ写真あり(追加する)" : "同じ写真あり(外しました)") : it.include ? "追加する" : "追加しない";
-    b.append(im, tg);
-    if(!it.err) b.addEventListener("click", ()=>{ it.include = !it.include; renderAdd(); });
-    g.appendChild(b);
+    const rm = document.createElement("button"); rm.type = "button"; rm.className = "rm"; rm.textContent = "×";
+    rm.setAttribute("aria-label", it.name + " を一覧から外す");
+    rm.addEventListener("click", ()=>{ addItems.splice(idx, 1); if(addItems.length === 0) $("files").value = ""; renderAdd(); });
+    box.append(tog, mk, tg, rm);
+    g.appendChild(box);
   });
   const n = addItems.filter(i => i.include && !i.err).length;
   $("addBtn").disabled = n === 0; $("addBtn").textContent = n ? ("選んだ写真を追加(" + n + "枚)") : "選んだ写真を追加";
